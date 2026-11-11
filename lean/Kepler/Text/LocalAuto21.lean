@@ -4502,11 +4502,770 @@ theorem general_482_deformation_p21 (h : mainNonlinearTerminalV11_p21)
     (ha12 : s.a p1 p2 = 2) (hb12 : s.b p1 p2 ≤ 2 * h0)
     (h2 : 2 ≤ dist (v p0) (v p1)) (hdc : dist (v p0) (v p1) ≤ cstab) :
     dist (v p1) (v p2) = 2 := by
-  -- DISCHARGES: HOL `general_482_deformation` (640 lines): the strata
-  -- dispatch (obtuse/nonplanar/acute subcases) assembling the a/b/azim
-  -- assumption reductions, deformation_BBs, general_482 lemmas and the
-  -- nonlinear registry entries. NEEDS: the full CUXVZOZ terminal chain.
-  sorry
+  -- ## A. basic facts
+  have hk0 : k ≠ 0 := by omega
+  have hnk : ¬ k ≤ 3 := by omega
+  simp only [MMsV39, Set.mem_setOf_eq] at hMMs
+  obtain ⟨hvBB2, -, -, -, -, -⟩ := hMMs
+  simp only [BBprime2V39, Set.mem_setOf_eq] at hvBB2
+  obtain ⟨hvBBp, -⟩ := hvBB2
+  simp only [BBprimeV39, Set.mem_setOf_eq] at hvBBp
+  obtain ⟨hvBB, hvmin, hvneg⟩ := hvBBp
+  obtain ⟨hann, hperS, hbnd, hconv⟩ := hvBB
+  have hvBBs : BBsV39 s v := ⟨hann, hperS, hbnd, hconv⟩
+  have hperv : Periodic v k := by
+    intro i
+    have := hperS i
+    rwa [← hk] at this
+  have hmod : ∀ i : ℕ, v (i % k) = v i := periodic_mod_p18 hperv
+  -- ## B. fan structure
+  set V : Set V3 := Set.range v with hV
+  set E : Set (Set V3) := Set.range fun i => ({v i, v (i + 1)} : Set V3) with hE
+  have hclf : ConvexLocalFan V E FF := by
+    rcases hconv with hle | hcl
+    · exfalso; omega
+    · simpa only [hV, hE, hFF] using hcl
+  have hlf : LocalFan V E FF := hclf.1
+  have hvmem : ∀ i : ℕ, v i ∈ V := fun i => by rw [hV]; exact Set.mem_range_self i
+  -- ## C. base interior angle: positivity and azim form
+  have hpos : 0 < interiorAngle1 0 FF (v p1) := by
+    have hlf2 : localFan_p2 V E FF := w5cC_lf2_of_LocalFan hlf
+    have h := INTERIOR_ANGLE1_POS (V := V) (E := E) (FF := FF) hlf2 (hvmem p1)
+    simpa only [interiorAngle1, interiorAngle1_p2, rhoNode1, rhoNode1_p2,
+      ivsRhoNode1, ivsRhoNode1_p2] using h
+  have hrho : rhoNode1 FF (v p1) = v (p1 + 1) := by
+    have hp := VV_SUC_EQ_RHO_NODE_PRIME_p35 s k p1 p1 0 (v p1) V E FF v
+      hk.symm rfl hV.symm hE.symm hFF.symm hs hnk hvBBs 1
+    simp only [Function.iterate_one] at hp
+    simpa [Nat.add_comm] using hp
+  have hivs : ivsRhoNode1 FF (v p1) = v (p1 + (k - 1)) :=
+    VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21 V E FF s v (v p1) k p1
+      hk.symm rfl hV.symm hE.symm hFF.symm hs hnk hvBBs
+  have hazim_base : interiorAngle1 0 FF (v p1) = azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) := by
+    rw [interior_angle1_azim_p21 V E FF (v p1) hlf (hvmem p1), hrho, hivs]
+  -- ## D. non-collinearity of the two base spokes
+  have hdisj : v (p1 + (k - 1)) ≠ v (p1 + 1) := by
+    intro he
+    have hlb := scs_lb_2_p22 s v (p1 + 1) (p1 + (k - 1)) hs hvBBs ?_
+    · rw [he, dist_self] at hlb; linarith
+    · intro hc
+      have hc' : (p1 + 1) % k = (p1 + (k - 1)) % k := by rw [← hk] at hc; exact hc
+      have hle : p1 + 1 ≤ p1 + (k - 1) := by omega
+      have hdvd : k ∣ (p1 + (k - 1)) - (p1 + 1) := (Nat.modEq_iff_dvd' hle).mp hc'
+      have hval : (p1 + (k - 1)) - (p1 + 1) = k - 2 := by omega
+      rw [hval] at hdvd
+      have := Nat.le_of_dvd (by omega) hdvd
+      omega
+  have hnc_col : ¬ Collinear ℝ ({0, v (p1 + 1), v (p1 + (k - 1))} : Set V3) := by
+    have hp14 := PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 V E FF (v (p1 + (k - 1))) (v (p1 + 1))
+      hlf (hvmem _) (hvmem _) hdisj (by simpa only [scsGeneric, ← hV, ← hE] using hgen)
+    have hsetpair : ({0, v (p1 + 1), v (p1 + (k - 1))} : Set V3) =
+        {0, v (p1 + (k - 1)), v (p1 + 1)} := by
+      ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hsetpair]; exact hp14
+  -- ## E. non-coplanarity of the base tetrahedron
+  have hncop : ¬ Coplanar ({0, v p1, v (p1 + 1), v (p1 + (k - 1))} : Set V3) := by
+    intro hc
+    have hd := (AZIM_COND_FOR_COPLANAR 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1)))).mpr hc
+    rw [← hazim_base] at hd
+    rcases hd with h0 | hpi
+    · linarith
+    · linarith
+  -- ## F. contradiction setup
+  by_contra hne
+  -- ## G. base azim facts
+  have hposA : 0 < azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) := by
+    rw [← hazim_base]; exact hpos
+  have hltA : azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) < Real.pi := by
+    rw [← hazim_base]; exact hang
+  have hncfan := notcoplanar_imp_notcollinear_fan (x := (0:V3)) (v := v p1)
+    (u := v (p1 + 1)) (w := v (p1 + (k - 1))) hncop
+  -- cyclic partners of the base azimuth
+  have hB_base : 0 < azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1) ∧
+      azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1) < Real.pi := by
+    exact (g482w3_azim_cycle (x := v p1) (y := v (p1 + 1)) (z := v (p1 + (k - 1)))
+      hncfan.2.1 hncfan.2.2 hposA hltA).1
+
+  -- ## H. the deforming family
+  have hups : 0 < (v p1).ofLp ⬝ᵥ (cross3 (v (p1 + 1)) (v (p1 + (k - 1)))).ofLp := by
+    have hcyc := (azim_lt_pi_cross_p14 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1)).mp hB_base
+    simpa only [dotProduct_comm] using hcyc
+  have hncop4 : ¬ Coplanar ({0, v (p1 + (k - 1)), v p1, v (p1 + 1)} : Set V3) := by
+    intro hc
+    apply hncop
+    have hset : ({0, v (p1 + (k - 1)), v p1, v (p1 + 1)} : Set V3) =
+        {0, v p1, v (p1 + 1), v (p1 + (k - 1))} := by
+      ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [hset] at hc
+  -- `v (p1+1) ≠ v p1` and `v (p1+k-1) ≠ v p1`
+  have hmod_ne_succ : (p1 + 1) % k ≠ p1 % k := by
+    intro he
+    have hle : p1 ≤ p1 + 1 := by omega
+    have hdvd : k ∣ (p1 + 1) - p1 := (Nat.modEq_iff_dvd' hle).mp he.symm
+    have hval : (p1 + 1) - p1 = 1 := by omega
+    rw [hval] at hdvd
+    have := Nat.le_of_dvd (by norm_num) hdvd
+    omega
+  have hmod_ne_pred : (p1 + (k - 1)) % k ≠ p1 % k := by
+    intro he
+    have hle : p1 ≤ p1 + (k - 1) := by omega
+    have hdvd : k ∣ (p1 + (k - 1)) - p1 := (Nat.modEq_iff_dvd' hle).mp he.symm
+    have hval : (p1 + (k - 1)) - p1 = k - 1 := by omega
+    rw [hval] at hdvd
+    have hk1 : 0 < k - 1 := by omega
+    have := Nat.le_of_dvd hk1 hdvd
+    omega
+  have hne_succ : v (p1 + 1) ≠ v p1 := by
+    intro he
+    have := scs_lb_2_p22 s v p1 (p1 + 1) hs hvBBs (by rw [← hk]; exact Ne.symm hmod_ne_succ)
+    rw [he, dist_self] at this
+    linarith
+  have hne_pred : v (p1 + (k - 1)) ≠ v p1 := by
+    intro he
+    have := scs_lb_2_p22 s v p1 (p1 + (k - 1)) hs hvBBs (by rw [← hk]; exact Ne.symm hmod_ne_pred)
+    rw [he, dist_self] at this
+    linarith
+  -- pair-expansion of `hpair`
+  have hcases : (v p0 = v (p1 + 1) ∧ v p2 = v (p1 + (k - 1))) ∨
+      (v p0 = v (p1 + (k - 1)) ∧ v p2 = v (p1 + 1)) := by
+    have h1 : v p0 ∈ ({v (p1 + 1), v (p1 + (k - 1))} : Set V3) := by
+      rw [← hpair]; simp
+    have h2 : v p2 ∈ ({v (p1 + 1), v (p1 + (k - 1))} : Set V3) := by
+      rw [← hpair]; simp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1 h2
+    rcases h1 with h1 | h1 <;> rcases h2 with h2 | h2
+    · exfalso
+      have h3 : v (p1 + (k - 1)) ∈ ({v p0, v p2} : Set V3) := by rw [hpair]; simp
+      have h3' : v (p1 + (k - 1)) = v (p1 + 1) := by
+        have h := h3; rw [h1, h2] at h; simpa using h
+      exact hdisj h3'
+    · exact Or.inl ⟨h1, h2⟩
+    · exact Or.inr ⟨h1, h2⟩
+    · exfalso
+      have h3 : v (p1 + 1) ∈ ({v p0, v p2} : Set V3) := by rw [hpair]; simp
+      have h3' : v (p1 + 1) = v (p1 + (k - 1)) := by
+        have h := h3; rw [h1, h2] at h; simpa using h
+      exact hdisj h3'.symm
+  have hdeform : ∃ f : V3 → ℝ → V3, ∃ e' : ℝ, 0 < e' ∧ Deformation f V (-e') e' ∧
+      (∀ w t, w ≠ v p1 → f w t = w) ∧
+      (∀ t, |t| < e' → dist (v p0) (f (v p1) t) = dist (v p0) (v p1) ∧
+        dist (v p2) (f (v p1) t) = dist (v p2) (v p1) - |t| ∧ ‖f (v p1) t‖ = ‖v p1‖) := by
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · obtain ⟨f, hf⟩ := deform_simplex_edge_exists_p21 V (fun t => -|t|) (fun _ => 0)
+        (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) 1
+      obtain ⟨e', he', hdef, hfix, hdist⟩ := hf hncop4 hups (by norm_num)
+        (by fun_prop) (by fun_prop) (by simp) rfl
+      refine ⟨f, e', he', hdef, hfix, ?_⟩
+      intro t ht
+      obtain ⟨hd1, hd2, hd3⟩ := hdist t ht
+      refine ⟨?_, ?_, hd3⟩
+      · rw [hp0]; simpa using hd2
+      · rw [hp2]; simpa [sub_eq_add_neg] using hd1
+    · obtain ⟨f, hf⟩ := deform_simplex_edge_exists_p21 V (fun _ => 0) (fun t => -|t|)
+        (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) 1
+      obtain ⟨e', he', hdef, hfix, hdist⟩ := hf hncop4 hups (by norm_num)
+        (by fun_prop) (by fun_prop) rfl (by simp)
+      refine ⟨f, e', he', hdef, hfix, ?_⟩
+      intro t ht
+      obtain ⟨hd1, hd2, hd3⟩ := hdist t ht
+      refine ⟨?_, ?_, hd3⟩
+      · rw [hp0]; simpa using hd1
+      · rw [hp2]; simpa [sub_eq_add_neg] using hd2
+  obtain ⟨f, e', he'pos, hdef, hfix, hdistf⟩ := hdeform
+  have hfixb : ∀ t, f (v (p1 + 1)) t = v (p1 + 1) := fun t => hfix _ t hne_succ
+  have hfixc : ∀ t, f (v (p1 + (k - 1))) t = v (p1 + (k - 1)) := fun t => hfix _ t hne_pred
+  have hnormf : ∀ (i : ℕ) (t : ℝ), |t| < e' → ‖f (v i) t‖ = ‖v i‖ := by
+    intro i t ht
+    by_cases hi : v i = v p1
+    · rw [hi]; exact (hdistf t ht).2.2
+    · rw [hfix _ t hi]
+  -- ## I. the moving azimuth stays in (0,π)
+  have hdefsub : Deformation f ({v (p1 + (k - 1)), v p1, v (p1 + 1)} : Set V3) (-e') e' :=
+    deformation_subset_p14 f _ V (-e') e' (by
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | rfl | rfl
+      · exact hvmem _
+      · exact hvmem _
+      · exact hvmem _) hdef
+  obtain ⟨e1, he1, haz1⟩ := WNWSHJT_ALT_p21 (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) f
+    (-e') e' Real.pi hdefsub hncfan.2.1 hncfan.2.2 hposA hltA
+  have haz1' : ∀ t, |t| < e1 → 0 < azim 0 (f (v p1) t) (v (p1 + 1)) (v (p1 + (k - 1))) ∧
+      azim 0 (f (v p1) t) (v (p1 + 1)) (v (p1 + (k - 1))) < Real.pi := by
+    intro t ht
+    have h := haz1 t ht
+    rwa [hfixb, hfixc] at h
+  -- ═══ T0c: LEMMA_482 boxes, deltaY / upsX positivity, monotonicity witness
+  have hk0pos : 0 < k := by omega
+  have hnorm_lo : ∀ i : ℕ, 2 ≤ ‖v i‖ := by
+    intro i
+    have h := hann (Set.mem_range_self i)
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right, not_lt] at h
+    linarith [h.1, h.2]
+  have hnorm_hi : ∀ i : ℕ, ‖v i‖ ≤ 2 * h0 := by
+    intro i
+    have h := hann (Set.mem_range_self i)
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right, not_lt] at h
+    linarith [h.1, h.2]
+  have hy4lo : 2 ≤ dist (v p1) (v p2) := by
+    have h := (hbnd p1 p2).1
+    rw [ha12] at h
+    exact h
+  have hy4hi : dist (v p1) (v p2) ≤ 2 * h0 := (hbnd p1 p2).2.trans hb12
+  have hncop4' : ¬ Coplanar ({0, v p0, v p2, v p1} : Set V3) := by
+    intro hc
+    apply hncop
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · have hset : ({0, v p0, v p2, v p1} : Set V3) =
+          {0, v p1, v (p1 + 1), v (p1 + (k - 1))} := by
+        rw [hp0, hp2]
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at hc
+    · have hset : ({0, v p0, v p2, v p1} : Set V3) =
+          {0, v p1, v (p1 + 1), v (p1 + (k - 1))} := by
+        rw [hp0, hp2]
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at hc
+  have hnc_412 : ¬ Coplanar ({0, v p0, v p1, v p2} : Set V3) := by
+    intro hc
+    apply hncop4'
+    have hset : ({0, v p0, v p1, v p2} : Set V3) = {0, v p0, v p2, v p1} := by
+      ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [hset] at hc
+  have hnc02 : ¬ Collinear3 0 (v p0) (v p2) :=
+    (notcoplanar_imp_notcollinear_fan (x := (0 : V3)) (v := v p0) (u := v p2) (w := v p1)
+      hncop4').2.1
+  have hdYpos : 0 < deltaY ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2))
+      (dist (v p0) (v p1)) (dist (v p0) (v p2)) := by
+    have h := g482w3_deltaY_pos hncop4'
+    rw [dist_comm (v p2) (v p1)] at h
+    simpa [dist_eq_norm] using h
+  have hu6 : 0 < upsX (‖v p0‖ * ‖v p0‖) (‖v p2‖ * ‖v p2‖)
+      (dist (v p0) (v p2) * dist (v p0) (v p2)) := by
+    have h := g482w3_upsX_pos_of_not_col hnc02
+    simpa [dist_eq_norm, dist_comm] using h
+  obtain ⟨aM, bM, hy4mem, hmono⟩ := LEMMA_4828966562_p22 h
+    ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2)) (dist (v p0) (v p1)) (dist (v p0) (v p2))
+    ⟨hnorm_lo p0, hnorm_hi p0⟩ ⟨hnorm_lo p2, hnorm_hi p2⟩ ⟨hnorm_lo p1, hnorm_hi p1⟩
+    ⟨hy4lo, hy4hi⟩ ⟨h2, hdc⟩ h3 hdYpos hu6
+  obtain ⟨haM, hbM⟩ := hy4mem
+
+  -- ═══ T1: NONPLANAR_OPEN (coplanarity is open along the deformation)
+  have hcont0 : ContinuousAt (fun t => f (v p1) t) 0 :=
+    hdef.2.1 (v p1) (hvmem p1) 0 hdef.1
+  obtain ⟨e2, he2, hnc2⟩ := NONPLANAR_OPEN_p14 (fun _ => (0 : V3))
+    (fun t => f (v p1) t) (fun _ => v (p1 + (k - 1))) (fun _ => v (p1 + 1)) 0
+    (by
+      have hset : ({0, f (v p1) 0, v (p1 + (k - 1)), v (p1 + 1)} : Set V3) =
+          {0, v p1, v (p1 + 1), v (p1 + (k - 1))} := by
+        rw [hdef.2.2 (v p1) (hvmem p1)]
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset]; exact hncop)
+    continuousAt_const hcont0 continuousAt_const continuousAt_const
+  have hnc2' : ∀ t, |t| < e2 →
+      ¬ Coplanar ({0, f (v p1) t, v (p1 + (k - 1)), v (p1 + 1)} : Set V3) := by
+    intro t ht
+    refine hnc2 t ?_
+    simpa using ht
+
+
+  -- ═══ mod-k bookkeeping helper
+  have hmod_eq : ∀ {a b : ℕ}, v a = v b → a % k = b % k := by
+    intro a b hab
+    exact BBs_inj_p21 s v k hs hk.symm hvBBs (a % k) (b % k)
+      (Nat.mod_lt _ hk0pos) (Nat.mod_lt _ hk0pos)
+      (by rw [hmod a, hmod b, hab])
+  -- ═══ T3a: dihV_obtuse_mono instantiated at the base tetrahedron
+  obtain ⟨eM, heM, hM1full, hM2full⟩ :=
+    dihV_obtuse_mono_p21 (0 : V3) (v p0) (v p1) (v p2) hnc_412
+  have hposM : 0 < min (dist (v p1) (v p2) - aM) (bM - dist (v p1) (v p2)) :=
+    lt_min (by linarith only [haM]) (by linarith only [hbM])
+  -- ═══ T3: combined epsilon (haz / nonplanarity / deformation / dihV-mono / LEMMA_482 box)
+  obtain ⟨e, he, hE1, hE2, hEe, hEM, hE5, hE6⟩ :=
+    g482w3_eps6 e1 e2 e' eM
+      (min (dist (v p1) (v p2) - aM) (bM - dist (v p1) (v p2)))
+      (min (dist (v p1) (v p2) - aM) (bM - dist (v p1) (v p2)))
+      he1 he2 he'pos heM hposM hposM
+  -- the deformation restricted to the common radius
+  have hdefe' : Deformation f (Set.range v) (-e') e' := by
+    rw [← hV]; exact hdef
+  have hde : Deformation f (Set.range v) (-e) e :=
+    deformation_restrict_p21 e' f (Set.range v) e hdefe' he (fun t ht => hEe t ht)
+  -- ═══ T2 preliminaries: base azim cycle partner, collinearity swap, azim→dihV bridges
+  have hC_base : 0 < azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) ∧
+      azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) < Real.pi :=
+    (g482w3_azim_cycle (x := v p1) (y := v (p1 + 1)) (z := v (p1 + (k - 1)))
+      hncfan.2.1 hncfan.2.2 hposA hltA).2
+  have hcswap : ∀ {a b c : V3}, Collinear3 a b c → Collinear3 a c b := by
+    intro a b c h
+    unfold Collinear3 at *
+    rw [show ({a, c, b} : Set V3) = {a, b, c} from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact h
+  have hbr1 : ∀ t, |t| < e → azim 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + 1)) =
+      dihV 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + 1)) := by
+    intro t ht
+    have hnc := hnc2' t (hE2 t ht)
+    have hnc' := notcoplanar_imp_notcollinear_fan hnc
+    have hcyc := g482w3_azim_cycle (x := f (v p1) t) (y := v (p1 + 1))
+      (z := v (p1 + (k - 1))) hnc'.2.2 hnc'.2.1
+      (haz1' t (hE1 t ht)).1 (haz1' t (hE1 t ht)).2
+    exact AZIM_DIHV_SAME_STRONG (fun h => hnc'.2.1 (hcswap h)) hnc'.1
+      (le_of_lt hcyc.2.2)
+  have hbr1b : azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) =
+      dihV 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) :=
+    AZIM_DIHV_SAME_STRONG (fun h => hncfan.2.2 (hcswap h))
+      (fun h => hncfan.1 (hcswap h)) (le_of_lt hC_base.2)
+  have hbr2 : ∀ t, |t| < e → azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (f (v p1) t) =
+      dihV 0 (v (p1 + 1)) (v (p1 + (k - 1))) (f (v p1) t) := by
+    intro t ht
+    have hnc := hnc2' t (hE2 t ht)
+    have hnc' := notcoplanar_imp_notcollinear_fan hnc
+    have hcyc := g482w3_azim_cycle (x := f (v p1) t) (y := v (p1 + 1))
+      (z := v (p1 + (k - 1))) hnc'.2.2 hnc'.2.1
+      (haz1' t (hE1 t ht)).1 (haz1' t (hE1 t ht)).2
+    exact AZIM_DIHV_SAME_STRONG hncfan.1 (fun h => hnc'.2.2 (hcswap h))
+      (le_of_lt hcyc.1.2)
+  have hbr2b : azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1) =
+      dihV 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1) :=
+    AZIM_DIHV_SAME_STRONG hncfan.1 (fun h => hncfan.2.1 (hcswap h))
+      (le_of_lt hB_base.2)
+  -- the two dihV monotonicity corollaries at `X = f (v p1) t`, `t = -|t|`
+  have hM1t : Real.pi / 2 < dihV 0 (v p1) (v p2) (v p0) → ∀ t, |t| < e →
+      dihV 0 (v p2) (f (v p1) t) (v p0) ≤ dihV 0 (v p2) (v p1) (v p0) := by
+    intro hobtD t ht
+    refine hM1full hobtD (f (v p1) t) (-|t|) (by simpa using hEM t ht)
+      (by linarith only [abs_nonneg t]) ?_ ?_ ?_
+    · simpa [dist_eq_norm] using hnormf p1 t (hEe t ht)
+    · exact (hdistf t (hEe t ht)).1
+    · rw [dist_comm (f (v p1) t) (v p2), (hdistf t (hEe t ht)).2.1,
+        dist_comm (v p1) (v p2), sub_eq_add_neg]
+  have hM2t : ∀ t, |t| < e →
+      dihV 0 (v p0) (f (v p1) t) (v p2) ≤ dihV 0 (v p0) (v p1) (v p2) := by
+    intro t ht
+    refine hM2full (f (v p1) t) (-|t|) (by simpa using hEM t ht)
+      (by linarith only [abs_nonneg t]) ?_ ?_ ?_
+    · simpa [dist_eq_norm] using hnormf p1 t (hEe t ht)
+    · exact (hdistf t (hEe t ht)).1
+    · rw [dist_comm (f (v p1) t) (v p2), (hdistf t (hEe t ht)).2.1,
+        dist_comm (v p1) (v p2), sub_eq_add_neg]
+  -- the interior-angle form of the base azimuth at `v p2`
+  have hrho2 : rhoNode1 FF (v p2) = v (p2 + 1) := by
+    have hp := VV_SUC_EQ_RHO_NODE_PRIME_p35 s k p2 p2 0 (v p2) V E FF v
+      hk.symm rfl hV.symm hE.symm hFF.symm hs hnk hvBBs 1
+    simp only [Function.iterate_one] at hp
+    simpa [Nat.add_comm] using hp
+  have hivs2 : ivsRhoNode1 FF (v p2) = v (p2 + (k - 1)) :=
+    VV_SUC_EQ_IVS_RHO_NODE_PRIME_p21 V E FF s v (v p2) k p2
+      hk.symm rfl hV.symm hE.symm hFF.symm hs hnk hvBBs
+  have hIA2 : interiorAngle1 0 FF (v p2) = azim 0 (v p2) (v (p2 + 1)) (v (p2 + (k - 1))) := by
+    rw [interior_angle1_azim_p21 V E FF (v p2) hlf (hvmem p2), hrho2, hivs2]
+  -- ═══ T2: the two azimuth-monotonicity disjunctions
+  have hdisjM : (azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + (k - 2))) < Real.pi ∨
+      ∃ eps, 0 < eps ∧ ∀ t, |t| < eps →
+        azim 0 (v (p1 + (k - 1))) (f (v p1) t) (v (p1 + 1)) ≤
+          azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1))) ∧
+    (azim 0 (v (p1 + 1)) (v (p1 + 2)) (v p1) < Real.pi ∨
+      ∃ eps, 0 < eps ∧ ∀ t, |t| < eps →
+        azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (f (v p1) t) ≤
+          azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1)) := by
+    by_cases hobt : Real.pi / 2 < interiorAngle1 0 FF (v p1)
+    · -- obtuse branch: both monotone alternatives, via hM1/hM2
+      have hobtD : Real.pi / 2 < dihV 0 (v p1) (v p2) (v p0) := by
+        have h1 : azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) =
+            dihV 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) :=
+          AZIM_DIHV_SAME_STRONG hncfan.2.1 hncfan.2.2 (le_of_lt hltA)
+        have h2 : Real.pi / 2 < dihV 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) := by
+          have hh := hobt
+          rw [hazim_base, h1] at hh
+          exact hh
+        have hpairdih : dihV 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) =
+            dihV 0 (v p1) (v p2) (v p0) := by
+          rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+          · rw [hp0, hp2]
+            exact (DIHV_SYM_2 0 (v p1) (v (p1 + (k - 1))) (v (p1 + 1))).symm
+          · rw [hp0, hp2]
+        rw [← hpairdih]
+        exact h2
+      have hM1 := hM1t hobtD
+      constructor
+      · refine Or.inr ⟨e, he, fun t ht => ?_⟩
+        rw [hbr1 t ht, hbr1b]
+        rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+        · rw [← hp0, ← hp2]
+          exact hM1 t ht
+        · rw [← hp0, ← hp2]
+          exact hM2t t ht
+      · refine Or.inr ⟨e, he, fun t ht => ?_⟩
+        rw [hbr2 t ht, hbr2b]
+        rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+        · rw [← hp0, ← hp2, DIHV_SYM_2 0 (v p0) (v p2) (f (v p1) t),
+            DIHV_SYM_2 0 (v p0) (v p2) (v p1)]
+          exact hM2t t ht
+        · rw [← hp0, ← hp2, DIHV_SYM_2 0 (v p2) (v p0) (f (v p1) t),
+            DIHV_SYM_2 0 (v p2) (v p0) (v p1)]
+          exact hM1 t ht
+    · -- non-obtuse branch: one first disjunct (interior angle at `v p2`) + one monotone
+      have hia2 : interiorAngle1 0 FF (v p2) < Real.pi := by
+        rcases hcase with h | h
+        · exact absurd h hobt
+        · exact h
+      constructor
+      · rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+        · refine Or.inl ?_
+          have hs1 : v (p2 + 1) = v p1 := by
+            rw [← hmod (p2 + 1), ← hmod p1]
+            congr 1
+            rw [Nat.add_mod, hmod_eq hp2, ← Nat.add_mod,
+              show p1 + (k - 1) + 1 = p1 + k by omega, Nat.add_mod_right]
+          have hs2 : v (p2 + (k - 1)) = v (p1 + (k - 2)) := by
+            rw [← hmod (p2 + (k - 1)), ← hmod (p1 + (k - 2))]
+            congr 1
+            rw [Nat.add_mod, hmod_eq hp2, ← Nat.add_mod,
+              show p1 + (k - 1) + (k - 1) = (p1 + (k - 2)) + k by omega,
+              Nat.add_mod_right]
+          rw [hIA2, hp2, hs1, hs2] at hia2
+          exact hia2
+        · refine Or.inr ⟨e, he, fun t ht => ?_⟩
+          rw [hbr1 t ht, hbr1b, ← hp0, ← hp2]
+          exact hM2t t ht
+      · rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+        · refine Or.inr ⟨e, he, fun t ht => ?_⟩
+          rw [hbr2 t ht, hbr2b, ← hp0, ← hp2,
+            DIHV_SYM_2 0 (v p0) (v p2) (f (v p1) t),
+            DIHV_SYM_2 0 (v p0) (v p2) (v p1)]
+          exact hM2t t ht
+        · refine Or.inl ?_
+          have hs1 : v (p2 + 1) = v (p1 + 2) := by
+            rw [← hmod (p2 + 1), ← hmod (p1 + 2)]
+            congr 1
+            rw [Nat.add_mod, hmod_eq hp2, ← Nat.add_mod,
+              show p1 + 1 + 1 = p1 + 2 by omega]
+          have hs2 : v (p2 + (k - 1)) = v p1 := by
+            rw [← hmod (p2 + (k - 1)), ← hmod p1]
+            congr 1
+            rw [Nat.add_mod, hmod_eq hp2, ← Nat.add_mod,
+              show p1 + 1 + (k - 1) = p1 + k by omega, Nat.add_mod_right]
+          rw [hIA2, hp2, hs1, hs2] at hia2
+          exact hia2
+  -- ═══ T4: the azimuth assumption reduction
+  obtain ⟨hA1, hA2, hA3, hA4, hA5, hA6, hA7, ⟨eA8, heA8, hA8⟩, hA9⟩ :=
+    azim_assumption_reduction_p21 s k p1 f v e hs hk.symm hvBBs hgen hk3 hncop hde
+      hfix hltA hdisjM.1 hdisjM.2
+  -- ═══ psort alignment for the a-reduction
+  have hpsort_eq : psort k (p0, p2) = psort k (p1 + 1, p1 + (k - 1)) := by
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · have h1 : p0 % k = (p1 + 1) % k := hmod_eq hp0
+      have h2 : p2 % k = (p1 + (k - 1)) % k := hmod_eq hp2
+      rw [← psort_mod_p21 k p0 p2 hk0, ← psort_mod_p21 k (p1 + 1) (p1 + (k - 1)) hk0,
+        h1, h2]
+    · have h1 : p0 % k = (p1 + (k - 1)) % k := hmod_eq hp0
+      have h2 : p2 % k = (p1 + 1) % k := hmod_eq hp2
+      rw [← psort_mod_p21 k p0 p2 hk0, ← psort_mod_p21 k (p1 + 1) (p1 + (k - 1)) hk0,
+        h1, h2, g482w3_psort_swap k ((p1 + (k - 1)) % k) ((p1 + 1) % k)]
+  have hdiagA : ∀ i j, scsDiag k i j → psort k (i, j) ≠ psort k (p1 + 1, p1 + (k - 1)) →
+      s.a i j < dist (v i) (v j) := by
+    intro i j hd hps
+    exact ha i j hd (by
+      intro h
+      rw [hpsort_eq] at h
+      exact hps h)
+  -- strictness on the moving edge (from `2 ≤ dist` and `dist ≠ 2`)
+  have hy4gt2 : 2 < dist (v p1) (v p2) :=
+    lt_of_le_of_ne hy4lo (fun h => hne h.symm)
+  -- periodic transport of the a-table
+  have hsK := hs
+  obtain ⟨-, -, -, -, -, -, -, hpa0, -, -, -, -, -, -, -, -, -, -, -, -, -⟩ := hsK
+  have hpa : Periodic2 s.a k := by
+    rw [← hk] at hpa0
+    exact hpa0
+  have hamod : ∀ i j, s.a i j = s.a (i % k) (j % k) :=
+    fun i j => periodic2_MOD_p21 (a := s.a) (i := i) (j := j) (k := k) hk0 hpa
+  -- ═══ T5: a/b skeletons
+  have ha1 : ∃ eps, 0 < eps ∧ (s.a p1 (p1 + 1) = dist (v p1) (v (p1 + 1)) →
+      ∀ t, |t| < eps →
+        s.a p1 (p1 + 1) ≤ dist (f (v p1) t) (f (v (p1 + 1)) t)) := by
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · have hkey : ∀ t, |t| < e' → dist (f (v p1) t) (v (p1 + 1)) =
+          dist (v p1) (v (p1 + 1)) := by
+        intro t ht
+        have hd := (hdistf t ht).1
+        rw [← hp0, dist_comm (f (v p1) t) (v p0), hd, dist_comm (v p0) (v p1)]
+      refine ⟨e, he, fun heq t ht => ?_⟩
+      rw [hfixb t, hkey t (hEe t ht), heq]
+    · have haeq : s.a p1 (p1 + 1) = s.a p1 p2 := by
+        have hmk : (p1 + 1) % k = p2 % k := (hmod_eq hp2).symm
+        rw [hamod p1 (p1 + 1), hamod p1 p2, hmk]
+      have hlt2 : s.a p1 (p1 + 1) < dist (v p1) (v (p1 + 1)) := by
+        rw [haeq, ha12, ← hp2]
+        exact hy4gt2
+      exact ⟨e, he, fun heq t ht => absurd heq (ne_of_lt hlt2)⟩
+  have ha2 : ∃ eps, 0 < eps ∧ (s.a p1 (p1 + (k - 1)) = dist (v p1) (v (p1 + (k - 1))) →
+      ∀ t, |t| < eps →
+        s.a p1 (p1 + (k - 1)) ≤ dist (f (v p1) t) (f (v (p1 + (k - 1))) t)) := by
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · have haeq : s.a p1 (p1 + (k - 1)) = s.a p1 p2 := by
+        have hmk : (p1 + (k - 1)) % k = p2 % k := (hmod_eq hp2).symm
+        rw [hamod p1 (p1 + (k - 1)), hamod p1 p2, hmk]
+      have hlt2 : s.a p1 (p1 + (k - 1)) < dist (v p1) (v (p1 + (k - 1))) := by
+        rw [haeq, ha12, ← hp2]
+        exact hy4gt2
+      exact ⟨e, he, fun heq t ht => absurd heq (ne_of_lt hlt2)⟩
+    · have hkey : ∀ t, |t| < e' → dist (f (v p1) t) (v (p1 + (k - 1))) =
+          dist (v p1) (v (p1 + (k - 1))) := by
+        intro t ht
+        have hd := (hdistf t ht).1
+        rw [← hp0, dist_comm (f (v p1) t) (v p0), hd, dist_comm (v p0) (v p1)]
+      refine ⟨e, he, fun heq t ht => ?_⟩
+      rw [hfixc t, hkey t (hEe t ht), heq]
+  have hb1 : ∃ eps, 0 < eps ∧ (dist (v p1) (v (p1 + 1)) = s.b p1 (p1 + 1) →
+      ∀ t, |t| < eps →
+        dist (f (v p1) t) (f (v (p1 + 1)) t) ≤ s.b p1 (p1 + 1)) := by
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · have hkey : ∀ t, |t| < e' → dist (f (v p1) t) (v (p1 + 1)) =
+          dist (v p1) (v (p1 + 1)) := by
+        intro t ht
+        have hd := (hdistf t ht).1
+        rw [← hp0, dist_comm (f (v p1) t) (v p0), hd, dist_comm (v p0) (v p1)]
+      refine ⟨e, he, fun heq t ht => ?_⟩
+      rw [hfixb t, hkey t (hEe t ht), heq]
+    · have hle : ∀ t, |t| < e' → dist (f (v p1) t) (v (p1 + 1)) ≤
+          dist (v p1) (v (p1 + 1)) := by
+        intro t ht
+        rw [← hp2, dist_comm (f (v p1) t) (v p2), (hdistf t ht).2.1,
+          dist_comm (v p1) (v p2)]
+        linarith only [abs_nonneg t]
+      refine ⟨e, he, fun heq t ht => ?_⟩
+      rw [hfixb t]
+      have h := hle t (hEe t ht)
+      rw [heq] at h
+      exact h
+  have hb2 : ∃ eps, 0 < eps ∧ (dist (v p1) (v (p1 + (k - 1))) = s.b p1 (p1 + (k - 1)) →
+      ∀ t, |t| < eps →
+        dist (f (v p1) t) (f (v (p1 + (k - 1))) t) ≤ s.b p1 (p1 + (k - 1))) := by
+    rcases hcases with ⟨hp0, hp2⟩ | ⟨hp0, hp2⟩
+    · have hle : ∀ t, |t| < e' → dist (f (v p1) t) (v (p1 + (k - 1))) ≤
+          dist (v p1) (v (p1 + (k - 1))) := by
+        intro t ht
+        rw [← hp2, dist_comm (f (v p1) t) (v p2), (hdistf t ht).2.1,
+          dist_comm (v p1) (v p2)]
+        linarith only [abs_nonneg t]
+      refine ⟨e, he, fun heq t ht => ?_⟩
+      rw [hfixc t]
+      have h := hle t (hEe t ht)
+      rw [heq] at h
+      exact h
+    · have hkey : ∀ t, |t| < e' → dist (f (v p1) t) (v (p1 + (k - 1))) =
+          dist (v p1) (v (p1 + (k - 1))) := by
+        intro t ht
+        have hd := (hdistf t ht).1
+        rw [← hp0, dist_comm (f (v p1) t) (v p0), hd, dist_comm (v p0) (v p1)]
+      refine ⟨e, he, fun heq t ht => ?_⟩
+      rw [hfixc t, hkey t (hEe t ht), heq]
+  have haSkel := a_assumption_reduction_p21 s k p1 f v e hs hk.symm hvBBs hk3
+    hdiagA hde hfix ha1 ha2
+  have hbSkel := b_assumption_reduction_p21 s k p1 f v e hs hk.symm hvBBs hk3
+    hb hde hfix hb1 hb2
+  -- ═══ T6: the deformed configuration is again in BBs
+  obtain ⟨eBB, heBB, hBBsALT⟩ := deformation_BBs_ALT_p21 s k f v e hs hk.symm hk3
+    hvBBs hgen he hde hA7 (fun i t ht => hnormf i t (hEe t ht)) haSkel hbSkel
+  -- ═══ T7: minimality of the tau sum
+  have hvBP : v ∈ BBprimeV39 s := ⟨hvBBs, hvmin, hvneg⟩
+  have hsum : ∀ t, |t| < eBB →
+      setSum {i | i < k}
+          (fun i => rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1)))) ≤
+        setSum {i | i < k}
+          (fun i => rhoFun ‖f (v i) t‖ * azim 0 (f (v i) t) (f (v (i + 1)) t)
+            (f (v (i + (k - 1))) t)) := by
+    intro t ht
+    exact MMs_minimize_tau_fun_p21 s k v (fun i => f (v i) t) hs hbasic hk.symm hk3
+      hvBP (hBBsALT t ht)
+  -- ═══ T8: the finite-sum surgery at some small nonzero `t'`
+  set eF : ℝ := min (min e eBB) eA8 with heFdef
+  have heF : 0 < eF := lt_min (lt_min he heBB) heA8
+  have heFe : eF ≤ e := le_trans (min_le_left _ _) (min_le_left _ _)
+  have heFeBB : eF ≤ eBB := le_trans (min_le_left _ _) (min_le_right _ _)
+  have heFeA8 : eF ≤ eA8 := min_le_right _ _
+  obtain ⟨t', ht'F, ht'ne⟩ : ∃ t' : ℝ, |t'| < eF ∧ t' ≠ 0 := by
+    refine ⟨eF / 2, ?_, ?_⟩
+    · rw [abs_of_pos (by linarith only [heF])]
+      linarith only [heF]
+    · intro h
+      linarith only [heF, h]
+  have ht'e : |t'| < e := lt_of_lt_of_le ht'F heFe
+  have ht'eBB : |t'| < eBB := lt_of_lt_of_le ht'F heFeBB
+  have ht'A8 : |t'| < eA8 := lt_of_lt_of_le ht'F heFeA8
+  have ht1' : |t'| < e1 := hE1 t' ht'e
+  have ht2' : |t'| < e2 := hE2 t' ht'e
+  have htabs : 0 < |t'| := abs_pos.mpr ht'ne
+  have hA8t := hA8 t' ht'A8
+  have hA8a := hA8t.1
+  have hA8b := hA8t.2
+  have hnr : ‖f (v p1) t'‖ = ‖v p1‖ := hnormf p1 t' (hEe t' ht'e)
+  have hd1 : dist (f (v p1) t') (v p2) = dist (v p1) (v p2) - |t'| := by
+    rw [dist_comm (f (v p1) t') (v p2), (hdistf t' (hEe t' ht'e)).2.1,
+      dist_comm (v p1) (v p2)]
+  have hd2 : dist (v p0) (f (v p1) t') = dist (v p0) (v p1) :=
+    (hdistf t' (hEe t' ht'e)).1
+  have hncM : ¬ Coplanar ({0, f (v p1) t', v (p1 + 1), v (p1 + (k - 1))} : Set V3) := by
+    have h := hnc2' t' ht2'
+    rw [show ({0, f (v p1) t', v (p1 + (k - 1)), v (p1 + 1)} : Set V3) =
+        {0, f (v p1) t', v (p1 + 1), v (p1 + (k - 1))} from by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro (rfl | rfl | rfl | rfl)
+        · exact Or.inl rfl
+        · exact Or.inr (Or.inl rfl)
+        · exact Or.inr (Or.inr (Or.inr rfl))
+        · exact Or.inr (Or.inr (Or.inl rfl))
+      · rintro (rfl | rfl | rfl | rfl)
+        · exact Or.inl rfl
+        · exact Or.inr (Or.inl rfl)
+        · exact Or.inr (Or.inr (Or.inr rfl))
+        · exact Or.inr (Or.inr (Or.inl rfl))] at h
+    exact h
+  have htau_m : tau3 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1))) =
+      taum ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2) - |t'|)
+        (dist (v p0) (v p1)) (dist (v p0) (v p2)) := by
+    rw [tau3_taum_nonplanar_p21 _ _ _ hncM]
+    rw [g482w3_taum4 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1))) (v p0) (v p2) hdisj.symm hpair,
+      hnr, hd1, hd2]
+  have htau_v : tau3 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) =
+      taum ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2))
+        (dist (v p0) (v p1)) (dist (v p0) (v p2)) := by
+    rw [tau3_taum_nonplanar_p21 _ _ _ hncop]
+    rw [g482w3_taum4 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) (v p0) (v p2) hdisj.symm hpair]
+  -- the two `taum` reductions of the three-point sums
+  have hred_v : rhoFun ‖v p1‖ * azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1)))
+      + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1)
+      + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1))
+      = taum ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2))
+          (dist (v p0) (v p1)) (dist (v p0) (v p2)) + (Real.pi + sol0) := by
+    have h3a := tau3_azim_p21 (v p1) (v (p1 + 1)) (v (p1 + (k - 1))) hncop (le_of_lt hltA)
+    rw [htau_v] at h3a
+    rw [h3a]
+    simp only [rho_rho_fun]
+    ring
+  have hred_m : rhoFun ‖v p1‖ * azim 0 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1)))
+      + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (f (v p1) t')
+      + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (f (v p1) t') (v (p1 + 1))
+      = taum ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2) - |t'|)
+          (dist (v p0) (v p1)) (dist (v p0) (v p2)) + (Real.pi + sol0) := by
+    have hazle : azim 0 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1))) ≤ Real.pi :=
+      le_of_lt (haz1' t' ht1').2
+    have h3a := tau3_azim_p21 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1))) hncM hazle
+    rw [htau_m] at h3a
+    rw [h3a]
+    simp only [rho_rho_fun, hnr]
+    ring
+  -- the strict `taum` drop transported to the reduced sums
+  have hlt : rhoFun ‖v p1‖ * azim 0 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1)))
+      + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (f (v p1) t')
+      + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (f (v p1) t') (v (p1 + 1))
+      < rhoFun ‖v p1‖ * azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1)))
+      + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + (k - 1))) (v p1)
+      + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + 1)) := by
+    have hτ : taum ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2) - |t'|)
+          (dist (v p0) (v p1)) (dist (v p0) (v p2))
+        < taum ‖v p0‖ ‖v p2‖ ‖v p1‖ (dist (v p1) (v p2))
+          (dist (v p0) (v p1)) (dist (v p0) (v p2)) := by
+      refine hmono (dist (v p1) (v p2) - |t'|) (dist (v p1) (v p2))
+        ⟨?_, ?_⟩ ⟨haM, hbM⟩ ?_
+      · have hlt5 := hE5 t' ht'e
+        have hmin := lt_of_lt_of_le hlt5
+          (min_le_left (dist (v p1) (v p2) - aM) (bM - dist (v p1) (v p2)))
+        linarith only [hmin]
+      · linarith only [hbM, abs_nonneg t']
+      · linarith only [htabs]
+    linarith only [hred_v, hred_m, hτ]
+  -- the three-point sums
+  set T : Finset ℕ := ({p1 % k, (p1 + 1) % k, (p1 + (k - 1)) % k} : Finset ℕ) with hTdef
+  have hTsub : T ⊆ Finset.range k := by
+    intro i hi
+    rw [hTdef] at hi
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hi
+    rcases hi with rfl | rfl | rfl <;>
+      exact Finset.mem_range.mpr (Nat.mod_lt _ hk0pos)
+  have hthree_v : ∑ i ∈ T,
+        rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1)))
+      = rhoFun ‖v p1‖ * azim 0 (v p1) (v (p1 + 1)) (v (p1 + (k - 1)))
+        + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + 2)) (v p1)
+        + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (v p1) (v (p1 + (k - 2))) := by
+    rw [hTdef]
+    exact g482w3_sum_T_G v hk3 hperv
+  have hthree_f : ∑ i ∈ T,
+        rhoFun ‖f (v i) t'‖ * azim 0 (f (v i) t') (f (v (i + 1)) t')
+          (f (v (i + (k - 1))) t')
+      = rhoFun ‖f (v p1) t'‖ * azim 0 (f (v p1) t') (v (p1 + 1)) (v (p1 + (k - 1)))
+        + rhoFun ‖v (p1 + 1)‖ * azim 0 (v (p1 + 1)) (v (p1 + 2)) (f (v p1) t')
+        + rhoFun ‖v (p1 + (k - 1))‖ * azim 0 (v (p1 + (k - 1))) (f (v p1) t') (v (p1 + (k - 2))) := by
+    rw [hTdef]
+    exact g482w3_sum_T_H f v t' hk3 hperv (hA9 t').1 (hA9 t').2.2.2
+      (hA9 t').2.1 (hA9 t').2.2.1
+  have hS_v : setSum {i | i < k}
+        (fun i => rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1))))
+      = ∑ i ∈ (Finset.range k \ T),
+          rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1)))
+        + ∑ i ∈ T, rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) := by
+    rw [g482w3_setSum_range]
+    exact (Finset.sum_sdiff hTsub).symm
+  have hS_f : setSum {i | i < k}
+        (fun i => rhoFun ‖f (v i) t'‖ * azim 0 (f (v i) t') (f (v (i + 1)) t')
+          (f (v (i + (k - 1))) t'))
+      = ∑ i ∈ (Finset.range k \ T),
+          rhoFun ‖f (v i) t'‖ * azim 0 (f (v i) t') (f (v (i + 1)) t')
+            (f (v (i + (k - 1))) t')
+        + ∑ i ∈ T, rhoFun ‖f (v i) t'‖ * azim 0 (f (v i) t') (f (v (i + 1)) t')
+            (f (v (i + (k - 1))) t') := by
+    rw [g482w3_setSum_range]
+    exact (Finset.sum_sdiff hTsub).symm
+  -- the complement sum is frozen
+  have hSc : ∑ i ∈ (Finset.range k \ T),
+        rhoFun ‖f (v i) t'‖ * azim 0 (f (v i) t') (f (v (i + 1)) t')
+          (f (v (i + (k - 1))) t')
+      = ∑ i ∈ (Finset.range k \ T),
+        rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) := by
+    refine Finset.sum_congr rfl (fun i hi => ?_)
+    simp only [Finset.mem_sdiff, Finset.mem_range] at hi
+    rw [hTdef] at hi
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hi
+    obtain ⟨hiT, h1i, h2i, h3i⟩ := hi
+    have hmod1 : p1 % k ≠ i % k := by
+      intro hh
+      exact h1i (by rw [← Nat.mod_eq_of_lt hiT]; exact hh.symm)
+    have hmod2 : p1 % k ≠ (i + 1) % k := by
+      intro hh
+      have hm : i = (p1 + (k - 1)) % k := by
+        have hcalc : (p1 + (k - 1)) % k = ((i + 1) + (k - 1)) % k := by
+          rw [Nat.add_mod p1 (k - 1) k, hh, ← Nat.add_mod (i + 1) (k - 1) k]
+        rw [hcalc, show i + 1 + (k - 1) = i + k by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt hiT]
+      exact h3i hm
+    have hmod3 : p1 % k ≠ (i + (k - 1)) % k := by
+      intro hh
+      have hm : i = (p1 + 1) % k := by
+        have hcalc : (p1 + 1) % k = ((i + (k - 1)) + 1) % k := by
+          rw [Nat.add_mod p1 1 k, hh, ← Nat.add_mod (i + (k - 1)) 1 k]
+        rw [hcalc, show i + (k - 1) + 1 = i + k by omega, Nat.add_mod_right,
+          Nat.mod_eq_of_lt hiT]
+      exact h2i hm
+    have hvi : v i ≠ v p1 := fun hv => hmod1 (hmod_eq hv).symm
+    rw [hA3 i t' hmod1 hmod2 hmod3, hfix (v i) t' hvi]
+  -- the strict drop on the three-point block
+  have hSt : ∑ i ∈ T,
+        rhoFun ‖f (v i) t'‖ * azim 0 (f (v i) t') (f (v (i + 1)) t')
+          (f (v (i + (k - 1))) t')
+      < ∑ i ∈ T, rhoFun ‖v i‖ * azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) := by
+    have hnr' : rhoFun ‖f (v p1) t'‖ = rhoFun ‖v p1‖ := by rw [hnr]
+    rw [hthree_f, hnr', hA8b, hA8a, hthree_v, hA2, hA1]
+    linarith only [hlt]
+  -- close: minimality contradicts the strict drop
+  have hsum_t := hsum t' ht'eBB
+  rw [hS_v, hS_f, hSc] at hsum_t
+  linarith only [hsum_t, hSt]
 
 /-- HOL `CUXVZOZ` (CUXVZOZ.hl:4289): the check-completeness lemma — from
 `general_482_deformation` by `p0 := p1 + (k-1)`, `p2 := p1 + 1` (exactly the
