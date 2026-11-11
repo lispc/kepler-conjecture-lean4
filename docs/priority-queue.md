@@ -356,6 +356,17 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:09，续981）**：**一笔落库：tame-corr nb62 `b1b5cc08`（`Reduction5J5UvnsChainCl` +344，文件 1052 行）——U1c 收尾 I：MemIn 工具九件 + `memMid` 全绿**。
+① **`b1b5cc08`（tame-corr nb62）**：`MemIn` 谓词 + `memInSingle`/`memInBase`/`memInNsAppend`/`memInSomeAppend`（四簇位置账）/`memInAppend`/`memInPrefix`/`memInDestSingle`（`destTriple0` 单 triple 三支，**junction 全免**——mem 不看连接）/`getLastDDestSingle` + `memMid`（`∀ i, i+1≤k → MemIn S (destTriple0 f [] (take (i+1))) ∧ getLastD = some z_i`；succ 用 `memInAppend`+`memInPrefix`+`memInDestSingle`，比 `chainClMid` 三支桥省一半）。17/17 探针 ⊆ 标准三、零 sorryAx。
+② **实测 vs 估（超止损线，如实）**：+344 vs 估 150–220（超 250 止损线）；`memInSomeAppend` 四簇 ~70 + `memMid` ~165 是大头；**工具件全部可复用**——U3/U2 的 mem 面零重证，净账不亏。
+③ **续派**：tame-corr → **全 vs 三段装配 `uvnsWalkCons`（200–220）**：Cl 半 ≈130（新 `chainClAppend` 胶水 ~35 + Cl(init)/Cl(final) 各 ~25 + `chainClMid@k-1` + 两 junction（arc=[] 支 `aq10_betwnEqNil`））+ mem 半 ≈50（`memInAppend` 两级 + mem(init)/mem(final)）+ unpack/组装 ~40；**先交 Cl 半**（UVNS 主命题的核心），mem 半超预算可 PARTIAL。
+④ **落库闸**：apply-check PASS @8127a487、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
+- **2026-11-11（19:09，续980）**：**一笔落库：J4 `8127a487`（`Reduction5J5IndexfYltSizelPre` 新文件 +291，1 件）——J5-5 `indexf_y_lt_sizel_pre` 公开件绿；J5 清单已知欠账清零**。
+① **`8127a487`（J4）**：`indexfYltSizelPre`（HOL more_lemma2.hl:890–940）——六前提逐字（`good_list`/`good_list_nodes`/`is_restricted`/`marked_list`/`transform_count = k`/`0<k`）⇒ `indexf (ztrans (k-1)) x (findFaceDarts L x) < (core L r).length`。证明体**平迁** aq13 ml14 私件 `indexfZkXltCore`（207 行逐字，弧计数路线），本文件重建 `aqSlotOf` + `pplhulj3Gen'` 两枚 private 供料；与私件唯一差异 = 公开件按 HOL 取 `hres`、`haq` 体内由 `TameSpine.aqiunpp` 现拼。1/1 探针 ⊆ 标准三、零 sorryAx；实测 291 vs 估 160–260（超 31，证明体同私件规模）；1 轮编译。
+② **状态**：J5-5 双怪件（`indexf_y_lt_sizel` + `_pre`）全部公开在库；J5 清单已知欠账清零（hmuc 裁决除外，属 D3b 槽修正）。J4 车道至此空闲待会师。
+③ **落库闸**：apply-check PASS @4e00ef23、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:04，续979）**：**一笔落库：J4 D1 `f584f836`（`Reduction5J5K4` 新文件 +71，3 件全绿）——D1 打包完成，J5-9 最终条件形封口**。
 ① **`f584f836`（J4 D1）**：`k3Indexf8 : k3Indexf8Slot`（`indexf8FinalLemmas` 于 `i := i+1` 一行实例，`PRE (i+1) ↦ i` 定义级，槽内 `hgn/hres/hm/hnf/hk` 逐字对齐）+ `reductionK4OfSlots (hSx3) (hUvns) : (∀K4Asm→K4Concl) → assumptionSetK10Full`（**`hK4` 参数按 ml15 判词零消费直接丢弃**；K3 供给 = `k3Indexf8` + `hSx3` + `hUvns`；`haq` 按 `TameSpine.aqiunpp` 现拼）+ `jcajyduOfK4Slots : hSx3 → hUvns → J5-9 结论`（**槽类型与 `jcajyduOfK4` 完全咬合，无差异**）。3/3 探针 ⊆ 标准三、零 sorryAx（编排者补 `jcajyduOfK4Slots` 探针后重编）；实测 70 vs 估 50–90，1 轮编译。
 ② **会师形态**：`jcajyduOfK4Slots` 就是 J5-9 的最终条件形——**只剩两个槽**：`hSx3`（aq13 SX-c 链在飞）+ `hUvns`（tame-corr U 段在飞）。两槽落地后 = 一行实例化 + Assembly 删桩。
