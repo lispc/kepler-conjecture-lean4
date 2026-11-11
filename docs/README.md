@@ -9,8 +9,11 @@
 ### 当前进度 / 下一步
 
 - **[`priority-queue.md`](priority-queue.md)** — 唯一 operational 账本：
-  里程碑对表（§0）、在飞车道（§1）、排队与工单（§2–§7）、最近日志（§8）。
-  超过 30 天的日志在 [`history/changelog-archive.md`](history/changelog-archive.md)。
+  里程碑对表（§0）、在飞车道（§1）、排队与工单（§2–§6）、最近日志（§8）。
+  §8 只保留最近窗口（续990 起）；续306–续989 在
+  [`history/changelog-archive-2.md`](history/changelog-archive-2.md)，续1–续344 在
+  [`history/changelog-archive.md`](history/changelog-archive.md)。旧队列/战术/J 战役表在
+  [`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
 - [`DECISIONS.md`](../DECISIONS.md) — 用户裁决与长期政策（根级唯一 current 文档）。
 - [`PLAN.md`](../PLAN.md) — 项目目标、锁定决策、阶段定义（**2026-10-10 计划快照，
@@ -67,8 +70,9 @@
 
 ## 维护规则（三条）
 
-1. **一笔落库 = 一条日志**：只在 `priority-queue.md` §8 追加；月份翻转时把
-   超过 30 天的条目移入 `history/changelog-archive.md`，原文不改。
+1. **一笔落库 = 一条日志**：只在 `priority-queue.md` §8 追加（新→旧）；§8 超过窗口
+   （当前约 20 条）时移入 `history/changelog-archive-2.md`（按续号升序），原文不改；
+   续1–续344 的旧档在 `history/changelog-archive.md`。
 2. **数字只引用不抄**：同一指标不允许多个文档各写一份；引用时带
    `（实测 <commit>，<日期>）` 或标 `stale`。
 3. **历史只搬不删**：`archive/` 与 `history/` 只增不改；需要纠正时加 `ERRATA` 行，
