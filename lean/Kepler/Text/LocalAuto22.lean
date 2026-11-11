@@ -86,6 +86,12 @@ import Kepler.Text.LocalAuto23
 import Kepler.Text.SphereKit
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
+-- LA22MONO (2026-11-12, lane `la22mono-w1`): the x4/x5/x6 `dihXf`
+-- partials consumed by the new taum-monotonicity kit below are the proved
+-- `Gamma4Deriv2` values (HOL `OCBICBY.derived_form_dih_x_wrt_x4/5/6`).
+-- The local `derived_form_dih_x_wrt_x*_p22` twins remain unproved for
+-- their own (untouched) consumers.
+import Kepler.Text.Gamma4Deriv2
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -2257,7 +2263,450 @@ theorem dih_y_mono_p22 (y1 y2 y3 y4 y5 y6 y4' : ℝ)
     dihY y1 y2 y3 y4 y5 y6 ≤ dihY y1 y2 y3 y4' y5 y6 := by
   sorry
 
+/-! ## LA22MONO kit: taum monotonicity in `y4`
+
+Private helper block added 2026-11-12 (lane `la22mono-w1`) to prove
+`LEMMA_1834976363_p22` and `LEMMA_4828966562_p22` without consuming the
+unproved `SECOND_DERIVATIVE_TEST_TAUM_p22` / `FIRST_DERIVATIVE_TEST_TAUM_p22`
+/ `NUM1_GENERIC_p22` / `xrr_simple_*` tape.  Contents: `taum = Σ rho·dihY −
+(π+sol0)`, the `xrr` scaling identity for `dihY`, the `dihXf`-sum derivative
+`num1/(2 x4 (16−x4) √Δx)` (from `Gamma4Deriv2`), the registry boxes, and the
+MVT/monotonicity glue.  HOL sources: `OCBICBY.hl` `taum_compose_xrr`,
+`derived_form_sum_dih444`, `xrr_simple_lower/upper_bound`, `xrr_le_16`,
+`dih_y_mono`-adjacent kit. -/
+section La22TaumMonoKit
+open Filter
+open scoped Topology
+
+private theorem la22_atn2_smul {c a b : ℝ} (hc : 0 < c) :
+    atn2 (c * a) (c * b) = atn2 a b := by
+  have hcb : |c * b| = c * |b| := by rw [abs_mul, abs_of_pos hc]
+  have hcond : |c * b| < c * a ↔ |b| < a := by
+    rw [hcb]
+    constructor
+    · intro hh; exact lt_of_mul_lt_mul_left hh hc.le
+    · intro hh; exact mul_lt_mul_of_pos_left hh hc
+  have hcbne : b ≠ 0 → (c * b : ℝ) ≠ 0 := fun hh => mul_ne_zero (ne_of_gt hc) hh
+  unfold atn2
+  rcases lt_or_ge (abs b) a with h1 | h1
+  · rw [if_pos (hcond.mpr h1), if_pos h1,
+      show (c * b) / (c * a) = b / a from by field_simp]
+  · rw [if_neg (not_lt.mpr (by rw [hcb]; exact mul_le_mul_of_nonneg_left h1 hc.le)),
+      if_neg (not_lt.mpr h1)]
+    rcases lt_trichotomy b 0 with h2 | h2 | h2
+    · have hcbneg : c * b < 0 := by
+        have ht := mul_lt_mul_of_pos_left h2 hc
+        rwa [mul_zero] at ht
+      rw [if_neg (by linarith : ¬ (0:ℝ) < c * b), if_neg (by linarith : ¬ (0:ℝ) < b),
+        if_pos hcbneg, if_pos (by linarith : b < 0),
+        show (c * a) / (c * b) = a / b from by field_simp [hcbne (ne_of_lt h2)]]
+    · subst h2
+      norm_num
+    · rw [if_pos (mul_pos hc h2), if_pos h2,
+        show (c * a) / (c * b) = a / b from by field_simp [hcbne (ne_of_gt h2)]]
+
+private theorem la22_dihY222222 : dihY 2 2 2 2 2 2 = Real.arccos (1 / 3) := by
+  have hdx : (deltaX 4 4 4 4 4 4 : ℝ) = 128 := by norm_num [deltaX]
+  have hdx4 : (deltaX4 4 4 4 4 4 4 : ℝ) = 16 := by norm_num [deltaX4]
+  have hd : dihY 2 2 2 2 2 2 = Real.pi / 2 + atn2 (Real.sqrt 2048) (-16) := by
+    simp only [dihY, dihXf]
+    norm_num [hdx, hdx4]
+  have hsqrt2 : Real.sqrt (2048 : ℝ) = 32 * Real.sqrt 2 := by
+    rw [show (2048 : ℝ) = 1024 * 2 by norm_num, Real.sqrt_mul (by norm_num)]
+    norm_num
+  have hsq2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  have hs : Real.sin (Real.arctan (1 / (2 * Real.sqrt 2))) = 1 / 3 := by
+    rw [Real.sin_arctan]
+    have hden : (1 : ℝ) + (1 / (2 * Real.sqrt 2)) ^ 2 = 9 / 8 := by
+      have e1 : (1 / (2 * Real.sqrt 2)) ^ 2 = 1 / (2 * Real.sqrt 2) ^ 2 := by
+        rw [one_div_pow]
+      have e2 : (2 * Real.sqrt 2) ^ 2 = 8 := by rw [mul_pow, hsq2]; norm_num
+      rw [e1, e2]
+      norm_num
+    have hr8 : Real.sqrt (9 / 8) = 3 / (2 * Real.sqrt 2) := by
+      have hval : (9 / 8 : ℝ) = (3 / (2 * Real.sqrt 2)) ^ 2 := by
+        rw [div_pow, mul_pow, hsq2]
+        norm_num
+      rw [hval, Real.sqrt_sq (by positivity)]
+    rw [hden, hr8]
+    field_simp
+  have hθ : Real.arcsin (1 / 3) = Real.arctan (1 / (2 * Real.sqrt 2)) := by
+    rw [← hs]
+    obtain ⟨hm1, hm2⟩ := Real.arctan_mem_Ioo (1 / (2 * Real.sqrt 2))
+    exact Real.arcsin_sin' ⟨le_of_lt hm1, le_of_lt hm2⟩
+  have hv : atn2 (32 * Real.sqrt 2) (-16) = -(Real.arcsin (1 / 3)) := by
+    have h1s : (1 : ℝ) < Real.sqrt 2 :=
+      (Real.lt_sqrt (x := (1 : ℝ)) (by norm_num)).mpr (by norm_num)
+    have hbr : |(-16 : ℝ)| < 32 * Real.sqrt 2 := by
+      rw [abs_of_neg (by norm_num : (-16 : ℝ) < 0), neg_neg]
+      calc (16 : ℝ) = 16 * 1 := by ring
+        _ < 16 * (2 * Real.sqrt 2) :=
+          mul_lt_mul_of_pos_left (by linarith) (by positivity)
+        _ = 32 * Real.sqrt 2 := by ring
+    have hconv : (-16 : ℝ) / (32 * Real.sqrt 2) = -(1 / (2 * Real.sqrt 2)) := by
+      field_simp
+      ring
+    simp only [atn2, hbr, if_true, hconv, Real.arctan_neg, ← hθ]
+  rw [hd, hsqrt2, hv, Real.arccos_eq_pi_div_two_sub_arcsin (1 / 3)]
+  ring
+
+private theorem la22_const1_eq : const1 = sol0 / Real.pi := by
+  have hs0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  have hsol : solY 2 2 2 2 2 2 = 3 * Real.arccos (1 / 3) - Real.pi := by
+    show dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 - Real.pi = _
+    rw [la22_dihY222222]
+    ring
+  show solY 2 2 2 2 2 2 / Real.pi = sol0 / Real.pi
+  rw [hs0, hsol]
+
+private theorem la22_taum_eq (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y1 y2 y3 y4 y5 y6 =
+      rho y1 * dihY y1 y2 y3 y4 y5 y6 +
+        rho y2 * dihY y2 y3 y1 y5 y6 y4 +
+        rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) := by
+  have hc : const1 = sol0 / Real.pi := la22_const1_eq
+  have ht : (2 : ℝ) * h0 - 2 ≠ 0 := by norm_num [h0]
+  have hly : ∀ y : ℝ, ly y = 1 - (y - 2) / (2 * h0 - 2) := by
+    intro y
+    have h252 : (2.52 - 2 : ℝ) = 2 * h0 - 2 := by norm_num [h0]
+    show 1 + (y - 2) * (0 - 1) / (2.52 - 2) = 1 - (y - 2) / (2 * h0 - 2)
+    rw [h252]
+    ring
+  show solY y1 y2 y3 y4 y5 y6 * (1 + const1) -
+    const1 * (lnazim y1 y2 y3 y4 y5 y6 +
+      lnazim y2 y3 y1 y5 y6 y4 + lnazim y3 y1 y2 y6 y4 y5) = _
+  simp only [solY, lnazim, hc, hly, rho]
+  field_simp [ht, Real.pi_ne_zero]
+  ring
+
+private theorem la22_deltaY_rot231564 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y2 y3 y1 y5 y6 y4 = deltaY y1 y2 y3 y4 y5 y6 := by
+  unfold deltaY deltaX
+  ring
+
+private theorem la22_deltaY_rot312645 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y3 y1 y2 y6 y4 y5 = deltaY y1 y2 y3 y4 y5 y6 := by
+  unfold deltaY deltaX
+  ring
+
+private theorem la22_dihY_xrr (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    dihY y1 y2 y3 y4 y5 y6 =
+      dihXf 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) := by
+  have hy1' : y1 ≠ 0 := ne_of_gt hy1
+  have hy2' : y2 ≠ 0 := ne_of_gt hy2
+  have hy3' : y3 ≠ 0 := ne_of_gt hy3
+  have hD := delta_x_xrr_p22 y1 y2 y3 y4 y5 y6 hy1' hy2' hy3'
+  have hD4raw := delta_x4_dim_reduction_p22 y1 y2 y3 y4 y5 y6 hy1' hy2' hy3'
+  have hD4 : deltaX4 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)
+      = 16 * yOfX deltaX4 y1 y2 y3 y4 y5 y6 / (y1 * y1 * y2 * y3) := hD4raw
+  unfold dihXf
+  change Real.pi / 2 + atn2
+      (Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6))
+      (-(yOfX deltaX4 y1 y2 y3 y4 y5 y6)) =
+    Real.pi / 2 + atn2
+      (Real.sqrt (4 * 4 * deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)))
+      (-(deltaX4 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)))
+  rw [hD, hD4]
+  congr 1
+  have hk : (0 : ℝ) < 16 / (y1 * y1 * y2 * y3) := by positivity
+  have hA : Real.sqrt (4 * 4 * (64 * deltaY y1 y2 y3 y4 y5 y6 / (y1 * y2 * y3) ^ 2))
+      = (16 / (y1 * y1 * y2 * y3)) *
+        Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6) := by
+    have hsq : 4 * 4 * (64 * deltaY y1 y2 y3 y4 y5 y6 / (y1 * y2 * y3) ^ 2)
+        = (16 / (y1 * y1 * y2 * y3)) ^ 2 *
+          (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6) := by
+      field_simp
+      ring
+    rw [hsq,
+      Real.sqrt_mul (x := (16 / (y1 * y1 * y2 * y3)) ^ 2) (by positivity)
+        (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6),
+      Real.sqrt_sq hk.le]
+  have hB : -(16 * yOfX deltaX4 y1 y2 y3 y4 y5 y6 / (y1 * y1 * y2 * y3))
+      = (16 / (y1 * y1 * y2 * y3)) * (-(yOfX deltaX4 y1 y2 y3 y4 y5 y6)) := by
+    ring
+  rw [hA, hB, la22_atn2_smul hk]
+
+private theorem la22_taum_compose (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
+    taum y1 y2 y3 y4 y5 y6 =
+      rho y1 * dihXf 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) +
+      rho y2 * dihXf 4 4 4 (xrr y1 y3 y5) (xrr y1 y2 y6) (xrr y2 y3 y4) +
+      rho y3 * dihXf 4 4 4 (xrr y1 y2 y6) (xrr y2 y3 y4) (xrr y1 y3 y5) -
+        (Real.pi + sol0) := by
+  have h1 := la22_dihY_xrr y1 y2 y3 y4 y5 y6 hy1 hy2 hy3 hd
+  have hd2 : 0 < deltaY y2 y3 y1 y5 y6 y4 := by
+    rw [la22_deltaY_rot231564]; exact hd
+  have h2 := la22_dihY_xrr y2 y3 y1 y5 y6 y4 hy2 hy3 hy1 hd2
+  have hd3 : 0 < deltaY y3 y1 y2 y6 y4 y5 := by
+    rw [la22_deltaY_rot312645]; exact hd
+  have h3 := la22_dihY_xrr y3 y1 y2 y6 y4 y5 hy3 hy1 hy2 hd3
+  rw [la22_taum_eq, h1, h2, h3, xrr_sym_p22 y3 y1 y5, xrr_sym_p22 y2 y1 y6,
+    xrr_sym_p22 y3 y2 y4]
+
+private theorem la22_G_hasDerivAt (e1 e2 e3 x4 x5 x6 : ℝ)
+    (h4 : 0 < x4) (h4' : x4 < 16) (hΔ : 0 < deltaX 4 4 4 x4 x5 x6) :
+    HasDerivAt (fun q => e1 * dihXf 4 4 4 q x5 x6 + e2 * dihXf 4 4 4 x5 x6 q
+        + e3 * dihXf 4 4 4 x6 q x5 - (1 + const1) * Real.pi)
+      (num1 e1 e2 e3 x4 x5 x6 /
+        (2 * x4 * (16 - x4) * Real.sqrt (deltaX 4 4 4 x4 x5 x6))) x4 := by
+  have hcyc2 : deltaX 4 4 4 x5 x6 x4 = deltaX 4 4 4 x4 x5 x6 := by unfold deltaX; ring
+  have hcyc3 : deltaX 4 4 4 x6 x4 x5 = deltaX 4 4 4 x4 x5 x6 := by unfold deltaX; ring
+  have hΔ2 : 0 < deltaX 4 4 4 x5 x6 x4 := by rw [hcyc2]; exact hΔ
+  have hΔ3 : 0 < deltaX 4 4 4 x6 x4 x5 := by rw [hcyc3]; exact hΔ
+  have h1 := dihXf_hasDerivAt_x4 4 4 4 x4 x5 x6 (by norm_num) hΔ
+  have h2 := dihXf_hasDerivAt_x6 4 4 4 x5 x6 x4 (by norm_num) hΔ2
+  have h3 := dihXf_hasDerivAt_x5 4 4 4 x6 x4 x5 (by norm_num) hΔ3
+  have h := (((h1.const_mul e1).add (h2.const_mul e2)).add (h3.const_mul e3)).sub
+    (hasDerivAt_const (x := x4) ((1 + const1) * Real.pi))
+  refine h.congr_deriv ?_
+  rw [hcyc2, hcyc3]
+  have hsq : ∀ D : ℝ, Real.sqrt (4 * 4 * D) = 4 * Real.sqrt D := by
+    intro D
+    rw [show (4:ℝ) * 4 * D = 4^2 * D by ring,
+        Real.sqrt_mul (x := (4:ℝ)^2) (by norm_num) D, Real.sqrt_sq (by norm_num)]
+  rw [hsq]
+  have hu4 : upsX 4 4 x4 = x4 * (16 - x4) := by unfold upsX; ring
+  rw [hu4]
+  have hU4 : (0:ℝ) < x4 * (16 - x4) := by nlinarith
+  have h16 : (16:ℝ) - x4 ≠ 0 := by nlinarith
+  have hpoly : 4 * (e1 * (x4 * (16 - x4))
+      - e2 * deltaX5 4 4 4 x5 x6 x4
+      - e3 * g4dDX6 4 4 4 x6 x4 x5) = num1 e1 e2 e3 x4 x5 x6 := by
+    unfold num1 deltaX5 g4dDX6
+    ring
+  field_simp [hU4.ne', h16, (Real.sqrt_pos.mpr hΔ).ne']
+  linear_combination hpoly
+
+
+
+private theorem la22_xrr_strictMonoOn (y2 y3 : ℝ) (hy2 : 0 < y2) (hy3 : 0 < y3)
+    {q1 q2 : ℝ} (h1 : 0 < q1) (hlt : q1 < q2) : xrr y2 y3 q1 < xrr y2 y3 q2 := by
+  have h2 : 0 < q2 := by linarith
+  have h : xrr y2 y3 q2 - xrr y2 y3 q1 = 4 * (q2 - q1) * (q2 + q1) / (y2 * y3) := by
+    unfold xrr
+    field_simp
+    ring
+  have hpos : 0 < 4 * (q2 - q1) * (q2 + q1) / (y2 * y3) := by positivity
+  linarith
+
+private theorem la22_xrr_continuousAt (y2 y3 q : ℝ) :
+    ContinuousAt (fun q => xrr y2 y3 q) q := by
+  have hq : Continuous fun q : ℝ => y2 * y2 + y3 * y3 - q * q := by
+    exact continuous_const.sub (continuous_id.mul continuous_id)
+  have h : Continuous fun q : ℝ => 8 * (1 - (y2 * y2 + y3 * y3 - q * q) / (2 * y2 * y3)) :=
+    continuous_const.mul (continuous_const.sub (hq.div_const _))
+  unfold xrr
+  exact h.continuousAt
+
+private theorem la22_xrr_decreasing (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1')
+    (h2 : 2 ≤ y2) (h6 : 2 ≤ y6) (h2' : y2 ≤ 2 * h0) (hlt : y1 ≤ y1') :
+    xrr y1' y2 y6 ≤ xrr y1 y2 y6 := by
+  have hp1 : (0:ℝ) < y1 := by linarith
+  have hp1' : (0:ℝ) < y1' := by linarith
+  have hp2 : (0:ℝ) < y2 := by linarith
+  have hdiff : xrr y1 y2 y6 - xrr y1' y2 y6
+      = 4 * (y1' - y1) * (y1 * y1' + y6 * y6 - y2 * y2) / (y1 * y1' * y2) := by
+    unfold xrr
+    field_simp
+    ring
+  have h0v : (2 * h0) * (2 * h0) = 6.3504 := by norm_num [h0_eq_p22]
+  have hnn : 0 ≤ y1 * y1' + y6 * y6 - y2 * y2 := by
+    have h22 : y2 * y2 ≤ (2 * h0) * (2 * h0) := by nlinarith
+    nlinarith
+  have hle : 0 ≤ 4 * (y1' - y1) * (y1 * y1' + y6 * y6 - y2 * y2) / (y1 * y1' * y2) := by
+    positivity
+  linarith
+
+private theorem la22_xrr_simple_lower (y1 y2 y6 y6inf : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ 2 * h0)
+    (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy6 : 2 ≤ y6inf) (hy6' : y6inf ≤ y6) :
+    (y6inf / h0) ^ 2 ≤ xrr y1 y2 y6 := by
+  have h1 : xrr (2 * h0) y2 y6 ≤ xrr y1 y2 y6 :=
+    la22_xrr_decreasing y1 (2 * h0) y2 y6 hy1 (by linarith) hy2 (by linarith) hy2' hy1'
+  have h2 : xrr (2 * h0) (2 * h0) y6 ≤ xrr (2 * h0) y2 y6 := by
+    have h := la22_xrr_decreasing y2 (2 * h0) (2 * h0) y6 hy2 (by linarith)
+      (by linarith) (by linarith) le_rfl hy2'
+    rwa [xrr_sym_p22 y2 (2 * h0) y6] at h
+  have h3 : xrr (2 * h0) (2 * h0) y6inf ≤ xrr (2 * h0) (2 * h0) y6 := by
+    rcases lt_or_eq_of_le hy6' with hlt | heq
+    · exact le_of_lt (xrr_increasing_p22 _ _ _ _ (by linarith) (by linarith) (by linarith) hlt)
+    · rw [heq]
+  have h4 : xrr (2 * h0) (2 * h0) y6inf = (y6inf / h0) ^ 2 := by
+    have h0ne : (h0 : ℝ) ≠ 0 := by norm_num [h0_eq_p22]
+    unfold xrr
+    field_simp
+    ring
+  linarith
+
+private theorem la22_xrr_simple_upper (y1 y2 y6 y6sup : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ 2 * h0)
+    (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy6 : 2 ≤ y6) (hy6' : y6 ≤ y6sup)
+    (_hy6sup : y6sup < 4) :
+    xrr y1 y2 y6 ≤ y6sup ^ 2 := by
+  have h1 : xrr y1 y2 y6 ≤ xrr 2 y2 y6 :=
+    la22_xrr_decreasing 2 y1 y2 y6 (by norm_num) hy1 hy2 hy6 hy2' hy1
+  have h2 : xrr 2 y2 y6 ≤ xrr 2 2 y6 := by
+    have h := la22_xrr_decreasing 2 y2 2 y6 (by norm_num) hy2 (by norm_num) hy6
+      (by linarith) hy2
+    rw [xrr_sym_p22 2 y2 y6]
+    exact h
+  have h3 : xrr 2 2 y6 ≤ xrr 2 2 y6sup := by
+    rcases lt_or_eq_of_le hy6' with hlt | heq
+    · exact le_of_lt (xrr_increasing_p22 2 2 y6 y6sup (by norm_num) (by norm_num) (by linarith) hlt)
+    · rw [heq]
+  have h4 : xrr 2 2 y6sup = y6sup ^ 2 := by
+    unfold xrr
+    field_simp
+    ring
+  linarith
+
+private theorem la22_upsX_box (a b c : ℝ) (ha : 2 ≤ a) (ha' : a ≤ 2 * h0)
+    (hb : 2 ≤ b) (hb' : b ≤ 2 * h0) (hc : 2 ≤ c) (hc' : c ≤ 2 * h0) :
+    0 < upsX (a * a) (b * b) (c * c) := by
+  have h2h0 : (2:ℝ) * h0 = 2.52 := by norm_num [h0_eq_p22]
+  refine TRI_UPS_X_STRICT_POS a b c (by linarith) (by linarith) (by linarith)
+    ?_ ?_ ?_
+  · nlinarith
+  · nlinarith
+  · nlinarith
+
+
+
+private theorem la22_deltaY_continuous (y1 y2 y3 y5 y6 : ℝ) :
+    Continuous (fun q => deltaY y1 y2 y3 q y5 y6) := by
+  unfold deltaY deltaX
+  continuity
+
+private theorem la22_taum_hasDerivAt (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3) (hy4 : 0 < y4)
+    (_hy5 : 0 < y5) (_hy6 : 0 < y6)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
+    (hu4 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4)) :
+    HasDerivAt (fun q => taum y1 y2 y3 q y5 y6)
+      ((num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)
+        / (2 * xrr y2 y3 y4 * (16 - xrr y2 y3 y4)
+           * Real.sqrt (deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6))))
+        * (8 * y4 / (y2 * y3))) y4 := by
+  have hx4 := (xrr_bounds_2_p22 y2 y3 y4 hy2 hy3 hy4).mp hu4
+  have hΔ : 0 < deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) := by
+    rw [delta_x_xrr_p22 y1 y2 y3 y4 y5 y6 (ne_of_gt hy1) (ne_of_gt hy2) (ne_of_gt hy3)]
+    positivity
+  have hG := la22_G_hasDerivAt (rho y1) (rho y2) (rho y3)
+    (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) hx4.1 hx4.2 hΔ
+  have hxrr : HasDerivAt (fun q => xrr y2 y3 q) (8 * y4 / (y2 * y3)) y4 :=
+    ((derived_form_xrr_p22 y2 y3 y4) ⟨hy2, hy3⟩).hasDerivAt (by simp)
+  have hcomp := hG.comp y4 hxrr
+  refine hcomp.congr_of_eventuallyEq ?_
+  have hev : ∀ᶠ q in 𝓝 y4, 0 < deltaY y1 y2 y3 q y5 y6 :=
+    (la22_deltaY_continuous y1 y2 y3 y5 y6).continuousAt.eventually_mem
+      (isOpen_Ioi.mem_nhds hd)
+  filter_upwards [hev] with q hq
+  have hc1 : Real.pi + sol0 = (1 + const1) * Real.pi := by
+    rw [la22_const1_eq]
+    field_simp
+  rw [Function.comp_apply, ← hc1]
+  exact la22_taum_compose y1 y2 y3 q y5 y6 hy1 hy2 hy3 hq
+
+private theorem la22_taum_deriv_eq (y1 y2 y3 c y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3) (hc : 0 < c)
+    (hy5 : 0 < y5) (hy6 : 0 < y6)
+    (hd : 0 < deltaY y1 y2 y3 c y5 y6)
+    (hu4 : 0 < upsX (y2 * y2) (y3 * y3) (c * c)) :
+    deriv (fun q => taum y1 y2 y3 q y5 y6) c
+      = (num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6)
+        / (2 * xrr y2 y3 c * (16 - xrr y2 y3 c)
+           * Real.sqrt (deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6))))
+        * (8 * c / (y2 * y3)) :=
+  (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1 hy2 hy3 hc hy5 hy6 hd hu4).deriv
+
+private theorem la22_taum_deriv_pos (y1 y2 y3 c y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3) (hc : 0 < c)
+    (hy5 : 0 < y5) (hy6 : 0 < y6)
+    (hd : 0 < deltaY y1 y2 y3 c y5 y6)
+    (hu4 : 0 < upsX (y2 * y2) (y3 * y3) (c * c))
+    (hnum : 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 c) (xrr y1 y3 y5)
+      (xrr y1 y2 y6)) :
+    0 < deriv (fun q => taum y1 y2 y3 q y5 y6) c := by
+  rw [la22_taum_deriv_eq y1 y2 y3 c y5 y6 hy1 hy2 hy3 hc hy5 hy6 hd hu4]
+  have hx4 := (xrr_bounds_2_p22 y2 y3 c hy2 hy3 hc).mp hu4
+  have hΔ : 0 < deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6) := by
+    rw [delta_x_xrr_p22 y1 y2 y3 c y5 y6 (ne_of_gt hy1) (ne_of_gt hy2) (ne_of_gt hy3)]
+    positivity
+  have h16 : 0 < (16:ℝ) - xrr y2 y3 c := by linarith [hx4.2]
+  have hsqrt : 0 < Real.sqrt (deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6)) :=
+    Real.sqrt_pos.mpr hΔ
+  have hden : 0 < 2 * xrr y2 y3 c * (16 - xrr y2 y3 c)
+      * Real.sqrt (deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6)) := by
+    have hA : 0 < 2 * xrr y2 y3 c := by
+      have := hx4.1; linarith
+    exact mul_pos (mul_pos hA h16) hsqrt
+  exact mul_pos (div_pos hnum hden)
+    (div_pos (by nlinarith [hc]) (mul_pos hy2 hy3))
+
+private theorem la22_taum_deriv_neg (y1 y2 y3 c y5 y6 : ℝ)
+    (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3) (hc : 0 < c)
+    (hy5 : 0 < y5) (hy6 : 0 < y6)
+    (hd : 0 < deltaY y1 y2 y3 c y5 y6)
+    (hu4 : 0 < upsX (y2 * y2) (y3 * y3) (c * c))
+    (hnum : num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 c) (xrr y1 y3 y5)
+      (xrr y1 y2 y6) < 0) :
+    deriv (fun q => taum y1 y2 y3 q y5 y6) c < 0 := by
+  rw [la22_taum_deriv_eq y1 y2 y3 c y5 y6 hy1 hy2 hy3 hc hy5 hy6 hd hu4]
+  have hx4 := (xrr_bounds_2_p22 y2 y3 c hy2 hy3 hc).mp hu4
+  have hΔ : 0 < deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6) := by
+    rw [delta_x_xrr_p22 y1 y2 y3 c y5 y6 (ne_of_gt hy1) (ne_of_gt hy2) (ne_of_gt hy3)]
+    positivity
+  have hsqrt : 0 < Real.sqrt (deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6)) :=
+    Real.sqrt_pos.mpr hΔ
+  have hden : 0 < 2 * xrr y2 y3 c * (16 - xrr y2 y3 c)
+      * Real.sqrt (deltaX 4 4 4 (xrr y2 y3 c) (xrr y1 y3 y5) (xrr y1 y2 y6)) := by
+    have := hx4.1; have := hx4.2
+    positivity
+  have hfac : 0 < 8 * c / (y2 * y3) := by positivity
+  exact mul_neg_of_neg_of_pos (div_neg_of_neg_of_pos hnum hden) hfac
+
+private theorem la22_mvt_lt {F : ℝ → ℝ} {p q : ℝ} (hpq : p < q)
+    (hcont : ContinuousOn F (Set.Icc p q))
+    (hdiff : DifferentiableOn ℝ F (Set.Ioo p q))
+    (hpos : ∀ c ∈ Set.Ioo p q, 0 < deriv F c) :
+    F p < F q := by
+  obtain ⟨c, hc, hcder⟩ := exists_deriv_eq_slope F hpq hcont hdiff
+  have hp := hpos c hc
+  rw [hcder] at hp
+  have hq : 0 < q - p := by linarith
+  have hpos' : 0 < F q - F p := (div_pos_iff_of_pos_right hq).mp hp
+  linarith
+
+private theorem la22_mvt_lt_of_neg {F : ℝ → ℝ} {p q : ℝ} (hpq : p < q)
+    (hcont : ContinuousOn F (Set.Icc p q))
+    (hdiff : DifferentiableOn ℝ F (Set.Ioo p q))
+    (hneg : ∀ c ∈ Set.Ioo p q, deriv F c < 0) :
+    F q < F p := by
+  obtain ⟨c, hc, hcder⟩ := exists_deriv_eq_slope F hpq hcont hdiff
+  have hp := hneg c hc
+  rw [hcder] at hp
+  have hq : 0 < q - p := by linarith
+  have hneg' : F q - F p < 0 := by
+    rcases (div_neg_iff.mp hp) with ⟨_, hneg⟩ | ⟨hlt, _⟩
+    · linarith
+    · exact hlt
+  linarith
+
+private theorem la22_upsX_pos3 (a b c : ℝ) (ha : 2 ≤ a) (ha' : a ≤ 2 * h0)
+    (hb : 2 ≤ b) (hb' : b ≤ 2 * h0) (hc : 2 ≤ c) (hc' : c ≤ 3.01) :
+    0 < upsX (a * a) (b * b) (c * c) := by
+  have h2h0 : (2:ℝ) * h0 = 2.52 := by norm_num [h0_eq_p22]
+  refine TRI_UPS_X_STRICT_POS a b c (by linarith) (by linarith) (by linarith) ?_ ?_ ?_
+  · nlinarith
+  · nlinarith
+  · nlinarith
+
+end La22TaumMonoKit
+
 /-- HOL `LEMMA_1834976363`. -/
+-- PROVED 2026-11-12 (lane `la22mono-w1`): from the `La22TaumMonoKit` block
+-- above (registry `1834976363` + MVT); `#print axioms` = standard three.
 theorem LEMMA_1834976363_p22 (h : main_nonlinear_terminal_v11)
     (y1 y2 y3 y4 y5 y6 a b : ℝ)
     (hy1 : 2 ≤ y1 ∧ y1 ≤ 2 * h0) (hy2 : 2 ≤ y2 ∧ y2 ≤ 2 * h0)
@@ -2271,7 +2720,234 @@ theorem LEMMA_1834976363_p22 (h : main_nonlinear_terminal_v11)
     (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
     ∃ y4', y4' ∈ Set.Ioo a b ∧ taum y1 y2 y3 y4' y5 y6 < taum y1 y2 y3 y4 y5 y6 := by
-  sorry
+  have hy1p : 0 < y1 := by linarith [hy1.1]
+  have hy2p : 0 < y2 := by linarith [hy2.1]
+  have hy3p : 0 < y3 := by linarith [hy3.1]
+  have hy4p : 0 < y4 := (hsub hy4).2.1
+  have hx5lt : xrr y1 y3 y5 < 16 :=
+    ((xrr_bounds_2_p22 y1 y3 y5 hy1p hy3p hy5).mp hu5).2
+  have hx6lt : xrr y1 y2 y6 < 16 :=
+    ((xrr_bounds_2_p22 y1 y2 y6 hy1p hy2p hy6).mp hu6).2
+  have hx5le : xrr y1 y3 y5 ≤ 4 ^ 2 := by norm_num; linarith
+  have hx6le : xrr y1 y2 y6 ≤ 4 ^ 2 := by norm_num; linarith
+  have hnum := (h "1834976363" (by simp [mainNonlinearTerminalV11Ids_t11]))
+    (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)
+    (rho_bounds_p22 y1 hy1.1 hy1.2).1 (rho_bounds_p22 y1 hy1.1 hy1.2).2
+    (rho_bounds_p22 y2 hy2.1 hy2.2).1 (rho_bounds_p22 y2 hy2.1 hy2.2).2
+    (rho_bounds_p22 y3 hy3.1 hy3.2).1 (rho_bounds_p22 y3 hy3.1 hy3.2).2
+    hx4.1 hx4.2 hx5 hx5le hx6 hx6le
+  -- case split on the sign of num1 at y4
+  by_cases hpos : 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4)
+      (xrr y1 y3 y5) (xrr y1 y2 y6)
+  · -- (A) strictly increasing on a neighbourhood
+    let S : Set ℝ := Set.Ioo a b ∩
+      {q | 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 q) (xrr y1 y3 y5)
+        (xrr y1 y2 y6)}
+    have hSopen : IsOpen S := by
+      refine isOpen_Ioo.inter ?_
+      have hcont : Continuous (fun q => num1 (rho y1) (rho y2) (rho y3)
+          (xrr y2 y3 q) (xrr y1 y3 y5) (xrr y1 y2 y6)) := by
+        unfold num1 xrr
+        continuity
+      exact isOpen_lt continuous_const hcont
+    have hy4S : y4 ∈ S := ⟨hy4, hpos⟩
+    obtain ⟨α, β, hy4αβ, hαβS⟩ :=
+      real_open_contains_real_interval_p22 y4 S hy4S hSopen
+    have hα4 : α < y4 := hy4αβ.1
+    have h4β : y4 < β := hy4αβ.2
+    let p : ℝ := (α + y4) / 2
+    have hαp : α < p := by simp only [p]; linarith
+    have hpy4 : p < y4 := by simp only [p]; linarith
+    have hpS : p ∈ S := hαβS ⟨hαp, by linarith⟩
+    -- differentiability and derivative positivity on [p, y4]
+    have hdiff : DifferentiableOn ℝ (fun q => taum y1 y2 y3 q y5 y6) (Set.Ioo p y4) := by
+      intro c hc
+      have hcS : c ∈ S := hαβS ⟨by linarith [hc.1], by linarith [hc.2]⟩
+      have hcab : c ∈ Set.Ioo a b := hcS.1
+      have hc4 := hsub hcab
+      exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+        hc4.1 hc4.2.2).differentiableAt.differentiableWithinAt
+    have hcont : ContinuousOn (fun q => taum y1 y2 y3 q y5 y6) (Set.Icc p y4) := by
+      intro c hc
+      have hcp : p ≤ c := hc.1
+      have hcy : c ≤ y4 := hc.2
+      have hcab : c ∈ Set.Ioo a b := by
+        have : c ∈ S := hαβS ⟨by linarith, by linarith⟩
+        exact this.1
+      have hc4 := hsub hcab
+      exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+        hc4.1 hc4.2.2).continuousAt.continuousWithinAt
+    have hderivpos : ∀ c ∈ Set.Ioo p y4, 0 < deriv (fun q => taum y1 y2 y3 q y5 y6) c := by
+      intro c hc
+      have hcS : c ∈ S := hαβS ⟨by linarith [hc.1], by linarith [hc.2]⟩
+      have hcab : c ∈ Set.Ioo a b := hcS.1
+      have hc4 := hsub hcab
+      exact la22_taum_deriv_pos y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+        hc4.1 hc4.2.2 hcS.2
+    exact ⟨p, hpS.1, la22_mvt_lt (F := fun q => taum y1 y2 y3 q y5 y6) hpy4 hcont hdiff hderivpos⟩
+  · by_cases hneg : num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4)
+        (xrr y1 y3 y5) (xrr y1 y2 y6) < 0
+    · -- (B) strictly decreasing on a neighbourhood
+      let S : Set ℝ := Set.Ioo a b ∩
+        {q | num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 q) (xrr y1 y3 y5)
+          (xrr y1 y2 y6) < 0}
+      have hSopen : IsOpen S := by
+        refine isOpen_Ioo.inter ?_
+        have hcont : Continuous (fun q => num1 (rho y1) (rho y2) (rho y3)
+            (xrr y2 y3 q) (xrr y1 y3 y5) (xrr y1 y2 y6)) := by
+          unfold num1 xrr
+          continuity
+        exact isOpen_lt hcont continuous_const
+      have hy4S : y4 ∈ S := ⟨hy4, hneg⟩
+      obtain ⟨α, β, hy4αβ, hαβS⟩ :=
+        real_open_contains_real_interval_p22 y4 S hy4S hSopen
+      let q : ℝ := (y4 + β) / 2
+      have h4q : y4 < q := by simp only [q]; linarith [hy4αβ.2]
+      have hqβ : q < β := by simp only [q]; linarith [hy4αβ.2]
+      have hqS : q ∈ S := hαβS ⟨by linarith [hy4αβ.1], hqβ⟩
+      have hdiff : DifferentiableOn ℝ (fun q => taum y1 y2 y3 q y5 y6) (Set.Ioo y4 q) := by
+        intro c hc
+        have hcS : c ∈ S := hαβS ⟨by linarith [hc.1, hy4αβ.1], by linarith [hc.2]⟩
+        have hcab : c ∈ Set.Ioo a b := hcS.1
+        have hc4 := hsub hcab
+        exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+          hc4.1 hc4.2.2).differentiableAt.differentiableWithinAt
+      have hcont : ContinuousOn (fun q => taum y1 y2 y3 q y5 y6) (Set.Icc y4 q) := by
+        intro c hc
+        have hcab : c ∈ Set.Ioo a b := by
+          have : c ∈ S := hαβS ⟨by linarith [hc.1, hy4αβ.1], by linarith [hc.2, hqβ]⟩
+          exact this.1
+        have hc4 := hsub hcab
+        exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+          hc4.1 hc4.2.2).continuousAt.continuousWithinAt
+      have hderivneg : ∀ c ∈ Set.Ioo y4 q, deriv (fun q => taum y1 y2 y3 q y5 y6) c < 0 := by
+        intro c hc
+        have hcS : c ∈ S := hαβS ⟨by linarith [hc.1, hy4αβ.1], by linarith [hc.2, hqβ]⟩
+        have hcab : c ∈ Set.Ioo a b := hcS.1
+        have hc4 := hsub hcab
+        exact la22_taum_deriv_neg y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+          hc4.1 hc4.2.2 hcS.2
+      exact ⟨q, hqS.1, la22_mvt_lt_of_neg (F := fun q => taum y1 y2 y3 q y5 y6) h4q hcont hdiff hderivneg⟩
+    · -- (C) critical point: num1 = 0 and dnum1 < 0
+      have hzero : num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4)
+          (xrr y1 y3 y5) (xrr y1 y2 y6) = 0 :=
+        le_antisymm (le_of_not_gt hpos) (le_of_not_gt hneg)
+      have hcrit : dnum1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4)
+          (xrr y1 y3 y5) (xrr y1 y2 y6) < 0 := by
+        rcases hnum with hh | hh | hh
+        · exact absurd hh hpos
+        · exact absurd hh hneg
+        · exact hh
+      have he1 : 0 < rho y1 := by linarith [(rho_bounds_p22 y1 hy1.1 hy1.2).1]
+      let d := dnum1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4)
+        (xrr y1 y3 y5) (xrr y1 y2 y6)
+      let e1 := rho y1
+      have hdneg : d < 0 := hcrit
+      have hε : 0 < -d / (4 * e1) := by
+        have : 0 < 4 * e1 := by simp only [e1]; linarith
+        exact div_pos (by linarith) this
+      -- the quadratic expansion of num1 around x4 = xrr y2 y3 y4
+      have hquad : ∀ x : ℝ, num1 e1 (rho y2) (rho y3) x (xrr y1 y3 y5) (xrr y1 y2 y6)
+          = -4 * e1 * (x - xrr y2 y3 y4) ^ 2 + 4 * d * (x - xrr y2 y3 y4) := by
+        intro x
+        have h0 : num1 e1 (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5)
+            (xrr y1 y2 y6) = 0 := hzero
+        calc num1 e1 (rho y2) (rho y3) x (xrr y1 y3 y5) (xrr y1 y2 y6)
+            = num1 e1 (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5)
+                (xrr y1 y2 y6)
+              + 4 * d * (x - xrr y2 y3 y4)
+              - 4 * e1 * (x - xrr y2 y3 y4) ^ 2 := by
+              simp only [d, e1]
+              unfold num1 dnum1
+              ring
+          _ = -4 * e1 * (x - xrr y2 y3 y4) ^ 2 + 4 * d * (x - xrr y2 y3 y4) := by
+              rw [h0]; ring
+      -- the left neighbourhood of x4 where num1 > 0
+      have hleftpos : ∀ x : ℝ, xrr y2 y3 y4 - (-d / (4 * e1)) < x → x < xrr y2 y3 y4 →
+          0 < num1 e1 (rho y2) (rho y3) x (xrr y1 y3 y5) (xrr y1 y2 y6) := by
+        intro x hx1 hx2
+        rw [hquad x]
+        set t := x - xrr y2 y3 y4 with ht
+        have htneg : t < 0 := by rw [ht]; linarith
+        have hb1 : -t < -d / (4 * e1) := by rw [ht]; linarith
+        have he : 0 < 4 * e1 := by simp only [e1]; linarith
+        have hb : d - e1 * t < 0 := by
+          have h2 : e1 * (-t) < e1 * (-d / (4 * e1)) :=
+            mul_lt_mul_of_pos_left hb1 he1
+          have h3 : e1 * (-d / (4 * e1)) = -d / 4 := by
+            simp only [e1]
+            field_simp
+          rw [h3] at h2
+          nlinarith
+        have hfac : -4 * e1 * t ^ 2 + 4 * d * t = 4 * t * (d - e1 * t) := by ring
+        rw [hfac]
+        exact mul_pos_of_neg_of_neg (by linarith) (by linarith)
+      -- pull back to a one-sided y-interval
+      obtain ⟨δ, hδpos, hδ⟩ := Metric.continuousAt_iff.mp
+        (la22_xrr_continuousAt y2 y3 y4) (-d / (4 * e1)) hε
+      let ρ := min (δ / 2) ((y4 - a) / 2)
+      have hρpos : 0 < ρ := by
+        have h1 : 0 < δ / 2 := by linarith
+        have h2 : 0 < (y4 - a) / 2 := by linarith [hy4.1]
+        exact lt_min h1 h2
+      have hρδ : ρ < δ := by
+        have h1 : ρ ≤ δ / 2 := min_le_left _ _
+        linarith
+      have hρa : ρ < y4 - a := by
+        have h1 : ρ ≤ (y4 - a) / 2 := min_le_right _ _
+        linarith [hy4.1]
+      let q : ℝ := y4 - ρ
+      have hq4 : q < y4 := by simp only [q]; linarith
+      have hqa : a < q := by simp only [q]; linarith
+      have hqpos : 0 < q := (hsub ⟨hqa, by linarith [hy4.2]⟩).2.1
+      have hqδ : dist q y4 < δ := by
+        rw [Real.dist_eq]
+        have : |q - y4| = ρ := by
+          rw [show q - y4 = -ρ by simp only [q]; ring, abs_neg, abs_of_pos hρpos]
+        rw [this]
+        exact hρδ
+      have hxq : xrr y2 y3 y4 - (-d / (4 * e1)) < xrr y2 y3 q ∧
+          xrr y2 y3 q < xrr y2 y3 y4 := by
+        have hdist := hδ hqδ
+        rw [Real.dist_eq] at hdist
+        have habs : |xrr y2 y3 q - xrr y2 y3 y4| < -d / (4 * e1) := hdist
+        have hlt1 := (abs_lt.mp habs).1
+        have hsmono : xrr y2 y3 q < xrr y2 y3 y4 :=
+          la22_xrr_strictMonoOn y2 y3 hy2p hy3p hqpos hq4
+        exact ⟨by linarith, hsmono⟩
+      have hqnum : 0 < num1 e1 (rho y2) (rho y3) (xrr y2 y3 q) (xrr y1 y3 y5)
+          (xrr y1 y2 y6) := hleftpos _ hxq.1 hxq.2
+      -- derivative positivity on (q, y4)
+      have hdiff : DifferentiableOn ℝ (fun q => taum y1 y2 y3 q y5 y6) (Set.Ioo q y4) := by
+        intro c hc
+        have hcab : c ∈ Set.Ioo a b := ⟨by linarith [hc.1], by linarith [hc.2, hy4.2]⟩
+        have hc4 := hsub hcab
+        exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+          hc4.1 hc4.2.2).differentiableAt.differentiableWithinAt
+      have hcont : ContinuousOn (fun q => taum y1 y2 y3 q y5 y6) (Set.Icc q y4) := by
+        intro c hc
+        have hcab : c ∈ Set.Ioo a b := ⟨by linarith [hc.1], by linarith [hc.2, hy4.2]⟩
+        have hc4 := hsub hcab
+        exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+          hc4.1 hc4.2.2).continuousAt.continuousWithinAt
+      have hderivpos : ∀ c ∈ Set.Ioo q y4, 0 < deriv (fun q => taum y1 y2 y3 q y5 y6) c := by
+        intro c hc
+        have hcab : c ∈ Set.Ioo a b := ⟨by linarith [hc.1], by linarith [hc.2, hy4.2]⟩
+        have hc4 := hsub hcab
+        have hxc : xrr y2 y3 y4 - (-d / (4 * e1)) < xrr y2 y3 c ∧
+            xrr y2 y3 c < xrr y2 y3 y4 := by
+          have hlt1 : xrr y2 y3 q < xrr y2 y3 c :=
+            la22_xrr_strictMonoOn y2 y3 hy2p hy3p hqpos hc.1
+          have hlt2 : xrr y2 y3 c < xrr y2 y3 y4 :=
+            la22_xrr_strictMonoOn y2 y3 hy2p hy3p (by linarith [hqpos, hc.1]) hc.2
+          exact ⟨by linarith [hxq.1, hlt1], by linarith [hlt2]⟩
+        have hnumc : 0 < num1 e1 (rho y2) (rho y3) (xrr y2 y3 c) (xrr y1 y3 y5)
+            (xrr y1 y2 y6) := hleftpos _ hxc.1 hxc.2
+        have := la22_taum_deriv_pos y1 y2 y3 c y5 y6 hy1p hy2p hy3p hc4.2.1 hy5 hy6
+          hc4.1 hc4.2.2 ?_
+        · exact this
+        · simpa only [e1] using hnumc
+      exact ⟨q, ⟨hqa, by linarith [hy4.2]⟩, la22_mvt_lt (F := fun q => taum y1 y2 y3 q y5 y6) hq4 hcont hdiff hderivpos⟩
 
 /-- HOL `NUM1_GENERIC`. -/
 theorem NUM1_GENERIC_p22 (x4inf x4sup x5inf x5sup x6inf x6sup y1 y2 y3 y4 y5 y6 : ℝ)
@@ -2295,6 +2971,9 @@ theorem NUM1_GENERIC_p22 (x4inf x4sup x5inf x5sup x6inf x6sup y1 y2 y3 y4 y5 y6 
   sorry
 
 /-- HOL `LEMMA_4828966562`. -/
+-- PROVED 2026-11-12 (lane `la22mono-w1`): from the `La22TaumMonoKit` block
+-- above (registry `4828966562` + `strictMonoOn_of_deriv_pos`); `#print axioms`
+-- = standard three.
 theorem LEMMA_4828966562_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
     (hy1 : 2 ≤ y1 ∧ y1 ≤ 2 * h0) (hy2 : 2 ≤ y2 ∧ y2 ≤ 2 * h0)
     (hy3 : 2 ≤ y3 ∧ y3 ≤ 2 * h0) (hy4 : 2 ≤ y4 ∧ y4 ≤ 2 * h0)
@@ -2303,7 +2982,79 @@ theorem LEMMA_4828966562_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y
     (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) :
     ∃ a b, y4 ∈ Set.Ioo a b ∧ ∀ y4' y4'', y4' ∈ Set.Ioo a b → y4'' ∈ Set.Ioo a b →
       y4' < y4'' → taum y1 y2 y3 y4' y5 y6 < taum y1 y2 y3 y4'' y5 y6 := by
-  sorry
+  have hy1p : 0 < y1 := by linarith [hy1.1]
+  have hy2p : 0 < y2 := by linarith [hy2.1]
+  have hy3p : 0 < y3 := by linarith [hy3.1]
+  have hy4p : 0 < y4 := by linarith [hy4.1]
+  have hy5p : 0 < y5 := by linarith [hy5.1]
+  have hy6p : 0 < y6 := by linarith
+  have hu4 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4) :=
+    la22_upsX_box y2 y3 y4 hy2.1 hy2.2 hy3.1 hy3.2 hy4.1 hy4.2
+  have hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5) :=
+    la22_upsX_pos3 y1 y3 y5 hy1.1 hy1.2 hy3.1 hy3.2 hy5.1 hy5.2
+  have h4lo : (2 / h0) ^ 2 ≤ xrr y2 y3 y4 :=
+    la22_xrr_simple_lower y2 y3 y4 2 hy2.1 hy2.2 hy3.1 hy3.2 (by norm_num) hy4.1
+  have h4hi : xrr y2 y3 y4 ≤ (2 * h0) ^ 2 :=
+    la22_xrr_simple_upper y2 y3 y4 (2 * h0) hy2.1 hy2.2 hy3.1 hy3.2 hy4.1 hy4.2
+      (by norm_num [h0_eq_p22])
+  have h5lo : (2 / h0) ^ 2 ≤ xrr y1 y3 y5 :=
+    la22_xrr_simple_lower y1 y3 y5 2 hy1.1 hy1.2 hy3.1 hy3.2 (by norm_num) hy5.1
+  have h5hi : xrr y1 y3 y5 ≤ 3.01 ^ 2 :=
+    la22_xrr_simple_upper y1 y3 y5 3.01 hy1.1 hy1.2 hy3.1 hy3.2 hy5.1 hy5.2
+      (by norm_num)
+  have h6lo' : ((3 : ℝ) / h0) ^ 2 ≤ xrr y1 y2 y6 :=
+    la22_xrr_simple_lower y1 y2 y6 3 hy1.1 hy1.2 hy2.1 hy2.2 (by norm_num) hy6
+  have h6lo : ((2.38 : ℝ)) ^ 2 ≤ xrr y1 y2 y6 := by
+    have hc : ((2.38 : ℝ)) ^ 2 ≤ ((3 : ℝ) / h0) ^ 2 := by
+      rw [h0_eq_p22]
+      norm_num
+    linarith
+  have h6hi : xrr y1 y2 y6 ≤ (16.0 : ℝ) := by
+    have := xrr_le_16_p22 y1 y2 y6 hy1p hy2p hy6p hu6
+    rw [show (16.0 : ℝ) = 16 by norm_num]
+    exact this
+  have hnum := (h "4828966562" (by simp [mainNonlinearTerminalV11Ids_t11]))
+    (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)
+    (rho_bounds_p22 y1 hy1.1 hy1.2).1 (rho_bounds_p22 y1 hy1.1 hy1.2).2
+    (rho_bounds_p22 y2 hy2.1 hy2.2).1 (rho_bounds_p22 y2 hy2.1 hy2.2).2
+    (rho_bounds_p22 y3 hy3.1 hy3.2).1 (rho_bounds_p22 y3 hy3.1 hy3.2).2
+    h4lo h4hi h5lo h5hi h6lo h6hi
+  let S : Set ℝ := {q | 0 < deltaY y1 y2 y3 q y5 y6} ∩ {q | 0 < q} ∩
+    {q | 0 < upsX (y2 * y2) (y3 * y3) (q * q)} ∩
+    {q | 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 q) (xrr y1 y3 y5)
+      (xrr y1 y2 y6)}
+  have hSopen : IsOpen S := by
+    have h1 : IsOpen {q : ℝ | 0 < deltaY y1 y2 y3 q y5 y6} :=
+      isOpen_lt continuous_const (la22_deltaY_continuous y1 y2 y3 y5 y6)
+    have h2 : IsOpen {q : ℝ | 0 < q} := isOpen_Ioi
+    have h3 : IsOpen {q : ℝ | 0 < upsX (y2 * y2) (y3 * y3) (q * q)} := by
+      apply isOpen_lt continuous_const
+      unfold upsX
+      continuity
+    have h4 : IsOpen {q : ℝ | 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 q)
+        (xrr y1 y3 y5) (xrr y1 y2 y6)} := by
+      apply isOpen_lt continuous_const
+      unfold num1 xrr
+      continuity
+    exact ((h1.inter h2).inter h3).inter h4
+  have hy4S : y4 ∈ S := ⟨⟨⟨hd, hy4p⟩, hu4⟩, hnum⟩
+  obtain ⟨α, β, hy4αβ, hαβS⟩ :=
+    real_open_contains_real_interval_p22 y4 S hy4S hSopen
+  have hcont : ContinuousOn (fun q => taum y1 y2 y3 q y5 y6) (Set.Ioo α β) := by
+    intro c hc
+    obtain ⟨⟨⟨hdc, hcpos⟩, huc⟩, _⟩ := hαβS hc
+    exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hcpos hy5p hy6p
+      hdc huc).continuousAt.continuousWithinAt
+  have hderiv : ∀ c ∈ interior (Set.Ioo α β),
+      0 < deriv (fun q => taum y1 y2 y3 q y5 y6) c := by
+    intro c hc
+    rw [interior_Ioo] at hc
+    obtain ⟨⟨⟨hdc, hcpos⟩, huc⟩, hnumc⟩ := hαβS hc
+    exact la22_taum_deriv_pos y1 y2 y3 c y5 y6 hy1p hy2p hy3p hcpos hy5p hy6p
+      hdc huc hnumc
+  have hmono := strictMonoOn_of_deriv_pos (D := Set.Ioo α β)
+    (f := fun q => taum y1 y2 y3 q y5 y6) (convex_Ioo α β) hcont hderiv
+  exact ⟨α, β, hy4αβ, fun y4' y4'' h1 h2 hlt => hmono h1 h2 hlt⟩
 
 /-- HOL `LEMMA_6843920790`. -/
 theorem LEMMA_6843920790_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
