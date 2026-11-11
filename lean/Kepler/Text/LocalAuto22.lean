@@ -1279,6 +1279,78 @@ theorem xrr_increasing_p22 (y1 y2 y6 y6' : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
   unfold xrr
   linarith
 
+/-! ## `xrr` simple-bounds kit (early copies)
+
+Private helper block added 2026-11-12 (lane `la22aux-w1`): early copies of
+HOL `xrr_decreasing` + `xrr_simple_lower_bound` + `xrr_simple_upper_bound`
+placed ahead of `xrr_simple_lower_bound_p22` / `xrr_simple_upper_bound_p22`
+so the public proved theorems can consume them (Lean declaration order).
+The `La22TaumMonoKit` block below keeps the original `la22_xrr_*` copies
+(consumed by `LEMMA_4828966562_p22`); bodies are identical. -/
+section La22XrrSimpleKit
+
+private theorem la22aux_xrr_decreasing (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1')
+    (h2 : 2 ≤ y2) (h6 : 2 ≤ y6) (h2' : y2 ≤ 2 * h0) (hlt : y1 ≤ y1') :
+    xrr y1' y2 y6 ≤ xrr y1 y2 y6 := by
+  have hp1 : (0:ℝ) < y1 := by linarith
+  have hp1' : (0:ℝ) < y1' := by linarith
+  have hp2 : (0:ℝ) < y2 := by linarith
+  have hdiff : xrr y1 y2 y6 - xrr y1' y2 y6
+      = 4 * (y1' - y1) * (y1 * y1' + y6 * y6 - y2 * y2) / (y1 * y1' * y2) := by
+    unfold xrr
+    field_simp
+    ring
+  have h0v : (2 * h0) * (2 * h0) = 6.3504 := by norm_num [h0_eq_p22]
+  have hnn : 0 ≤ y1 * y1' + y6 * y6 - y2 * y2 := by
+    have h22 : y2 * y2 ≤ (2 * h0) * (2 * h0) := by nlinarith
+    nlinarith
+  have hle : 0 ≤ 4 * (y1' - y1) * (y1 * y1' + y6 * y6 - y2 * y2) / (y1 * y1' * y2) := by
+    positivity
+  linarith
+
+private theorem la22aux_xrr_simple_lower (y1 y2 y6 y6inf : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ 2 * h0)
+    (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy6 : 2 ≤ y6inf) (hy6' : y6inf ≤ y6) :
+    (y6inf / h0) ^ 2 ≤ xrr y1 y2 y6 := by
+  have h1 : xrr (2 * h0) y2 y6 ≤ xrr y1 y2 y6 :=
+    la22aux_xrr_decreasing y1 (2 * h0) y2 y6 hy1 (by linarith) hy2 (by linarith) hy2' hy1'
+  have h2 : xrr (2 * h0) (2 * h0) y6 ≤ xrr (2 * h0) y2 y6 := by
+    have h := la22aux_xrr_decreasing y2 (2 * h0) (2 * h0) y6 hy2 (by linarith)
+      (by linarith) (by linarith) le_rfl hy2'
+    rwa [xrr_sym_p22 y2 (2 * h0) y6] at h
+  have h3 : xrr (2 * h0) (2 * h0) y6inf ≤ xrr (2 * h0) (2 * h0) y6 := by
+    rcases lt_or_eq_of_le hy6' with hlt | heq
+    · exact le_of_lt (xrr_increasing_p22 _ _ _ _ (by linarith) (by linarith) (by linarith) hlt)
+    · rw [heq]
+  have h4 : xrr (2 * h0) (2 * h0) y6inf = (y6inf / h0) ^ 2 := by
+    have h0ne : (h0 : ℝ) ≠ 0 := by norm_num [h0_eq_p22]
+    unfold xrr
+    field_simp
+    ring
+  linarith
+
+private theorem la22aux_xrr_simple_upper (y1 y2 y6 y6sup : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ 2 * h0)
+    (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy6 : 2 ≤ y6) (hy6' : y6 ≤ y6sup)
+    (_hy6sup : y6sup < 4) :
+    xrr y1 y2 y6 ≤ y6sup ^ 2 := by
+  have h1 : xrr y1 y2 y6 ≤ xrr 2 y2 y6 :=
+    la22aux_xrr_decreasing 2 y1 y2 y6 (by norm_num) hy1 hy2 hy6 hy2' hy1
+  have h2 : xrr 2 y2 y6 ≤ xrr 2 2 y6 := by
+    have h := la22aux_xrr_decreasing 2 y2 2 y6 (by norm_num) hy2 (by norm_num) hy6
+      (by linarith) hy2
+    rw [xrr_sym_p22 2 y2 y6]
+    exact h
+  have h3 : xrr 2 2 y6 ≤ xrr 2 2 y6sup := by
+    rcases lt_or_eq_of_le hy6' with hlt | heq
+    · exact le_of_lt (xrr_increasing_p22 2 2 y6 y6sup (by norm_num) (by norm_num) (by linarith) hlt)
+    · rw [heq]
+  have h4 : xrr 2 2 y6sup = y6sup ^ 2 := by
+    unfold xrr
+    field_simp
+    ring
+  linarith
+
+end La22XrrSimpleKit
+
 /-- HOL `xrr_decreasing`. -/
 theorem xrr_decreasing_p22 (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1')
     (h2 : 2 ≤ y2) (h6 : 2 ≤ y6) (h2' : y2 ≤ 2 * h0) (hlt : y1 ≤ y1') :
@@ -1286,17 +1358,25 @@ theorem xrr_decreasing_p22 (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1'
   sorry
 
 /-- HOL `xrr_simple_lower_bound`. -/
+-- PROVED 2026-11-12 (lane `la22aux-w1`): from the early `La22XrrSimpleKit`
+-- copy `la22aux_xrr_simple_lower` (HOL route:
+-- `xrr (&2*h0) y2 y6` / `xrr (&2*h0) (&2*h0) y6` intermediates, two
+-- `xrr_decreasing` + one `xrr_increasing`, endpoint evaluation).
 theorem xrr_simple_lower_bound_p22 (y1 y2 y6 y6inf : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ 2 * h0)
     (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy6 : 2 ≤ y6inf) (hy6' : y6inf ≤ y6) :
     (y6inf / h0) ^ 2 ≤ xrr y1 y2 y6 := by
-  sorry
+  exact la22aux_xrr_simple_lower y1 y2 y6 y6inf hy1 hy1' hy2 hy2' hy6 hy6'
 
 /-- HOL `xrr_simple_upper_bound`. -/
+-- PROVED 2026-11-12 (lane `la22aux-w1`): from the early `La22XrrSimpleKit`
+-- copy `la22aux_xrr_simple_upper` (HOL route:
+-- `xrr &2 y2 y6` / `xrr &2 &2 y6` intermediates, two `xrr_decreasing` +
+-- one `xrr_increasing`, endpoint evaluation).
 theorem xrr_simple_upper_bound_p22 (y1 y2 y6 y6sup : ℝ) (hy1 : 2 ≤ y1) (hy1' : y1 ≤ 2 * h0)
     (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy6 : 2 ≤ y6) (hy6' : y6 ≤ y6sup)
     (hy6sup : y6sup < 4) :
     xrr y1 y2 y6 ≤ y6sup ^ 2 := by
-  sorry
+  exact la22aux_xrr_simple_upper y1 y2 y6 y6sup hy1 hy1' hy2 hy2' hy6 hy6' hy6sup
 
 /-- HOL `taum_compose_xrr` (NEEDS the real `taum` body). -/
 theorem taum_compose_xrr_p22 (y1 y2 y3 y4 y5 y6 : ℝ)
@@ -1508,12 +1588,48 @@ theorem vv_inj_lemma_p22 (s : ScsV39) (v : ℕ → V3) (k : ℕ)
   sorry
 
 /-- HOL `LOCAL_FAN_AZIM_POS`. -/
+-- PROVED 2026-11-12 (lane `la22aux-w1`): HOL chain
+-- `azim_in_fan_azim` + `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM` +
+-- `vv_rho_node1` + `vv_inj_lemma` + `INTERIOR_ANGLE1_POS`, reproduced on the
+-- definitional `rhoNode1`/`ivsRhoNode1` route (same as `RRCWNS_WEAK_p22`):
+-- `interiorAngle1 0 FF (vv i) = azim 0 (vv i) (vv (i+1)) (vv (i+(k-1)))`
+-- by `DETER_RHO_NODE` + `PRE_IVS_RHO_NODE1_DETE`, then fan positivity.
 theorem LOCAL_FAN_AZIM_POS_p22 (s : ScsV39) (vv : ℕ → V3) (i : ℕ)
     (hcf : ConvexLocalFan (Set.range vv)
       (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
     (h1 : isScsV39 s) (h2 : BBsV39 s vv) :
     0 < azim 0 (vv i) (vv (i + 1)) (vv (i + (s.k - 1))) := by
-  sorry
+  -- the fan is a `localFan_p2` (`LocalFan` ↦ `localFan_p3` ↦ `localFan_p2`)
+  have hlf : LocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) := hcf.1
+  have hlf2 : localFan_p2 (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) :=
+    localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp hlf)
+  have hk3 : 3 ≤ s.k := h1.2.1
+  -- rho-node is the successor, inverse-rho-node is the predecessor
+  have hrn : rhoNode1 (Set.range fun i => (vv i, vv (i + 1))) (vv i) = vv (i + 1) := by
+    have hrp : rhoNode1_p2 (Set.range fun i => (vv i, vv (i + 1))) (vv i) = vv (i + 1) :=
+      DETER_RHO_NODE hlf2 (v := vv i) (w := vv (i + 1))
+        (show (vv i, vv (i + 1)) ∈ (Set.range fun i => (vv i, vv (i + 1)))
+          from Set.mem_range.mpr ⟨i, rfl⟩)
+    simpa only [rhoNode1, rhoNode1_p2] using hrp
+  have hivs : ivsRhoNode1 (Set.range fun i => (vv i, vv (i + 1))) (vv i)
+      = vv (i + (s.k - 1)) := by
+    have hmem : (vv (i + (s.k - 1)), vv i) ∈ (Set.range fun i => (vv i, vv (i + 1))) := by
+      refine Set.mem_range.mpr ⟨i + (s.k - 1), ?_⟩
+      have hper : vv (i + (s.k - 1) + 1) = vv i := by
+        rw [show i + (s.k - 1) + 1 = i + s.k by omega]
+        exact h2.2.1 i
+      rw [hper]
+    have hip : ivsRhoNode1_p2 (Set.range fun i => (vv i, vv (i + 1))) (vv i)
+        = vv (i + (s.k - 1)) :=
+      PRE_IVS_RHO_NODE1_DETE hlf2 hmem
+    simpa only [ivsRhoNode1, ivsRhoNode1_p2] using hip
+  have hid : interiorAngle1 0 (Set.range fun i => (vv i, vv (i + 1))) (vv i)
+      = azim 0 (vv i) (vv (i + 1)) (vv (i + (s.k - 1))) := by
+    simp only [interiorAngle1, hrn, hivs]
+  rw [← hid]
+  exact INTERIOR_ANGLE1_POS hlf2 (Set.mem_range_self i)
 
 /-- HOL `INTERIOR_ANGLE1_AZIM`. -/
 theorem INTERIOR_ANGLE1_AZIM_p22 (s : ScsV39) (vv : ℕ → V3) (i : ℕ)
@@ -2255,13 +2371,233 @@ theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
         taum y135 y1 y3 y5 2 2) := by
   sorry
 
+/-! ## `dih_y_mono` kit: `dihY` monotone in its 4th slot
+
+Private helper block added 2026-11-12 (lane `la22aux-w1`) for
+`dih_y_mono_p22`.  Analytic proof of HOL
+`Tame_inequalities.DIH_X_MONO_LT_4` + `dih_y_mono` (OCBICBY.hl:3406):
+resolve the right-half-plane `atn2` branch to `π/2 + arctan(-P/√(4·x1·Δ))`,
+compare the ratios via the discriminant invariant `P² + 4·x1·Δ = const`
+and the midpoint identity `2(Δ'−Δ) = (P+P')(x4'−x4)`; pure algebra, no
+calculus. -/
+section La22DihYMonokit
+
+private theorem la22dy_atn2_eq_arctan {A B : ℝ} (hA : 0 < A) :
+    atn2 A B = Real.arctan (B / A) := by
+  unfold atn2
+  split_ifs with hb hb2 hb3
+  · rfl
+  · have hBA : 0 < B / A := div_pos hb2 hA
+    have hrec : A / B = (B / A)⁻¹ := by field_simp
+    rw [hrec, Real.arctan_inv_of_pos hBA]
+    ring
+  · have hBA : B / A < 0 := div_neg_of_neg_of_pos hb3 hA
+    have hrec : A / B = (B / A)⁻¹ := by field_simp
+    rw [hrec, Real.arctan_inv_of_neg hBA]
+    ring
+  · have hB : B = 0 := le_antisymm (not_lt.mp hb2) (not_lt.mp hb3)
+    have hle : A ≤ |B| := le_of_not_gt hb
+    rw [hB, abs_zero] at hle
+    linarith
+
+/-- 楔形 kit：`delta_x` 的两点判别式不变量（`P^2 + 4*x1*Δ` 与第 4 槽无关）。 -/
+private theorem la22dy_delta_inv (x1 x2 x3 x4 x4' x5 x6 : ℝ) :
+    (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4 x5 x6
+      = (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 := by
+  simp only [deltaX, deltaX4]
+  ring
+
+/-- 楔形 kit：`delta_x4` 沿第 4 槽的仿射差（斜率 `-2*x1`）。 -/
+private theorem la22dy_dX4_sub (x1 x2 x3 x4 x4' x5 x6 : ℝ) :
+    deltaX4 x1 x2 x3 x4' x5 x6
+      = deltaX4 x1 x2 x3 x4 x5 x6 - 2 * x1 * (x4' - x4) := by
+  simp only [deltaX4]
+  ring
+
+/-- 楔形 kit：`delta_x` 的两点中点恒等式。 -/
+private theorem la22dy_dX_mid (x1 x2 x3 x4 x4' x5 x6 : ℝ) :
+    2 * (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+      = (deltaX4 x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4' x5 x6) * (x4' - x4) := by
+  simp only [deltaX, deltaX4]
+  ring
+
+/-- 楔形 kit：`-delta_x4 / sqrt(4*x1*delta_x)` 沿第 4 槽的比值比较
+（判别式不变量消平方，正分子支 `abs_le_of_sq_le_sq'` 收口）。 -/
+private theorem la22dy_ratio_le {x1 x2 x3 x4 x4' x5 x6 : ℝ} (hx1 : 0 < x1)
+    (h44 : x4 ≤ x4') (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hd' : 0 < deltaX x1 x2 x3 x4' x5 x6) :
+    -(deltaX4 x1 x2 x3 x4 x5 x6) / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+      ≤ -(deltaX4 x1 x2 x3 x4' x5 x6)
+          / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) := by
+  have h4 : (0:ℝ) < 4 := by norm_num
+  have hdec : deltaX4 x1 x2 x3 x4' x5 x6 ≤ deltaX4 x1 x2 x3 x4 x5 x6 := by
+    have h2 := la22dy_dX4_sub x1 x2 x3 x4 x4' x5 x6
+    have hprod : 0 ≤ 2 * x1 * (x4' - x4) :=
+      mul_nonneg (mul_nonneg zero_le_two hx1.le) (sub_nonneg.mpr h44)
+    linarith
+  have hmid := la22dy_dX_mid x1 x2 x3 x4 x4' x5 x6
+  have hs0p : 0 ≤ 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 :=
+    le_of_lt (mul_pos (mul_pos h4 hx1) hd)
+  have hs1p : 0 ≤ 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 :=
+    le_of_lt (mul_pos (mul_pos h4 hx1) hd')
+  have hs0lt : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 :=
+    mul_pos (mul_pos h4 hx1) hd
+  have hs1lt : 0 < 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 :=
+    mul_pos (mul_pos h4 hx1) hd'
+  have hs0 : 0 ≤ Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := Real.sqrt_nonneg _
+  have hs1 : 0 ≤ Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) := Real.sqrt_nonneg _
+  rcases le_or_gt 0 (deltaX4 x1 x2 x3 x4' x5 x6) with hP1 | hP1
+  · -- both P ≥ 0: delta increases along the slot, negative numerators compare
+    have hP0 : 0 ≤ deltaX4 x1 x2 x3 x4 x5 x6 := hP1.trans hdec
+    have hDle : deltaX x1 x2 x3 x4 x5 x6 ≤ deltaX x1 x2 x3 x4' x5 x6 := by
+      nlinarith [hmid, hP0, hP1, h44]
+    have hsq : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        ≤ Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) :=
+      Real.sqrt_le_sqrt (by nlinarith [hDle, hx1.le])
+    have hnp0 : -(deltaX4 x1 x2 x3 x4 x5 x6) ≤ -(deltaX4 x1 x2 x3 x4' x5 x6) := by linarith
+    have hnp1 : -(deltaX4 x1 x2 x3 x4' x5 x6) ≤ 0 := by linarith
+    refine le_trans ((div_le_div_iff₀ (Real.sqrt_pos.mpr hs0lt)
+      (Real.sqrt_pos.mpr hs0lt)).mpr
+      (mul_le_mul_of_nonneg_right hnp0 (Real.sqrt_nonneg _)))
+      ((div_le_div_iff₀ (Real.sqrt_pos.mpr hs0lt) (Real.sqrt_pos.mpr hs1lt)).mpr
+        (mul_le_mul_of_nonpos_left hsq hnp1))
+  · rcases le_or_gt 0 (deltaX4 x1 x2 x3 x4 x5 x6) with hP0 | hP0
+    · -- P1 < 0 ≤ P0: left side nonpositive, right side positive
+      have hL : -(deltaX4 x1 x2 x3 x4 x5 x6)
+            / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ≤ 0 :=
+        (div_nonpos_iff).mpr (Or.inr ⟨by linarith, hs0⟩)
+      have hR : 0 ≤ -(deltaX4 x1 x2 x3 x4' x5 x6)
+            / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) :=
+        (div_nonneg_iff).mpr (Or.inl ⟨by linarith, hs1⟩)
+      linarith
+    · -- both numerators positive: compare squares via the discriminant invariant
+      have hnp0 : 0 < -(deltaX4 x1 x2 x3 x4 x5 x6) := by linarith
+      have hnp1 : 0 < -(deltaX4 x1 x2 x3 x4' x5 x6) := by linarith
+      have hDle : deltaX x1 x2 x3 x4' x5 x6 ≤ deltaX x1 x2 x3 x4 x5 x6 := by
+        nlinarith [hmid, hdec, hP0, h44]
+      have hcert : (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+          * ((deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+              + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6) * (4 * x1) ≤ 0 := by
+        have hbase : 0 ≤ 4 * x1 := by linarith
+        have hdiff : deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6 ≤ 0 := by
+          nlinarith [hmid, hdec, hP0, h44]
+        have hpos : 0 ≤ (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+            + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 := by nlinarith
+        have hp1 : (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+            * ((deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+                + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6) ≤ 0 :=
+          mul_nonpos_of_nonpos_of_nonneg hdiff hpos
+        exact mul_nonpos_of_nonpos_of_nonneg hp1 hbase
+      have heq : (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2
+            * (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)
+          = (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+              * (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            + (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+              * ((deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+                  + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6) * (4 * x1) := by
+        linear_combination (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) *
+          la22dy_delta_inv x1 x2 x3 x4 x4' x5 x6
+      have hsqnum : (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2
+            * (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)
+          ≤ (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+              * (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by linarith
+      have hsq0 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ^ 2
+          = 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 := Real.sq_sqrt hs0p
+      have hsq1 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) ^ 2
+          = 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 := Real.sq_sqrt hs1p
+      have hA2 : (-(deltaX4 x1 x2 x3 x4 x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) ^ 2
+          ≤ (-(deltaX4 x1 x2 x3 x4' x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)) ^ 2 := by
+        have h1 : (-(deltaX4 x1 x2 x3 x4 x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) ^ 2
+            = (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2
+                / (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by
+          rw [div_pow, neg_sq, hsq0]
+        have h2 : (-(deltaX4 x1 x2 x3 x4' x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)) ^ 2
+            = (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+                / (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) := by
+          rw [div_pow, neg_sq, hsq1]
+        rw [h1, h2]
+        exact (div_le_div_iff₀ hs0lt hs1lt).mpr hsqnum
+      exact (abs_le_of_sq_le_sq' hA2
+        (le_of_lt (div_pos hnp1 (Real.sqrt_pos.mpr hs1lt)))).2
+
+/-- 楔形 kit 主件：`dih_x` 沿第 4 槽单调（起点 `delta_x > 0`，终点 `≥ 0`；
+终点退化时右侧值只增不减，`delta_x4 > 0` 支由中点恒等式排除）。 -/
+private theorem la22dy_dihXf_mono_x4 {x1 x2 x3 x4 x4' x5 x6 : ℝ} (hx1 : 0 < x1)
+    (h44 : x4 ≤ x4') (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (_hd' : 0 ≤ deltaX x1 x2 x3 x4' x5 x6) :
+    dihXf x1 x2 x3 x4 x5 x6 ≤ dihXf x1 x2 x3 x4' x5 x6 := by
+  have h4 : (0:ℝ) < 4 := by norm_num
+  have hs0 : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 :=
+    mul_pos (mul_pos h4 hx1) hd
+  unfold dihXf
+  rcases lt_or_ge 0 (deltaX x1 x2 x3 x4' x5 x6) with hD1 | hD1
+  · have hs1 : 0 < 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 :=
+      mul_pos (mul_pos h4 hx1) hD1
+    rw [la22dy_atn2_eq_arctan (A := Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+        (B := -(deltaX4 x1 x2 x3 x4 x5 x6)) (Real.sqrt_pos.mpr hs0),
+      la22dy_atn2_eq_arctan (A := Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6))
+        (B := -(deltaX4 x1 x2 x3 x4' x5 x6)) (Real.sqrt_pos.mpr hs1)]
+    linarith [Real.arctan_le_arctan_iff.mpr (la22dy_ratio_le hx1 h44 hd hD1)]
+  · -- degenerate right endpoint: sqrt = 0, atn2 value only grows
+    have hP1le : deltaX4 x1 x2 x3 x4' x5 x6 ≤ 0 := by
+      by_contra hcon
+      have hcon' : 0 < deltaX4 x1 x2 x3 x4' x5 x6 := lt_of_not_ge hcon
+      have h2 := la22dy_dX4_sub x1 x2 x3 x4 x4' x5 x6
+      have hprod : 0 ≤ 2 * x1 * (x4' - x4) :=
+        mul_nonneg (mul_nonneg zero_le_two hx1.le) (sub_nonneg.mpr h44)
+      have hP0pos : 0 < deltaX4 x1 x2 x3 x4 x5 x6 := by linarith
+      have hsum : 0 < deltaX4 x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4' x5 x6 := by
+        linarith
+      have hprod2 : 0 ≤ (deltaX4 x1 x2 x3 x4 x5 x6
+            + deltaX4 x1 x2 x3 x4' x5 x6) * (x4' - x4) :=
+        mul_nonneg (le_of_lt hsum) (sub_nonneg.mpr h44)
+      have hm := la22dy_dX_mid x1 x2 x3 x4 x4' x5 x6
+      linarith [hm, hprod2, hd]
+    have hz : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) = 0 :=
+      Real.sqrt_eq_zero_of_nonpos (by nlinarith [hD1, hx1.le])
+    rw [hz, la22dy_atn2_eq_arctan (A := Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+        (B := -(deltaX4 x1 x2 x3 x4 x5 x6)) (Real.sqrt_pos.mpr hs0)]
+    have hArcL : Real.arctan (-(deltaX4 x1 x2 x3 x4 x5 x6)
+        / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) ≤ Real.pi / 2 :=
+      (Real.arctan_lt_pi_div_two _).le
+    unfold atn2
+    split_ifs with hb1 hb2 hb3
+    · linarith [abs_nonneg (-(deltaX4 x1 x2 x3 x4' x5 x6)), hArcL]
+    · simp only [zero_div, Real.arctan_zero]
+      linarith [hArcL]
+    · linarith
+    · linarith [Real.pi_pos, hArcL]
+
+/-- 楔形 kit：`dih_y` 沿第 4 槽单调（y 空间版，即 HOL `dih_y_mono`）。 -/
+private theorem la22dy_dihY_mono_y4 {y1 y2 y3 y4 y4' y5 y6 : ℝ} (hy1 : 0 < y1)
+    (hy4 : 0 ≤ y4) (h44 : y4 ≤ y4') (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
+    (hd' : 0 ≤ deltaY y1 y2 y3 y4' y5 y6) :
+    dihY y1 y2 y3 y4 y5 y6 ≤ dihY y1 y2 y3 y4' y5 y6 := by
+  show dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) ≤
+    dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4' * y4') (y5 * y5) (y6 * y6)
+  refine la22dy_dihXf_mono_x4 (mul_pos hy1 hy1) ?_ hd hd'
+  have hstep1 : y4 * y4 ≤ y4' * y4 := mul_le_mul_of_nonneg_right h44 hy4
+  have hstep2 : y4' * y4 ≤ y4' * y4' := by
+    refine mul_le_mul_of_nonneg_left h44 ?_
+    linarith
+  linarith
+
+end La22DihYMonokit
+
 /-- HOL `dih_y_mono`. -/
+-- PROVED 2026-11-12 (lane `la22aux-w1`): from the `La22DihYMonokit` block
+-- above (HOL `Tame_inequalities.DIH_X_MONO_LT_4` at squared lengths);
+-- `#print axioms` = standard three.
 theorem dih_y_mono_p22 (y1 y2 y3 y4 y5 y6 y4' : ℝ)
     (hle : y4 ≤ y4') (hy1 : 0 < y1) (hy4 : 0 < y4)
     (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
     (hd' : 0 ≤ deltaY y1 y2 y3 y4' y5 y6) :
     dihY y1 y2 y3 y4 y5 y6 ≤ dihY y1 y2 y3 y4' y5 y6 := by
-  sorry
+  exact la22dy_dihY_mono_y4 hy1 hy4.le hle hd hd'
 
 /-! ## LA22MONO kit: taum monotonicity in `y4`
 
