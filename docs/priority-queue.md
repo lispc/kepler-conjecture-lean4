@@ -166,10 +166,10 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 14 三车道在飞（池 3/3）**：`g482-482-w4`（general_482 续写）、`vpwshto-w1`
-> （`VPWSHTO_p15`，锥内直源）、`empty-la22-w1`（`empty_6T1_p22` + `empty_5T1_p22`，OCBICBY 的
-> 14 条 emptiness 之二）。**ocbicby-w1 判 BLOCKED**（14 条 empty 缺口：2 LA22 sorry + 1 LA38 环 +
-> 11 条无陈述；装配探针已标准三，见续1010）；**基线 Z：SORRIED 74**。
+> **wave 15 三车道在飞（池 3/3）**：`g482-482-w4`（general_482 续写）、`vpwshto-w1`
+> （`VPWSHTO_p15`）、`la22emptykit-w1`（`scs_6T1/5T1_generic` + `terminal_pent_taum2` 等 empty 前置）。
+> **empty-la22 判 BLOCKED**（空件缺 6/5 条 in-file 前置 + LA38 环 + 无陈述件，见续1011）；
+> **ocbicby-w1 判 BLOCKED**（14 条 empty 缺口，装配探针已标准三，见续1010）；**基线 Z：SORRIED 74**。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -534,6 +534,12 @@
 ① **BLOCKED 机器证据**：HOL `OCBICBY` 的证明体 = `pos_imp_scs_arrow_empty` × 14 + `arrow_rewrite_list`（14 条 `empty_*`）；**装配探针（14 条作假设）= 标准三** ⇒ 一旦 empties 落地，本体零额外信任成本。缺口恰 14 条：**2 条 LA22 本文件 sorry**（`empty_6T1_p22:2319` / `empty_5T1_p22:2324`）、**1 条 LA38 `empty_3T2:3121` 且 import 成环**（LA38→LA18→LA27→LA24→LA20→LA22）、**11 条 Lean 树内无陈述**（`empty_3T1/3T3/3T4/3T5/3T6'/3T7`、`empty_4T1`–`empty_4T5`）——AGENTS §2 禁止新增 sorry 占位，故不可只立壳。另：15 个 mnl registry id 全在 `mainNonlinearTerminalV11Ids_t11`；LA38 的 3T/4T 解析 kit 全标准三但 LA22 闭包零命中（需 `_p22` 复制）；`ineq_5691615370_asym`（`empty_4T2` 需要）唯 Lean 版在 LA38 仍 sorryAx。
 ② **`empty_la22-w1` 发车**：先攻 `empty_6T1_p22`（HOL giant，analytic core）再 `empty_5T1_p22`；每绿一条 = OCBICBY 少一条缺口。其余 11 条无陈述件与 LA38 `empty_3T2` 记 §0.2 第 1 步挂账（OCBICBY 完整解封需一轮 empty_* 专项，估 E1–E7 分批）。
 ③ **wave 14（池 3/3）**：`g482-482-w4`（general_482 续写）/ `vpwshto-w1`（`VPWSHTO_p15`）/ `empty-la22-w1`（LA22 两条 empty 巨件）。
+
+- **2026-11-12（07:26，续1011）**：**`empty-la22-w1` 判词 BLOCKED（两件均缺一串 in-file 前置）；关键 ERRATA：`RRCWNS_WEAK`/`SYNQIWN` 已绿、`scs_*_generic` 是薄包装 ⇒ `la22emptykit-w1` 发车**。
+① **BLOCKED 证据**：`empty_6T1_p22` / `empty_5T1_p22` 探针均含 `sorryAx`；整文件岛编 RC=0/0err/70 sorry（= 基线，闭件 0）；新 olean sha1 与池内一致（`11bd6ec8…`，非假绿）。**点名上游（全实测 sorryAx）**：6T1 = `vv_inj_lemma_p22`/`azim_in_fan_azim_p22`/`sol_local_azim_p22`/`scs_6T1_generic_p22`/`EAR_SOL_NN_p22`/`DIH_IMP_EULER_A_POS_p22` + **`vv_split_azim_generic`（LA38:2654，import 成环无可达绿孪生）** + **`terminal_hex_taum`（树内无陈述）**；5T1 = `vv_inj_lemma_p22`/`azim_in_fan_azim_p22`/`scs_5T1_generic_p22`/`periodic_sum_shift_p22`/`terminal_pent_taum2_p22` + **`VPWSHTO_PRIME_p15`（LA15 sorryAx）**。
+② **ERRATA（LA22 文件头过时）**：`RRCWNS_WEAK`/`SYNQIWN` 实测**均标准三**；`scs_{6,5}T1_generic` 在 HOL 只是 `RRCWNS_WEAK`+props 的**薄包装** ⇒ 解除成本可能不高。**正面资产**：`DIHV_EQ_DIH_Y_4PT_B`（Bridge:600）/`DELTA_Y_POS_4POINTS_B`（:503）/`PROPERTIES_GENERIC_LOCAL_FAN_p9`/`JKQEWGV1_p23` 全标准三；LP registry 不是瓶颈（两 mnl id 的 `mainEstimate_*` 是定义非公理）；`AZIM_DIHV_SAME_STRONG`（LA7）标准三且闭包不含 LA22，**可无环 import**（新增 import 决策）；LA38 `tau_fun_azim`/`tau3_taum_40`/`taum_sym2` 绿但只能 `_p22` 复制。
+③ **`la22emptykit-w1` 发车**：按 U1–U9 顺序先攻 `scs_6T1_generic_p22` / `scs_5T1_generic_p22` / `terminal_pent_taum2_p22`，余量再 `vv_inj_lemma_p22`/`azim_in_fan_azim_p22`。OCBICBY 完整解封仍是一轮 `empty_*` 专项（E1–E7 + U1–U9）。
+④ **wave 15（池 3/3）**：`g482-482-w4` / `vpwshto-w1` / `la22emptykit-w1`。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
