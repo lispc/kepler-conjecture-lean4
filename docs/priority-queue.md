@@ -356,6 +356,18 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（11:33，续923）**：**一笔落库：J4 J5-8 B 簇 `95568bcd`（`Reduction3Thm14g` +231，6 定理）——reduction2/3 上游 A/B/C 三簇全清**。
+① **`95568bcd`（J4，J5-8 B 簇）**：B1 `newvertexPreppedTransformLemma`（spine 形已在库 `newvertexPreppedTransformLemmaSpine` 直投 + 链↔spine 桥 `ntransEqSpine`/`rtransEqSpine`/`markedSpineFullOfChainAlways`/`finalList_iff_finalListSpine`）+ B2 `newvertexPreppedTransform`（同款 + `hrreS` 槽，无 chain→spine 无条件桥，先例口径）+ B3 `splitFaceCountVertices`（定义级 rfl，探针仅 `[propext]`）+ B4 `splitFaceGoodVerticesSet2`（converse + `elementsOfListNtransTop` 在库无条件形 + B3/B1/`rtransDiffR` 计数 + B6 收口）+ B5 `sizelFaceListAtSplitFace`（`t9c_splitFace_faceListAt_length` + B3）+ B6 `elementsOfListVerticesSet2`（正向同证重落）。**6/6 探针 ⊆ 标准三，零 sorryAx**。3 轮机制层修法：`Kepler.Text.ly` 遮蔽雷第三次踩中已全限定；`← hB1` 方向反改 `rw [hB1]`；B4 六件并入一文件（因新 olean 未进池，按岛编纪律合并）。
+② **J5-8 上游余量对表（hF 无条件形，已入 DELIVERY）**：
+   - `nfgtransFst`（HOL :66）≈ **90–130**：可攻；B1 已落、`nfgtransSuc` ✅、两 assumption Props 作前提携带；**卡点 = 链 `lnrx_induction`（仅 spine 形）**。
+   - `main_induction`（HOL :246）≈ **200–280**：可攻；上游 A/B/C 全清，携两 assumption Props 零外部阻塞。
+   - `reduction_A/B/C`（≈428）≈ **250–400**：未落；**J2 门已开**（TAV2 无条件）。
+   - `reduction_D` / `E`+`F` ≈ **150–220 / 70–110**：等 A/B/C / 等 D+mainInduction。
+   - 2 assumption lemmas ≈ **20–30**：外部（More_lemma1 `r_rtrans_eq_thm` / `core_split_normal_list`；aq13 8b B4 frozen）。
+   - **合计 ≈820–1,240**，较侦察判词 1,250–1,700 已消 ~430–460。
+③ **状态**：J5-8 上游 A/B/C 簇全清；**真正硬依赖 = L3 两项（More_lemma1 + lnrx 链形）+ reduction_A/B/C**。下游 `nfgtransFst` 已可攻。
+④ **续派**：J4 → **`nfgtransFst`（90–130，J5-8 下一验收点）**；aq13（W4 装配）、tame-corr（J5-6 B+P3 收官）在飞。
+
 - **2026-11-11（11:28，续922）**：**一笔落库：tame-corr nb40 `998eed04`（`Reduction3J5PartOfZkLast` +228，1 公开+2 私）——J5-6 P2 子论证 A `LAST py = zk` 绿；B+P3 交精确卡点**。
 ① **`998eed04`（tame-corr nb40）**：`partOfZkGetLast`（betwn_corek_z_x.hl:591-:640 GSUBGOAL；`(hm)(hk)(hk0)(hne) {py} (hpy : py ∈ parts L r) (hzkpy : zk ∈ py) ⇒ py.getLast! = zk`；148 行 = 陈述 13 + 证 135）。路线按 nb39 §4.1 逐条落地：弧引擎（`hcongr` n=1）→ `memFindFaceImpFacesEq` 得 `fList zk = nextEl f zk` → `loopList`+`edgeNondegFXorNi` 得否定式 → 双支（`partsFlatten`/`lastFlatten2`/`uniqSublistUnique`；`conditionLastParts.mp`）。私件 `getLastBangEqGetLast`（5）+ `indexfTNextEl`（22，第 4 份同证重推导）。
 ② **三条新摩擦记档**：`conditionLastParts` 的 `.mp` 才是「¬fList-eList → d = LAST p」；`lastFlatten2` 的 `hlne` 须是 **LAST part** 非空（非 `py`）；含 `getLast` 证明参的等式上 `rw at h` 依懒改写失败，改用 `List.getLast_congr` 两步合成。
