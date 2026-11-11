@@ -356,6 +356,18 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:27，续986）**：**一笔落库：J4 mem 半 `68a066ac`（`Reduction5J5UvnsMemHalf` 新文件 +148，2 件全绿）——`memInit`/`memFinal` 绿**。
+① **`68a066ac`（J4）**：`MemIn (fun w => w ∈ core L r)` 对 init/final 形状（nb63 §2.2/2.3）；假设集与 `memMid` 同形（六载体 + `hm`/`hnf`/`hk`）+ `v` + `hprev : (prevEl (core L r) v, v) = x`。差异仅一处（≤1 行桥）：`memFinal` 统一取 `hprev`，`hprevcore` 由 `congrArg Prod.fst hprev` + `x ∈ r` 现推。
+② **路线（采信）**：`nextPrevId` + `nextEl_mem_of_mem` 得 `v ∈ core`；`pnxvwfs1/2` + `finalAssumptionMemFstCore` 得 `y0/z/prevEl v ∈ core`；`between` 段经新私有胶水 `memInMapSome`（`uvnsGetDMapSomeApp` + `betwnMem`）。2/2 探针 ⊆ 标准三、零 sorryAx；实测 148 vs 估 50–80（证明体 95 在估内，超出为头注/共享胶水）；3 轮收敛；**与 tame-corr Cl 半零写冲突**（新文件，未改 ChainCl）。
+③ **续派**：tame-corr → **2.4+2.5 junction + 装配（90–110）**，mem 槽由 `memInit`/`memFinal` 直接消（`hmemInit := memInit … v hprev`、`hmemFinal := memFinal … v hprev`），目标 = 无 mem 槽的 `uvnsWalkCons`。U 段剩 U3 + U2 消槽。
+④ **落库闸**：apply-check PASS @023181ee、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
+- **2026-11-11（19:27，续985）**：**一笔落库：tame-corr nb64 `023181ee`（`Reduction5J5UvnsChainCl` +292，文件 1407 行）——Cl 半 2.1–2.3 全绿（PARTIAL）**。
+① **`023181ee`（tame-corr nb64）**：三新微件 `getDSnocZero`/`getDSnocSucc`（`[some a] ++ X` 位置引理，**替代 `uvnsGetDAppend`+dif/omega 硬凑路线，位置账从 ~10 行变 2 行**）+ `getDMapSomeNil`（界外 `map some` 取值 = none，供 `j≥1` 支界反证）+ `getDMidZero`（mid 首项 = `some y_0`）+ `chainClInit`（init 弧段 Cl：`if_pos` 空表 + `j=0` `betwnOrbit`@0 + `j≥1` 弧内 `betwnOrbit`×2）+ `chainClFinal`（final 弧段 Cl：弧内 + 弧末→`prevEl v` 用 `nextLastBetwn` + `getD_eq_getElem_of_lt`/`getLast_eq_getElem` 桥 + 长度账排除 `j≥|arc|`）。
+② **修法记录（5 条，采信）**：`[some v] ++ X` 在 whnf 下变 cons，`uvnsGetDAppend` 的 pattern 不匹配 ⇒ 用 `getDSnoc*` 两件；`cases huv : l` 后目标已被替换，不要再 `rw [huv]`（`simpa only [huv, List.getElem_cons_zero]`）；`obtain ⟨k, rfl⟩` 消去 j 后陈述里不能写 `j`（用 `k+1`）；索引重写与 getElem 证明参数先 `show j = len-1` 再 `getD_eq_getElem_of_lt`。
+③ **PARTIAL（如实）**：2.4+2.5 junction/装配顺延（90–110），DELIVERY §2 已给精确配方。实测 +292 vs 估 120–150。
+④ **落库闸**：apply-check PASS @c9f37c97、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:23，续984）**：**一笔落库：aq13 ml17 `47663d96`（`Reduction5J5UvnsSlot` 新文件 +112，2 件全绿）——`k3UvnsOfSlots` 构造器绿，hUvns 槽压缩到单一主槽**。
 ① **`47663d96`（aq13 ml17）**：`k3UvnsMainSlot`（U 段主定理的公开类型：`finalAssumptionUvnsCombinedOfSlots` 十前提形，两分支由 hU 一并给出；def 与 `k3UvnsSlot` 结论同一 `let` 链 defeq）+ `k3UvnsOfSlots : k3UvnsMainSlot → k3UvnsSlot`。
 ② **四件供料咬合（采信）**：`hnNil ← k3Sx3SlotInstance` **直投**（逐字一致）；`hnZx ← finalAssumptionNotMemSndXZx` **直投**；`hIdxSnd ← indexSndX` **直投**；`hnFy ← finalAssumptionNotMemSndXFy` 唯一差异 = HOL 合取前提 `i<k ∧ 1<len` vs 组合件柯里化形 ⇒ **内联 1 行桥**（未改已落库陈述）。`AqiunppSlot` 由 `TameSpine.aqiunpp` 定理内部构造，零槽化。
