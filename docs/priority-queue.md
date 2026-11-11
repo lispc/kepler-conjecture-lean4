@@ -356,6 +356,13 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:16，续983）**：**一笔落库：tame-corr nb63 `6e21b5ca`（`Reduction5J5UvnsChainCl` +63，文件 1115 行）——Cl 半胶水两件绿（PARTIAL）**。
+① **`6e21b5ca`（tame-corr nb63）**：`chainClAppend`（`ChainCl` append 胶水，三支：两端 l1 / 跨越 `hj` / 两端 l2 索引 `j-l1.length` 归一）+ `getDZeroDestTriple0`（`destTriple0 f (some y :: rest) uvns` 首位不变，供 mid 首项 = `some y_0`）。19/19 探针 ⊆ 标准三、零 sorryAx；编排者清 2 处 trailing whitespace 后重编 RC=0/0err/0warn。
+② **修法记录（4 条，采信）**：`chainClAppend` l2 支索引须在**目标侧** `rw [show j+1-l1.length = (j-l1.length)+1]`；`hj'` 先 `simp only [List.length_append]` 再 omega；`getDZeroDestTriple0` 分支 sofar 与 IH 只在定义级相等 ⇒ 先 `simp only [List.cons_append]` 再 `exact ih y _`；`destTriple0` 三支是**嵌套 if**（`split` 后需再 `split`；`destTriple0Nil` 在 split 后已 whnf 消去，再 rw 会 unknown pattern）。
+③ **PARTIAL（如实）**：Cl(init)/Cl(final)/两 junction/装配未收口（6 轮止损）；DELIVERY §2 给了 2.1–2.5 逐件精确目标 + 配方（`getDMidZero` / `chainClInit` / `chainClFinal` / 两 junction / `uvnsWalkConsCl`），剩余 120–150。
+④ **并行分工（编排者）**：tame-corr → **Cl 半收口（2.1–2.5）**，继续写 `Reduction5J5UvnsChainCl.lean`；J4 → **mem 半**（新文件 `Reduction5J5UvnsMemHalf.lean`：`memInit`/`memFinal` 两件，50–80，**不改 ChainCl 文件**）；`uvnsWalkConsCl` 以显式 mem 槽接入，J4 件落地后一行消槽。
+⑤ **落库闸**：apply-check PASS @ed18d7b4、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:12，续982）**：**一笔落库：aq13 ml16 `ac8c6f7b`（`Reduction5J5SxC` 新文件 +474，12 件全绿）——SX-c 链整段绿，`k3Sx3SlotInstance` 落库，hSx3 槽消**。
 ① **`ac8c6f7b`（aq13 ml16）**：`listPairsCoreChain`（tame_list:14057 链形）+ `memListOfDartsQuotientChain`（:6913）+ `memListOfDartsQuotientCore`（reduction4:3412）+ `memFlattenOfQuotDart`（:3388）+ `memListPairsCoreImpMemR`（:3360）+ `memListPairsCoreOfNextEl`（:1647 逆向形）+ `split2MemChain`（`has_snd_norm_list_fliter` 链形**替位**，经在库 `TameSpine.aq1b_split2Mem` + 三桥）+ **`nonRDartsTrans`（:3433，97 HOL → ~65）** + `ntransStateComp` + `nonRDartsTransI`（:3530）+ `listOfDartsMem`（:3563）+ **`k3Sx3SlotInstance : k3Sx3Slot`**（:3694–3708 第三合取）。
 ② **验收**：陈述零偏差（前提集与 HOL 逐项同，仅柯里化顺序；`memListPairsCoreOfNextEl` = `next_el_core_list_pairs` 逆向形）；12/12 探针 ⊆ 标准三、零 sorryAx；**接口探针 `reductionK3ConclOfSlots hF8 k3Sx3SlotInstance` 机器通过**；实测 +474 vs 估 220–300（超 450 软线 24 行，证明体 ~380，一次绿成按整段优先，如实记档）。
