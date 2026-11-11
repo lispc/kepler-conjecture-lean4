@@ -526,7 +526,51 @@ poly 簇接线（`fcdjdot` 柱③ = `pa22-poly-defix`）落地后逐批转入 K_
 混有闸重编带来的 olean 覆盖面变化（N 时期已记录同类 +2,796），跨基线比较只看
 K_REACH / SORRIED / AXIOM 三项更可靠。
 
+### 基线 U：J5-9 会师落库 @ `64663be3`（2026-11-11）
 
+> 触发：J 链收官（`551fe9b6` 接线 + `64663be3` Assembly `jcajydu` 真证替换）。
+> 仪器 `nice -n 19 lake env lean scripts/e2e_reach_map.lean`（串行，pit 15 纪律）；
+> 输出原样换装 `docs/e2e-reachability-map.tsv`（**5,900 行**）；`trust_manifest.py --check` PASS
+> （585/585 ground、0 形状未知、三区间 0 空隙 0 重叠）。
+
+| 指标 | 基线 U | 基线 T | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,443** | 2,088,969 | **+6,474** |
+| SORRIED | **77** | 78 | **−1** |
+| K_AXIOM | **585** | 585 | **0** |
+| K_MODULES | 5,219 | 4,747 | +472 |
+| K_UNIVERSE | 2,108,348 | 2,101,184 | +7,164 |
+| COVERAGE | 99.3879% | 99.4187% | −0.0308pp |
+| 口径 II（ex-Cases） | K_REACH **35,020** / SORRIED **77** / AXIOM **585** / UNIVERSE **46,368** | 28,546 / 78 / 585 / 39,204 | +6,474 / −1 / 0 / +7,164 |
+| TOTAL_VALUE_DECLS | 2,094,769 | 2,088,302 | +6,467 |
+
+**SORRIED 清单逐行 diff（唯一判据）**：closed = **{`Kepler.Assembly.jcajydu`}**，added = ∅。
+**hTC 三件（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）在 SORRIED 段 0 命中** ⇒
+hTC 的 Assembly 侧全闭。**Axiom 名单 diff = 0/0**（585 不变，仍 580 shard-range + 5 tri-single-seed）。
+
+**剩余 77 的构成**（`--- SORRIED ---` 段实测）：
+- Assembly **56** = **55 `nli*`（hNL 骨架）+ 1 `lpArchiveCertificatesDebt`（hLP）**
+  （`nliRest*` 40 / `nliTsk*` 5 / `nliCell3*` 5 / 直挂 5）；
+- Text **21** = hTC 消费的 Text 章级件（`LocalAuto` p22–p33 阶梯 16 + `TameLp.fully_surrounded_perimeter_bound`
+  + `PackingAuto13.URRPHBZ2` + `PackingAuto25.pkLeafRankCriticalEdge` + `PackingAuto25.real_model_ox3q1h_merge`
+  + `_private….mnt11_anchor`）。
+- **勘误（对路线图第 0 步 ③ 的预期）**：「hTC 全闭 ⇒ e2e 只剩 hNL + hLP」**不成立**——
+  会师只关 hTC 的 **3 条 Assembly 件**，其 **Text 章级债 21 条**仍在锥内（基线 T 就在，非回归）。
+
+**判读**：K_REACH +6,474 / K_MODULES +472 是 J 链（K2–K10、SX-c、UVNS、会师件）整体进树的兑现
+（主指标"树越大越好"）；COVERAGE 微降是 K_UNIVERSE 涨得更快（+7,164，J 链新模块入 env），非退步。
+
+**仪器勘误（stale olean / 预计算公理表，2026-11-11 新发现，已修）**：Lean 4.32 的
+`#print axioms` 对**导入声明**读的是 olean 里序列化的**预计算公理表**
+（`Lean/Util/CollectAxioms.lean:100-148` `exportedAxiomsExt`：表在 olean 导出时算好，
+下游模块查表、**不跨模块重走证明项**；最小复现：A 改公理后只重建 A，旧 B.olean 仍报旧公理）。
+池内 `Kepler/Final.olean` 停在 **2026-11-06**（goodList 波四之前）⇒ 查询
+`#print axioms Kepler.the_kepler_conjecture_e2e` 读旧表报 **587 native**（含两条已删的
+`{hex,pent}_top_replay._native…` **幻影公理**）；同环境查
+`Kepler.Assembly.the_kepler_conjecture_from_interfaces` 则是 585（新 Assembly.olean）。
+**修法**：`lean -o` 重编 `Final.lean` 回灌 `.lake`；复测 **589 = 585 native + 标准三 + sorryAx**
+（与基线 T 逐项一致）。**纪律**：`#print axioms` 探针必须保证**目标声明所在模块的 olean**
+新鲜；上游改动后下游 importer（尤其 `Final`）不重编，根面读数会"穿越"到旧状态。
 
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 

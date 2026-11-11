@@ -9,15 +9,19 @@
 > **核心路线图（2026-11-09 用户指定）**：[`docs/hf-proof-map.md`](hf-proof-map.md) —— 九节完成度 +
 > 逐箭头逻辑链 + 缺口清单 §11；推进以它为基础，状态更新写在它的「状态更新」节。
 > **数字口径（2026-11-05 起）**：本文件里的指标是「最后实测」，不是实时值——
-> 每条都带 commit 与日期。当前实测 = **基线 T @`52275a1c`（2026-11-09，信任基座定格）**
-> （cone `K_REACH 2,088,969` / **SORRIED 78** / **`K_AXIOM 585`** / MODULES 4,747 /
-> UNIVERSE 2,101,184 / COVERAGE **99.4187%**；口径 II 28,546 / 78 / 585 / 39,204。
+> 每条都带 commit 与日期。当前实测 = **基线 U @`64663be3`（2026-11-11，J5-9 会师）**
+> （cone `K_REACH 2,095,443` / **SORRIED 77** / **`K_AXIOM 585`** / MODULES 5,219 /
+> UNIVERSE 2,108,348 / COVERAGE **99.3879%**；口径 II 35,020 / 77 / 585 / 46,368。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （编排者复核，RC=0，Δ=2 精确命中波四消除的 2 条公理）。
-> `docs/e2e-reachability-map.tsv` **已按基线 T 重写（5,429 行）** — 仪器原样输出，非手工；
-> `trust-base.tsv` manifest 已再生（585 行，`--check` PASS：0 非地面、0 形状未知、
+> （**fresh-compile `Final.lean` 复核**，RC=0；池内旧 `Final.olean` 的幻影读数勘误见
+> `e2e-reachability-map.md` 基线 U 与续995）。
+> `docs/e2e-reachability-map.tsv` **已按基线 U 重写（5,900 行）** — 仪器原样输出，非手工；
+> `trust-base.tsv` manifest `--check` PASS（585/585 ground、0 形状未知、
 > 三区间 0 空隙 0 重叠）。**公理形状仅剩 2 种：shard-range 580 + tri-single-seed 5**
-> —— AGENTS §1 的「约 585 条」自此为精确值，无任何可再削的公理。
+> —— AGENTS §1 的「约 585 条」为精确值，无任何可再削的公理。
+> 较基线 T（`52275a1c`）：**SORRIED 78→77**（清单 diff：closed 恰 `jcajydu`、added ∅；
+> hTC Assembly 三件全闭）、**K_AXIOM 585→585（名单 diff 0/0）**、K_REACH **+6,474**、
+> K_MODULES **+472**、K_UNIVERSE **+7,164**（J 链整体进树 + 新模块入 env）。
 > 较基线 S（`2ef062e8`）：**K_AXIOM 587→585**（goodList 波四：最后 2 条
 > `{hex,pent}_top_replay` 换 kernel `decide`+符号链，`52275a1c`）；
 > K_REACH +333、K_MODULES +90（86 个 `TopReplay{Hex,Pent}Shard` 文件 + `Cert{Hex,Pent}` 链）。
@@ -37,7 +41,7 @@
 
 | 里程碑 | 定义 | 现状（**2026-11-06 实测，基线 O @`7c120676`**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **⚠️ 本行下列数字停在基线 O（历史）；当前 = 基线 T（2026-11-09 定格）：cone SORRIED 78 / K_REACH 2,088,969 / AXIOM **585** / MODULES 4,747 / UNIVERSE 2,101,184 / COVERAGE 99.4187%（见文件头与 TSV）。基线 O：cone K_REACH 2,086,156（较 N +205）/ SORRIED **99**（较 N −19，`b07a1722` 补测）/ AXIOM 624（±0）/ K_MODULES 4,195 / K_UNIVERSE 2,099,010；口径 II ex-Cases = 25,733 / 99 / 624 / 37,030；UNION K_REACH 2,107,294 / ROOTS 164 / K_UNIVERSE 2,122,916 / COVERAGE 99.264% / ORPHANS 15,622（public 11,297 + private 4,325）/ SHIMS 22（sorried 2）**。**ORPHANS +1,123 已归因：GENERATED 层 Δ=0（否证「重建 shard」假设），`PackingAuto22` 单模块 983 = 87.5%（该模块本轮才由 `04db48c7` 进 env），其余 +140 是「新增未接线材料净掉塔群回收」；非回归。** 详见 `docs/e2e-reachability-map.md` 基线 O |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **⚠️ 本行下列数字停在基线 O（历史）；当前 = 基线 U（2026-11-11 @`64663be3`，J5-9 会师）：cone SORRIED 77 / K_REACH 2,095,443 / AXIOM **585** / MODULES 5,219 / UNIVERSE 2,108,348 / COVERAGE 99.3879%（见文件头与 TSV）。基线 T：SORRIED 78 / K_REACH 2,088,969 / MODULES 4,747 / UNIVERSE 2,101,184 / COVERAGE 99.4187%。基线 O：cone K_REACH 2,086,156（较 N +205）/ SORRIED **99**（较 N −19，`b07a1722` 补测）/ AXIOM 624（±0）/ K_MODULES 4,195 / K_UNIVERSE 2,099,010；口径 II ex-Cases = 25,733 / 99 / 624 / 37,030；UNION K_REACH 2,107,294 / ROOTS 164 / K_UNIVERSE 2,122,916 / COVERAGE 99.264% / ORPHANS 15,622（public 11,297 + private 4,325）/ SHIMS 22（sorried 2）**。**ORPHANS +1,123 已归因：GENERATED 层 Δ=0（否证「重建 shard」假设），`PackingAuto22` 单模块 983 = 87.5%（该模块本轮才由 `04db48c7` 进 env），其余 +140 是「新增未接线材料净掉塔群回收」；非回归。** 详见 `docs/e2e-reachability-map.md` 基线 O / 基线 U |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -47,15 +51,13 @@
 |---|---|---|---|
 | **M0b 兑现** | 塔群 capstone + Assembly 接线，闭件转成 K_REACH | **已三件：w1 126 + w2 45 + w3 151 = 322 出口入锥（`b8e64e18`/`68a306ec`、`939b2533`/`da9b5fd4`、`a7bdb571`/`cbfad0cd`），根公理面 628 行始终不变；LA6 的 PROVE_SLICING_FAN/LOFA_HYP 两件待小波补录** | 无（机械） |
 | **M1a 锥内文本债清零** | cone SORRIED **134 → 89**（只剩农场 84+5） | 文本波 35（twin-transfer/装配）+ 移植 7（hTC 3 + LEAF 3 + TameLp 1）+ 接口锚 2 + LP 1 | **勘误：twin 不全是捷径**——`ZLZTHIC_discharged := @ZLZTHIC_p14`、`MHAEYJN_discharged := MHAEYJN_p37` 是**指向塔内 sorry 的正向转发体**；M1a 的 transfer 只对"真证孪生"成立，须逐件 `#print axioms` 核实 |
-| **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导）；hTC 3 Assembly + ~70 Text 章级移植单开长车道 | hTC 章级移植深（DLWCHEM/XULJEPR 计数 GIANT） |
+| **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | **hTC Assembly 三件已全闭（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`，基线 U 实测 SORRIED 0 命中）**；其 Text 章级债 21 条仍在锥；hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导） | hTC 章级移植深（DLWCHEM/XULJEPR 计数 GIANT） |
 | **M2 信任基座** | 621 shard manifest + 抽样 replay + Docker 一键复现（**原版 Flyspeck 的答案**：见 handoff §0.1） | manifest/harness 本机可做；全量 replay 需算力窗口 | 算力 |
-| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 78 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | 锥内 sorry 的非-LP 部分在攻（J 战役 / WSEWPCH / nli 移植）；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
+| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 77 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | 锥内 sorry 的非-LP 部分在攻（WSEWPCH / nli 移植）；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
 
-三接口独立债量（2026-10-28 口径，Assembly 81；2026-11-03 已降至 77，明细待重扫）：**hNL（非线性不等式）= 77 条 nli\***（57
-`nliPackNonlinearRest`（TSV 实数，含 A2 在飞的 rest 9）+ 8 `nliTskBank` + 7 `nliCell3Bank` + 直挂若干）；**hLP（线性规划）
-= 1 条**（`lpArchiveCertificatesDebt`，Assembly:6236（triage-w1 2026-10-28 实测行漂，原记 6224），纯逻辑部分已真推导）；**hTC
-（TextCapstone）= 3 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）+ Text 层
-~70 条（triage-w1 全量分诊实测 2026-10-28，原约数 ~74）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
+三接口独立债量（**基线 U @`64663be3` 实测 2026-11-11**，取代 2026-10-28 口径）：**hNL（非线性不等式）= 55 条 `nli*`**
+（`nliRest*` 40 + `nliTsk*` 5 + `nliCell3*` 5 + 直挂 5：`nliKcblrqcIneqDef`/`nliLpIneqs`/`nliMainNonlinearTerminalV11`/`nliOx3q1h`/`nliPackIneqDefA`）；**hLP（线性规划）
+= 1 条**（`lpArchiveCertificatesDebt`，纯逻辑部分已真推导）；**hTC（TextCapstone）= 0 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso` 全闭，SORRIED 0 命中）**+ Text 章级 21 条仍在锥**。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
 ## 0.2 J 战役后路线图（2026-11-10 用户批准）
 
@@ -66,7 +68,7 @@
 
 | 步 | 名称 | 内容（可执行清单） | 前置 | 需用户裁决 |
 |---|---|---|---|---|
-| **0** | **收口量测（不猜）** | ① 重跑 `#print axioms Kepler.the_kepler_conjecture_e2e` + `e2e_reach_map` + SORRIED/K_REACH/K_AXIOM/K_MODULES；② 出**新基线 U** 并写档（带 commit 与日期）；③ 用 J5 实测对账 hTC 三件（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）——若全闭，e2e 应只剩 **hNL 585 基座 + hLP 1 条**；④ 更新 `docs/hf-proof-map.md` 状态表 | J5 落库 | 否 |
+| **0** | **收口量测（不猜）** | ① 重跑 `#print axioms Kepler.the_kepler_conjecture_e2e` + `e2e_reach_map` + SORRIED/K_REACH/K_AXIOM/K_MODULES；② 出**新基线 U** 并写档（带 commit 与日期）；③ 用 J5 实测对账 hTC 三件（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）——若全闭，e2e 应只剩 **hNL 585 基座 + hLP 1 条**；④ 更新 `docs/hf-proof-map.md` 状态表。**✅ 2026-11-11 完成（基线 U @`64663be3`）**：SORRIED **78→77**（清单 diff 恰 `{jcajydu}`、added ∅）；**③ 的预期勘误**——hTC Assembly 三件全闭但 Text 章级债 **21 条仍在锥**，e2e 剩余 = **55 `nli*` + 1 hLP + 21 Text**；K_AXIOM 名单 diff 0/0 | J5 落库 | 否 |
 | **1** | **文本层剩余债清零** | ① WSEWPCH：W12 straight 支（~500–650，三拆批）+ BGMIFTE 本体装配（**✅ `54e312a0`**）+ 五分支归纳 → 消 LA7 的 `sorry`，闭 `fully_surrounded_perimeter_bound`；**⚠ 2026-11-10 记账（续514）**：WSEWPCH **generic 支**（内角全 < π）不是 LA7 内部工作——HOL `polar_fan.hl:2564` 显式用 `Localization.NKEZBFC`（`0 ≤ sol_local`），本树 `LocalAuto2:1606` 是 `:= sorry` ⇒ **WSEWPCH 全闭还差 NKEZBFC（+`EJRCFJD` 挂账前提）**，`nkezbfc-scout` 报规模后单独立项；本步其余照常推进。
 **✅ 2026-11-10 记账（续774）：NKEZBFC 已条件形收口**——全链 11 波（W19–W40）标准三零 sorryAx，结案报告 `docs/history/nkezbfc-final-2026-11-10.md`；**唯一真几何挂账 B1 = w 侧 1_2 族**（HOL 亦为隐式依赖，脚本内不可独立摘录；`WindingSlot` 边界件 def 零公理）。**B1 在 queue 中的位置 = 本步挂账项（非独立工位）**；两个入口：① 取得 HOL 可执行 proof state（本地无 HOL 工具链）；② 独立攻绕序核心（估 200–400，成功率未定）——池腾槽后可作独立波发车，发车前需用户点头「不确定性投资」。NKEZBFC 闭环后，`fully_surrounded_perimeter_bound`（TameLp:925）三桥只剩 `hNKE` 供给件（~60–120，`LocalFanPerimeterGeneric:116` 预留位）即可得**条件形**；`MQMSMAB`（TameLp:10892）的无条件形仍等 B1。② J 侧非 J2 尾巴扫干净（J3 审计表「可攻 35」归零、T9/T7/T11 残留件、`marked_x_exists` 等 M2 挂件随 M2 走）；③ 每件落库后按 §1 池纪律继续派 | 无（可与 J 并行） | 否 |
 | **2** | **hLP 一件收口** | `lpArchiveCertificatesDebt`（Assembly 级）：纯逻辑部分已真推导，只剩包装/接线；落库后 hLP 归零 | 无 | 否（**不触 LP 证书层**，仅逻辑接线） |
@@ -133,7 +135,12 @@
 > **HOL 死码 5 条禁搬**：`containsDuplicateEdge`（整块注释且带自由 `X`）/`oldvertex2`/`SHXWKXQ`/两件 iota。
 > 逐波落库一笔 commit + 一条续日志；行数超 450 先交半件 + 接缝报告（AGENTS §7）。
 
-## 1. 在飞（2026-11-09 18:45，池 **5/5**，续477 对表）
+## 1. 在飞（2026-11-11 22:09，池 **0/3**：J5 收官后待发下一波，续995 对表）
+
+> **2026-11-11（续995）现状**：J 链（J0–J5）收官，`Assembly.jcajydu` 已真证（`64663be3`），
+> 三条现役车道（`aq13` / `tame-corr` / `J4`）在上波交付后全部收工待命，当前**无在飞**。
+> **下一波（路线图第 1/2 步，并行）**：① 文本层剩余债（WSEWPCH straight 支 / BGMIFTE 装配已有件 / 21 条 Text 章级）；② hLP `lpArchiveCertificatesDebt` 纯逻辑接线（不触 LP 证书层）。
+> 下表的 2026-11-09 波序与机器状态为历史，保留作审计。
 
 > **用户 2026-11-09 指令：额度恢复，维持 5 车道。**（11-06 的"降到 3"解除。）
 > **用户 2026-11-09 裁决（常设）：`jcajydu` J 战役立项，池内永久保持 ≥1 条战役车道**——
@@ -355,6 +362,13 @@
 ② **编排方式改版（用户指令「sub agent 负责更大、主线程更稀疏」）**：派单从「每轮 1–2 件」改为**整段交付制**——每车道一次负责一整个波段（多件 + 验收点），车道自行迭代到绿或真冻结，**只回主线程一次**，绿件打包单 patch 整批验收落库；冻结件附陈述+修法表；中途侦察不交主线程。
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
+
+- **2026-11-11（22:09，续995）**：**路线图第 0 步完成：基线 U 量测定格 @`64663be3`——SORRIED 78→77（清单 diff 恰 `{jcajydu}`、added ∅）、K_AXIOM 585 名单 0/0、K_REACH +6,474；根面 589 复核通过；两条仪器勘误入账**。
+① **根面（fresh compile）**：`lean -o` 重编 `Kepler/Final.lean` + `#print axioms Kepler.the_kepler_conjecture_e2e` = **589 = 585 native + 标准三 + `sorryAx`**（RC=0，与基线 T 逐项一致）。**勘误（幻影公理）**：池内 `Final.olean` 停在 **2026-11-06**（goodList 波四前），直接 `import Kepler.Final` 读它报 **587 native**（含两条已删 `{hex,pent}_top_replay._native…` 幻影）；同环境查 `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 是 585。**机理（Lean 4.32 实测源码+最小复现）**：`#print axioms` 对导入声明读 olean 内**预计算公理表**（`CollectAxioms.lean:100-148` `exportedAxiomsExt`，不跨模块重走证明项）⇒ 上游改动后下游 importer 不重编，读数"穿越"到旧状态。**修法**：重编 `Final.olean` 回灌 `.lake`，复测 589。**纪律**：根面探针须保证目标声明所在模块 olean 新鲜（关联 `vu` 工具链文档）。
+② **仪器（`e2e_reach_map`，21:16:49→21:29:26 ≈ 12.6 min，`nice -n 19` 串行）**：`K_REACH 2,095,443`（较 T **+6,474**）/ **SORRIED 77**（−1；`--- SORRIED ---` 清单逐行 diff：closed = `{Kepler.Assembly.jcajydu}`、added = ∅）/ **`K_AXIOM 585`**（公理名单 diff **0/0**）/ `K_MODULES 5,219`（+472）/ `K_UNIVERSE 2,108,348`（+7,164）/ COVERAGE **99.3879%**；口径 II `35,020 / 77 / 585 / 46,368`。**判读**：+6,474 reach / +472 modules = J 链（K2–K10、SX-c、UVNS、会师件）整体进树的直接兑现；COVERAGE 微降 = universe（+7,164，J 链新模块入 env）涨得更快，非退步。
+③ **剩余 77 构成（实测）**：Assembly **56** = **55 `nli*`（hNL）+ 1 `lpArchiveCertificatesDebt`（hLP）**；Text **21** = hTC 消费的章级件（`LocalAuto` p22–p33 阶梯 16 + `TameLp.fully_surrounded_perimeter_bound` + PA13 `URRPHBZ2` + PA25 两件 + `mnt11_anchor`）。**勘误（路线图第 0 步 ③ 预期）**：「hTC 全闭 ⇒ e2e 只剩 hNL + hLP」**只对 Assembly 侧成立**——hTC 三件（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`）确已全闭（SORRIED 0 命中），但其 Text 章级债 21 条仍在锥（基线 T 就在，非回归）。
+④ **落档**：TSV 换装（**5,900 行**，仪器原样）；`trust_manifest.py --check` PASS（585/585 ground、0 形状未知、Quad/Pent/Hex 三区间 0 空隙 0 重叠）；`e2e-reachability-map.md` 新增「基线 U」节（含 stale-olean 勘误）；`hf-proof-map.md` 状态更新（七）+ 口径节刷到 77；`AGENTS.md` §1 锥内 sorry 78→77；本文件文件头 + §0 M0 行 + §0.1 M1b 行 + §0.2 第 0 步行同步。
+⑤ **下一步**：按路线图**并行发车**——第 1 步（文本层剩余债，WSEWPCH straight 支 / BGMIFTE 装配已有件）与第 2 步（hLP `lpArchiveCertificatesDebt` 纯逻辑接线，不触 LP 证书层）各占车道，互不冲突。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
