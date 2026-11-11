@@ -356,6 +356,13 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:45，续990）**：**一笔落库：tame-corr nb67 `1ee005fd`（`Reduction5J5UvnsMainWiring` 新文件 +56，1 件）——U 段合成 `uvnsMainOfU2` 绿**。
+① **`1ee005fd`（tame-corr nb67）**：`uvnsMainOfU2 (hU2 : 有序支 ∀ 形) : k3UvnsMainSlot`——`intro` 后 `refine ⟨?_, ?_⟩`：有序支 = `hU2`（**zeta 后与第一合取逐字同形，无需 `show` 桥**），pairs 支 = `uvnsPairsOfWalk`（U3）；`hnNil`/`hnFy`/`hnZx`/`hIdxSnd` 四前提仅透传（`hnNil` 供 U3，其余供 `k3UvnsOfSlots` 直投，本件不消费不重证）。证体仅 **13 行**、一次编译过。
+② **ERRATA（路径冲突）**：派单指定 `Reduction5J5UvnsCombined.lean` **已存在**（nb53 的 `finalAssumptionUvnsCombinedOfSlots`，`76ef16de`）⇒ 改用 `Reduction5J5UvnsMainWiring.lean`，既有文件零触碰。
+③ **验收**：探针 ⊆ 标准三、零 sorryAx；实测 56 vs 估 20–40（证体 13 行，证明成本低于估）。
+④ **状态**：**U 段只剩 J4 的 U2 一个显式槽**。U2 落库后：`finalAssumptionUvnsCombined := uvnsMainOfU2 uvnsOrderedOfWalk` 一行 → `k3UvnsOfSlots finalAssumptionUvnsCombined : k3UvnsSlot` → `reductionK3` 的 hUvns 槽就位 → 会师（Assembly 删桩按 续987 样板 + 岛协议）。
+⑤ **落库闸**：apply-check PASS @ffdb61a2、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:41，续989）**：**一笔落库：tame-corr nb66 `bad42751`（`Reduction5J5UvnsU3` 新文件 +72，1 件）——U3 pairs 支 `uvnsPairsOfWalk` 绿**。
 ① **`bad42751`（tame-corr nb66）**：陈述 = `k3UvnsMainSlot` 第二合取逐字（`let vs := destTripleFull …; ∀ i, isSome ∧ isSome ∧ i+1 < |vs| ∧ d ∈ listOfDarts (quotientList) → d ∈ listPairs (core L r)`）；前提 = `uvnsWalkCons` 六载体 + `hnNil`（`k3UvnsOfSlots` 直投槽）+ `hprev`。
 ② **证体（Cl 二分，~20 行）**：`rcases hwalk.1 i hlt hs1 hs2 with hnext | ⟨t, htk, ha, hb, hlen⟩`——① nextEl 支 `memListPairsCoreOfNextEl`（SxC，ac8c6f7b）一次调用（`u ∈ core` 由 walk mem 半），`d ∈ listOfDarts` 不消费（Cl 已内含邻接）；② `(y_t,z_t)` 支 `hnNil t htk (List.length_eq_zero_iff.mp hlen)` + `rw [← ha, ← hb]; exact hd` 对形即闭。
