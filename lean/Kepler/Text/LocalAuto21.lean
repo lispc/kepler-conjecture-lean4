@@ -11,8 +11,8 @@ obtuse-monotonicity kit, and the terminal chain `general_482_deformation`,
 
 FILE MAP (all 62 HOL theorems, source order; `_p21` suffix throughout)
   Section A (simplex completion kit): `PQCSXWG1_SYM_p21` (sorry), `homog_2x2_p21`
-    (proved), `simplex_unique_p21` (sorry), `re_eqvl_pos_pos_p21` (proved),
-    `mk_simplex_uniq_p21` (sorry).
+    (proved), `simplex_unique_p21` (proved), `re_eqvl_pos_pos_p21` (proved),
+    `mk_simplex_uniq_p21` (proved).
   Section B (ε/continuity small-print): `continuous_nbd_pos_p21`,
     `epsilon_pair_p21`, `epsilon_triple_p21`, `epsilon_quad_p21` (all proved).
   Section C (deformation existence): `deform_simplex_decrease_edge23_p21`
@@ -202,11 +202,9 @@ theorem simplex_unique_p21 (v0 v1 v2 v3 v3' : V3)
     (d2 : dist v2 v3 = dist v2 v3')
     (hre : reEqvl ((v3 - v0) ⬝ᵥ cross3 (v1 - v0) (v2 - v0))
       ((v3' - v0) ⬝ᵥ cross3 (v1 - v0) (v2 - v0))) : v3 = v3' := by
-  -- DISCHARGES: HOL proof over Trigonometry2.NONCOPLANAR_3_BASIS,
-  -- Local_lemmas.NOT_COLL_IMP_COPL, `homog_2x2` and the Pythagorean
-  -- decomposition `NORM_ADD_PYTHAGOREAN`; geometry engine absent here.
-  -- NEEDS: port the basis-expansion argument on the LocalAuto1 side.
-  sorry
+  -- PROVED: HOL `NONCOPLANAR_3_BASIS` basis-expansion ported verbatim (same
+  -- statement) in `LocalAuto21Kit.simplex_unique_w2`.
+  exact simplex_unique_w2 v0 v1 v2 v3 v3' hnc d0 d1 d2 hre
 
 /-- HOL `re_eqvl_pos_pos` (CUXVZOZ.hl:218). -/
 theorem re_eqvl_pos_pos_p21 (a b : ℝ) (ha : 0 < a) (hb : 0 < b) : reEqvl a b := by
@@ -220,11 +218,10 @@ theorem mk_simplex_uniq_p21 (v0 v1 v2 v3 : V3)
     (hpos : (v1 - v0) ⬝ᵥ cross3 (v2 - v0) (v3 - v0) > 0) :
     mkSimplex1 v0 v1 v2 (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
       (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) = v3 := by
-  -- DISCHARGES: HOL Pqcsxwg.PQCSXWG1 + Oxlzlez.coplanar_delta_y
-  -- (`delta_y > 0` off non-coplanarity) + `re_eqvl_pos_pos`; the coplanar
-  -- delta_y criterion is not on this side of the `atn2` split.
-  -- NEEDS: merge with the PQCSXWG/Oxlzlez lanes.
-  sorry
+  -- PROVED: HOL proof ported verbatim (same statement) in
+  -- `LocalAuto21Kit.mk_simplex_uniq_w2` (the `coplanar_delta_y` step is
+  -- replaced there by the `Coplanar` hypothesis).
+  exact mk_simplex_uniq_w2 v0 v1 v2 v3 hnc hpos
 
 /-! ## Section B: ε and continuity small-print -/
 
