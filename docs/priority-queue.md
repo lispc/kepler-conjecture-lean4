@@ -356,6 +356,11 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（15:18，续958）**：**一笔落库：J4 K4-C0 R2b2+R2c `10928250`（`Reduction4K4C0R2b2` +291，2 件）——K4-C0 六件全清**。
+① **`10928250`（J4）**：`memIfbetwnTlExtend`（reduction4.hl:4123，226 HOL → 132）+ `coreBetwn`（:4425，73 HOL → 89）。**K4-C0 六件全清**（`ifbetwn_indexf`/`indexf0`/`mem_ifbetwn_hd_extend`/`mem_ifbetwn_tl_extend`/`core_lt_indexf`/`core_betwn`）。
+② **路线**：tl_extend 不走 HOL 的「双 rot + `index_cat` + `indexl_LAST`」，改 `rotParts` 取 p 前缀 → 按 `t.idxOf x` 拆 `t = u ++ x :: v` → 构造 `s = (x :: v) ++ (p ++ u)` 并证 `s = r'.rotate (|p|+|u|)`（两次 `rotate_append_length_eq`），核心归约为 `indexf` 比较 + `idxOf_append_of_mem/notMem` 三处下标 + `omega`；core_betwn = `memIfbetwnHdExtend` + `memIfbetwnTlExtend` 两端归一 + `ifbetwnIndexf` 两侧化 + `indexfInj` 排除相等支 + `coreLtIndexf` 收口。DIFFERS：`good_list_nodes ↦ GoodListNodesTl`、`is_edge_nondegenerate ↦ (hypermapOfList L hL).EdgeNondegenerate`（HOL 证体中两前提同样未消费）。2/2 探针 ⊆ 标准三、零 sorryAx；实测 291 vs 估 270–380。
+③ **续派**：J4 → **`_snd_x_fy`/`_snd_x_zx` 回攻（110–180，`coreBetwn` 已供）→ 随后 C2 `index_snd_x`（200–350）**；aq13（C3）、tame-corr（split_normal_list 本体）在飞。
+
 - **2026-11-11（15:12，续957）**：**一笔落库：tame-corr nb49 `d2dd97e0`（`Reduction5J5K2A2Split` +116，3 件）——A2.2 上游三件绿；两件 AQ8 的 spine 主定理早已在库**。
 ① **`d2dd97e0`（tame-corr nb49）**：`zNotEqYtransV0`（15 行；`finalAssumptionYNeZ` i=0 + `transformCountNon0OfMarked` 对称供）+ `uniqFstSplitNormalParts`（23 行）+ `uniqSndSplitNormalParts`（23 行）。3/3 探针 ⊆ 标准三、零 sorryAx；实测 116 vs 估 125–205。
 ② **关键发现（判词）**：两件 AQ8 的 spine 主定理**早已在库**——`aq8w4d_uniqFstSplitNormalParts`（`JcajyduAqLeaf8W4d:200`，AQ8:2382 完整证）/ `aq8w3ae_coreSNDNodup`（`JcajyduAqLeaf8W3ae:256`，AQ8:530 完整证）；链层只需三桥换元（`parts_eq_partsSpine` + `splitNormalListEqSpine` + `lyEqSpine`/`lzEqSpine` + `coreEqPartsHeadFst`）**各 23 行**，不是 scout 估的 60–100。
