@@ -166,10 +166,10 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 13 三车道在飞（池 3/3）**：`g482-482-w4`（general_482 续写，Body2 511 行 + ~316 行）、
-> `vpwshto-w1`（`VPWSHTO_p15`，锥内直源，HOL `VPWSHTO.hl:1978`）、`ocbicby-w1`（`OCBICBY_p22`
-> 先依赖侦察；锥内直源巨件）。**wave 12 三笔已全落库**（rrw `75ed6d07` / w3 `3d8db02b` /
-> la7gen `001731a7`）；**基线 Z：SORRIED 74（真还债）**。
+> **wave 14 三车道在飞（池 3/3）**：`g482-482-w4`（general_482 续写）、`vpwshto-w1`
+> （`VPWSHTO_p15`，锥内直源）、`empty-la22-w1`（`empty_6T1_p22` + `empty_5T1_p22`，OCBICBY 的
+> 14 条 emptiness 之二）。**ocbicby-w1 判 BLOCKED**（14 条 empty 缺口：2 LA22 sorry + 1 LA38 环 +
+> 11 条无陈述；装配探针已标准三，见续1010）；**基线 Z：SORRIED 74**。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -529,6 +529,11 @@
 ④ **基线 Z（`e2e_reach_map`，仪器原样）**：`K_REACH 2,095,561`（**+77**，RRCWNSJ 证明体 kit 入锥）/ **SORRIED 74（75→74；清单 diff：closed 恰 `{Kepler.Text.RRCWNSJ_p26}`、added ∅）** / `K_AXIOM 585`（0/0）/ `K_MODULES 5,219` / `K_UNIVERSE 2,108,677`（+113）/ COVERAGE **99.3796%**；口径 II `35,138 / 74 / 585 / 46,697`；`TOTAL_VALUE_DECLS 2,094,887`。TSV 换装 **5,897 行**，manifest `--check` PASS，根面 589 **逐字节 IDENTICAL**。**定性：真还债**（不同于 `pkLeafRankCriticalEdge`/`mnt11_anchor` 的资产/去重）。剩余 74 = Assembly 56 + **Text 18**。
 ⑤ **wave 13（池 3/3）**：`g482-482-w4`（general_482 续写，Body2 511 行 + ~316 行）/ `vpwshto-w1`（`VPWSHTO_p15`，锥内直源，HOL `VPWSHTO.hl:1978`）/ `ocbicby-w1`（`OCBICBY_p22` 先依赖侦察后移植；锥内直源巨件）。
 ⑥ **磁盘清理（用户指令）**：删除过期 `/tmp` 工作目录（前会话 17 个大件 + 本会话已完成车道），**已用 431 GiB → 188 GiB、空闲 2.9 GiB → 245 GiB**；保留在飞车道（`g482-482-w4`/`la7gen`→后转 `vpwshto`/`ocbicby`）与 `~/c17_backup/lane_snapshots` 全部交付。
+
+- **2026-11-12（07:12，续1010）**：**`ocbicby-w1` 判词 BLOCKED（OCBICBY_p22：14 条 emptiness 缺口）；`empty_la22-w1` 发车攻 LA22 两条巨件**。
+① **BLOCKED 机器证据**：HOL `OCBICBY` 的证明体 = `pos_imp_scs_arrow_empty` × 14 + `arrow_rewrite_list`（14 条 `empty_*`）；**装配探针（14 条作假设）= 标准三** ⇒ 一旦 empties 落地，本体零额外信任成本。缺口恰 14 条：**2 条 LA22 本文件 sorry**（`empty_6T1_p22:2319` / `empty_5T1_p22:2324`）、**1 条 LA38 `empty_3T2:3121` 且 import 成环**（LA38→LA18→LA27→LA24→LA20→LA22）、**11 条 Lean 树内无陈述**（`empty_3T1/3T3/3T4/3T5/3T6'/3T7`、`empty_4T1`–`empty_4T5`）——AGENTS §2 禁止新增 sorry 占位，故不可只立壳。另：15 个 mnl registry id 全在 `mainNonlinearTerminalV11Ids_t11`；LA38 的 3T/4T 解析 kit 全标准三但 LA22 闭包零命中（需 `_p22` 复制）；`ineq_5691615370_asym`（`empty_4T2` 需要）唯 Lean 版在 LA38 仍 sorryAx。
+② **`empty_la22-w1` 发车**：先攻 `empty_6T1_p22`（HOL giant，analytic core）再 `empty_5T1_p22`；每绿一条 = OCBICBY 少一条缺口。其余 11 条无陈述件与 LA38 `empty_3T2` 记 §0.2 第 1 步挂账（OCBICBY 完整解封需一轮 empty_* 专项，估 E1–E7 分批）。
+③ **wave 14（池 3/3）**：`g482-482-w4`（general_482 续写）/ `vpwshto-w1`（`VPWSHTO_p15`）/ `empty-la22-w1`（LA22 两条 empty 巨件）。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
