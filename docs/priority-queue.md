@@ -356,6 +356,13 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:12，续982）**：**一笔落库：aq13 ml16 `ac8c6f7b`（`Reduction5J5SxC` 新文件 +474，12 件全绿）——SX-c 链整段绿，`k3Sx3SlotInstance` 落库，hSx3 槽消**。
+① **`ac8c6f7b`（aq13 ml16）**：`listPairsCoreChain`（tame_list:14057 链形）+ `memListOfDartsQuotientChain`（:6913）+ `memListOfDartsQuotientCore`（reduction4:3412）+ `memFlattenOfQuotDart`（:3388）+ `memListPairsCoreImpMemR`（:3360）+ `memListPairsCoreOfNextEl`（:1647 逆向形）+ `split2MemChain`（`has_snd_norm_list_fliter` 链形**替位**，经在库 `TameSpine.aq1b_split2Mem` + 三桥）+ **`nonRDartsTrans`（:3433，97 HOL → ~65）** + `ntransStateComp` + `nonRDartsTransI`（:3530）+ `listOfDartsMem`（:3563）+ **`k3Sx3SlotInstance : k3Sx3Slot`**（:3694–3708 第三合取）。
+② **验收**：陈述零偏差（前提集与 HOL 逐项同，仅柯里化顺序；`memListPairsCoreOfNextEl` = `next_el_core_list_pairs` 逆向形）；12/12 探针 ⊆ 标准三、零 sorryAx；**接口探针 `reductionK3ConclOfSlots hF8 k3Sx3SlotInstance` 机器通过**；实测 +474 vs 估 220–300（超 450 软线 24 行，证明体 ~380，一次绿成按整段优先，如实记档）。
+③ **状态**：**hSx3 槽消**；K3 引理（`reductionK3ConclOfSlots`）只剩 `hUvns` 一槽 + `hF8`（已由 `k3Indexf8` 供）。**会师前余量：U 段余 440–580 + J5-9 删桩 20–50 = 460–630 行（中心 ≈545）**。
+④ **续派**：aq13 → **`k3UvnsOfSlots` 构造器**（新文件；把 `k3UvnsSlot` 的四件已知供料先接好：`hnNil ← k3Sx3SlotInstance`、`hnFy/hnZx ← finalAssumptionNotMemSndXFy/Zx`、`hIdxSnd ← indexSndX`，只留 U 段主定理一个显式槽；30–60）。U 段落库后一行得 `k3UvnsSlot`。
+⑤ **落库闸**：apply-check PASS @9753dc1f、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:09，续981）**：**一笔落库：tame-corr nb62 `b1b5cc08`（`Reduction5J5UvnsChainCl` +344，文件 1052 行）——U1c 收尾 I：MemIn 工具九件 + `memMid` 全绿**。
 ① **`b1b5cc08`（tame-corr nb62）**：`MemIn` 谓词 + `memInSingle`/`memInBase`/`memInNsAppend`/`memInSomeAppend`（四簇位置账）/`memInAppend`/`memInPrefix`/`memInDestSingle`（`destTriple0` 单 triple 三支，**junction 全免**——mem 不看连接）/`getLastDDestSingle` + `memMid`（`∀ i, i+1≤k → MemIn S (destTriple0 f [] (take (i+1))) ∧ getLastD = some z_i`；succ 用 `memInAppend`+`memInPrefix`+`memInDestSingle`，比 `chainClMid` 三支桥省一半）。17/17 探针 ⊆ 标准三、零 sorryAx。
 ② **实测 vs 估（超止损线，如实）**：+344 vs 估 150–220（超 250 止损线）；`memInSomeAppend` 四簇 ~70 + `memMid` ~165 是大头；**工具件全部可复用**——U3/U2 的 mem 面零重证，净账不亏。
