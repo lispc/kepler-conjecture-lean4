@@ -6806,3 +6806,46 @@ LA1/LA25/LocalConcl/VasTuaKit 岛编 0 error；`#print axioms` 仍含 `sorryAx`
   LA1/LA25/LocalConcl/VasTuaKit 岛编 RC=0/0 err，警告谱与基线归一化逐条相同；
   `VasTuaKit` 三件仍标准三；`#print axioms TUAPYYU_concl` 仍含 `sorryAx`（预期，未证本体）。
 - 全树无其它代码调用点（`LocalAuto25:2266/2269` 消费者本来就已传 `h`，类型不变故零改动）。
+
+## 108. LA21 Section F 三件 `a_assumption_reduction_p21` / `b_assumption_reduction_p21` / `azim_assumption_reduction_p21` 的 ∃-ε 前提括号缺失（`∧` 优先级高于 `→` ⇒ 弱形，`e1 := 0` 空洞满足）— 分级 **A**（移植括号误植 · 陈述修正 · 补丁面 = LA21 三陈述 **7 处** `(P → Q)` 加括号，证明体不动）
+
+> 发现者：`cuxvzozF-w1`（2026-11-12，真证四件时按原样陈述发现）；编排者复核 HOL 原文与解析形。
+
+### (a) HOL 裁决
+
+HOL `CUXVZOZ.hl`（`a_assumption_reduction` :4032 / `b_assumption_reduction` :4063 /
+`azim_assumption_reduction` :3910）的形是
+`?e1. 0 < e1 /\ (P ==> !t. |t| < e1 ==> Q)` —— **先合取、括号内才是蕴含**。
+
+### (b) 证据（Lean 解析形）
+
+Lean 现行文（HEAD `4673518a`）写成
+`∃ e1, 0 < e1 ∧ P → ∀ t, |t| < e1 → Q`。因 `∧` 优先级高于 `→`，它解析为
+`∃ e1, (0 < e1 ∧ P) → ∀ t, …`：当 `P` 为假时 `e1 := 0` 即可满足（**空洞见证**）。
+下游 `general_482_deformation_p21` 需要从该前提取出 `0 < e1` 喂给 `deformation_BBs`
+的 ε-槽 ⇒ 弱形取不出（`cuxvzozF-w1` 的证明体已按**强形式**收口，未用空洞见证）。
+
+实测 7 处（`∃ eX, 0 < eX ∧` 后紧跟一个**非 `∀`** 前件的位置）：
+
+| 件 | 位置（相对陈述） | 前件 |
+|---|---|---|
+| `a_assumption_reduction_p21` | ha1 | `s.a p1 (p1+1) = dist …` |
+| 同上 | ha2 | `s.a p1 (p1+(k−1)) = dist …` |
+| 同上 | 结论 | `s.a i j = dist …` |
+| `b_assumption_reduction_p21` | hb1 | `dist … = s.b p1 (p1+1)` |
+| 同上 | hb2 | `dist … = s.b p1 (p1+(k−1))` |
+| 同上 | 结论 | `dist … = s.b i j` |
+| `azim_assumption_reduction_p21` | A7 | `azim … = Real.pi` |
+
+（其余 `∃ eX, 0 < eX ∧ ∀ t, …` 处解析正确，不加括号。）
+
+### (c) 修法
+
+在 7 处的 `∧` 之后把 `P → …` 用括号包成 `(P → …)`（HOL 同形）；陈述其余逐字不动；
+**证明体不动**（现有证明已建立强形式，加上括号后仍成立）。
+
+### (d) 验收
+
+`#check @Kepler.Text.{a,b,azim}_assumption_reduction_p21` 中对应位置显示
+`∃ e, 0 < e ∧ (P → …)`；LA21 岛编 RC=0 / 0 err；三件 `#print axioms` 仍
+`[propext, Classical.choice, Quot.sound]`；不涉 sorry 删除面。
