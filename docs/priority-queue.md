@@ -356,6 +356,12 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（13:56，续945）**：**一笔落库：J4 `5dc4437c`（`Reduction3Thm19` 增补 +36 → 216 行，3 探针）——`reduction_F` 绿；J5-8 本体链全通、hF 供给件齐**。
+① **`5dc4437c`（J4 reduction_F）**：`reductionF`（HOL reduction3.hl:5636-5653）——`apply reductionE hK10` → `exact mainInduction hK10 … (hrreAll L) (hrreSAll L) (hcsnl L hL) …`；7 处方向修正（`hp`/`hf`/`hv`/`hfx`/`huv`/`hgi`/`hfi` 全 `.symm`）。3/3 探针（D/E/F）⊆ 标准三、零 sorryAx。
+② **hF → J5-9 接线签名（定稿）**：`reductionF (hK10 : assumptionSetK10Full) (hrreAll : ∀ L N' r' y, rRtransEq L N' r' y) (hrreSAll : ∀ L N' r' y, rRtransEqSpine L N' r' y) (hcsnl : ∀ L hL N' r' y, markedList L hL N' r' y → ¬ finalList L r' → coreSplitNormalList L N' r' y) : restrictedHypermapsArePlaneGraphsV4`。调法 `reductionF hF hrreAll hrreSAll hcsnl`；`hcsnl` 来源 = **`coreSplitNormalListThm`（8b 真证 `cb1396fe`）**；`hrreAll`/`hrreSAll` 待 W5b（aq13），落库前由装配层显式携带。
+③ **J5-8 最终收官对表**：`nfgtrans_suc/mem/fst` ✅ `c42a5b0c`/`439752b2`/`0fc4d3df`；`main_induction` ✅ `7d31caee`；W6 塔 6 波 ✅ `48e734f5`/`df310dcf`/`0bfddcc8`/`a951b525`/`c3a7b4de`/`0ac10977`；`reduction_D/E/F` ✅ `0ddf7e09`/`c82388a4`/`5dc4437c`；**剩余仅 W5b（aq13 线）+ 前提消除 patch**。
+④ **续派**：J4 空闲 → **K4 Lane C1（`corei_reduction` + `snd_x_fy`/`snd_x_zx`，140–230）**，与 tame-corr 的 K2/K3 并行；aq13（W5b）、tame-corr（Lane A2+A3）在飞。
+
 - **2026-11-11（13:54，续944）**：**一笔落库：J4 `c82388a4`（`Reduction3Thm19` 增补 +66 → 193 行，2 探针）——`reduction_E` 绿；`reduction_F` 仅剩 3 个 `.symm`**。
 ① **`c82388a4`（J4 reduction_E）**：`reductionE`（HOL reduction3.hl:4682-4733）——`apply reductionD hK10` → E-hgen at `i := k`（`k ≤ transformCount` 由 `hk`）→ 7 元中仅第 5 条需 `0 < k`（`transformCountNon0` + `finalListTransformCount`）。实测 ≈54 vs 估 40–60；探针 ⊆ 标准三、零 sorryAx。
 ② **reduction_F PARTIAL（完整证明已写出，3 个等式方向）**：`apply reductionE hK10` + `exact mainInduction hK10 i L N g p fs f v r x fx uvns gi fi hL (hrreAll L) (hrreSAll L) (hcsnl L hL) hgn …`；剩 `huv`/`hgi`/`hfi` 各一次 `.symm`，**下一轮一次编译即收**。
