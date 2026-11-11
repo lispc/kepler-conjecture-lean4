@@ -356,6 +356,13 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:04，续979）**：**一笔落库：J4 D1 `f584f836`（`Reduction5J5K4` 新文件 +71，3 件全绿）——D1 打包完成，J5-9 最终条件形封口**。
+① **`f584f836`（J4 D1）**：`k3Indexf8 : k3Indexf8Slot`（`indexf8FinalLemmas` 于 `i := i+1` 一行实例，`PRE (i+1) ↦ i` 定义级，槽内 `hgn/hres/hm/hnf/hk` 逐字对齐）+ `reductionK4OfSlots (hSx3) (hUvns) : (∀K4Asm→K4Concl) → assumptionSetK10Full`（**`hK4` 参数按 ml15 判词零消费直接丢弃**；K3 供给 = `k3Indexf8` + `hSx3` + `hUvns`；`haq` 按 `TameSpine.aqiunpp` 现拼）+ `jcajyduOfK4Slots : hSx3 → hUvns → J5-9 结论`（**槽类型与 `jcajyduOfK4` 完全咬合，无差异**）。3/3 探针 ⊆ 标准三、零 sorryAx（编排者补 `jcajyduOfK4Slots` 探针后重编）；实测 70 vs 估 50–90，1 轮编译。
+② **会师形态**：`jcajyduOfK4Slots` 就是 J5-9 的最终条件形——**只剩两个槽**：`hSx3`（aq13 SX-c 链在飞）+ `hUvns`（tame-corr U 段在飞）。两槽落地后 = 一行实例化 + Assembly 删桩。
+③ **会师前余量再校准**：U 段余 370–580（U1c 收尾 150–220 / U3 100–160 / U2 120–180 / 收口 20）+ SX-c 220–300 + J5-9 删桩 20–50 = **610–930 行（中心 ≈770）**。
+④ **续派**：J4 → **J5-5 `indexf_y_lt_sizel_pre` 公开件**（非会师阻塞；HOL more_lemma2.hl:890；直接平迁 aq13 ml14 的 private `indexfZkXltCore` 证明体；160–260）。aq13（SX-c）、tame-corr（U1c 收尾）在飞。
+⑤ **落库闸**：apply-check PASS @b549a5c8、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（18:58，续978）**：**一笔落库：tame-corr nb60 `a804bda4`（`Reduction5J5UvnsChainCl` +390，文件 708 行）——`chainClMid` 绿，U1c base+succ 归纳全绿**。
 ① **`a804bda4`（tame-corr nb60）**：`chainClMid`——base（`taskOneEq`+`elCoreTriple`+两段 `show…from rfl`+`destTriple0Nil`+`chainClBase`+`getLastD_concat`）；succ（`htake`/`ha_ne`/`hL1ne`/`hlast'`/`hL1eq`/`hcat2`/`hgeti` + **三分支独立分支等式** `hpc`/`hpc2`/`hpc3` + 每支**显式桥** `hbridge`（Cl）/`hbridge2`（last）+ 调 `chainClNsAppend`/`chainClSomeAppend`）；六 junction（`betwnOrbit`@0、`betwnOrbit` 逐位尾部 `iterate_succ_apply'`、`nextLastBetwn` 就地桥 `getD(len-1)=getLast`、`hpos` 由 `aq10_betwnEqNil` 反证）。11/11 探针 ⊆ 标准三、零 sorryAx。
 ② **修法记录（4 条，采信）**：分支等式逐支写（`split <;> rfl` 因结合形/`Option.getD` 归约非定义相等而失败）；`List.append_assoc` 的 `←` 深度按嵌套逐层数（case1/2/3 需 1/2/4 次），更稳写法 = 形状等式 + `simp only [append_assoc]` + `getLastD_concat`；`betwnOrbit`/`aq10_betwnEqNil` 与 Assembly `nextEl` 同实例无需桥，但 `List ℕ` 的 getD/getLast 桥不能复用 Option 专用件；删未用 `destTriple0Nil`（0 warning）。
