@@ -14,7 +14,9 @@
 >   `main_nonlinear_terminal_v11` 前提（HOL `VASYYAU.hl:524-525` 陈述定义本身是条件式），
 >   LA1/LA25/LocalConcl/VasTuaKit 链式岛编 0 err。**g482-w1**：#1–#3 全绿（HOL
 >   CUXVZOZ.hl:839/:974/:1004），LA21 sorry 17→14。wave 4 在飞：g482no4（#4 本体）/
->   vas-nhx（NEHXMWH_p23）/ g482-482（general_482 本体，LA33/aq13 总闸）。
+>   vas-nhx（NEHXMWH_p23）/ cuxvzozF（Section F 四件）；**g482-482 判 BLOCKED**——general_482
+>   本体根路径实测 7 件 tainted + 2 桥（LA22:2298 / LA21:2248·2348·2192·2149·2170·2380 /
+>   LA18:436 + `NOT_COL_EQ_UPS_X_POS` 无孪生），triage「七条前置」对本体不成立（续1001 ERRATA）。
 > - **2026-11-12（02:25，编排者，九）**：**两笔落库 + 基线 W**——`mntdedup`（`1de85f96`）去重
 >   `mnt11_anchor`（锥内 SORRIED **76→75**，清单 diff：closed 恰 `_private…mnt11_anchor`、added ∅；
 >   **去重非还债**，银行债务 `nliMainNonlinearTerminalV11` 未动）+ `vas-w1`（`fb89790e`）

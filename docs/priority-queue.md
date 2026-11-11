@@ -151,8 +151,9 @@
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
 > **wave 4 三车道在飞**：`g482no4-w1`（`deform_simplex_684_pent_p21` 本体）、
-> `vas-nhx-w1`（`NEHXMWH_p23`，JOTSWIX.hl:1171-1678）、`g482-482-w1`（`general_482_deformation_p21`
-> 本体，先依赖侦察再移植；它是 LA33/aq13 链的总闸）。
+> `vas-nhx-w1`（`NEHXMWH_p23`，JOTSWIX.hl:1171-1678）、`cuxvzozF-w1`（Section F 四件：
+> `WNWSHJT_ALT_p21` + a/b/azim assumption reduction）。**`g482-482-w1` 判 BLOCKED**（本体根路径
+> 7 件 tainted + 2 桥，见续1001）；`g482br-w1`（两桥件）排队。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -450,6 +451,13 @@
 ④ **基线 X 复测（`e2e_reach_map`，仪器原样）**：`K_REACH 2,095,484`（0）/ **SORRIED 75（清单 diff 0/0）** / **`K_AXIOM 585`（名单 0/0）** / `K_MODULES 5,219`（0）/ `K_UNIVERSE 2,108,389`（**+32**，LA21 证明体新增私有 helper，不可达）/ COVERAGE **99.3879%**（分母涨）；口径 II `35,061 / 75 / 585 / 46,409`；`TOTAL_VALUE_DECLS 2,094,810`。TSV 换装 5,898 行，manifest `--check` PASS。根面 589 与基线 W **逐字节 IDENTICAL**。
 ⑤ **wave 4 发车（池 3/3）**：`g482no4-w1`（`deform_simplex_684_pent_p21` 本体，HOL `CUXVZOZ.hl:533-805`；两 kit 已绿）、`vas-nhx-w1`（`NEHXMWH_p23`，HOL `JOTSWIX.hl:1171-1678`；绿后只差 `BZQNDMN_p23` 即可组装 TUAPYYU）、`g482-482-w1`（`general_482_deformation_p21` 本体，先依赖侦察；**LA33/aq13 链的总闸**）。
 ⑥ **警告**：三笔均无 `sorry` 删除计分（g482kit 删除的 2 条与 g482 的 3 条是**真证替换**，但目标件不在锥内，SORRIED 不动；SF-107 零删除）。不要把「LA21 文件 sorry 19→14」当成锥内还款数。
+
+- **2026-11-12（03:03，续1001）**：**`g482-482-w1` 判词 BLOCKED（0/1，patch 0 字节）——general_482 本体根路径依赖表实测；编排者工单 ERRATA + wave 4 换人**。
+① **BLOCKED 机器证据（HEAD `66e70eb4`，池内 olean md5 `94446e5d` 与 HEAD 同源）**：HOL `general_482_deformation`（CUXVZOZ.hl:3649-4289）**直接调用**的 Lean 孪生中 7 件仍 `sorryAx`——`LEMMA_4828966562_p22`（LA22:2298）/**`WNWSHJT_ALT_p21`（LA21:2248）**/`dihV_obtuse_mono_p21`（LA21:2348，经 `_a`/`_b` 两件 sorry）/`azim_assumption_reduction_p21`（LA21:2192）/`a_assumption_reduction_p21`（LA21:2149）/`b_assumption_reduction_p21`（LA21:2170）/`MMs_minimize_tau_fun_p21`（LA21:2380，其自然 kit `taustar_taum*` 在 LA38:1577/1612 仍 sorry ⇒ root 更深）；另 2 处桥未闭：`coplanar_delta_y_zero_p18`（LA18:436，sorryAx）+ HOL `NOT_COL_EQ_UPS_X_POS` 在 LA21 import 闭包内**无孪生**（`ea2_upsX_pos_iff` 在 EulerSimplexGeom:294，闭包够不到）。按 AGENTS §2 判 BLOCKED（不搬债、不绕假桩）。
+② **编排者工单 ERRATA**：续1000 ③ 与续997 ⑤ 的「general_482 七条前置全绿」**对本体根路径不成立**——那 7 条（deform_simplex_decrease_edge23 / deformation_BBs / deformation_BBs_ALT / tau3_azim / mk_planar_unique / mk_planar2_continuous / collinear_expand）只是 **triage 列的表面前置**；HOL 本体还直接吃上表 7 件 tainted。**唯一可靠判据是「HOL 直接引用闭包逐件探针」**，不是 triage 清单。
+③ **情报更新（可用）**：`WNWSHJT_ALT` 的旧 DEFHOLE **已消失**——其缺失的 `REAL_CONTINUOUS_ATREAL_AZIM_COMPOSE` 孪生 `w5cA3_continuousAt_azim` 已在 `LocalAuto14:2971` 真证（标准三）且在闭包内 ⇒ 现为纯 labor；a/b/azim 三件 assumption reduction 也是纯 labor 候选。
+④ **wave 4 换人（池 3/3 纪律）**：`cuxvzozF-w1` 接手 Section F 四件（`WNWSHJT_ALT_p21` + a/b/azim 三件）；`g482br-w1`（两桥件）**先停、排队**（避免 4 车道破并发 ≤3），待 g482no4/vas-nhx 任一收工即发。`g482no4-w1`（#4 本体）与 `vas-nhx-w1`（`NEHXMWH_p23`）照常。
+⑤ **勘误纪律沉淀**：以后派「本体」车道时，阶段一必须逐件 `#print axioms` HOL 直接引用闭包（而非引 triage 清单），并把依赖表写进 DELIVERY。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
