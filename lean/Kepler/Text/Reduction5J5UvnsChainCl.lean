@@ -693,6 +693,344 @@ theorem chainClMid
           rw [hpc3]
           exact hbridge2
 
+/-! ## §5 U1c 收尾 I：`MemIn` 工具 + mid 段成员归纳 -/
+
+/-- 成员谓词：Some 项取值 ∈ S。 -/
+def MemIn (S : ℕ → Prop) (l : List (Option ℕ)) : Prop :=
+  ∀ j, j < l.length → (l.getD j none).isSome → S ((l.getD j none).getD 0)
+
+/-- 单点 Some。 -/
+theorem memInSingle (S : ℕ → Prop) (w : ℕ) (hw : S w) : MemIn S [some w] := by
+  intro j hj hsome
+  have hj0 : j = 0 := by simpa using hj
+  subst hj0
+  simpa using hw
+
+/-- 首段 `[some y] ++ nseq ++ [some z]`。 -/
+theorem memInBase (S : ℕ → Prop) (y z n : ℕ) (hy : S y) (hz : S z) :
+    MemIn S ([some y] ++ List.replicate n (none : Option ℕ) ++ [some z]) := by
+  intro j hj hsome
+  rw [uvnsGetDHeadRepCons] at hsome
+  by_cases h0 : j = 0
+  · have hv : (([some y] ++ List.replicate n (none : Option ℕ) ++ [some z]).getD j none).getD 0 = y := by
+      rw [uvnsGetDHeadRepCons, if_pos h0]
+      rfl
+    rw [hv]
+    exact hy
+  · rw [if_neg h0] at hsome
+    rw [uvnsGetDRepZV] at hsome
+    by_cases h1 : j - 1 = n
+    · have hv : (([some y] ++ List.replicate n (none : Option ℕ) ++ [some z]).getD j none).getD 0 = z := by
+        rw [uvnsGetDHeadRepCons, if_neg h0, uvnsGetDRepZV, if_pos h1]
+        rfl
+      rw [hv]
+      exact hz
+    · rw [if_neg h1] at hsome
+      simp at hsome
+
+/-- nseq 追加。 -/
+theorem memInNsAppend (S : ℕ → Prop) (pfx : List (Option ℕ)) (zv n : ℕ)
+    (hp : MemIn S pfx) (hz : S zv) :
+    MemIn S (pfx ++ (List.replicate n (none : Option ℕ) ++ [some zv])) := by
+  intro j hj hsome
+  simp only [uvnsGetDAppend (l := pfx) (m := List.replicate n (none : Option ℕ) ++ [some zv]) (j := j)] at hsome
+  by_cases hj' : j < pfx.length
+  · simp only [dif_pos hj'] at hsome
+    have hv : (pfx ++ (List.replicate n (none : Option ℕ) ++ [some zv])).getD j none
+        = pfx.getD j none := by
+      rw [uvnsGetDAppend, dif_pos hj']
+    rw [hv]
+    exact hp j hj' hsome
+  · simp only [dif_neg hj'] at hsome
+    rw [uvnsGetDRepZV] at hsome
+    by_cases ht : j - pfx.length = n
+    · have hv : ((pfx ++ (List.replicate n (none : Option ℕ) ++ [some zv])).getD j none).getD 0 = zv := by
+        rw [uvnsGetDAppend, dif_neg hj', uvnsGetDRepZV, if_pos ht]
+        rfl
+      rw [hv]
+      exact hz
+    · rw [if_neg ht] at hsome
+      simp at hsome
+
+/-- 带首 Some 的追加（`r` 是任意 ℕ 链）。 -/
+theorem memInSomeAppend (S : ℕ → Prop) (pfx : List (Option ℕ)) (r : List ℕ)
+    (u zv n : ℕ) (hp : MemIn S pfx) (hr : ∀ t ∈ r, S t) (hu : S u) (hz : S zv) :
+    MemIn S (pfx ++ (r.map some ++ [some u] ++
+      List.replicate n (none : Option ℕ) ++ [some zv])) := by
+  intro j hj hsome
+  set rest : List (Option ℕ) := [some u] ++ List.replicate n (none : Option ℕ) ++ [some zv] with hrest
+  have happ : r.map some ++ [some u] ++ List.replicate n (none : Option ℕ) ++ [some zv]
+      = r.map some ++ rest := by
+    rw [hrest]
+    simp only [List.append_assoc]
+  rw [happ] at hsome ⊢
+  simp only [uvnsGetDAppend (l := pfx) (m := r.map some ++ rest) (j := j)] at hsome
+  by_cases hj' : j < pfx.length
+  · simp only [dif_pos hj'] at hsome
+    have hv : (pfx ++ (r.map some ++ rest)).getD j none = pfx.getD j none := by
+      rw [uvnsGetDAppend, dif_pos hj']
+    rw [hv]
+    exact hp j hj' hsome
+  · simp only [dif_neg hj'] at hsome
+    set t := j - pfx.length with htdef
+    by_cases ht : t < r.length
+    · have hv : (r.map some ++ rest).getD t none = some (r.getD t 0) :=
+        uvnsGetDMapSomeApp rest ht
+      have hv2 : ((pfx ++ (r.map some ++ rest)).getD j none).getD 0 = r.getD t 0 := by
+        rw [uvnsGetDAppend, dif_neg hj', hv]
+        rfl
+      rw [hv2]
+      exact hr _ (by
+        rw [Kepler.Text.TameLp.getD_eq_getElem_of_lt ht 0]
+        exact List.getElem_mem _)
+    · by_cases ht2 : t = r.length
+      · have hv : (r.map some ++ rest).getD t none = rest.getD 0 none := by
+          rw [show t = r.length + 0 from by omega, uvnsGetDMapAdd]
+        have hv2 : ((pfx ++ (r.map some ++ rest)).getD j none).getD 0 = u := by
+          rw [uvnsGetDAppend, dif_neg hj', hv, hrest]
+          simp
+        rw [hv2]
+        exact hu
+      · have hlt : r.length < t := by omega
+        have hv : (r.map some ++ rest).getD t none = rest.getD (t - r.length) none := by
+          rw [← uvnsGetDMapAdd rest (t - r.length)]
+          congr 1
+          omega
+        rw [hv] at hsome
+        rw [hrest] at hsome
+        rw [uvnsGetDHeadRepCons] at hsome
+        by_cases hk0 : t - r.length = 0
+        · rw [if_pos hk0] at hsome
+          have hv2 : ((pfx ++ (r.map some ++ rest)).getD j none).getD 0 = u := by
+            rw [uvnsGetDAppend, dif_neg hj', hv, hrest, uvnsGetDHeadRepCons, if_pos hk0]
+            rfl
+          rw [hv2]
+          exact hu
+        · rw [if_neg hk0] at hsome
+          rw [uvnsGetDRepZV] at hsome
+          by_cases hN : t - r.length - 1 = n
+          · rw [if_pos hN] at hsome
+            have hv2 : ((pfx ++ (r.map some ++ rest)).getD j none).getD 0 = zv := by
+              rw [uvnsGetDAppend, dif_neg hj', hv, hrest, uvnsGetDHeadRepCons, if_neg hk0,
+                uvnsGetDRepZV, if_pos hN]
+              rfl
+            rw [hv2]
+            exact hz
+          · rw [if_neg hN] at hsome
+            simp at hsome
+
+/-- append 成员保持。 -/
+theorem memInAppend (S : ℕ → Prop) (l1 l2 : List (Option ℕ))
+    (h1 : MemIn S l1) (h2 : MemIn S l2) : MemIn S (l1 ++ l2) := by
+  intro j hj hsome
+  simp only [List.length_append] at hj
+  simp only [uvnsGetDAppend (l := l1) (m := l2) (j := j)] at hsome
+  by_cases hj' : j < l1.length
+  · simp only [dif_pos hj'] at hsome
+    have hv : (l1 ++ l2).getD j none = l1.getD j none := by
+      rw [uvnsGetDAppend, dif_pos hj']
+    rw [hv]
+    exact h1 j hj' hsome
+  · simp only [dif_neg hj'] at hsome
+    have hv : (l1 ++ l2).getD j none = l2.getD (j - l1.length) none := by
+      rw [uvnsGetDAppend, dif_neg hj']
+    rw [hv]
+    exact h2 (j - l1.length) (by omega) hsome
+
+/-- 前缀成员保持（`a ++ b` 的成员 ⇒ `a` 的成员）。 -/
+theorem memInPrefix (S : ℕ → Prop) (a b : List (Option ℕ))
+    (h : MemIn S (a ++ b)) : MemIn S a := by
+  intro j hj hsome
+  have hlt : j < (a ++ b).length := by
+    simp only [List.length_append]; omega
+  have hv : (a ++ b).getD j none = a.getD j none := by
+    rw [uvnsGetDAppend, dif_pos hj]
+  have hsome' : ((a ++ b).getD j none).isSome := by rwa [← hv] at hsome
+  have hres := h j hlt hsome'
+  rwa [hv] at hres
+
+/-- `destTriple0` 单 triple 的成员（三分支各为 `memInBase`/`memInSomeAppend`）。 -/
+theorem memInDestSingle (f : List ℕ) (S : ℕ → Prop) (w y z n : ℕ)
+    (hw : S w) (hy : S y) (hz : S z) (harc : ∀ t ∈ between f w y, S t) :
+    MemIn S (Kepler.Text.Reduction3.destTriple0 f [some w] [(y, z, n)]) := by
+  simp only [Kepler.Text.Reduction3.destTriple0]
+  rw [if_neg (by simp : ¬ ([some w] : List (Option ℕ)) = [])]
+  rw [show ([some w] : List (Option ℕ)).getLastD none = some w from rfl]
+  simp only [Option.getD_some]
+  split
+  · exact memInBase S w z n hw hz
+  · split
+    · exact memInSomeAppend S [some w] [] y z n (memInSingle S w hw)
+        (fun t ht => absurd ht (by simp)) hy hz
+    · exact memInSomeAppend S [some w] (between f w y) y z n (memInSingle S w hw) harc hy hz
+
+/-- `destTriple0` 单 triple 的末元（三分支均以 `[some z]` 收）。 -/
+theorem getLastDDestSingle (f : List ℕ) (w y z n : ℕ) :
+    (Kepler.Text.Reduction3.destTriple0 f [some w] [(y, z, n)]).getLastD none = some z := by
+  simp only [Kepler.Text.Reduction3.destTriple0]
+  rw [if_neg (by simp : ¬ ([some w] : List (Option ℕ)) = [])]
+  rw [show ([some w] : List (Option ℕ)).getLastD none = some w from rfl]
+  simp only [Option.getD_some]
+  split
+  · simp only [List.getLastD_concat]
+  · split
+    · simp only [List.getLastD_concat]
+    · simp only [List.getLastD_concat]
+
+/-- **mid 段成员归纳**：`destTriple0 f [] (uvns.take (i+1))` 的 `MemIn` +
+末元 = `z_i`（与 `chainClMid` 同骨架，无 junction 需求）。 -/
+theorem memMid
+    (L : fgraph ℕ) (hL : GoodList L)
+    (hgn : Kepler.Text.TameLp.GoodListNodesTl L hL)
+    (hres : (Kepler.Text.TameLp.hypermapOfList L hL).IsRestricted)
+    {N : List (List Dart)} {r : List Dart} {x : Dart} {k : ℕ}
+    (hm : Kepler.Text.ChainLists.markedList L hL N r x)
+    (hnf : ¬ finalList L r) (hk : transformCount L N r x = k) :
+    ∀ i, i + 1 ≤ k →
+      MemIn (fun w => w ∈ core L r)
+        (Kepler.Text.Reduction3.destTriple0 (core L r) []
+          ((Kepler.Text.Reduction3.coreTripleV4 L N r x).take (i + 1))) ∧
+      (Kepler.Text.Reduction3.destTriple0 (core L r) []
+          ((Kepler.Text.Reduction3.coreTripleV4 L N r x).take (i + 1))).getLastD none
+        = some (ztrans L N r x i).1 := by
+  have haq : Kepler.Text.Reduction4Idx.AqiunppSlot L hL :=
+    fun hgn' N' r' x' hm' j => Kepler.Text.TameSpine.aqiunpp L hL hgn' N' r' x' hm' j
+  have hk0 : 0 < k := by
+    have h := Kepler.Text.Reduction5.transformCountNon0OfMarked L hL hgn haq hm hnf
+    rw [hk] at h
+    exact Nat.pos_of_ne_zero h
+  have hnf_i : ∀ i, i < k → ¬ finalList L (rtrans L N r x i) := fun i hi =>
+    Kepler.Text.Reduction4.transformCount_not i (by rw [hk]; exact hi)
+  have hcoreof : ∀ u ∈ r, u.1 ∈ core L r :=
+    Kepler.Text.Reduction4Idx.finalAssumptionMemFstCore L hL hm
+  have hym : ∀ i, i < k → (ytrans L N r x i).1 ∈ core L r := fun i hi =>
+    hcoreof _ (pnxvwfs1 L hL hgn haq i (hnf_i i hi) hm)
+  have hzm : ∀ i, i < k → (ztrans L N r x i).1 ∈ core L r := fun i hi =>
+    hcoreof _ (pnxvwfs2 L hL hgn haq i (hnf_i i hi) hm)
+  have hlen0 : (Kepler.Text.Reduction3.coreTripleV4 L N r x).length = k := by
+    rw [Kepler.Text.Reduction3.coreTripleV4_length]
+    exact hk
+  have hget : ∀ i (hi : i < k),
+      (Kepler.Text.Reduction3.coreTripleV4 L N r x)[i]'(by rw [hlen0]; exact hi) =
+        ((ytrans L N r x i).1, (ztrans L N r x i).1,
+          (between (findFaceDarts L x) (ytrans L N r x i) (ztrans L N r x i)).length) := by
+    intro i hi
+    exact Kepler.Text.Reduction3.elCoreTriple L N r x i (by rw [hk]; exact hi)
+  set uvns := Kepler.Text.Reduction3.coreTripleV4 L N r x with huv
+  have hlen : uvns.length = k := hlen0
+  intro i
+  induction i with
+  | zero =>
+    intro h1k
+    have h0len : 0 < uvns.length := by rw [hlen]; exact hk0
+    have htake1 : uvns.take 1 = [uvns[0]'h0len] := uvnsGetDTakeOne uvns h0len
+    rw [htake1]
+    have hg0 : uvns[0]'h0len =
+        ((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+          (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length) :=
+      hget 0 hk0
+    rw [hg0]
+    rw [show Kepler.Text.Reduction3.destTriple0 (core L r) []
+          [((ytrans L N r x 0).1, (ztrans L N r x 0).1,
+            (between (findFaceDarts L x) (ytrans L N r x 0) (ztrans L N r x 0)).length)]
+        = Kepler.Text.Reduction3.destTriple0 (core L r)
+          ([some (ytrans L N r x 0).1] ++
+            List.replicate (between (findFaceDarts L x) (ytrans L N r x 0)
+              (ztrans L N r x 0)).length (none : Option ℕ) ++
+            [some (ztrans L N r x 0).1]) [] from rfl]
+    rw [Kepler.Text.Reduction3.destTriple0Nil]
+    exact ⟨memInBase (fun w => w ∈ core L r) (ytrans L N r x 0).1
+        (ztrans L N r x 0).1 _ (hym 0 hk0) (hzm 0 hk0), by rw [List.getLastD_concat]⟩
+  | succ i ih =>
+    intro hik
+    have hi1 : i + 1 ≤ k := by omega
+    have hi1lt : i + 1 < k := by omega
+    have hilt : i < k := by omega
+    obtain ⟨hMem, hlast⟩ := ih hi1
+    have hgeti : uvns[i + 1]'(by rw [hlen]; exact hi1lt) =
+        ((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+          (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+            (ztrans L N r x (i + 1))).length) := hget (i + 1) hi1lt
+    have htake : uvns.take (i + 1 + 1)
+        = uvns.take (i + 1) ++ [uvns[i + 1]'(by rw [hlen]; exact hi1lt)] := by
+      rw [List.take_add_one, List.getElem?_eq_getElem (by rw [hlen]; exact hi1lt)]
+      rfl
+    have ha_ne : uvns.take (i + 1) ≠ [] := by
+      intro h
+      have hc := congrArg List.length h
+      rw [List.length_take, hlen, Nat.min_eq_left hi1] at hc
+      simp at hc
+    have hL1ne : Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1)) ≠ [] := by
+      intro h
+      rw [h] at hlast
+      simp at hlast
+    have hlast' : (Kepler.Text.Reduction3.destTriple0 (core L r) []
+        (uvns.take (i + 1))).getLast hL1ne = some (ztrans L N r x i).1 := by
+      rw [← uvnsGetLastDEqGetLast hL1ne]
+      exact hlast
+    have hL1eq : Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))
+        = (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+          ++ [some (ztrans L N r x i).1] :=
+      uvnsEqDropLastAppend hL1ne hlast'
+    have hcat2 : Kepler.Text.Reduction3.destTriple0 (core L r) []
+          (uvns.take (i + 1) ++ [uvns[i + 1]'(by rw [hlen]; exact hi1lt)])
+        = (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+          ++ Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+            [uvns[i + 1]'(by rw [hlen]; exact hi1lt)] :=
+      Kepler.Text.Reduction3.destTriple0Cat2 (core L r) [] (uvns.take (i + 1))
+        [uvns[i + 1]'(by rw [hlen]; exact hi1lt)]
+        (Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+        (ztrans L N r x i).1 ha_ne (fun h => absurd rfl h) hL1eq
+    rw [htake, hcat2, hgeti]
+    have hgd : (Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+        [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+          (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+            (ztrans L N r x (i + 1))).length)]).getLastD none
+        = some (ztrans L N r x (i + 1)).1 :=
+      getLastDDestSingle (core L r) (ztrans L N r x i).1 (ytrans L N r x (i + 1)).1
+        (ztrans L N r x (i + 1)).1 _
+    have hXne : Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+        [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+          (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+            (ztrans L N r x (i + 1))).length)] ≠ [] := by
+      intro h
+      rw [h] at hgd
+      simp at hgd
+    refine ⟨memInAppend (fun w => w ∈ core L r) _ _
+      (memInPrefix (fun w => w ∈ core L r) _ _
+        (by rw [← hL1eq]; exact hMem))
+      (memInDestSingle (core L r) (fun w => w ∈ core L r) (ztrans L N r x i).1
+        (ytrans L N r x (i + 1)).1 (ztrans L N r x (i + 1)).1 _
+        (hzm i hilt) (hym (i + 1) hi1lt) (hzm (i + 1) hi1lt)
+        (fun t ht => Kepler.Text.Reduction5.betwnMem ht)), ?_⟩
+    have hcomp : ((Kepler.Text.Reduction3.destTriple0 (core L r) [] (uvns.take (i + 1))).dropLast
+        ++ Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+          [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+            (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+              (ztrans L N r x (i + 1))).length)]).getLastD none
+        = (Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+          [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+            (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+              (ztrans L N r x (i + 1))).length)]).getLastD none := by
+      have hneA : ((Kepler.Text.Reduction3.destTriple0 (core L r) []
+            (uvns.take (i + 1))).dropLast
+          ++ Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+            [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+              (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length)]) ≠ [] := by
+        intro h
+        have h2 := congrArg List.length h
+        simp only [List.length_append, List.length_nil] at h2
+        have hX : (Kepler.Text.Reduction3.destTriple0 (core L r) [some (ztrans L N r x i).1]
+            [((ytrans L N r x (i + 1)).1, (ztrans L N r x (i + 1)).1,
+              (between (findFaceDarts L x) (ytrans L N r x (i + 1))
+                (ztrans L N r x (i + 1))).length)]).length = 0 := by omega
+        exact hXne (List.length_eq_zero_iff.mp hX)
+      rw [uvnsGetLastDEqGetLast hneA, uvnsGetLastDEqGetLast hXne]
+      exact List.getLast_append_of_right_ne_nil _ _ hXne
+    rw [hcomp]
+    exact hgd
+
 end Kepler.Text.Reduction5
 
 #print axioms Kepler.Text.Reduction5.ChainCl
@@ -706,3 +1044,9 @@ end Kepler.Text.Reduction5
 #print axioms Kepler.Text.Reduction5.uvnsEqDropLastAppend
 #print axioms Kepler.Text.Reduction5.UvnsD
 #print axioms Kepler.Text.Reduction5.chainClMid
+#print axioms Kepler.Text.Reduction5.MemIn
+#print axioms Kepler.Text.Reduction5.memInBase
+#print axioms Kepler.Text.Reduction5.memInSomeAppend
+#print axioms Kepler.Text.Reduction5.memInDestSingle
+#print axioms Kepler.Text.Reduction5.getLastDDestSingle
+#print axioms Kepler.Text.Reduction5.memMid
