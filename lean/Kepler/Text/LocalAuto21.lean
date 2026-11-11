@@ -650,10 +650,359 @@ theorem deform_simplex_684_pent_p21 (V : Set V3) (g23 : ℝ → ℝ) (v0 v1 v2 v
         dist (pent684F_p21 v0 v1 v2 v3 g23 v2 t) v0 = dist v2 v0 ∧
         dist (pent684F_p21 v0 v1 v2 v3 g23 v2 t) v3 = dist v2 v3 + g23 t ∧
         ‖pent684F_p21 v0 v1 v2 v3 g23 v2 t‖ = ‖v2‖) := by
-  -- DISCHARGES: HOL `deform_simplex_684_pent` (270 lines): two stacked
-  -- `mk_simplex1` decreases plus coplanarity/continuity management.
-  -- NEEDS: same PQCSXWG/NONPLANAR_OPEN kit as the edge23 giant.
-  sorry
+  -- PROVED: HOL `deform_simplex_684_pent` (CUXVZOZ.hl:533) ported.  Stage 1
+  -- (the `f1`/`v2` move) reads `PQCSXWG1_SYM` on `(0, v0, v3)` with the
+  -- `g23`-dependent `deltaX` kept positive by `continuous_nbd_pos`, and
+  -- `PQCSXWG2_ATREAL` for continuity; `NONPLANAR_OPEN` propagates
+  -- `¬coplanar {0,v0,f1 v2 t,v3}` near `0`.  Stage 2 (the `f`/`v1` move)
+  -- reads `PQCSXWG1_SYM` on `(0, v0, f1 v2 t)` with the constant `deltaX`
+  -- of `h2`.  `mk_simplex_uniq` (twice) pins both `t = 0` values.
+  obtain ⟨h0v0, h0v2, h0v3, hv0v2, hv0v3, hv2v3⟩ :=
+    w2b_ncop_ne_all (x := (0 : V3)) (y := v0) (z := v2) (w := v3) h1
+  obtain ⟨-, h0v1, -, hv0v1, -, hv1v2⟩ :=
+    w2b_ncop_ne_all (x := (0 : V3)) (y := v0) (z := v1) (w := v2) h2
+  -- the two `let`-bound maps unfold definitionally
+  have hval1 : ∀ (w : V3) (t : ℝ), pent684F1_p21 v0 v2 v3 g23 w t =
+      if w = v2 then mkSimplex1 0 v3 v0 (‖v3‖ ^ 2) (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+        (dist v0 v2 ^ 2) ((dist v3 v2 + g23 t) ^ 2) (dist v0 v3 ^ 2) else w :=
+    fun w t => rfl
+  have hval : ∀ (w : V3) (t : ℝ), pent684F_p21 v0 v1 v2 v3 g23 w t =
+      if w = v2 then pent684F1_p21 v0 v2 v3 g23 v2 t
+      else if w = v1 then
+        mkSimplex1 0 (pent684F1_p21 v0 v2 v3 g23 v2 t) v0
+          (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+          (dist v0 v1 ^ 2) (dist v2 v1 ^ 2) (dist v0 v2 ^ 2)
+      else w := fun w t => rfl
+  -- set permutations of the two non-coplanarity hypotheses
+  have hnc023 : ¬ Collinear ℝ ({0, v0, v3} : Set V3) := by
+    intro hcol
+    apply h1
+    have hcop := w2b_collinear_coplanar (z := (0 : V3)) (w := v0) (w1 := v3)
+      (w2 := v2) hcol
+    rwa [show ({0, v0, v3, v2} : Set V3) = ({0, v0, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hcop
+  have hnc023' : ¬ Collinear ℝ ({0, v3, v0} : Set V3) := by
+    have h := hnc023
+    rwa [show ({0, v0, v3} : Set V3) = ({0, v3, v0} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  have hnc_s1 : ¬ Coplanar ({0, v3, v0, v2} : Set V3) := by
+    intro hc
+    apply h1
+    rwa [show ({0, v3, v0, v2} : Set V3) = ({0, v0, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hnc_d1 : ¬ Coplanar ({0, v0, v3, v2} : Set V3) := by
+    intro hc
+    apply h1
+    rwa [show ({0, v0, v3, v2} : Set V3) = ({0, v0, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hnc_s2 : ¬ Coplanar ({0, v2, v0, v1} : Set V3) := by
+    intro hc
+    apply h2
+    rwa [show ({0, v2, v0, v1} : Set V3) = ({0, v0, v1, v2} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hnc_d2 : ¬ Coplanar ({0, v0, v2, v1} : Set V3) := by
+    intro hc
+    apply h2
+    rwa [show ({0, v0, v2, v1} : Set V3) = ({0, v0, v1, v2} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  -- `deltaX` positivity at `t = 0` (stage 1: triangle `0,v0,v3`)
+  have hd0_1 : 0 < deltaX (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+      (dist v3 v2 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) := by
+    have hraw := w2b_deltaX_pos_of_ncop (v0 := v3) (v1 := v2) (v2 := v0) hnc_d1
+    rw [show ‖v0‖ ^ 2 = dist v0 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v3‖ ^ 2 = dist v3 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v2‖ ^ 2 = dist v2 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show dist v0 v3 ^ 2 = dist v3 v0 ^ 2 from by rw [dist_comm v0 v3]]
+    exact hraw
+  -- `deltaX` positivity for the stage-2 triangle `0,v0,v1` (constant in `t`)
+  have hd0_2 : 0 < deltaX (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+      (dist v2 v1 ^ 2) (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) := by
+    have hraw := w2b_deltaX_pos_of_ncop (v0 := v2) (v1 := v1) (v2 := v0) hnc_d2
+    rw [show ‖v0‖ ^ 2 = dist v0 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v2‖ ^ 2 = dist v2 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v1‖ ^ 2 = dist v1 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show dist v0 v2 ^ 2 = dist v2 v0 ^ 2 from by rw [dist_comm v0 v2]]
+    exact hraw
+  -- stage-1 `deltaX` positivity is open near `0`
+  have hg23_0 : ContinuousAt g23 0 := h23.continuousAt (Ioo_mem_nhds (by linarith) he)
+  have hdcont1 : ContinuousAt (fun t => deltaX (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+      ((dist v3 v2 + g23 t) ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)) 0 := by
+    have h5 : ContinuousAt (fun t : ℝ => (dist v3 v2 + g23 t) ^ 2) 0 :=
+      (continuousAt_const.add hg23_0).pow 2
+    simp only [deltaX]
+    fun_prop
+  obtain ⟨e1, he1, hδ1⟩ := continuous_nbd_pos_p21 hdcont1 (by
+    simpa [h23z] using hd0_1)
+  -- positivity of the moving edge length `dist v3 v2 + g23 t` near `0`
+  have hpos0 : 0 < dist v3 v2 + g23 0 := by
+    rw [h23z, add_zero]
+    exact dist_pos.mpr (fun h => hv2v3 h.symm)
+  obtain ⟨e2, he2, hpos2⟩ := continuous_nbd_pos_p21 (continuousAt_const.add hg23_0) hpos0
+  -- `f1` fixes `v2` at `t = 0`
+  have hf1_0 : pent684F1_p21 v0 v2 v3 g23 v2 0 = v2 := by
+    rw [hval1 v2 0, if_pos rfl, h23z, add_zero]
+    rw [show ‖v3‖ ^ 2 = dist 0 v3 ^ 2 from by rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v0‖ ^ 2 = dist 0 v0 ^ 2 from by rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v2‖ ^ 2 = dist 0 v2 ^ 2 from by rw [dist_eq_norm, zero_sub, norm_neg],
+        show dist v0 v3 ^ 2 = dist v3 v0 ^ 2 from by rw [dist_comm v0 v3]]
+    exact mk_simplex_uniq_p21 0 v3 v0 v2 hnc_s1 (by
+      rw [sub_zero, sub_zero, sub_zero, w2b_triple_cyclic v3 v0 v2]
+      exact hc1)
+  -- working radius: `e` (g23 continuity) ∧ `e1` (`deltaX`) ∧ `e2` (edge sign)
+  set E : ℝ := min e (min e1 e2) with hEdef
+  have hEpos : 0 < E := lt_min he (lt_min he1 he2)
+  have hEe : E ≤ e := min_le_left e (min e1 e2)
+  have hEe1 : E ≤ e1 := le_trans (min_le_right e (min e1 e2)) (min_le_left e1 e2)
+  have hEe2 : E ≤ e2 := le_trans (min_le_right e (min e1 e2)) (min_le_right e1 e2)
+  -- continuity of the stage-1 moving vertex on `Ioo (-E) E`
+  have hcont1_at : ∀ r ∈ Ioo (-E) E,
+      ContinuousAt (fun t => pent684F1_p21 v0 v2 v3 g23 v2 t) r := by
+    intro r hr
+    obtain ⟨hr1, hr2⟩ := hr
+    have habs : |r| < e1 := by
+      rw [abs_lt]; constructor <;> linarith
+    have hre : r ∈ Ioo (-e) e := ⟨by linarith, by linarith⟩
+    have hgr : ContinuousAt g23 r := h23.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hff : (fun t => pent684F1_p21 v0 v2 v3 g23 v2 t)
+        = fun t => mkSimplex1_p11 0 v3 v0 (‖v3‖ ^ 2) (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+            (dist v0 v2 ^ 2) ((dist v3 v2 + g23 t) ^ 2) (dist v0 v3 ^ 2) := by
+      funext t
+      rw [hval1 v2 t, if_pos rfl]
+      rfl
+    rw [hff]
+    refine PQCSXWG2_ATREAL_p11 (v0 := fun _ => (0 : V3)) (v1 := fun _ => v3)
+      (v2 := fun _ => v0)
+      (x1 := fun _ => ‖v3‖ ^ 2) (x2 := fun _ => ‖v0‖ ^ 2)
+      (x3 := fun _ => ‖v2‖ ^ 2) (x4 := fun _ => dist v0 v2 ^ 2)
+      (x5 := fun t => (dist v3 v2 + g23 t) ^ 2) (x6 := fun _ => dist v0 v3 ^ 2)
+      (a := r)
+      hnc023' ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    · show ‖v3‖ ^ 2 = dist v3 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · show dist v0 v3 ^ 2 = dist v3 v0 ^ 2
+      rw [dist_comm v0 v3]
+    · -- `deltaX` at `r` (positional `x4`, `x5` order)
+      rw [w2b_deltaX_sym (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+        ((dist v3 v2 + g23 r) ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)]
+      exact hδ1 r (by simpa using habs)
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact (continuousAt_const.add hgr).pow 2
+    · exact continuousAt_const
+  -- stage-1 pointwise facts (on `|t| < E`)
+  have hstage1 : ∀ t, |t| < E →
+      ‖pent684F1_p21 v0 v2 v3 g23 v2 t‖ = ‖v2‖ ∧
+      dist (pent684F1_p21 v0 v2 v3 g23 v2 t) v0 = dist v2 v0 ∧
+      dist (pent684F1_p21 v0 v2 v3 g23 v2 t) v3 = dist v3 v2 + g23 t ∧
+      v3 ⬝ᵥ cross3 v0 (pent684F1_p21 v0 v2 v3 g23 v2 t) > 0 := by
+    intro t htE
+    have ht1 : |t| < e1 := lt_of_lt_of_le htE hEe1
+    have ht2 : |t| < e2 := lt_of_lt_of_le htE hEe2
+    have hposb : 0 < dist v3 v2 + g23 t := hpos2 t (by simpa using ht2)
+    have hΔ : 0 < deltaX (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+        ((dist v3 v2 + g23 t) ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) :=
+      hδ1 t (by simpa using ht1)
+    have hv3 : pent684F1_p21 v0 v2 v3 g23 v2 t
+        = mkSimplex1 0 v3 v0 (‖v3‖ ^ 2) (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+            (dist v0 v2 ^ 2) ((dist v3 v2 + g23 t) ^ 2) (dist v0 v3 ^ 2) := by
+      rw [hval1 v2 t, if_pos rfl]
+    obtain ⟨hA, hB, hC, hD⟩ := PQCSXWG1_SYM_p21 0 v0 v3
+      (pent684F1_p21 v0 v2 v3 g23 v2 t)
+      (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+      ((dist v3 v2 + g23 t) ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+      (pow_pos (norm_pos_iff.mpr h0v0.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v3.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v2.symm) 2)
+      (pow_pos hposb 2) (pow_pos (dist_pos.mpr hv0v2) 2)
+      (pow_pos (dist_pos.mpr hv0v3) 2)
+      hnc023
+      (by show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      (by show ‖v3‖ ^ 2 = dist v3 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      rfl
+      hΔ hv3
+    have hD' : v3 ⬝ᵥ cross3 v0 (pent684F1_p21 v0 v2 v3 g23 v2 t) > 0 := by
+      simpa only [sub_zero] using hD
+    refine ⟨?_, ?_, ?_, hD'⟩
+    · have hsq : ‖pent684F1_p21 v0 v2 v3 g23 v2 t‖ ^ 2 = ‖v2‖ ^ 2 := by
+        rw [hA, dist_eq_norm, sub_zero]
+      exact w2b_sq_eq_of_nonneg hsq (norm_nonneg _) (norm_nonneg _)
+    · have hsq : dist (pent684F1_p21 v0 v2 v3 g23 v2 t) v0 ^ 2
+          = dist v2 v0 ^ 2 := by
+        rw [← hB, dist_comm v0 v2]
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg dist_nonneg
+    · have hsq : dist (pent684F1_p21 v0 v2 v3 g23 v2 t) v3 ^ 2
+          = (dist v3 v2 + g23 t) ^ 2 := hC.symm
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg (le_of_lt hposb)
+  -- `f` fixes `v1` at `t = 0`
+  have hf_0 : pent684F_p21 v0 v1 v2 v3 g23 v1 0 = v1 := by
+    rw [hval v1 0, if_neg hv1v2, if_pos rfl, hf1_0]
+    rw [show ‖v2‖ ^ 2 = dist 0 v2 ^ 2 from by rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v0‖ ^ 2 = dist 0 v0 ^ 2 from by rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v1‖ ^ 2 = dist 0 v1 ^ 2 from by rw [dist_eq_norm, zero_sub, norm_neg],
+        show dist v0 v2 ^ 2 = dist v2 v0 ^ 2 from by rw [dist_comm v0 v2]]
+    exact mk_simplex_uniq_p21 0 v2 v0 v1 hnc_s2 (by
+      rw [sub_zero, sub_zero, sub_zero, w2b_triple_cyclic v2 v0 v1]
+      exact hc2)
+  -- `f` fixes `v2` at `t = 0`
+  have hf2_0 : pent684F_p21 v0 v1 v2 v3 g23 v2 0 = v2 := by
+    rw [hval v2 0, if_pos rfl, hf1_0]
+  -- non-coplanarity of `{0, v0, f1 v2 t, v3}` persists near `0`
+  obtain ⟨e3, he3, hnc3⟩ :=
+    NONPLANAR_OPEN_p14 (v1 := fun _ => (0 : V3)) (v2 := fun _ => v0)
+      (v3 := fun _ => v3) (v4 := fun t => pent684F1_p21 v0 v2 v3 g23 v2 t) 0
+      (by simpa [hf1_0] using hnc_d1)
+      continuousAt_const continuousAt_const continuousAt_const
+      (hcont1_at 0 ⟨by linarith, hEpos⟩)
+  set E2 : ℝ := min E e3 with hE2def
+  have hE2pos : 0 < E2 := lt_min hEpos he3
+  have hE2E : E2 ≤ E := min_le_left E e3
+  have hE2e3 : E2 ≤ e3 := min_le_right E e3
+  have hnc3' : ∀ t, |t| < e3 →
+      ¬ Coplanar ({0, v0, v3, pent684F1_p21 v0 v2 v3 g23 v2 t} : Set V3) :=
+    fun t ht => hnc3 t (by simpa using ht)
+  have hncol2 : ∀ t, |t| < E2 →
+      ¬ Collinear ℝ ({0, pent684F1_p21 v0 v2 v3 g23 v2 t, v0} : Set V3) := by
+    intro t ht hcol
+    have ht3 : |t| < e3 := lt_of_lt_of_le ht hE2e3
+    apply hnc3' t ht3
+    rw [show ({0, v0, v3, pent684F1_p21 v0 v2 v3 g23 v2 t} : Set V3) =
+        ({0, pent684F1_p21 v0 v2 v3 g23 v2 t, v0, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact w2b_collinear_coplanar (z := (0 : V3))
+      (w := pent684F1_p21 v0 v2 v3 g23 v2 t) (w1 := v0) (w2 := v3) hcol
+  -- continuity of the stage-2 moving vertex on `Ioo (-E2) E2`
+  have hcont2_at : ∀ r ∈ Ioo (-E2) E2,
+      ContinuousAt (fun t => pent684F_p21 v0 v1 v2 v3 g23 v1 t) r := by
+    intro r hr
+    obtain ⟨hr1, hr2⟩ := hr
+    have habs2 : |r| < E2 := by rw [abs_lt]; exact ⟨hr1, hr2⟩
+    have habsE : |r| < E := lt_of_lt_of_le habs2 hE2E
+    have hre : r ∈ Ioo (-e) e := ⟨by linarith, by linarith⟩
+    have hgr : ContinuousAt g23 r := h23.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hff : (fun t => pent684F_p21 v0 v1 v2 v3 g23 v1 t)
+        = fun t => mkSimplex1_p11 0 (pent684F1_p21 v0 v2 v3 g23 v2 t) v0
+            (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+            (dist v0 v1 ^ 2) (dist v2 v1 ^ 2) (dist v0 v2 ^ 2) := by
+      funext t
+      rw [hval v1 t, if_neg hv1v2, if_pos rfl]
+      rfl
+    rw [hff]
+    have hd2 : 0 < deltaX (‖v2‖ ^ 2) (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+        (dist v0 v1 ^ 2) (dist v2 v1 ^ 2) (dist v0 v2 ^ 2) := by
+      rw [w2b_deltaX_sym (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+        (dist v2 v1 ^ 2) (dist v0 v1 ^ 2) (dist v0 v2 ^ 2)]
+      exact hd0_2
+    refine PQCSXWG2_ATREAL_p11 (v0 := fun _ => (0 : V3))
+      (v1 := fun t => pent684F1_p21 v0 v2 v3 g23 v2 t) (v2 := fun _ => v0)
+      (x1 := fun _ => ‖v2‖ ^ 2) (x2 := fun _ => ‖v0‖ ^ 2)
+      (x3 := fun _ => ‖v1‖ ^ 2) (x4 := fun _ => dist v0 v1 ^ 2)
+      (x5 := fun _ => dist v2 v1 ^ 2) (x6 := fun _ => dist v0 v2 ^ 2) (a := r)
+      (hncol2 r habs2) ?_ ?_ ?_ hd2 ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    · have hnorm := (hstage1 r habsE).1
+      show ‖v2‖ ^ 2 = dist (pent684F1_p21 v0 v2 v3 g23 v2 r) (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero, ← hnorm]
+    · show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · have hd0 := (hstage1 r habsE).2.1
+      show dist v0 v2 ^ 2 = dist (pent684F1_p21 v0 v2 v3 g23 v2 r) v0 ^ 2
+      rw [hd0, dist_comm v0 v2]
+    · exact continuousAt_const
+    · exact hcont1_at r ⟨by linarith, by linarith⟩
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+  -- final radius
+  refine ⟨E2, hE2pos, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_, ?_⟩
+    · constructor <;> linarith
+    · intro v _ r hr
+      by_cases hvv : v = v1
+      · rw [hvv]
+        exact hcont2_at r hr
+      · by_cases hvv2 : v = v2
+        · rw [hvv2]
+          obtain ⟨hr1, hr2⟩ := hr
+          have hconst : pent684F_p21 v0 v1 v2 v3 g23 v2
+              = fun t => pent684F1_p21 v0 v2 v3 g23 v2 t := by
+            funext t
+            rw [hval v2 t, if_pos rfl]
+          rw [hconst]
+          exact hcont1_at r ⟨by linarith, by linarith⟩
+        · have hconst : pent684F_p21 v0 v1 v2 v3 g23 v = fun _ => v := by
+            funext t
+            rw [hval v t, if_neg hvv2, if_neg hvv]
+          rw [hconst]
+          exact continuousAt_const
+    · intro v _
+      by_cases hvv : v = v1
+      · rw [hvv]
+        exact hf_0
+      · by_cases hvv2 : v = v2
+        · rw [hvv2]
+          exact hf2_0
+        · rw [hval v 0, if_neg hvv2, if_neg hvv]
+  · intro v t hvv
+    rw [hval v t, if_neg hvv.2, if_neg hvv.1]
+  · intro t ht
+    have htE : |t| < E := lt_of_lt_of_le ht hE2E
+    obtain ⟨hnorm2, hd20, hd23, -⟩ := hstage1 t htE
+    obtain ⟨hA, hB, hC, -⟩ := PQCSXWG1_SYM_p21 0 v0
+      (pent684F1_p21 v0 v2 v3 g23 v2 t)
+      (pent684F_p21 v0 v1 v2 v3 g23 v1 t)
+      (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+      (dist v2 v1 ^ 2) (dist v0 v1 ^ 2) (dist v0 v2 ^ 2)
+      (pow_pos (norm_pos_iff.mpr h0v0.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v2.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v1.symm) 2)
+      (pow_pos (dist_pos.mpr (fun h => hv1v2 h.symm)) 2)
+      (pow_pos (dist_pos.mpr hv0v1) 2)
+      (pow_pos (dist_pos.mpr hv0v2) 2)
+      (by
+        intro hcol
+        apply hncol2 t ht
+        rwa [show ({0, v0, pent684F1_p21 v0 v2 v3 g23 v2 t} : Set V3) =
+            ({0, pent684F1_p21 v0 v2 v3 g23 v2 t, v0} : Set V3) from by
+          ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hcol)
+      (by show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      (by show ‖v2‖ ^ 2 = dist (pent684F1_p21 v0 v2 v3 g23 v2 t) (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero, ← hnorm2])
+      (by show dist v0 v2 ^ 2 = dist v0 (pent684F1_p21 v0 v2 v3 g23 v2 t) ^ 2
+          rw [dist_comm v0 (pent684F1_p21 v0 v2 v3 g23 v2 t), hd20, dist_comm v0 v2])
+      hd0_2
+      (by rw [hval v1 t, if_neg hv1v2, if_pos rfl])
+    refine ⟨?_, ?_, ?_, by rw [hval v2 t, if_pos rfl]; exact hd20, ?_, ?_⟩
+    · have hsq : dist v0 (pent684F_p21 v0 v1 v2 v3 g23 v1 t) ^ 2 = dist v0 v1 ^ 2 := by
+        rw [dist_comm v0 (pent684F_p21 v0 v1 v2 v3 g23 v1 t)]
+        exact hB.symm
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg dist_nonneg
+    · have hsq : dist (pent684F_p21 v0 v1 v2 v3 g23 v2 t)
+          (pent684F_p21 v0 v1 v2 v3 g23 v1 t) ^ 2 = dist v2 v1 ^ 2 := by
+        rw [show pent684F_p21 v0 v1 v2 v3 g23 v2 t
+            = pent684F1_p21 v0 v2 v3 g23 v2 t from by rw [hval v2 t, if_pos rfl]]
+        rw [dist_comm (pent684F1_p21 v0 v2 v3 g23 v2 t)
+          (pent684F_p21 v0 v1 v2 v3 g23 v1 t)]
+        exact hC.symm
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg dist_nonneg
+    · have hsq : ‖pent684F_p21 v0 v1 v2 v3 g23 v1 t‖ ^ 2 = ‖v1‖ ^ 2 := by
+        rw [hA, dist_eq_norm, sub_zero]
+      exact w2b_sq_eq_of_nonneg hsq (norm_nonneg _) (norm_nonneg _)
+    · rw [hval v2 t, if_pos rfl, hd23, dist_comm v2 v3]
+    · rw [hval v2 t, if_pos rfl]
+      exact hnorm2
 
 /-- HOL `deform_684_pent_exists` (CUXVZOZ.hl:805): existential-witness form
 of the preceding theorem. -/
