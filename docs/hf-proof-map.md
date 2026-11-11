@@ -6,6 +6,15 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（05:59，编排者，十一）**：**四笔落库 + 基线 Y**——`la22mono`（`3ebeecdd`，LA22 两件 +
+>   23 条 private taum kit + import Gamma4Deriv2）、`la22aux`（`055dfcea`，xrr 两界 + LOCAL_FAN_AZIM_POS +
+>   dih_y_mono）、`SF-108`（`4db35f92`，a/b/azim 7 处 ∃-ε 括号，陈述保真）、`cuxvzozG`（`e56181cb`，
+>   Section G 六件）。四笔均不动锥内 sorry：SORRIED 仍 **75**（清单 0/0）、`K_AXIOM 585`（0/0）、
+>   K_REACH 2,095,484（0）、K_UNIVERSE 2,108,564（+175 私有 kit，不可达）、COVERAGE 99.3797%。
+>   根面 589 逐字节 IDENTICAL；TSV 5,898 行 + manifest PASS。**`general_482` 根路径 7 件 + 2 桥全绿**
+>   ⇒ `g482-482-w2` 发车；`la27wire` 判 BLOCKED（`JCYFMRP_p27` 唯一缺口 = general_482；
+>   `TFITSKC_p27` 缺 `TFITSKCv1_p27` + LA7 `GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE`）。
+>   池事故与闸例外已入 `handoff §6` pit 16。
 > - **2026-11-12（03:00，编排者，十）**：**三笔落库（g482kit `38d64102` / SF-107 `405df55d` /
 >   g482 #1–#3 `66e70eb4`）+ 基线 X**——三笔均不动锥内 sorry：SORRIED 仍 **75**（清单 diff 0/0）、
 >   `K_AXIOM 585`（名单 0/0）、K_REACH 2,095,484（0）、K_UNIVERSE 2,108,389（+32 = LA21 新增私有
@@ -101,13 +110,13 @@
 > 声明**名**是稳定锚点：行号对不上时按名字 grep。
 >
 > ## 口径与数字出处（本文不自己重算任何指标）
-> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 X @`66e70eb4`，2026-11-12**）
+> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 Y @`e56181cb`，2026-11-12**）
 >   —— cone SORRIED **75**（= 55 `nli*` + 1 hLP + 19 Text 章级）/ `K_AXIOM` **585** /
->   根面 589 = 585 native + 标准三 + `sorryAx`。基线 W（`1de85f96`）为 SORRIED 75 / 根面 589；
+>   根面 589 = 585 native + 标准三 + `sorryAx`。基线 X（`66e70eb4`）/ W（`1de85f96`）均为 SORRIED 75 / 根面 589；
 >   基线 V（`9ac1bc89`）为 SORRIED 76 / 根面 589；
 >   基线 U（`64663be3`）为 SORRIED 77 / 根面 589；基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
 > - 75 的构成（56 Assembly + 19 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
->   `docs/e2e-reachability-map.md` 基线 X + `handoff-2026-11-06.md` §0。
+>   `docs/e2e-reachability-map.md` 基线 Y + `handoff-2026-11-06.md` §0。
 > - 信任基座逐类对照（含 `by eval` ↔ `native_decide`）、原版怎么处理 624：`docs/trust-base.md` §2 + `handoff §0.1`。
 > - 图数 19,715（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）：`Kepler/Assembly.lean:7295-7299` docstring。
 > - LP 记录 43,078（root 19,237 + easy 4,403 + hard 19,438、infeasible 189）：`Kepler/Text/LP/LPCert.lean:28-35` 文件头（该文件自己的盘点口径）。

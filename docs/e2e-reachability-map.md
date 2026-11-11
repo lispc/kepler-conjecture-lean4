@@ -668,6 +668,31 @@ SORRIED −1 恰为被真证声明，零新增。
 K_REACH 与 SORRIED 不动 ⇒ COVERAGE 微降是分母涨，不是树退步。三件的价值在**解锁下游**
 （#4 `deform_simplex_684_pent_p21`、LA33/aq13 的 general_482 根），不在本轮刻度。
 
+### 基线 Y：Section F/G + LA22 四件落库 @ `e56181cb`（2026-11-12）
+
+> 触发：`la22mono`（`3ebeecdd`，LA22 两件）+ `la22aux`（`055dfcea`，LA22 四件）+ `SF-108`
+> （`4db35f92`，a/b/azim 括号）+ `cuxvzozG`（`e56181cb`，Section G 六件）。四笔均**不动锥内 sorry**。
+> 仪器原样换装 `docs/e2e-reachability-map.tsv`（5,898 行）；`trust_manifest.py --check` PASS。
+
+| 指标 | 基线 Y | 基线 X | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,484** | 2,095,484 | 0 |
+| SORRIED | **75** | 75 | 0 |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,219 | 5,219 | 0 |
+| K_UNIVERSE | 2,108,564 | 2,108,389 | **+175** |
+| COVERAGE | 99.3797% | 99.3879% | −0.0082pp |
+| 口径 II（ex-Cases） | K_REACH **35,061** / SORRIED **75** / AXIOM **585** / UNIVERSE **46,584** | 35,061 / 75 / 585 / 46,409 | 0 / 0 / 0 / +175 |
+| TOTAL_VALUE_DECLS | 2,094,810 | 2,094,810 | 0 |
+
+**SORRIED 清单逐行 diff**：closed = ∅，added = ∅；**Axiom 名单 diff = 0/0**。
+根面 589 与基线 X/W **逐字节 IDENTICAL**。
+
+**判读**：+175 全部是四笔证明体新增的私有 kit/辅助声明（LA22 的 `La22TaumMonoKit` 23 + 两个
+xrr/dy kit、Section F/G 的 private kit 等，均不可达）；reach/SORRIED 不动 ⇒ COVERAGE 微降
+是分母涨。价值仍在**解锁**：`general_482` 根路径 7 件 + 2 桥现已全绿（本节四笔 + 此前
+`30aefbc5`/`f300a334`/`a908b449`）⇒ `g482-482-w2` 已发车。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的

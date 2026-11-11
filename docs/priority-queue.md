@@ -9,7 +9,15 @@
 > **核心路线图（2026-11-09 用户指定）**：[`docs/hf-proof-map.md`](hf-proof-map.md) —— 九节完成度 +
 > 逐箭头逻辑链 + 缺口清单 §11；推进以它为基础，状态更新写在它的「状态更新」节。
 > **数字口径（2026-11-05 起）**：本文件里的指标是「最后实测」，不是实时值——
-> 每条都带 commit 与日期。当前实测 = **基线 X @`66e70eb4`（2026-11-12，g482/SF-107 落库）**
+> 每条都带 commit 与日期。当前实测 = **基线 Y @`e56181cb`（2026-11-12，Section F/G + LA22 落库）**
+> （cone `K_REACH 2,095,484` / **SORRIED 75** / **`K_AXIOM 585`** / MODULES 5,219 /
+> UNIVERSE 2,108,564 / COVERAGE **99.3797%**；口径 II 35,061 / 75 / 585 / 46,584。
+> 根面 `#print axioms the_kepler_conjecture_e2e` = **589**（与基线 X/W **逐字节 IDENTICAL**）。
+> `docs/e2e-reachability-map.tsv` 已按基线 Y 重写（5,898 行）；manifest `--check` PASS（pins OK）。
+> 较基线 X（`66e70eb4`）：**SORRIED 75→75（清单 0/0）**、**K_AXIOM 585→585（名单 0/0）**、
+> K_REACH **0**、K_UNIVERSE **+175**（LA22/Section F/G 的私有 kit，不可达）、COVERAGE −0.0082pp。
+> 基线 X 实测原文如下（历史）：
+> 当前实测 = **基线 X @`66e70eb4`（2026-11-12，g482/SF-107 落库）**
 > （cone `K_REACH 2,095,484` / **SORRIED 75** / **`K_AXIOM 585`** / MODULES 5,219 /
 > UNIVERSE 2,108,389 / COVERAGE **99.3879%**；口径 II 35,061 / 75 / 585 / 46,409。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
@@ -49,7 +57,7 @@
 
 | 里程碑 | 定义 | 现状（**2026-11-06 实测，基线 O @`7c120676`**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **⚠️ 本行下列数字停在基线 O（历史）；当前 = 基线 X（2026-11-12 @`66e70eb4`，g482/SF-107 落库）：cone SORRIED 75 / K_REACH 2,095,484 / AXIOM **585** / MODULES 5,219 / UNIVERSE 2,108,389 / COVERAGE 99.3879%（见文件头与 TSV）。基线 W（`1de85f96`，mntdedup）：SORRIED 75 / K_REACH 2,095,484 / UNIVERSE 2,108,357 / COVERAGE 99.3894%。基线 U（`64663be3`，J5-9 会师）：SORRIED 77 / K_REACH 2,095,443 / COVERAGE 99.3879%。基线 V（`9ac1bc89`，J4-w1）：SORRIED 76 / K_REACH 2,095,485 / COVERAGE 99.3883%。基线 T：SORRIED 78 / K_REACH 2,088,969 / MODULES 4,747 / UNIVERSE 2,101,184 / COVERAGE 99.4187%。基线 O：cone K_REACH 2,086,156（较 N +205）/ SORRIED **99**（较 N −19，`b07a1722` 补测）/ AXIOM 624（±0）/ K_MODULES 4,195 / K_UNIVERSE 2,099,010；口径 II ex-Cases = 25,733 / 99 / 624 / 37,030；UNION K_REACH 2,107,294 / ROOTS 164 / K_UNIVERSE 2,122,916 / COVERAGE 99.264% / ORPHANS 15,622（public 11,297 + private 4,325）/ SHIMS 22（sorried 2）**。**ORPHANS +1,123 已归因：GENERATED 层 Δ=0（否证「重建 shard」假设），`PackingAuto22` 单模块 983 = 87.5%（该模块本轮才由 `04db48c7` 进 env），其余 +140 是「新增未接线材料净掉塔群回收」；非回归。** 详见 `docs/e2e-reachability-map.md` 基线 O / 基线 U |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **⚠️ 本行下列数字停在基线 O（历史）；当前 = 基线 Y（2026-11-12 @`e56181cb`，Section F/G + LA22 落库）：cone SORRIED 75 / K_REACH 2,095,484 / AXIOM **585** / MODULES 5,219 / UNIVERSE 2,108,564 / COVERAGE 99.3797%（见文件头与 TSV）。基线 X（`66e70eb4`）：SORRIED 75 / UNIVERSE 2,108,389 / COVERAGE 99.3879%。基线 W（`1de85f96`，mntdedup）：SORRIED 75 / K_REACH 2,095,484 / UNIVERSE 2,108,357 / COVERAGE 99.3894%。基线 U（`64663be3`，J5-9 会师）：SORRIED 77 / K_REACH 2,095,443 / COVERAGE 99.3879%。基线 V（`9ac1bc89`，J4-w1）：SORRIED 76 / K_REACH 2,095,485 / COVERAGE 99.3883%。基线 T：SORRIED 78 / K_REACH 2,088,969 / MODULES 4,747 / UNIVERSE 2,101,184 / COVERAGE 99.4187%。基线 O：cone K_REACH 2,086,156（较 N +205）/ SORRIED **99**（较 N −19，`b07a1722` 补测）/ AXIOM 624（±0）/ K_MODULES 4,195 / K_UNIVERSE 2,099,010；口径 II ex-Cases = 25,733 / 99 / 624 / 37,030；UNION K_REACH 2,107,294 / ROOTS 164 / K_UNIVERSE 2,122,916 / COVERAGE 99.264% / ORPHANS 15,622（public 11,297 + private 4,325）/ SHIMS 22（sorried 2）**。**ORPHANS +1,123 已归因：GENERATED 层 Δ=0（否证「重建 shard」假设），`PackingAuto22` 单模块 983 = 87.5%（该模块本轮才由 `04db48c7` 进 env），其余 +140 是「新增未接线材料净掉塔群回收」；非回归。** 详见 `docs/e2e-reachability-map.md` 基线 O / 基线 U |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -150,11 +158,10 @@
 > **g482-w1 落库 `66e70eb4`**（LA21 #1–#3 全绿：`mk_planar_unique_p21` / `mk_planar2_continuous_p21` /
 > `collinear_expand_p21`；499 ins / 15 del）、**g482kit 落库 `38d64102`**（`simplex_unique_p21` +
 > `mk_simplex_uniq_p21` 复用已落库 kit）。三笔均不动锥内 sorry ⇒ **基线 X**（SORRIED 仍 75）。
-> **wave 8 三车道在飞**：`la22mono-w1`（LA22 `LEMMA_4828966562_p22` + `LEMMA_1834976363_p22`）、
-> `cuxvzozG-w1`（Section G 六件 dih/dihV monotonicity）、`sf108-w1`（执行 SF-108：7 处 ∃-ε 括号）。
-> **taustar 已落库**（3 件，`f300a334`）、**cuxvzozF 已落库**（Section F 四件，`30aefbc5`）、
-> **g482br 已落库**（两桥件，`a908b449`）；**vas-nhx / g482-482 判 BLOCKED**（DAG 死锁 / 7 件 tainted，
-> 见续1002 ②、续1001）；两在飞全绿后重发 `g482-482-w2`。
+> **wave 9 两车道在飞（池 2/3）**：`g482-482-w2`（`general_482_deformation_p21` 本体 640 行，
+> 全部 7 件前置 + 2 桥已绿）、`rrw-w1`（`RRCWNSJ_p26`，锥内直源）。**wave 8 四笔已全落库**
+> （la22mono `3ebeecdd` / la22aux `055dfcea` / SF-108 `4db35f92` / cuxvzozG `e56181cb`）；
+> **la27wire 判 BLOCKED**（JCYFMRP 唯一缺口 = general_482；TFITSKC 缺 TFITSKCv1 + LA7 件，见续1006 ⑥）。
 > **hLP 不发**（ERRATA 见续996 ① 与 §0.2 第 2 行）。
 
 > **2026-11-12（续999）现状（历史）**：wave 2 结算——**mntdedup-w1 落库 `1de85f96`**
@@ -484,6 +491,15 @@
 ② **编排者闸（装池顺序 LA38→LA21）**：LA38 岛编 RC=0 / 0 err / **45 sorry-decls（47→45）** / 77 warn；LA21 RC=0 / 0 err / **8 sorry-decls（9→8）** / 8 warn；探针 **3/3 标准三** + `tau3_taum`/`tau3_taum_40` 不回归。**锥内零移动**；oleans 装池（LA38 `cfa36ed0…`，LA21 `c71ec3b4…`）。
 ③ **general_482 根依赖核销（续1001 表终盘）**：7 件 tainted 中 **6 件已清或已落**（Section F 四件 `30aefbc5`、`MMs_minimize_tau_fun` `f300a334`），仅剩 **Section G 六件（`cuxvzozG` 在飞）** 与 **LA22 两件（`la22mono` 在飞）**；2 桥已清（`a908b449`）。⇒ 两车道回执全绿后即可重发 **`g482-482-w2`**（本体 640 行）。
 ④ **wave 8（池 3/3）**：`la22mono-w1` / `cuxvzozG-w1` / `sf108-w1`（执行 SF-108：7 处 ∃-ε 括号，陈述修、证明体不动）。
+
+- **2026-11-12（05:59，续1006）**：**四笔落库（la22mono `3ebeecdd` / la22aux `055dfcea` / SF-108 `4db35f92` / cuxvzozG `e56181cb`）+ 基线 Y 定格；general_482 根路径全绿，本体车道发车**。
+① **`3ebeecdd`（la22mono，1 file / +753 / −2）**：LA22 `LEMMA_1834976363_p22` + `LEMMA_4828966562_p22` 真证；自底重建 23 条 private taum/dihY kit（`La22TaumMonoKit`，全标准三），新增 **1 行 import `Gamma4Deriv2`**（闭包无环、树内 `atn2` 仅 SphereKit 一处定义）。**工单 ERRATA**：`LEMMA_4828966562` 实为 taum 严格单调存在性（HOL `OCBICBY.hl:2002`），非 dihY 单调。闸：LA22 岛编 RC=0/0err/**74（76→74）**/103 warn，探针 2/2 标准三。
+② **`055dfcea`（la22aux，+340 / −4）**：LA22 `xrr_simple_lower/upper_bound_p22` + `LOCAL_FAN_AZIM_POS_p22` + `dih_y_mono_p22` 四件真证（纯代数/定义展开路线，零新 import、零新公开声明）；闸：LA22 **70（74→70）**/99 warn，探针 4/4 标准三。
+③ **`4db35f92`（SF-108，+103 / −115）**：a/b/azim 三件 **7 处** ∃-ε 括号修复（`∃ e, 0<e ∧ (P → Q)`），陈述保真、非还债；补丁归档 `docs/statement-fix-proposals-patches/108-…`；29 处同构证明形状换型、零数学改动；`#check` 七处全强形；**闸例外**：规则 4/4b 的 lake build 在本机缺 olean 现状下拉起 7 并行 `lean -o`（空闲页 48万→7.8万）⇒ 立即止损，按脚本同口径手工复刻 SF 检查（增删行多重集 115/115、103/103 全等）+ 岛编等价覆盖（pit 16 入 handoff）。**附带事故**：kill 时 lake 已删 `LocalAuto22.olean`/`LocalAuto35.olean` 等 output；LA22 从车道备份回灌，LA35 重编 24 min 恢复（RC=0 / 0 err / 341 warn / 0 sorry），池已复原。
+④ **`e56181cb`（cuxvzozG，+659 / −22）**：Section G 五件真证（`dih_x5_mono`/`dih_obtuse_mono(_b)`/`dihV_obtuse_mono_a/b`）+ `dihV_obtuse_mono` 派生转净；删除面恰 5 sorry + 17 注释；LA21 **3（8→3）**/3 warn，探针 6/6 标准三，编译 olean md5 与车道交付一致。**LA21 文件剩余 3 条 sorry = `deform_planar_p21` / `deform_planar_second_version_p21` / `general_482_deformation_p21`**（前两者为死胡同，HOL 本体不引用）。
+⑤ **基线 Y（`e2e_reach_map`，仪器原样）**：`K_REACH 2,095,484`（0）/ **SORRIED 75（0/0）** / **`K_AXIOM 585`（0/0）** / `K_MODULES 5,219`（0）/ `K_UNIVERSE 2,108,564`（**+175**，四笔私有 kit，不可达）/ COVERAGE **99.3797%**；口径 II `35,061 / 75 / 585 / 46,584`。TSV 换装 5,898 行，manifest `--check` PASS，根面 589 **逐字节 IDENTICAL**。
+⑥ **`la27wire-w1` 判词 BLOCKED（0/2，patch 0 字节）**：`TFITSKC_p27` 缺本文件 `TFITSKCv1_p27`（:311 sorry）+ `GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE`（LA7:958 sorry，在 LA27 闭包内）；`JCYFMRP_p27` **唯一缺口 = `CUXVZOZ`（即 general_482）**——其余 300 行路线依赖全有已证孪生。车道另交 **13 行 TFITSKC_p27 路线 demo**（`git apply --check` PASS，标 NOT FOR LANDING，等 `TFITSKCv1` 落地即插即用）。**推论**：general_482 本体绿后，`JCYFMRP_p27` 只差加 import + 300 行搬运。
+⑦ **wave 9（池 2/3）**：`g482-482-w2`（general_482 本体 640 行，已发车）+ `rrw-w1`（`RRCWNSJ_p26`，锥内直源）。**下一波候选**：`JCYFMRP_p27`（待 general_482）、`TFITSKCv1_p27`+LA7 件、`OCBICBY_p22`、VASYYAU DAG 重构。
 
 - **2026-11-11（21:03，续994）**：**🏁 会师：Assembly `jcajydu` 占位真证替换 `64663be3`——J5-9 完成，hTC 三件全闭**。
 ① **`64663be3`（编排者）**：`Assembly.lean` +import `Kepler.Text.Reduction5J5JcajyduFinal`；stub body 改为 `obtain ⟨…⟩ := jcajyduReduction5 H hres` + 四字段匿名构造器（`TameLp.IsHypermapOfListTl → Assembly IsHypermapOfList`）。
