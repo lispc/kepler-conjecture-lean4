@@ -356,6 +356,13 @@
 ③ **续派（整段）**：tame-corr → **Ncvibwu 铺装波整段**（N-A QCDVKEA 本体 90–120 槽形直配 + N-B KBWPBHQ2 障碍层三件 180–280 + 余量本体 150–220）；J4 → 扩围（ASGP 绿后续 **W2-2 整簇 8 件** 330–440，验收点 `map_newvertex`）；aq13 → 扩围（段 A + 段 B + NCVIBWU 组合薄装配 40–60，槽形全形亦为有效终点）。
 ④ **aq13 段 A 分析更新（车道 0 码轮，采信）**：`hBoff` 实为 ~15 行机械步（`hnestFill` 供双端 ∈ B + `betwnSuccGetElem` + `Nodup.idxOf_getElem`）；`hBlen` 真卡点 = **`betwnLenPos`**（`(idxOf z + 1 + |B|) % |r| = idxOf y`，betwnTakeDrop 双支）+ `indexf z e r` 双支非统一形（linear = B.idxOf e + 1、wrap = B.idxOf e）⇒ 必须双支 case（比上轮估多 ~10 行）。修正开工序：`hBoff` 先落（已单件重派）→ `betwnLenPos`+双支形 ⇒ `hBlen` → `hposW`。
 
+- **2026-11-11（19:41，续989）**：**一笔落库：tame-corr nb66 `bad42751`（`Reduction5J5UvnsU3` 新文件 +72，1 件）——U3 pairs 支 `uvnsPairsOfWalk` 绿**。
+① **`bad42751`（tame-corr nb66）**：陈述 = `k3UvnsMainSlot` 第二合取逐字（`let vs := destTripleFull …; ∀ i, isSome ∧ isSome ∧ i+1 < |vs| ∧ d ∈ listOfDarts (quotientList) → d ∈ listPairs (core L r)`）；前提 = `uvnsWalkCons` 六载体 + `hnNil`（`k3UvnsOfSlots` 直投槽）+ `hprev`。
+② **证体（Cl 二分，~20 行）**：`rcases hwalk.1 i hlt hs1 hs2 with hnext | ⟨t, htk, ha, hb, hlen⟩`——① nextEl 支 `memListPairsCoreOfNextEl`（SxC，ac8c6f7b）一次调用（`u ∈ core` 由 walk mem 半），`d ∈ listOfDarts` 不消费（Cl 已内含邻接）；② `(y_t,z_t)` 支 `hnNil t htk (List.length_eq_zero_iff.mp hlen)` + `rw [← ha, ← hb]; exact hd` 对形即闭。
+③ **修法 3 条**：`∀ i, (let d := …; (P → Q))` 的 let 不会自动 zeta ⇒ `intro vs i; dsimp only; intro h4`；`vs` 局部定义 omega 视 `vs.length` 与 `(destTripleFull …).length` 为不同变量 ⇒ defeq 重述 `hlt'`；Cl 第一支与 `memListPairsCoreOfNextEl` 的 `(u1,v1)` 逐字对上，无需 `simpa`。
+④ **实测 vs 估**：72 vs 估 100–160（`memListPairsCoreOfNextEl` 是最大省件；两分支各压成一次调用）。**续派**：tame-corr → **U 段合成 `uvnsMainOfU2`（20–40，`k3UvnsMainSlot` 两合取接线，只留 J4 的 U2 一个显式槽）**。
+⑤ **落库闸**：apply-check PASS @d67d1dd4、禁词净（审计锚除外）、岛编 RC=0/0err/0warn、olean 装池。
+
 - **2026-11-11（19:36，续988）**：**一笔落库：tame-corr nb65 `64438c41`（`Reduction5J5UvnsFinal` 新文件 +280，1 件）——`uvnsWalkCons` 绿，U1c 收官（Cl+mem 全 vs 装配）**。
 ① **`64438c41`（tame-corr nb65）**：`uvnsWalkCons`——Cl：两次 `chainClAppend`（`(init++mid)` junction 用 `getDMidZero` + `arc=[]`→`aq10_betwnEqNil` / `arc≠[]`→`nextLastBetwn`；`++ final` junction 用 `hIMlast`（mid 末 = `z_{k-1}`）× final 首（`betwnOrbit`@0 / `aq10_betwnEqNil`））；mem：两次 `memInAppend`（`memInit`/`memMid@k-1`/`memFinal`，**mem 槽零新增**）；三段展开 `hvs` = `unfold destTripleFull; rw [hhead, hlast]; rfl`（`hhead` = `elCoreTriple@0`，`hlast` = `lastCoreTriple (k-1)`）；`take ((k-1)+1) = uvns` 由 `hlen0` 账。
 ② **ERRATA（依赖方向入账）**：派单要求在 ChainCl 追加，实测 **import 成环**——`Reduction5J5UvnsMemHalf.lean:26` 自身 `import …UvnsChainCl`（J4 复用了 `MemIn` 等）⇒ 装配件独立成第三文件 `Reduction5J5UvnsFinal.lean`（import 两边），**MemHalf 与 ChainCl 均零改动**；后续依赖方向固定为 **MemHalf → ChainCl**。
