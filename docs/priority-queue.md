@@ -105,10 +105,10 @@
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
 > | `dagcut-w2` | **DEF-FIX 四刀**：10 声明搬迁（LA38←LA18 / LA34←LA18 / LA31←LA18 / LA21←LA16） | **LANDED `04ab3cac`**（章程 `902396d0`；+228/−190；闸 11 模块 rc=0 + LA27+import LA21 解锁 RC=0 + 根面 589 逐字节同 md5 `246e952c…`；cone-neutral，基线 AC 保持）；**同车道续 JCYFMRP 证明波（在飞）** |
-> | `k3edge-w1` | K3 EDGE 簇（LA33）→ `MM_4I2_IMP_4T2_4T1_p33` 本体 | **已交付**：kit 1/6 可落（`EXPAND_DIAG_4_DIST_p33`，标准三，patch-kit 待闸）；其余 5+本体被环 `LA33→LA21→LA16→LA33` 卡（对矩阵 row 8 / 基线 AA 记 ERRATA）——**dagcut 砍 LA21→LA16 后已验 `LA33+import LA21` 无环**，编排者全图 SCC 模拟确认；探针全备好（+350 行，锥外资产），落库后续派 |
+> | `k3edge-w1` | K3 EDGE 簇（LA33）→ `MM_4I2_IMP_4T2_4T1_p33` 本体 | kit 1/6 **LANDED `1c540609`**（闸：SORRY 9→8 + 探针标准三）；其余 5 件+本体：环已由 dagcut 解除、探针 +350 行备好——**待后台槽续派 agent-2** |
 > | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25:10378，HOL `OXLZLEZ3.hl:6099-6238`） | 用户裁决 ①（填充料）；**在飞**；落库预期 72→71 + 复测 `pkrmQuarter` |
 > | `biefjhu-tm-w2` | BIEFJHU-a TM pilot：~184–185 叶 `--hull` 证书 + `emit_lean --hull` + 重放包就绪 | 用户裁决 ③；**在飞**（CPU）；certtm 仅此一盒解冻；**内核重放窗口与编排者约** |
-> | `dagcut-eval-w1` | dagcut 后效侦察：SCS_6I1 链上移 / OCBICBY 的 LA22→LA38 可达性 / LFLACKU 的 LA38 两件下移 | **在飞**（2026-11-12 补派，用户确认）；纯分析零 patch，产出 3 份 DEF-FIX 工单草案 |
+> | `dagcut-eval-w1` | dagcut 后效侦察：SCS_6I1 / OCBICBY / LFLACKU 三切面 | **已交付**（续1020）：SCS_6I1 = GO-DEF-FIX 1B（5 件上移 LocalConcl，零边变化）｜OCBICBY = DAG 解环，emptykit-3 打包（JCYFMRP 波后派）｜LFLACKU = 3A+3C ~21 行（仍卡 hNL）；**两 DEF-FIX 新案待用户批** |
 > | `urrcell-w1` | K13 kit 先行：`CLOSED_MCELL` k=2 分支 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`（PA13/Geom-Aff） | **待发**：后台槽满（4 任务在跑），闸或任一车道收线后自动补位；Geom/Aff 近根文件、非必要不动 |
 >
 > **用户裁决（2026-11-12 08:55，已执行）**：两车道回来后**总结收工，不发新车**；
@@ -258,6 +258,16 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-12（11:47，续1021）**：**一笔落库：K3 EDGE 簇 kit 1/6 `1c540609`（k3edge-w1；`EXPAND_DIAG_4_DIST_p33` 真证，+42/−3；锥外资产 cone-neutral）**。
+① **证法**：纯 mod-4 搬运——`EXPAND_DIAG_4_p33` 给 `j % 4 = (i+2) % 4`，`SCS_DIAG_ADD1_p33` + `EXPAND_DIAG_4_p33` 给 `(i+3) % 4 = (j+1) % 4`，两对距离经 `BB_VV_FUN_EQ_p26`（mod-4 周期单射/满射）搬到陈述形；`_hmn`（hNL 假设）**未消费**。
+② **闸（编排者）**：apply-check PASS → LA33 `lake build` rc=0（SORRY 9→8、删除面恰本件；顺带刷新 29 个陈旧 olean）→ 探针 `#print axioms` 标准三零 sorryAx；根面不受影响。
+③ **勘误（车道 DELIVERY §2 入账）**：scout 矩阵 row 8「无环」与基线 AA「LA33 三件闸门开」均漏算环 `LA21→LA16→LA33`（LA21:102、LA16:109）；环已由 dagcut（续1019 ⑤）解除，**剩余 5 件+本体的探针文本已全备好**（RC=0 / 标准三 / 仅差原始对两条引理自 LA21 引擎实例化），续派 agent-2 转写 ~+350 行。
+
+- **2026-11-12（11:38，续1020）**：**侦察交付入档：dagcut-eval-w1 三切面判词（`lane_snapshots/dagcut-eval-w1/EVAL.md`；540 模块两态 SCC 模拟、0 编译纯分析）**。
+① **SCS_6I1（LA20:1647）：GO-DEF-FIX 方案 1B**——5 件（3 链 + `OEHDBEN` 对，60 行）上移 **LocalConcl**（全图唯一同时见 LA20 全闭包 + LA26/27/LA1 的模块；LA1 wires 是 hmn-free 强形，hmn-ful 转接件全在 LA20 上方），**零 import 边变化、SCC 不变**；备选 1A（挂 hNL 长杆）/1C（断 LA27→LA24）均 DEFER。**DEF-FIX 新案，待用户批**。
+② **OCBICBY（LA22:4093）：DAG 阻塞解除（GO 证明波，非 DEF-FIX）**——patched 图 `LA22↛LA38` 双向不通，`+import LA38` 模拟 2138 边零环。剩余 = 3 红 + **11 条 `empty_*` 缺陈述**（精确清单与逐条陈述模型在 EVAL.md §3.2）+ K10 1,400–1,900 ⇒ 打包 **emptykit-3 单车道**（LA22 +1 import；11 条陈述与证明**同 commit**、禁裸壳，净 −14 sorry），建议排 JCYFMRP 波后。
+③ **LFLACKU（LA23:303）：GO-DEF-FIX 3A+3C（~21 行）、优先级低**——LA38→LA23 实测**赘边**（0 活引用；唯一"命中"是 LA38:197 注释里的英文 instead）：删 LA38 一行、LA23 +1 import LA38，两声明原地不动；`pos_imp_scs_arrow_empty_p22` 下移 LA1（19 行零边变化）。字面 3B（两件下搬）拖 52 声明/~1,353 行 ⇒ DEFER。**切通后仍卡 `TAUM_STD_POS_p23`（hNL 保留区）**，仅前置清扫。**DEF-FIX 新案，待用户批**。
 
 - **2026-11-12（11:28，续1019）**：**两笔落库：DEF-FIX 章程 la-dag-cuts `902396d0` + DAG 声明切面四刀 `04ab3cac`（dagcut-w2，+228/−190；用户裁决 ②a；cone-neutral，基线 AC 保持）**。
 ① **内容**：LA38←LA18（`azimCycle_p18`）、LA34←LA18、LA31←LA18（`w5cC_*` 两件）、LA21←LA16（`taum_dih_y_p16` 块 4 件）共 **10 声明纯搬迁零重命名**；LA18/LA16 补 `import LocalAuto21`（consumer 补边），LA21 换 4 条无环 import（XivphksKit/PackingAuto18/LocalAuto38Bridge/LA22），LA31 改 7 条。
