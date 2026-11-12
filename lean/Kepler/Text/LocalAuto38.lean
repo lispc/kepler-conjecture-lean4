@@ -125,7 +125,6 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto1
-import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto23
 import Kepler.Text.SphereKit
 import Kepler.Text.TopologyFan
@@ -136,6 +135,22 @@ set_option maxHeartbeats 5000000
 namespace Kepler.Text
 
 open Kepler.Geom Set Classical
+
+-- MOVED 2026-11-12 (dagcut-w2 DEF-FIX wave, user ruling ②a): `azimCycle_p18`
+-- moved verbatim from LocalAuto18 (was LA18:128-136) to cut the DAG edge
+-- LA38 → LA18 (`azimCycle_p18` was the only LA18 decl consumed here).
+-- Name, statement and body are byte-identical; LA18 keeps consuming it via
+-- its `import LocalAuto21` (LA21 → LA38 reaches this def transitively).
+/-- HOL `azim_cycle` (sphere.hl:414). Verbatim twin of `azimCycle_p2`.
+NEEDS: merge. -/
+noncomputable def azimCycle_p18 (W : Set V3) (v w p : V3) : V3 :=
+  if W ⊆ {p} then p
+  else
+    Classical.epsilon fun u : V3 => u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖
+
 
 /-! ## Section 0: `_p38` external-anchor kit -/
 

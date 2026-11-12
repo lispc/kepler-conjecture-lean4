@@ -103,6 +103,12 @@ import Kepler.Text.SphereKit
 import Kepler.Text.ClosedSyKit
 import Kepler.Text.LocalAuto4
 import Kepler.Text.LocalAuto27
+import Kepler.Text.LocalAuto21
+-- MOVED-decl consumer (dagcut-w2): `azimCycle_p18`,
+-- `coplanar_delta_y_zero_p18`, `periodic_mod_p18` and
+-- `periodic2_mod_p18` now live in LocalAuto21 / LocalAuto38;
+-- LA18 keeps using them through this import. Acyclic: LA21 no
+-- longer imports LA16 and LA38 no longer imports LA18.
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -124,16 +130,6 @@ open Kepler.Geom Set Classical
 /-- HOL `EE v E` (localization.hl:27): the `E`-neighbours of `v`. Verbatim
 twin of `EE_p2`. NEEDS: merge. -/
 def EE_p18 {α : Type*} (v : α) (S : Set (Set α)) : Set α := {w | {v, w} ∈ S}
-
-/-- HOL `azim_cycle` (sphere.hl:414). Verbatim twin of `azimCycle_p2`.
-NEEDS: merge. -/
-noncomputable def azimCycle_p18 (W : Set V3) (v w p : V3) : V3 :=
-  if W ⊆ {p} then p
-  else
-    Classical.epsilon fun u : V3 => u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
-      azim v w p u < azim v w p q ∨
-        azim v w p u = azim v w p q ∧
-          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖
 
 /-- HOL `rho_node1` (localization.hl:115, the overriding second copy).
 Verbatim twin of `rhoNode1_p2`. NEEDS: merge. -/
@@ -431,41 +427,6 @@ theorem ARCV_ADD_AFF_GE_p18 (u v w x : V3) (hv : v ≠ u) (hw : w ≠ u)
   sorry
   -- DISCHARGES: HOL ANGLES_ADD_AFF_GE (Harrison, fan geometry); the `arcV`
   -- rendering is Kepler.Geom.LuneVolume's (HOL sphere.hl:375).
-
-/-- HOL `coplanar_delta_y_zero` (IUNBUIG.hl:144).
-
-Route (verbatim HOL `ASM_MESON_TAC` chain): `coplanar_eq_coplanar_alt`
-(`PackingAuto18`) turns the goal into `CoplanarAlt`; the Oxlzlez criterion
-`POS_EQ_NOT_COPLANANR` (`PackingAuto18`) is `0 < deltaP ↔ ¬CoplanarAlt`; the
-nonnegativity `0 ≤ deltaP` is `DELTA_Y_POS_4POINTS_B` (`LocalAuto38Bridge`,
-HOL `Terminal.DELTA_Y_POS_4POINTS`); `deltaY` at distances is `deltaP` at
-their squares by `delta_delta_x` (`PackingAuto18`). -/
-theorem coplanar_delta_y_zero_p18 (u₀ u₁ u₂ u₃ : V3) :
-    Coplanar ({u₀, u₁, u₂, u₃} : Set V3) ↔
-      deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃) (dist u₂ u₃)
-        (dist u₁ u₃) (dist u₁ u₂) = 0 := by
-  have hdelta : deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃)
-        (dist u₂ u₃) (dist u₁ u₃) (dist u₁ u₂)
-      = deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
-          (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
-    simp only [deltaY, pow_two, delta_delta_x]
-  have hnn : 0 ≤ deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
-      (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
-    rw [← hdelta]
-    exact DELTA_Y_POS_4POINTS_B u₀ u₁ u₂ u₃
-  have hpos := POS_EQ_NOT_COPLANANR u₀ u₁ u₂ u₃
-  rw [coplanar_eq_coplanar_alt, hdelta]
-  constructor
-  · intro hc
-    have hnlt : ¬ 0 < deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
-        (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) :=
-      fun hp => (hpos.mp hp) hc
-    linarith
-  · intro hzero
-    by_contra hnc
-    have hp : 0 < deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
-        (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := hpos.mpr hnc
-    linarith
 
 /-- HOL `real_continuous_finite_range_constant` (IUNBUIG.hl:157): a real
 function continuous on an open interval with finite range is constant
@@ -1092,31 +1053,6 @@ theorem coplanar_aff_gt_simple_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : 
           exact w4sg_affGt_pair_mem3_p18 h5
   -- DISCHARGES: EGHNAVX_COLL_SCS_p18 + FAN_IN_AFF_GE_IMP_EQ +
   -- fan_in_e_imp_neq + the affine-hull argument of HOL IUNBUIG.hl:672-906.
-
-/-- Mod-reduction of a `Periodic` family (helper). -/
-theorem periodic_mod_p18 {α : Sort*} {f : ℕ → α} {n : ℕ} (h : Periodic f n)
-    (i : ℕ) : f (i % n) = f i := by
-  have key : ∀ m i, f (i % n + n * m) = f (i % n) := by
-    intro m
-    induction m with
-    | zero => intro i; rw [Nat.mul_zero, Nat.add_zero]
-    | succ m ih =>
-      intro i
-      have he : i % n + n * (m + 1) = i % n + n * m + n := by ring
-      rw [he, h]
-      exact ih i
-  have hfin := key (i / n) i
-  rw [Nat.mod_add_div i n] at hfin
-  exact hfin.symm
-
-/-- Mod-reduction of a `Periodic2` family (helper). -/
-theorem periodic2_mod_p18 {α : Sort*} {g : ℕ → ℕ → α} {n : ℕ}
-    (h : Periodic2 g n) (i j : ℕ) : g (i % n) (j % n) = g i j := by
-  have e1 : g (i % n) (j % n) = g i (j % n) :=
-    periodic_mod_p18 (f := fun k => g k (j % n)) (fun k => (h k (j % n)).1) i
-  have e2 : g i (j % n) = g i j :=
-    periodic_mod_p18 (f := fun k => g i k) (fun k => (h i k).2) j
-  rw [e1, e2]
 
 /-- HOL `a5_assumption_reduction` (IUNBUIG.hl:909). Proved by the mod-5
 case bash: cyclic edges (0,1) and (0,4) come from the deformation

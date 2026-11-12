@@ -84,7 +84,10 @@ Encoding:
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto17
-import Kepler.Text.LocalAuto18
+import Kepler.Text.LocalAuto21
+-- MOVED-decl consumer (dagcut-w2): `periodic2_mod_p18` /
+-- `periodic_mod_p18` now live in LocalAuto21 (LA34 cut its
+-- LA18 import; LA34 used LA18 for exactly these two).
 import Kepler.Text.LocalAuto7
 import Kepler.Text.CircularSolKit
 import Kepler.Text.LocalAuto23

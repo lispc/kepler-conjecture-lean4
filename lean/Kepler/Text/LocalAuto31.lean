@@ -67,7 +67,13 @@ Encoding:
    `SUM_AZIM_EQ_ANGLE_LE4_p35` are directly citable without new imports.
 -/
 
-import Kepler.Text.LocalAuto18
+import Kepler.Text.LocalAuto21
+import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto5
+import Kepler.Text.LocalAuto9
+import Kepler.Text.AzimBridge
+import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto35
 import Kepler.Text.PackingAuto2
 import Mathlib
 
@@ -874,23 +880,6 @@ theorem WW_DEFOR_RHO_NODE1_p31 {FF : Set (V3 × V3)} {w1 v : V3} {t : ℝ}
     rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
         (wwDefor_p31 w1 v t) = rhoNode1 FF v :=
   epsilon_ext_p31 (fun u => WW_DEFOR_FF3_p31 h hw1v hv ht u)
-
-theorem w5cC_hedge_of_LocalFan {V : Set V3} {E : Set (Set V3)}
-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) :
-    ∀ v ∈ V, ∃ w, {v, w} ∈ E := by
-  obtain ⟨hfan, x, hx, -, -, hreg⟩ := h
-  intro v hv
-  have h2 : (ee v E).ncard = 2 := hreg v hv
-  have hne : (ee v E).Nonempty := by
-    by_contra hce
-    rw [Set.not_nonempty_iff_eq_empty.mp hce, Set.ncard_empty] at h2
-    norm_num at h2
-  obtain ⟨w, hw⟩ := hne
-  exact ⟨w, hw⟩
-
-theorem w5cC_lf2_of_LocalFan {V : Set V3} {E : Set (Set V3)}
-    {FF : Set (V3 × V3)} (h : LocalFan V E FF) : localFan_p2 V E FF :=
-  localFan_p2.of_LocalFan_noIso h (w5cC_hedge_of_LocalFan h)
 
 /-- Genericity keeps every other vertex off the line `0u`. -/
 theorem w5cC_gen_excl {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}

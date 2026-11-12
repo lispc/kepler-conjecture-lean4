@@ -97,6 +97,10 @@ this file.  All other items here discharge nothing yet.
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto20
+import Kepler.Text.LocalAuto21
+-- MOVED-decl consumer (dagcut-w2): `taum_dih_y_p16` now lives in
+-- LocalAuto21; LA16 keeps using it (LA16:1349) and `#print axioms`
+-- (LA16:1843) through this import. Acyclic: LA21 no longer imports LA16.
 import Kepler.Text.LocalAuto22
 import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto26
@@ -1016,100 +1020,6 @@ theorem INV_ARCLENGTH_p16 (y1 y3 z : ℝ) (hz1 : 0 < z) (hz2 : z < Real.pi)
     else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
     else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y) else Real.pi)
     (fun _ _ => rfl) |>.symm
-
-/-- Helper (ported 2026-11-05 from LA38's `p38_dihY222222`): the
-regular tetrahedron dihedral — `dih_y` at the all-2s point is
-`arccos (1/3)`. -/
-private theorem dihY222222_p16 : dihY 2 2 2 2 2 2 = Real.arccos (1 / 3) := by
-  have hdx : (deltaX 4 4 4 4 4 4 : ℝ) = 128 := by norm_num [deltaX]
-  have hdx4 : (deltaX4 4 4 4 4 4 4 : ℝ) = 16 := by norm_num [deltaX4]
-  have hd : dihY 2 2 2 2 2 2 = Real.pi / 2 + atn2 (Real.sqrt 2048) (-16) := by
-    simp only [dihY, dihXf]
-    norm_num [hdx, hdx4]
-  have hsqrt2 : Real.sqrt (2048 : ℝ) = 32 * Real.sqrt 2 := by
-    rw [show (2048 : ℝ) = 1024 * 2 by norm_num, Real.sqrt_mul (by norm_num)]
-    norm_num
-  have hsq2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
-  have hs : Real.sin (Real.arctan (1 / (2 * Real.sqrt 2))) = 1 / 3 := by
-    rw [Real.sin_arctan]
-    have hden : (1 : ℝ) + (1 / (2 * Real.sqrt 2)) ^ 2 = 9 / 8 := by
-      have e1 : (1 / (2 * Real.sqrt 2)) ^ 2 = 1 / (2 * Real.sqrt 2) ^ 2 := by
-        rw [one_div_pow]
-      have e2 : (2 * Real.sqrt 2) ^ 2 = 8 := by rw [mul_pow, hsq2]; norm_num
-      rw [e1, e2]
-      norm_num
-    have hr8 : Real.sqrt (9 / 8) = 3 / (2 * Real.sqrt 2) := by
-      have hval : (9 / 8 : ℝ) = (3 / (2 * Real.sqrt 2)) ^ 2 := by
-        rw [div_pow, mul_pow, hsq2]
-        norm_num
-      rw [hval, Real.sqrt_sq (by positivity)]
-    rw [hden, hr8]
-    field_simp
-  have hθ : Real.arcsin (1 / 3) = Real.arctan (1 / (2 * Real.sqrt 2)) := by
-    rw [← hs]
-    obtain ⟨hm1, hm2⟩ := Real.arctan_mem_Ioo (1 / (2 * Real.sqrt 2))
-    exact Real.arcsin_sin' ⟨le_of_lt hm1, le_of_lt hm2⟩
-  have hv : atn2 (32 * Real.sqrt 2) (-16) = -(Real.arcsin (1 / 3)) := by
-    have h1s : (1 : ℝ) < Real.sqrt 2 :=
-      (Real.lt_sqrt (x := (1 : ℝ)) (by norm_num)).mpr (by norm_num)
-    have hbr : |(-16 : ℝ)| < 32 * Real.sqrt 2 := by
-      rw [abs_of_neg (by norm_num : (-16 : ℝ) < 0), neg_neg]
-      calc (16 : ℝ) = 16 * 1 := by ring
-        _ < 16 * (2 * Real.sqrt 2) :=
-          mul_lt_mul_of_pos_left (by linarith) (by positivity)
-        _ = 32 * Real.sqrt 2 := by ring
-    have hconv : (-16 : ℝ) / (32 * Real.sqrt 2) = -(1 / (2 * Real.sqrt 2)) := by
-      field_simp
-      ring
-    simp only [atn2, hbr, if_true, hconv, Real.arctan_neg, ← hθ]
-  rw [hd, hsqrt2, hv, Real.arccos_eq_pi_div_two_sub_arcsin (1 / 3)]
-  ring
-
-/-- Helper (ported 2026-11-05 from LA38's `p38_const1_eq`):
-`const1 = sol0 / π` — the all-2s solid angle is three
-regular-tetrahedron dihedrals minus π, i.e. exactly `sol0`. -/
-private theorem const1_eq_p16 : const1 = sol0 / Real.pi := by
-  have hs0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
-  have hsol : solY 2 2 2 2 2 2 = 3 * Real.arccos (1 / 3) - Real.pi := by
-    show dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 - Real.pi = _
-    rw [dihY222222_p16]
-    ring
-  show solY 2 2 2 2 2 2 / Real.pi = sol0 / Real.pi
-  rw [hs0, hsol]
-
-/-- Helper (ported 2026-11-05 from LA38's `p38_taum_dih_y`): the
-pure-arithmetic half of the HOL `taum_dih_y` bridge — `taum` is
-`Σ rho(yᵢ)·dihYᵢ − (π + sol0)` once `const1 = sol0/π` is known. -/
-private theorem taum_dih_y_aux_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
-    taum y1 y2 y3 y4 y5 y6 =
-      rho y1 * dihY y1 y2 y3 y4 y5 y6 +
-        rho y2 * dihY y2 y3 y1 y5 y6 y4 +
-        rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) := by
-  have hc : const1 = sol0 / Real.pi := const1_eq_p16
-  have ht : (2 : ℝ) * h0 - 2 ≠ 0 := by norm_num [h0]
-  have hly : ∀ y : ℝ, ly y = 1 - (y - 2) / (2 * h0 - 2) := by
-    intro y
-    have h252 : (2.52 - 2 : ℝ) = 2 * h0 - 2 := by norm_num [h0]
-    show 1 + (y - 2) * (0 - 1) / (2.52 - 2) = 1 - (y - 2) / (2 * h0 - 2)
-    rw [h252]
-    ring
-  show solY y1 y2 y3 y4 y5 y6 * (1 + const1) -
-    const1 * (lnazim y1 y2 y3 y4 y5 y6 +
-      lnazim y2 y3 y1 y5 y6 y4 + lnazim y3 y1 y2 y6 y4 y5) = _
-  simp only [solY, lnazim, hc, hly, rho]
-  field_simp [ht, Real.pi_ne_zero]
-  ring
-
-/-- HOL `taum_dih_y` (BKOSSGE.hl:168).  PROVED 2026-11-05
-(`la16-gap-w1`): proof body ported verbatim from LA38's
-`p38_taum_dih_y` (standard-three); `SphereKit`'s real `taum` body is
-unfolded with `const1 = sol0/π` and `ly` normalized. -/
-theorem taum_dih_y_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
-    taum y1 y2 y3 y4 y5 y6 =
-      rho y1 * dihY y1 y2 y3 y4 y5 y6 +
-        rho y2 * dihY y2 y3 y1 y5 y6 y4 +
-        rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) :=
-  taum_dih_y_aux_p16 y1 y2 y3 y4 y5 y6
 
 /-! ### Local `atn2` continuity kit (Route B, clean)
 
