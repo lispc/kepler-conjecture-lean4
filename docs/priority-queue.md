@@ -104,12 +104,14 @@
 >
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
-> | `dagcut-w2` | **DEF-FIX 四刀**：10 声明搬迁（LA38←LA18 / LA34←LA18 / LA31←LA18 / LA21←LA16） | **LANDED `04ab3cac`**（章程 `902396d0`；+228/−190；闸 11 模块 rc=0 + LA27+import LA21 解锁 RC=0 + 根面 589 逐字节同 md5 `246e952c…`；cone-neutral，基线 AC 保持）；**同车道续 JCYFMRP 证明波（在飞）** |
-> | `k3edge-w1` | K3 EDGE 簇（LA33）→ `MM_4I2_IMP_4T2_4T1_p33` 本体 | kit 1/6 **LANDED `1c540609`**（闸：SORRY 9→8 + 探针标准三）；其余 5 件+本体：环已由 dagcut 解除、探针 +350 行备好——**待后台槽续派 agent-2** |
-> | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25 +800/−4；53 叶 case 树） | **LANDED `2b634e5b`**（用户裁决 ①；闸：build rc=0 + 目标/pkrmQuarter 双探针标准三 + 根面逐字节同）；**锥内 SORRIED 72→71（Text 16→15）**，基线 AD 档图仪器在跑 |
-> | `biefjhu-tm-w2` | BIEFJHU-a TM pilot：~184–185 叶 `--hull` 证书 + `emit_lean --hull` + 重放包就绪 | 用户裁决 ③；**在飞**（CPU）；certtm 仅此一盒解冻；**内核重放窗口与编排者约** |
-> | `dagcut-eval-w1` | dagcut 后效侦察：SCS_6I1 / OCBICBY / LFLACKU 三切面 | **已交付**（续1020）：SCS_6I1 = GO-DEF-FIX 1B（5 件上移 LocalConcl，零边变化）｜OCBICBY = DAG 解环，emptykit-3 打包（JCYFMRP 波后派）｜LFLACKU = 3A+3C ~21 行（仍卡 hNL）；**两 DEF-FIX 新案待用户批** |
-> | `urrcell-w1` | K13 kit：`CLOSED_MCELL` k=2 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`（PA12） | **LANDED `11b1c68e`**（+634/−70；闸：双探针标准三 + 根面逐字节同）；PA12 文件级 sorry 清零，Geom/Aff 零改动；URRPHBZ2 本体 650–950 仍冻结 |
+> | `dagcut-w2` | **DEF-FIX 四刀**：10 声明搬迁（LA38←LA18 / LA34←LA18 / LA31←LA18 / LA21←LA16） | **LANDED `04ab3cac`**（+228/−190，cone-neutral）；**w2 JCYFMRP 波 LANDED `55512ac9`**（LA27 +824/−179，70→69）——V2/V3 待 TFITSKC |
+> | `k3edge-w1` | K3 EDGE 簇（LA33） | kit `1c540609` + 全簇收口 `cc33026a` **均 LANDED**（6 新件标准三，LA33 sorry 9→2 余簇外 2 件） |
+> | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25 +800/−4；53 叶 case 树） | **LANDED `2b634e5b`**（双探针标准三 + 根面逐字节同） |
+> | `biefjhu-tm-w2` | BIEFJHU-a TM pilot（C 路线树发射段） | **在飞**（三续；300 叶 ✓ / 151 子盒可达 ✓；重放包固化中，窗口与编排者约） |
+> | `dagcut-eval-w1` | dagcut 后效侦察三切面 | **已交付**（续1020）：SCS_6I1-1B 与 LFLACKU-3A+3C 用户已批 → agent-8；OCBICBY → emptykit-3 排队 |
+> | `urrcell-w1` | K13 kit（PA12） | **LANDED `11b1c68e`**（+634/−70，PA12 sorry 清零，Geom/Aff 零改动） |
+> | `tfitskcv1-w1` | `TFITSKCv1_p27` 真证（LA27；K2 = TFITSKC 之门、V2/V3 活动边界） | **在飞**（agent-9；带 w2 五条勘误工单；落库预期 69→68） |
+> | `defix-small-w1` | SCS_6I1-1B（5 件上移 LocalConcl）+ LFLACKU-3A+3C | **在飞**（agent-8；两 DEF-FIX 已批，章程随车） |
 >
 > **用户裁决（2026-11-12 08:55，已执行）**：两车道回来后**总结收工，不发新车**；
 > 交接文档：[`handoff-2026-11-12.md`](handoff-2026-11-12.md)。
@@ -259,6 +261,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-12（14:28，续1025）**：**一笔落库：JCYFMRP_p27 真证 `55512ac9`（dagcut-w2/w2，LA27 +824/−179；锥内 70→69，Text 14→13）**。
+① **内容**：+import LA21（dagcut 解锁边）等 9 import + `open Fan` + 4 private kit（arc_mem/diag_ps/diag_sp/flat_residues_coplanar）+ ~370 行证明体；FEKTYIY_p27 块逐字节前移 169 行（消费次序所需，内容零改动）；冻结自检 SIG 删 0 增恰 4 / SORRY 删 1 增 0。
+② **闸（编排者）**：apply sanity + LA27/LocalConcl/TameLp 三 build rc=0 + JCYFMRP/FEKTYIY 双探针标准三 + 根面 589 逐字节同（md5 `246e952c…`）。
+③ **检查点（V3 判词）**：LA29 已可达 JCYFMRP_p27；`JCYFMRP_V3` 的 ∉-scsM 叉现在即可真证（`SCS_M_EQ_0`+`SCS_A_2` 绿），∈-叉走 TFITSKC ⇒ **TFITSKCv1（K2）是活动边界**；已派 `tfitskcv1-w1`（agent-9）。
+④ **施工勘误入档（DELIVERY §5）**：`periodic_mod_p27` 方向与直觉相反；`(by tac;` 换行必炸；`obtain ⟨…⟩ := h` 清除 h；`sigmaFan` 在 `Kepler.Text.Fan`；HOL 对角三分与 scsDiag 分量顺序不对称。
+⑤ LA27 剩 3 sorry（TFITSKCv1/TFITSKC/JLXFDMJ = 下一个波的两件 + K4b 巨件）。
 - **2026-11-12（13:30，续1024）**：**一笔落库：K13 kit 2/2 `11b1c68e`（urrcell-w1，PA12 +634/−70；锥外资产 cone-neutral）**。
 ① 两件：`CLOSED_MCELL` k=2 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS` 双探针标准三；**PA12 文件级 sorry 2→0 清零**。
 ② 路线忠实 HOL（ω-list/voronoi 胞 + affDim=1 矛盾；`K + ker Ψ` 坐标闭性 + 线性右逆 section 提升）；缺件全做 PA12 内 private，**Geom/Aff 零改动**（不触发下游重建窗口）。
