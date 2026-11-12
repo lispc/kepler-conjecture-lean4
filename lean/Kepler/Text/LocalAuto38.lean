@@ -125,7 +125,7 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto1
-import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto4
 import Kepler.Text.SphereKit
 import Kepler.Text.TopologyFan
 import Mathlib

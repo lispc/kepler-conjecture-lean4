@@ -109,6 +109,7 @@ import Kepler.Text.ClosedSyKit
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
 import Kepler.Text.LocalAuto9
+import Kepler.Text.LocalAuto38
 import Kepler.Text.SphereKit
 import Mathlib
 

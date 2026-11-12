@@ -3646,6 +3646,27 @@ noncomputable def scs3M1 : ScsV39 :=
   mkUnadornedV39 3 0.103 (funlistV39 [((0, 1), 2 * h0)] 2 3)
     (funlistV39 [((0, 1), cstab)] (2 * h0) 3)
 
+/-- HOL `pos_imp_scs_arrow_empty`. -/
+theorem pos_imp_scs_arrow_empty_p22 (s : ScsV39)
+    (h : ∀ vv, BBsV39 s vv → 0 ≤ taustarV39 s vv) :
+    scsArrowV39 {s} ∅ := by
+  refine ⟨fun x hx => absurd hx (by simp), ?_⟩
+  refine Or.inl fun s' hs' => ?_
+  rw [Set.mem_singleton_iff] at hs'
+  subst hs'
+  by_contra hne
+  obtain ⟨vv, hvv⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  -- keep `BBindexV39 = BBindexMinV39` opaque: unfolding it to
+  -- `encard-match = choice-projection` breaks dependent case analysis;
+  -- projections instead of rcases so the contaminated equation is never cleared
+  simp only [MMsV39, Set.mem_setOf_eq] at hvv
+  have hp2 := hvv.1
+  simp only [BBprime2V39, Set.mem_setOf_eq] at hp2
+  have hbp := hp2.1
+  simp only [BBprimeV39, Set.mem_setOf_eq] at hbp
+  linarith [h vv hbp.1, hbp.2.2]
+
+
 /-! ## Conclusions, part 4 (appendix.hl:1321-1408) -/
 
 /-- HOL `RRCWNSJ_concl` (appendix.hl:1321). Proof pending. -/

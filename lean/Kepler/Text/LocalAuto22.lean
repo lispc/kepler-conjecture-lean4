@@ -4067,26 +4067,6 @@ theorem scs_arrow_sing_empty_p22 (s : ScsV39) :
     subst h'
     exact h
 
-/-- HOL `pos_imp_scs_arrow_empty`. -/
-theorem pos_imp_scs_arrow_empty_p22 (s : ScsV39)
-    (h : ∀ vv, BBsV39 s vv → 0 ≤ taustarV39 s vv) :
-    scsArrowV39 {s} ∅ := by
-  refine ⟨fun x hx => absurd hx (by simp), ?_⟩
-  refine Or.inl fun s' hs' => ?_
-  rw [Set.mem_singleton_iff] at hs'
-  subst hs'
-  by_contra hne
-  obtain ⟨vv, hvv⟩ := Set.nonempty_iff_ne_empty.mpr hne
-  -- keep `BBindexV39 = BBindexMinV39` opaque: unfolding it to
-  -- `encard-match = choice-projection` breaks dependent case analysis;
-  -- projections instead of rcases so the contaminated equation is never cleared
-  simp only [MMsV39, Set.mem_setOf_eq] at hvv
-  have hp2 := hvv.1
-  simp only [BBprime2V39, Set.mem_setOf_eq] at hp2
-  have hbp := hp2.1
-  simp only [BBprimeV39, Set.mem_setOf_eq] at hbp
-  linarith [h vv hbp.1, hbp.2.2]
-
 /-- HOL `OCBICBY`: the 14 T-row arrows to the empty system (giant; discharges
 LocalAuto16's `JEJTVGB_case_breakdown_p16` NEEDS marker when the `empty_*`
 lane lands). -/
