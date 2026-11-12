@@ -7,8 +7,7 @@ namespace Kepler.Interval.Cases
 
 /-! BIEFJHU-a (HOL ineq entry `1965189142 a`) — schema-v3 hull expression.
 
-Case `1965189142 a hybrid`, box `[1, 1352914700/2^30] × [3,34] × [1,1]^4`
-(box top = dyadic ceiling of the HOL bound 1.26, P0' fix).
+Case `1965189142 a hybrid` (box `[1, 1352914700/2^30] × [3,34] × [1,1]^4`).
 sqrt slots are dummy `(0, 0)`; the per-leaf mantissa certificates live in the
 shard `TMParams.sqrtCerts`, open `atan` args at rung (128, -80), closed
 `atan 1` args at (2048, -64).  Auto-generated — do not edit by hand. -/
