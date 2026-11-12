@@ -10374,7 +10374,45 @@ theorem LEAF_RANK_PROPS (V : Set V3) (hp : Packing V) (hs : saturated V)
   · -- cc_v11 prep 模型：在库数据叶 `cc_prep_model_data`（:2179）直接消费
     exact cc_prep_model_data V f w0 n u0 u1 hn hp hs hnc hr
 
-/-- HOL `real_model_ox3q1h_merge`: the ox3q1h certified 4-quarter bound. -/
+/-- HOL `Merge_ineq.ox3q1h_merge` 的逐记录装配器（本文件私件）：从 46 条记录中
+一条的 5 枚 bank conjunct（beta / 三 quarter / templateB 常数兼容）与二面角和
+推出合并后的四叶片 gg 和为正。常数 conjunct 的交叉变量取合并值
+`y12 = (a12 + b12) / 2` 等——这正是四枚单纯形不等式求和后交叉项的内容
+（ineqdata3q1h.hl:228-232 注释：相邻两单形的 (c_i + c_i') 与两边合并变量配对），
+故两侧交叉项逐字相等，无需任何系数模式假设。 -/
+private theorem ox3q1h_merge_combine {τ c1 c2 c3 c4 b1 b2 b3 b4 d1 d2 d3 d4 y12 y23 y34 y41 : ℝ}
+    {Y bbA bbB γβ γ2 γ3 γ4 dih1 dih2 dih3 dih4 a12 a14 a23 a34 b12 b14 b23 b34 : ℝ}
+    (hsum : dih1 + dih2 + dih3 + dih4 = 2 * Real.pi)
+    (hbeta : γβ / 2 + (bbA - bbB) + τ * dih1 + b1 * Y + c1 * (a12 + a14 + b14 + b12) + d1 > 0)
+    (hq2 : γ2 + τ * dih2 + b2 * Y + c2 * (a23 + a12 + b12 + b23) + d2 > 0)
+    (hq3 : γ3 + τ * dih3 + b3 * Y + c3 * (a34 + a23 + b23 + b34) + d3 > 0)
+    (hq4 : γ4 + τ * dih4 + b4 * Y + c4 * (a14 + a34 + b34 + b14) + d4 > 0)
+    (hconst : 2 * Real.pi * τ + (b1 + b2 + b3 + b4) * Y + 2 * (c1 + c2) * y12
+        + 2 * (c2 + c3) * y23 + 2 * (c3 + c4) * y34 + 2 * (c4 + c1) * y41
+        + (d1 + d2 + d3 + d4) < 0)
+    (hy12 : y12 = (a12 + b12) / 2) (hy23 : y23 = (a23 + b23) / 2)
+    (hy34 : y34 = (a34 + b34) / 2) (hy41 : y41 = (a14 + b14) / 2) :
+    0 < γβ / 2 + (bbA - bbB) + γ2 + γ3 + γ4 := by
+  have hsum' : τ * dih1 + τ * dih2 + τ * dih3 + τ * dih4 = 2 * Real.pi * τ := by
+    rw [← mul_add, ← mul_add, ← mul_add, hsum]
+    ring
+  rw [hy12, hy23, hy34, hy41] at hconst
+  have hcross : c1 * (a12 + a14 + b14 + b12) + c2 * (a23 + a12 + b12 + b23)
+      + c3 * (a34 + a23 + b23 + b34) + c4 * (a14 + a34 + b34 + b14)
+      = 2 * (c1 + c2) * ((a12 + b12) / 2) + 2 * (c2 + c3) * ((a23 + b23) / 2)
+        + 2 * (c3 + c4) * ((a34 + b34) / 2) + 2 * (c4 + c1) * ((a14 + b14) / 2) := by
+    ring
+  linarith
+/-- HOL `real_model_ox3q1h_merge` (OXLZLEZ3.hl:6099-6238): the ox3q1h
+certified 4-quarter bound.  2026-11-12 转真（ox3q1h-w1）：HOL 的
+`Merge_ineq.ox3q1h_merge`（merge_ineq.hl:536，把 46 record × 5 支的
+`ineqdata3q1h` 银行经 `partial_merge` 二分树合并成一条粗界不等式）在 Lean 侧
+不存在，本件直接消费 `hox : ox3q1hP25` 的 230 合取：先按 HOL 分支树
+（caseno = (spine, c1) 象限 × spine/c1/quarters 的逐次二分中点）做 `by_cases`
+覆盖（53 叶，生成器数值校验覆盖 46/46 record 盒），每叶取该 record 的 5 枚
+conjunct 用 `ox3q1h_merge_combine` 合并（常数 conjunct 的交叉变量取
+`(a12 + b12) / 2` 等合并值，与四枚单纯形不等式求和逐字相等），与
+`real_model_sum_azim` 的二面角和 `= 2π` 合成即得。 -/
 theorem real_model_ox3q1h_merge (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hox : ox3q1hP25) (hn : 1 < n) (hp : Packing V)
     (hs : saturated V) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V)
@@ -10399,7 +10437,765 @@ theorem real_model_ox3q1h_merge (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ 
           dist u1 (f (i + 3 + 1)) < 2 * hminus ∧
           dist (f (i + 3)) (f (i + 3 + 1)) < 2 * hminus) →
       0 ≤ ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i) := by
-  sorry
+  intro hmain
+  obtain ⟨hcard, i, h4i, hC1lo, hC1hi, h4i1, hdA, hdE1, hdE2, hdE3, h4i2, hdG, hdH1, hdH2,
+    hdH3, h4i3, hdJ, hdK1, hdK2, hdK3⟩ := hmain
+  have hsz := hsize.2
+  have hn4 : n = 4 := by omega
+  subst hn4
+  obtain ⟨g0_0, g0_1, g0_2, g0_3, g0_4, hox_1⟩ := hox
+  obtain ⟨g1_0, g1_1, g1_2, g1_3, g1_4, hox_2⟩ := hox_1
+  obtain ⟨g2_0, g2_1, g2_2, g2_3, g2_4, hox_3⟩ := hox_2
+  obtain ⟨g3_0, g3_1, g3_2, g3_3, g3_4, hox_4⟩ := hox_3
+  obtain ⟨g4_0, g4_1, g4_2, g4_3, g4_4, hox_5⟩ := hox_4
+  obtain ⟨g5_0, g5_1, g5_2, g5_3, g5_4, hox_6⟩ := hox_5
+  obtain ⟨g6_0, g6_1, g6_2, g6_3, g6_4, hox_7⟩ := hox_6
+  obtain ⟨g7_0, g7_1, g7_2, g7_3, g7_4, hox_8⟩ := hox_7
+  obtain ⟨g8_0, g8_1, g8_2, g8_3, g8_4, hox_9⟩ := hox_8
+  obtain ⟨g9_0, g9_1, g9_2, g9_3, g9_4, hox_10⟩ := hox_9
+  obtain ⟨g10_0, g10_1, g10_2, g10_3, g10_4, hox_11⟩ := hox_10
+  obtain ⟨g11_0, g11_1, g11_2, g11_3, g11_4, hox_12⟩ := hox_11
+  obtain ⟨g12_0, g12_1, g12_2, g12_3, g12_4, hox_13⟩ := hox_12
+  obtain ⟨g13_0, g13_1, g13_2, g13_3, g13_4, hox_14⟩ := hox_13
+  obtain ⟨g14_0, g14_1, g14_2, g14_3, g14_4, hox_15⟩ := hox_14
+  obtain ⟨g15_0, g15_1, g15_2, g15_3, g15_4, hox_16⟩ := hox_15
+  obtain ⟨g16_0, g16_1, g16_2, g16_3, g16_4, hox_17⟩ := hox_16
+  obtain ⟨g17_0, g17_1, g17_2, g17_3, g17_4, hox_18⟩ := hox_17
+  obtain ⟨g18_0, g18_1, g18_2, g18_3, g18_4, hox_19⟩ := hox_18
+  obtain ⟨g19_0, g19_1, g19_2, g19_3, g19_4, hox_20⟩ := hox_19
+  obtain ⟨g20_0, g20_1, g20_2, g20_3, g20_4, hox_21⟩ := hox_20
+  obtain ⟨g21_0, g21_1, g21_2, g21_3, g21_4, hox_22⟩ := hox_21
+  obtain ⟨g22_0, g22_1, g22_2, g22_3, g22_4, hox_23⟩ := hox_22
+  obtain ⟨g23_0, g23_1, g23_2, g23_3, g23_4, hox_24⟩ := hox_23
+  obtain ⟨g24_0, g24_1, g24_2, g24_3, g24_4, hox_25⟩ := hox_24
+  obtain ⟨g25_0, g25_1, g25_2, g25_3, g25_4, hox_26⟩ := hox_25
+  obtain ⟨g26_0, g26_1, g26_2, g26_3, g26_4, hox_27⟩ := hox_26
+  obtain ⟨g27_0, g27_1, g27_2, g27_3, g27_4, hox_28⟩ := hox_27
+  obtain ⟨g28_0, g28_1, g28_2, g28_3, g28_4, hox_29⟩ := hox_28
+  obtain ⟨g29_0, g29_1, g29_2, g29_3, g29_4, hox_30⟩ := hox_29
+  obtain ⟨g30_0, g30_1, g30_2, g30_3, g30_4, hox_31⟩ := hox_30
+  obtain ⟨g31_0, g31_1, g31_2, g31_3, g31_4, hox_32⟩ := hox_31
+  obtain ⟨g32_0, g32_1, g32_2, g32_3, g32_4, hox_33⟩ := hox_32
+  obtain ⟨g33_0, g33_1, g33_2, g33_3, g33_4, hox_34⟩ := hox_33
+  obtain ⟨g34_0, g34_1, g34_2, g34_3, g34_4, hox_35⟩ := hox_34
+  obtain ⟨g35_0, g35_1, g35_2, g35_3, g35_4, hox_36⟩ := hox_35
+  obtain ⟨g36_0, g36_1, g36_2, g36_3, g36_4, hox_37⟩ := hox_36
+  obtain ⟨g37_0, g37_1, g37_2, g37_3, g37_4, hox_38⟩ := hox_37
+  obtain ⟨g38_0, g38_1, g38_2, g38_3, g38_4, hox_39⟩ := hox_38
+  obtain ⟨g39_0, g39_1, g39_2, g39_3, g39_4, hox_40⟩ := hox_39
+  obtain ⟨g40_0, g40_1, g40_2, g40_3, g40_4, hox_41⟩ := hox_40
+  obtain ⟨g41_0, g41_1, g41_2, g41_3, g41_4, hox_42⟩ := hox_41
+  obtain ⟨g42_0, g42_1, g42_2, g42_3, g42_4, hox_43⟩ := hox_42
+  obtain ⟨g43_0, g43_1, g43_2, g43_3, g43_4, hox_44⟩ := hox_43
+  obtain ⟨g44_0, g44_1, g44_2, g44_3, g44_4, hox_45⟩ := hox_44
+  obtain ⟨g45_0, g45_1, g45_2, g45_3, g45_4⟩ := hox_45
+  set Y := dist u0 u1 with hYdef
+  set C1 := dist (f i) (f (i + 1)) with hC1def
+  set K2 := dist (f (i + 3)) (f (i + 3 + 1)) with hK2def
+  set K3 := dist (f (i + 2)) (f (i + 2 + 1)) with hK3def
+  set K4 := dist (f (i + 1)) (f (i + 1 + 1)) with hK4def
+  set a12 := dist u0 (f i) with ha12
+  set a14 := dist u0 (f (i + 1)) with ha14
+  set a23 := dist u0 (f (i + 3)) with ha23
+  set a34 := dist u0 (f (i + 2)) with ha34
+  set b12 := dist u1 (f i) with hb12
+  set b14 := dist u1 (f (i + 1)) with hb14
+  set b23 := dist u1 (f (i + 3)) with hb23
+  set b34 := dist u1 (f (i + 2)) with hb34
+  have hgam : ∀ a b c d e g : ℝ, gamma4fgcyP25 a b c d e g lmfun
+      = gamma4fgcy a b c d e g lmfun := fun a b c d e g => rfl
+  have hf4 : f (i + 3 + 1) = f i := hper i
+  have hK2e : dist (f (i + 3)) (f i) = K2 := by rw [hK2def, hf4]
+  have hhm1 : (1.2:ℝ) ≤ hminus := mi_hminus_prop.1
+  have hhm2 : hminus < (1.3:ℝ) := mi_hminus_prop.2.1
+  have hh0 : Kepler.Text.h0 = (1.26:ℝ) := rfl
+  have hhp : hplus = (1.3254:ℝ) := rfl
+  have hm4i := MCELL4_DOMAIN V u0 u1 w0 4 f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr h4i
+  have hm4i1 := MCELL4_DOMAIN V u0 u1 w0 4 f (i + 1) hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+    h4i1
+  have hm4i2 := MCELL4_DOMAIN V u0 u1 w0 4 f (i + 2) hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+    h4i2
+  have hm4i3 := MCELL4_DOMAIN V u0 u1 w0 4 f (i + 3) hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+    h4i3
+  have hYl : 2 * hminus ≤ Y := hm4i.1
+  have hYh : Y ≤ 2 * hplus := hm4i.2.1
+  have hC1l : 2 * hminus ≤ C1 := hC1lo
+  have hC1h : C1 ≤ 2 * hplus := hC1hi
+  have ha12l : 2 ≤ a12 := by rw [ha12, ← hf4]; exact hm4i3.2.2.2.2.1
+  have ha14l : 2 ≤ a14 := hm4i.2.2.2.2.1
+  have ha23l : 2 ≤ a23 := hm4i3.2.2.1
+  have ha34l : 2 ≤ a34 := hm4i2.2.2.1
+  have hb12l : 2 ≤ b12 := by rw [hb12, ← hf4]; exact hm4i3.2.2.2.2.2.2.2.2.2.2.1
+  have hb14l : 2 ≤ b14 := hm4i.2.2.2.2.2.2.2.2.2.2.1
+  have hb23l : 2 ≤ b23 := hm4i3.2.2.2.2.2.2.2.2.1
+  have hb34l : 2 ≤ b34 := hm4i2.2.2.2.2.2.2.2.2.1
+  have ha12h : a12 < 2 * hminus := by rw [ha12, ← hf4]; exact hdK1
+  have ha14h : a14 < 2 * hminus := hdA.1
+  have ha23h : a23 < 2 * hminus := hdJ.1
+  have ha34h : a34 < 2 * hminus := hdG.1
+  have hb12h : b12 < 2 * hminus := by rw [hb12, ← hf4]; exact hdK2
+  have hb14h : b14 < 2 * hminus := hdA.2
+  have hb23h : b23 < 2 * hminus := hdJ.2
+  have hb34h : b34 < 2 * hminus := hdG.2
+  have hK2l : 2 ≤ K2 := hm4i3.2.2.2.2.2.2.1
+  have hK2h : K2 < 2 * hminus := hdK3
+  have hK3l : 2 ≤ K3 := hm4i2.2.2.2.2.2.2.1
+  have hK3h : K3 < 2 * hminus := hdH3
+  have hK4l : 2 ≤ K4 := hm4i1.2.2.2.2.2.2.1
+  have hK4h : K4 < 2 * hminus := hdE3
+  have ha12u : a12 ≤ 2 * hminus := le_of_lt ha12h
+  have ha14u : a14 ≤ 2 * hminus := le_of_lt ha14h
+  have ha23u : a23 ≤ 2 * hminus := le_of_lt ha23h
+  have ha34u : a34 ≤ 2 * hminus := le_of_lt ha34h
+  have hb12u : b12 ≤ 2 * hminus := le_of_lt hb12h
+  have hb14u : b14 ≤ 2 * hminus := le_of_lt hb14h
+  have hb23u : b23 ≤ 2 * hminus := le_of_lt hb23h
+  have hb34u : b34 ≤ 2 * hminus := le_of_lt hb34h
+  have hK2u : K2 ≤ 2 * hminus := le_of_lt hK2h
+  have hK3u : K3 ≤ 2 * hminus := le_of_lt hK3h
+  have hK4u : K4 ≤ 2 * hminus := le_of_lt hK4h
+  have hceyC1 : criticalEdgeY C1 := by
+    unfold criticalEdgeY
+    exact ⟨by linarith only [hC1l, hC1h], by linarith only [hC1l, hC1h]⟩
+  have eβ : gg_mcell V f u0 u1 i = gamma4fgcyP25 Y a12 a14 C1 b14 b12 lmfun / 2
+      + bump (Y / 2) - bump (C1 / 2) :=
+    GG_MCELL_BETA V u0 u1 w0 4 f i hnl hn hp hs hsize h0 h1 hper hnc hcey h4i
+      ⟨ha12h, hb12h⟩ ha14h hb14h hceyC1 hr
+  have e4 : gg_mcell V f u0 u1 (i + 1) = gamma4fgcyP25 Y a14 a34 K4 b34 b14 lmfun :=
+    GG_MCELL_QUARTER V u0 u1 w0 4 f (i + 1) hnl hn hp hs hsize h0 h1 hper hnc hcey h4i1
+      ⟨ha14h, hb14h⟩ ha34h hb34h hK4h hr
+  have e3 : gg_mcell V f u0 u1 (i + 1 + 1) = gamma4fgcyP25 Y a34 a23 K3 b23 b34 lmfun :=
+    GG_MCELL_QUARTER V u0 u1 w0 4 f (i + 1 + 1) hnl hn hp hs hsize h0 h1 hper hnc hcey h4i2
+      ⟨ha34h, hb34h⟩ ha23h hb23h hK3h hr
+  have e2 : gg_mcell V f u0 u1 (i + 2 + 1)
+      = gamma4fgcyP25 Y a23 (dist u0 (f (i + 3 + 1))) K2 (dist u1 (f (i + 3 + 1))) b23 lmfun :=
+    GG_MCELL_QUARTER V u0 u1 w0 4 f (i + 2 + 1) hnl hn hp hs hsize h0 h1 hper hnc hcey h4i3
+      ⟨ha23h, hb23h⟩ hdK1 hdK2 hK2h hr
+  have hpg := (real_periodic_data V u0 u1 f 4 hper).2.1
+  have hpa := (real_periodic_data V u0 u1 f 4 hper).1
+  have hsg := periodic_sum hpg (by norm_num) i
+  have hsa := periodic_sum hpa (by norm_num) i
+  have hr4 : Finset.range 4 = Finset.Icc 0 3 := by
+    ext x
+    simp only [Finset.mem_range, Finset.mem_Icc]
+    omega
+  have hs4 : ∑ x ∈ Finset.Icc i (i + 3), gg_mcell V f u0 u1 x
+      = gg_mcell V f u0 u1 i + gg_mcell V f u0 u1 (i + 1)
+        + gg_mcell V f u0 u1 (i + 1 + 1) + gg_mcell V f u0 u1 (i + 2 + 1) := by
+    rw [Finset.sum_Icc_succ_top (show i ≤ i + 2 + 1 by omega),
+      Finset.sum_Icc_succ_top (show i ≤ i + 1 + 1 by omega),
+      Finset.sum_Icc_succ_top (show i ≤ i + 0 + 1 by omega),
+      Finset.Icc_self, Finset.sum_singleton]
+  have hsa4 : ∑ x ∈ Finset.Icc i (i + 3), azim_mcell V f u0 u1 x
+      = azim_mcell V f u0 u1 i + azim_mcell V f u0 u1 (i + 1)
+        + azim_mcell V f u0 u1 (i + 1 + 1) + azim_mcell V f u0 u1 (i + 2 + 1) := by
+    rw [Finset.sum_Icc_succ_top (show i ≤ i + 2 + 1 by omega),
+      Finset.sum_Icc_succ_top (show i ≤ i + 1 + 1 by omega),
+      Finset.sum_Icc_succ_top (show i ≤ i + 0 + 1 by omega),
+      Finset.Icc_self, Finset.sum_singleton]
+  have hsuma := real_model_sum_azim V u0 u1 w0 4 f hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+  rw [← hr4, ← hsa] at hsuma
+  have e3' : 4 - 1 + i = i + 3 := by omega
+  rw [e3'] at hsuma
+  rw [hsa4] at hsuma
+  have hd1 := c_4_azim_mcell_dih_y V u0 u1 w0 4 f i hn hp hs hsize h0 h1 hper hnc hcey hr h4i
+  have hd1' := c_4_azim_mcell_dih_y V u0 u1 w0 4 f (i + 1) hn hp hs hsize h0 h1 hper hnc hcey
+    hr h4i1
+  have hd2' := c_4_azim_mcell_dih_y V u0 u1 w0 4 f (i + 1 + 1) hn hp hs hsize h0 h1 hper hnc
+    hcey hr h4i2
+  have hd3' := c_4_azim_mcell_dih_y V u0 u1 w0 4 f (i + 2 + 1) hn hp hs hsize h0 h1 hper hnc
+    hcey hr h4i3
+  rw [hd1, hd1', hd2', hd3'] at hsuma
+  simp only [hf4] at hsuma
+  rw [← hYdef, ← ha12, ← ha14, ← ha23, ← ha34, ← hb12, ← hb14, ← hb23, ← hb34, ← hC1def,
+    ← hK3def, ← hK4def, hK2e] at hsuma
+  have hdih : dihY Y a12 a14 C1 b14 b12 + dihY Y a23 a12 K2 b12 b23
+      + dihY Y a34 a23 K3 b23 b34 + dihY Y a14 a34 K4 b34 b14 = 2 * Real.pi := by
+    linarith only [hsuma]
+  rw [← hr4, ← hsg, e3', hs4, eβ, e4, e3, e2]
+  simp only [hf4]
+  rw [← ha12, ← hb12]
+  simp only [hgam]
+  by_cases hY0 : 2 * Kepler.Text.h0 ≤ Y
+  ·
+    by_cases hC0 : 2 * Kepler.Text.h0 ≤ C1
+    ·
+      by_cases hK4a : hminus + 1 ≤ K4
+      ·
+        have key := ox3q1h_merge_combine hdih
+          (g8_1 Y a12 a14 C1 b14 b12 hY0 hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+          (g8_2 Y a23 a12 K2 b12 b23 hY0 hYh ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+          (g8_3 Y a34 a23 K3 b23 b34 hY0 hYh ha34l ha34u ha23l ha23u hK3l hK3u hb23l hb23u hb34l hb34u)
+          (g8_4 Y a14 a34 K4 b34 b14 hY0 hYh ha14l ha14u ha34l ha34u hK4a hK4u hb34l hb34u hb14l hb14u)
+          (g8_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+          rfl rfl rfl rfl
+        linarith [key]
+      ·
+        by_cases hK3a : hminus + 1 ≤ K3
+        ·
+          have key := ox3q1h_merge_combine hdih
+            (g9_1 Y a12 a14 C1 b14 b12 hY0 hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+            (g9_2 Y a23 a12 K2 b12 b23 hY0 hYh ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+            (g9_3 Y a34 a23 K3 b23 b34 hY0 hYh ha34l ha34u ha23l ha23u hK3a hK3u hb23l hb23u hb34l hb34u)
+            (g9_4 Y a14 a34 K4 b34 b14 hY0 hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+            (g9_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+            rfl rfl rfl rfl
+          linarith [key]
+        ·
+          by_cases hK2a : hminus + 1 ≤ K2
+          ·
+            have key := ox3q1h_merge_combine hdih
+              (g10_1 Y a12 a14 C1 b14 b12 hY0 hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+              (g10_2 Y a23 a12 K2 b12 b23 hY0 hYh ha23l ha23u ha12l ha12u hK2a hK2u hb12l hb12u hb23l hb23u)
+              (g10_3 Y a34 a23 K3 b23 b34 hY0 hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+              (g10_4 Y a14 a34 K4 b34 b14 hY0 hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+              (g10_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+              rfl rfl rfl rfl
+            linarith [key]
+          ·
+            by_cases hYa : Kepler.Text.h0 + hplus ≤ Y
+            ·
+              by_cases hYb : 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2 ≤ Y
+              ·
+                by_cases hK4b : 1 * hminus / 2 + 3 / 2 ≤ K4
+                ·
+                  have key := ox3q1h_merge_combine hdih
+                    (g11_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                    (g11_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                    (g11_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                    (g11_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4b (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+                    (g11_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                    rfl rfl rfl rfl
+                  linarith [key]
+                ·
+                  by_cases hK3b : 1 * hminus / 2 + 3 / 2 ≤ K3
+                  ·
+                    have key := ox3q1h_merge_combine hdih
+                      (g12_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                      (g12_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                      (g12_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3b (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                      (g12_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                      (g12_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                      rfl rfl rfl rfl
+                    linarith [key]
+                  ·
+                    by_cases hK2b : 1 * hminus / 2 + 3 / 2 ≤ K2
+                    ·
+                      have key := ox3q1h_merge_combine hdih
+                        (g13_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                        (g13_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2b (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                        (g13_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                        (g13_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                        (g13_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                        rfl rfl rfl rfl
+                      linarith [key]
+                    ·
+                      by_cases hC1a : Kepler.Text.h0 + hplus ≤ C1
+                      ·
+                        have key := ox3q1h_merge_combine hdih
+                          (g14_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1a hC1h hb14l hb14u hb12l hb12u)
+                          (g14_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                          (g14_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                          (g14_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                          (g14_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                          rfl rfl rfl rfl
+                        linarith [key]
+                      ·
+                        have key := ox3q1h_merge_combine hdih
+                          (g15_1 Y a12 a14 C1 b14 b12 hYb hYh ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                          (g15_2 Y a23 a12 K2 b12 b23 hYb hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                          (g15_3 Y a34 a23 K3 b23 b34 hYb hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                          (g15_4 Y a14 a34 K4 b34 b14 hYb hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                          (g15_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYb hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                          rfl rfl rfl rfl
+                        linarith [key]
+              ·
+                by_cases hK4b : 1 * hminus / 2 + 3 / 2 ≤ K4
+                ·
+                  have key := ox3q1h_merge_combine hdih
+                    (g11_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                    (g11_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                    (g11_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                    (g11_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4b (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+                    (g11_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                    rfl rfl rfl rfl
+                  linarith [key]
+                ·
+                  by_cases hK3b : 1 * hminus / 2 + 3 / 2 ≤ K3
+                  ·
+                    have key := ox3q1h_merge_combine hdih
+                      (g12_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                      (g12_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                      (g12_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3b (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                      (g12_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                      (g12_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                      rfl rfl rfl rfl
+                    linarith [key]
+                  ·
+                    by_cases hK2b : 1 * hminus / 2 + 3 / 2 ≤ K2
+                    ·
+                      have key := ox3q1h_merge_combine hdih
+                        (g13_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                        (g13_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2b (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                        (g13_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                        (g13_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                        (g13_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                        rfl rfl rfl rfl
+                      linarith [key]
+                    ·
+                      by_cases hC1a : Kepler.Text.h0 + hplus ≤ C1
+                      ·
+                        have key := ox3q1h_merge_combine hdih
+                          (g14_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1a hC1h hb14l hb14u hb12l hb12u)
+                          (g14_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                          (g14_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                          (g14_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                          (g14_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                          rfl rfl rfl rfl
+                        linarith [key]
+                      ·
+                        by_cases hK4c : 1 * hminus / 4 + 7 / 4 ≤ K4
+                        ·
+                          have key := ox3q1h_merge_combine hdih
+                            (g16_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                            (g16_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                            (g16_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                            (g16_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4c (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                            (g16_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                            rfl rfl rfl rfl
+                          linarith [key]
+                        ·
+                          by_cases hK3c : 1 * hminus / 4 + 7 / 4 ≤ K3
+                          ·
+                            have key := ox3q1h_merge_combine hdih
+                              (g17_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                              (g17_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                              (g17_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3c (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                              (g17_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                              (g17_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                              rfl rfl rfl rfl
+                            linarith [key]
+                          ·
+                            by_cases hK2c : 1 * hminus / 4 + 7 / 4 ≤ K2
+                            ·
+                              have key := ox3q1h_merge_combine hdih
+                                (g18_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                                (g18_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2c (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                                (g18_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                (g18_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                (g18_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                rfl rfl rfl rfl
+                              linarith [key]
+                            ·
+                              by_cases hYc : 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4 ≤ Y
+                              ·
+                                have key := ox3q1h_merge_combine hdih
+                                  (g19_1 Y a12 a14 C1 b14 b12 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                                  (g19_2 Y a23 a12 K2 b12 b23 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                  (g19_3 Y a34 a23 K3 b23 b34 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                  (g19_4 Y a14 a34 K4 b34 b14 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                  (g19_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                  rfl rfl rfl rfl
+                                linarith [key]
+                              ·
+                                by_cases hC1b : 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2 ≤ C1
+                                ·
+                                  have key := ox3q1h_merge_combine hdih
+                                    (g20_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha12l ha12u ha14l ha14u hC1b (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                                    (g20_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                    (g20_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                    (g20_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                    (g20_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                    rfl rfl rfl rfl
+                                  linarith [key]
+                                ·
+                                  have key := ox3q1h_merge_combine hdih
+                                    (g21_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1b] : C1 ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) hb14l hb14u hb12l hb12u)
+                                    (g21_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                    (g21_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                    (g21_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                    (g21_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                    rfl rfl rfl rfl
+                                  linarith [key]
+            ·
+              by_cases hK4b : 1 * hminus / 2 + 3 / 2 ≤ K4
+              ·
+                have key := ox3q1h_merge_combine hdih
+                  (g22_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                  (g22_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                  (g22_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                  (g22_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha14l ha14u ha34l ha34u hK4b (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+                  (g22_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                  rfl rfl rfl rfl
+                linarith [key]
+              ·
+                by_cases hK3b : 1 * hminus / 2 + 3 / 2 ≤ K3
+                ·
+                  have key := ox3q1h_merge_combine hdih
+                    (g23_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                    (g23_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                    (g23_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha34l ha34u ha23l ha23u hK3b (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                    (g23_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                    (g23_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                    rfl rfl rfl rfl
+                  linarith [key]
+                ·
+                  by_cases hK2b : 1 * hminus / 2 + 3 / 2 ≤ K2
+                  ·
+                    have key := ox3q1h_merge_combine hdih
+                      (g24_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+                      (g24_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha23l ha23u ha12l ha12u hK2b (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                      (g24_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                      (g24_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                      (g24_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                      rfl rfl rfl rfl
+                    linarith [key]
+                  ·
+                    by_cases hC1a : Kepler.Text.h0 + hplus ≤ C1
+                    ·
+                      by_cases hYa2 : 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2 ≤ Y
+                      ·
+                        have key := ox3q1h_merge_combine hdih
+                          (g25_1 Y a12 a14 C1 b14 b12 hYa2 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha12l ha12u ha14l ha14u hC1a hC1h hb14l hb14u hb12l hb12u)
+                          (g25_2 Y a23 a12 K2 b12 b23 hYa2 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                          (g25_3 Y a34 a23 K3 b23 b34 hYa2 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                          (g25_4 Y a14 a34 K4 b34 b14 hYa2 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                          (g25_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa2 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                          rfl rfl rfl rfl
+                        linarith [key]
+                      ·
+                        by_cases hK4c : 1 * hminus / 4 + 7 / 4 ≤ K4
+                        ·
+                          have key := ox3q1h_merge_combine hdih
+                            (g26_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha12l ha12u ha14l ha14u hC1a hC1h hb14l hb14u hb12l hb12u)
+                            (g26_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                            (g26_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                            (g26_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha14l ha14u ha34l ha34u hK4c (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                            (g26_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                            rfl rfl rfl rfl
+                          linarith [key]
+                        ·
+                          by_cases hK3c : 1 * hminus / 4 + 7 / 4 ≤ K3
+                          ·
+                            have key := ox3q1h_merge_combine hdih
+                              (g27_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha12l ha12u ha14l ha14u hC1a hC1h hb14l hb14u hb12l hb12u)
+                              (g27_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                              (g27_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha34l ha34u ha23l ha23u hK3c (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                              (g27_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                              (g27_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                              rfl rfl rfl rfl
+                            linarith [key]
+                          ·
+                            by_cases hK2c : 1 * hminus / 4 + 7 / 4 ≤ K2
+                            ·
+                              have key := ox3q1h_merge_combine hdih
+                                (g28_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha12l ha12u ha14l ha14u hC1a hC1h hb14l hb14u hb12l hb12u)
+                                (g28_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha23l ha23u ha12l ha12u hK2c (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                                (g28_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                (g28_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                (g28_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                rfl rfl rfl rfl
+                              linarith [key]
+                            ·
+                              by_cases hC1c : 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2 ≤ C1
+                              ·
+                                by_cases hYd : 7 * Kepler.Text.h0 / 4 + 1 * hplus / 4 ≤ Y
+                                ·
+                                  have key := ox3q1h_merge_combine hdih
+                                    (g29_1 Y a12 a14 C1 b14 b12 hYd (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha12l ha12u ha14l ha14u hC1c hC1h hb14l hb14u hb12l hb12u)
+                                    (g29_2 Y a23 a12 K2 b12 b23 hYd (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                    (g29_3 Y a34 a23 K3 b23 b34 hYd (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                    (g29_4 Y a14 a34 K4 b34 b14 hYd (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                    (g29_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYd (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                    rfl rfl rfl rfl
+                                  linarith [key]
+                                ·
+                                  have key := ox3q1h_merge_combine hdih
+                                    (g30_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYd] : Y ≤ 7 * Kepler.Text.h0 / 4 + 1 * hplus / 4) ha12l ha12u ha14l ha14u hC1c hC1h hb14l hb14u hb12l hb12u)
+                                    (g30_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYd] : Y ≤ 7 * Kepler.Text.h0 / 4 + 1 * hplus / 4) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                    (g30_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYd] : Y ≤ 7 * Kepler.Text.h0 / 4 + 1 * hplus / 4) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                    (g30_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYd] : Y ≤ 7 * Kepler.Text.h0 / 4 + 1 * hplus / 4) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                    (g30_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYd] : Y ≤ 7 * Kepler.Text.h0 / 4 + 1 * hplus / 4) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                    rfl rfl rfl rfl
+                                  linarith [key]
+                              ·
+                                have key := ox3q1h_merge_combine hdih
+                                  (g31_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha12l ha12u ha14l ha14u hC1a (by linarith only [hC1c] : C1 ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) hb14l hb14u hb12l hb12u)
+                                  (g31_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                  (g31_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                  (g31_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                  (g31_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa2] : Y ≤ 3 * Kepler.Text.h0 / 2 + 1 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                  rfl rfl rfl rfl
+                                linarith [key]
+                    ·
+                      have key := ox3q1h_merge_combine hdih
+                        (g32_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha12l ha12u ha14l ha14u hC0 (by linarith only [hC1a] : C1 ≤ Kepler.Text.h0 + hplus) hb14l hb14u hb12l hb12u)
+                        (g32_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                        (g32_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                        (g32_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                        (g32_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                        rfl rfl rfl rfl
+                      linarith [key]
+    ·
+      by_cases hK4a : hminus + 1 ≤ K4
+      ·
+        have key := ox3q1h_merge_combine hdih
+          (g33_1 Y a12 a14 C1 b14 b12 hY0 hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+          (g33_2 Y a23 a12 K2 b12 b23 hY0 hYh ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+          (g33_3 Y a34 a23 K3 b23 b34 hY0 hYh ha34l ha34u ha23l ha23u hK3l hK3u hb23l hb23u hb34l hb34u)
+          (g33_4 Y a14 a34 K4 b34 b14 hY0 hYh ha14l ha14u ha34l ha34u hK4a hK4u hb34l hb34u hb14l hb14u)
+          (g33_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+          rfl rfl rfl rfl
+        linarith [key]
+      ·
+        by_cases hK3a : hminus + 1 ≤ K3
+        ·
+          have key := ox3q1h_merge_combine hdih
+            (g34_1 Y a12 a14 C1 b14 b12 hY0 hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+            (g34_2 Y a23 a12 K2 b12 b23 hY0 hYh ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+            (g34_3 Y a34 a23 K3 b23 b34 hY0 hYh ha34l ha34u ha23l ha23u hK3a hK3u hb23l hb23u hb34l hb34u)
+            (g34_4 Y a14 a34 K4 b34 b14 hY0 hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+            (g34_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+            rfl rfl rfl rfl
+          linarith [key]
+        ·
+          by_cases hK2a : hminus + 1 ≤ K2
+          ·
+            have key := ox3q1h_merge_combine hdih
+              (g35_1 Y a12 a14 C1 b14 b12 hY0 hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+              (g35_2 Y a23 a12 K2 b12 b23 hY0 hYh ha23l ha23u ha12l ha12u hK2a hK2u hb12l hb12u hb23l hb23u)
+              (g35_3 Y a34 a23 K3 b23 b34 hY0 hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+              (g35_4 Y a14 a34 K4 b34 b14 hY0 hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+              (g35_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+              rfl rfl rfl rfl
+            linarith [key]
+          ·
+            by_cases hYa : Kepler.Text.h0 + hplus ≤ Y
+            ·
+              by_cases hYb : 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2 ≤ Y
+              ·
+                by_cases hK4b : 1 * hminus / 2 + 3 / 2 ≤ K4
+                ·
+                  have key := ox3q1h_merge_combine hdih
+                    (g36_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                    (g36_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                    (g36_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                    (g36_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4b (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+                    (g36_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                    rfl rfl rfl rfl
+                  linarith [key]
+                ·
+                  by_cases hK3b : 1 * hminus / 2 + 3 / 2 ≤ K3
+                  ·
+                    have key := ox3q1h_merge_combine hdih
+                      (g37_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                      (g37_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                      (g37_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3b (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                      (g37_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                      (g37_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                      rfl rfl rfl rfl
+                    linarith [key]
+                  ·
+                    by_cases hK2b : 1 * hminus / 2 + 3 / 2 ≤ K2
+                    ·
+                      have key := ox3q1h_merge_combine hdih
+                        (g38_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                        (g38_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2b (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                        (g38_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                        (g38_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                        (g38_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                        rfl rfl rfl rfl
+                      linarith [key]
+                    ·
+                      have key := ox3q1h_merge_combine hdih
+                        (g39_1 Y a12 a14 C1 b14 b12 hYb hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                        (g39_2 Y a23 a12 K2 b12 b23 hYb hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                        (g39_3 Y a34 a23 K3 b23 b34 hYb hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                        (g39_4 Y a14 a34 K4 b34 b14 hYb hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                        (g39_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYb hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                        rfl rfl rfl rfl
+                      linarith [key]
+              ·
+                by_cases hK4b : 1 * hminus / 2 + 3 / 2 ≤ K4
+                ·
+                  have key := ox3q1h_merge_combine hdih
+                    (g36_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                    (g36_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                    (g36_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                    (g36_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4b (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+                    (g36_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                    rfl rfl rfl rfl
+                  linarith [key]
+                ·
+                  by_cases hK3b : 1 * hminus / 2 + 3 / 2 ≤ K3
+                  ·
+                    have key := ox3q1h_merge_combine hdih
+                      (g37_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                      (g37_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                      (g37_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3b (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                      (g37_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                      (g37_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                      rfl rfl rfl rfl
+                    linarith [key]
+                  ·
+                    by_cases hK2b : 1 * hminus / 2 + 3 / 2 ≤ K2
+                    ·
+                      have key := ox3q1h_merge_combine hdih
+                        (g38_1 Y a12 a14 C1 b14 b12 hYa hYh ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                        (g38_2 Y a23 a12 K2 b12 b23 hYa hYh ha23l ha23u ha12l ha12u hK2b (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                        (g38_3 Y a34 a23 K3 b23 b34 hYa hYh ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                        (g38_4 Y a14 a34 K4 b34 b14 hYa hYh ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                        (g38_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa hYh (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                        rfl rfl rfl rfl
+                      linarith [key]
+                    ·
+                      by_cases hK4c : 1 * hminus / 4 + 7 / 4 ≤ K4
+                      ·
+                        have key := ox3q1h_merge_combine hdih
+                          (g40_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                          (g40_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                          (g40_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                          (g40_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4c (by linarith only [hK4b] : K4 ≤ 1 * hminus / 2 + 3 / 2) hb34l hb34u hb14l hb14u)
+                          (g40_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                          rfl rfl rfl rfl
+                        linarith [key]
+                      ·
+                        by_cases hK3c : 1 * hminus / 4 + 7 / 4 ≤ K3
+                        ·
+                          have key := ox3q1h_merge_combine hdih
+                            (g41_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                            (g41_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                            (g41_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3c (by linarith only [hK3b] : K3 ≤ 1 * hminus / 2 + 3 / 2) hb23l hb23u hb34l hb34u)
+                            (g41_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                            (g41_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                            rfl rfl rfl rfl
+                          linarith [key]
+                        ·
+                          by_cases hK2c : 1 * hminus / 4 + 7 / 4 ≤ K2
+                          ·
+                            have key := ox3q1h_merge_combine hdih
+                              (g42_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                              (g42_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2c (by linarith only [hK2b] : K2 ≤ 1 * hminus / 2 + 3 / 2) hb12l hb12u hb23l hb23u)
+                              (g42_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                              (g42_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                              (g42_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                              rfl rfl rfl rfl
+                            linarith [key]
+                          ·
+                            by_cases hYc : 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4 ≤ Y
+                            ·
+                              have key := ox3q1h_merge_combine hdih
+                                (g43_1 Y a12 a14 C1 b14 b12 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                                (g43_2 Y a23 a12 K2 b12 b23 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                (g43_3 Y a34 a23 K3 b23 b34 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                (g43_4 Y a14 a34 K4 b34 b14 hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                (g43_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYc (by linarith only [hYb] : Y ≤ 1 * Kepler.Text.h0 / 2 + 3 * hplus / 2) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                rfl rfl rfl rfl
+                              linarith [key]
+                            ·
+                              have key := ox3q1h_merge_combine hdih
+                                (g44_1 Y a12 a14 C1 b14 b12 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                                (g44_2 Y a23 a12 K2 b12 b23 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2c] : K2 ≤ 1 * hminus / 4 + 7 / 4) hb12l hb12u hb23l hb23u)
+                                (g44_3 Y a34 a23 K3 b23 b34 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3c] : K3 ≤ 1 * hminus / 4 + 7 / 4) hb23l hb23u hb34l hb34u)
+                                (g44_4 Y a14 a34 K4 b34 b14 hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4c] : K4 ≤ 1 * hminus / 4 + 7 / 4) hb34l hb34u hb14l hb14u)
+                                (g44_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYa (by linarith only [hYc] : Y ≤ 3 * Kepler.Text.h0 / 4 + 5 * hplus / 4) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                                rfl rfl rfl rfl
+                              linarith [key]
+            ·
+              have key := ox3q1h_merge_combine hdih
+                (g45_1 Y a12 a14 C1 b14 b12 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+                (g45_2 Y a23 a12 K2 b12 b23 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+                (g45_3 Y a34 a23 K3 b23 b34 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+                (g45_4 Y a14 a34 K4 b34 b14 hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+                (g45_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hY0 (by linarith only [hYa] : Y ≤ Kepler.Text.h0 + hplus) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+                rfl rfl rfl rfl
+              linarith [key]
+  ·
+    by_cases hC0 : 2 * Kepler.Text.h0 ≤ C1
+    ·
+      by_cases hK4a : hminus + 1 ≤ K4
+      ·
+        have key := ox3q1h_merge_combine hdih
+          (g0_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+          (g0_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+          (g0_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3l hK3u hb23l hb23u hb34l hb34u)
+          (g0_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4a hK4u hb34l hb34u hb14l hb14u)
+          (g0_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+          rfl rfl rfl rfl
+        linarith [key]
+      ·
+        by_cases hK3a : hminus + 1 ≤ K3
+        ·
+          have key := ox3q1h_merge_combine hdih
+            (g1_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+            (g1_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+            (g1_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3a hK3u hb23l hb23u hb34l hb34u)
+            (g1_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+            (g1_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+            rfl rfl rfl rfl
+          linarith [key]
+        ·
+          by_cases hK2a : hminus + 1 ≤ K2
+          ·
+            have key := ox3q1h_merge_combine hdih
+              (g2_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+              (g2_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2a hK2u hb12l hb12u hb23l hb23u)
+              (g2_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+              (g2_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+              (g2_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+              rfl rfl rfl rfl
+            linarith [key]
+          ·
+            have key := ox3q1h_merge_combine hdih
+              (g3_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC0 hC1h hb14l hb14u hb12l hb12u)
+              (g3_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+              (g3_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+              (g3_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+              (g3_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+              rfl rfl rfl rfl
+            linarith [key]
+    ·
+      by_cases hK4a : hminus + 1 ≤ K4
+      ·
+        have key := ox3q1h_merge_combine hdih
+          (g4_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+          (g4_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+          (g4_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3l hK3u hb23l hb23u hb34l hb34u)
+          (g4_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4a hK4u hb34l hb34u hb14l hb14u)
+          (g4_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+          rfl rfl rfl rfl
+        linarith [key]
+      ·
+        by_cases hK3a : hminus + 1 ≤ K3
+        ·
+          have key := ox3q1h_merge_combine hdih
+            (g5_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+            (g5_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2l hK2u hb12l hb12u hb23l hb23u)
+            (g5_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3a hK3u hb23l hb23u hb34l hb34u)
+            (g5_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+            (g5_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+            rfl rfl rfl rfl
+          linarith [key]
+        ·
+          by_cases hK2a : hminus + 1 ≤ K2
+          ·
+            have key := ox3q1h_merge_combine hdih
+              (g6_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+              (g6_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2a hK2u hb12l hb12u hb23l hb23u)
+              (g6_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+              (g6_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+              (g6_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+              rfl rfl rfl rfl
+            linarith [key]
+          ·
+            have key := ox3q1h_merge_combine hdih
+              (g7_1 Y a12 a14 C1 b14 b12 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha12l ha12u ha14l ha14u hC1l (by linarith only [hC0] : C1 ≤ 2 * Kepler.Text.h0) hb14l hb14u hb12l hb12u)
+              (g7_2 Y a23 a12 K2 b12 b23 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha23l ha23u ha12l ha12u hK2l (by linarith only [hK2a] : K2 ≤ hminus + 1) hb12l hb12u hb23l hb23u)
+              (g7_3 Y a34 a23 K3 b23 b34 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha34l ha34u ha23l ha23u hK3l (by linarith only [hK3a] : K3 ≤ hminus + 1) hb23l hb23u hb34l hb34u)
+              (g7_4 Y a14 a34 K4 b34 b14 hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) ha14l ha14u ha34l ha34u hK4l (by linarith only [hK4a] : K4 ≤ hminus + 1) hb34l hb34u hb14l hb14u)
+              (g7_0 Y ((a12 + b12) / 2) ((a23 + b23) / 2) ((a34 + b34) / 2) ((a14 + b14) / 2) hYl (by linarith only [hY0] : Y ≤ 2 * Kepler.Text.h0) (by linarith only [ha12l, hb12l]) (by linarith only [ha12u, hb12u]) (by linarith only [ha23l, hb23l]) (by linarith only [ha23u, hb23u]) (by linarith only [ha34l, hb34l]) (by linarith only [ha34u, hb34u]) (by linarith only [ha14l, hb14l]) (by linarith only [ha14u, hb14u]))
+              rfl rfl rfl rfl
+            linarith [key]
 
 /-- 私件：`dihY` 的 (2 6)(3 5) 槽对称（PA20 `p20g_dihY_rev` 的本文件私拷——上游为
 private 不可见，查重后无公开同件；`deltaX`/`deltaX4` 多项式恒等，自含完整证明）。 -/
@@ -15810,7 +16606,7 @@ theorem real_model_tew (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
   │                 :2135 ✅ 投影）——零 sorryAx 会师真叶
   ├─ pkrmAzim      ⬜（合取 5-7 ← real_model_gckb :2897 / real_model_azim_c4
   │                 :2713 / real_model_sum_azim :2890，三枚认证锚）
-  ├─ pkrmQuarter   ⬜（合取 8 ← real_model_ox3q1h_merge :2983，消费
+  ├─ pkrmQuarter   ✅（合取 8 ← real_model_ox3q1h_merge :10378，已证，消费
   │                 ox3q1hP25——Oxl_def.hl 外部锚，Assembly 侧 T1 骨架
   │                 nliOx3q1h 同根）
   ├─ pkrmQu        ⬜（合取 9-17 ← gamma_qu :2795 / fhbv2_sym :2839 /
@@ -15929,7 +16725,7 @@ theorem pkrmAzim (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
       hcey hr
 
 /-- T4 切片 R3（合取 8）：n = 4 象限案的认证下和。
-资产状态：**bank 叶**——`real_model_ox3q1h_merge`(:2983 ⬜) 消费
+资产状态：**bank 叶已证**（2026-11-12，ox3q1h-w1）——`real_model_ox3q1h_merge`(:10378 ✅) 消费
 `ox3q1hP25`（Oxl_def.hl 外部锚；Assembly 侧 T1 骨架 `nliOx3q1h` 同根，
 G4 证书侧）。
 -- NEEDS: ox3q1hP25 本体回填（Oxl_def.hl）+ ox3q1h_merge 装配波。 -/
