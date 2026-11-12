@@ -118,8 +118,8 @@
 
 > 依据 = §2.1d 实测矩阵（2026-11-12）。**当前没有「直接可发」的锥内 Text 件**；下列均需先满足前置。
 
-1. **用户保留项（唯一 strict GO，等裁决）**：`real_model_ox3q1h_merge`（PA25:10378；一层 22/22 绿、零缺、同文件，EST 170–240）——用户保留理由（ox3q1h DEFHOLE）需先明确是否放行。
-2. **DAG 波（先切后证）**：`JCYFMRP_p27`（两波：DEF-FIX 切 LA38←LA18、LA21←LA16，再证 ~300–430）→ `JCYFMRP_V3`/`TFITSKCv1` → `TFITSKC`；同法 `LFLACKU`（LA23↛LA22/38）、`SCS_6I1`（LA20↛LA27/26）、`OCBICBY`（LA22↛LA38）——均需声明上移/DEF-FIX，非单车道硬闯。
+1. **`real_model_ox3q1h_merge`（唯一 strict GO；2026-11-12 用户放行，当填充料）**：PA25:10378；一层 22/22 绿、零缺、同文件，EST 170–240；空槽即发，不占关键路径。
+2. **DAG 波（先切后证；2026-11-12 用户批准切面，DEF-FIX）**：`JCYFMRP_p27`（两波：切 LA38←LA18、LA21←LA16，再证 ~300–430）→ `JCYFMRP_V3`/`TFITSKCv1` → `TFITSKC`；VASYYAU 本体暂缓。同法评估 `LFLACKU`（LA23↛LA22/38）、`SCS_6I1`（LA20↛LA27/26）、`OCBICBY`（LA22↛LA38）。
 3. **VASYYAU/vt 战役**（等 DAG 重构裁决）：`MIQMCSN`(K8)/`NWDGKXH`(K6)/`YOBIMPP`(K7) 三条 4M6/4M7/4M8 梯子**全部**继承 LA1 `VASYYAU`/`TUAPYYU`/`WKZZEEH` 三 master（~1,815 HOL 行）。
 4. **可 kit 先行的 PARTIAL**：`MM_4I2_IMP_4T2_4T1_p33`（K3 EDGE 簇 360–520，唯一干净有界 kit；本体 180–260）；`URRPHBZ2`（K13 180–310 + 本体 650–950）；`UAGHHBM_p30`（kit 120–250 + 本体 800–1,300，冻结）。
 5. **其余冻结**：`TameLp.fully_surrounded_perimeter_bound`（WSEWPCH 章 1,000–1,500）、`SCS_5M2`（K4b 600–800 + K4c）、`TFITSKC`（K2）、hLP `lpArchiveCertificatesDebt`（等 LP 解冻）。
@@ -217,13 +217,14 @@
 > 当前推进以 [`hf-proof-map.md`](hf-proof-map.md) 与 §0.2 路线图为准。
 
 
-## 6. 等用户裁决（编排者不单方面动）
+## 6. 用户裁决（2026-11-12 收工后记录；详见 `handoff-2026-11-12.md` §6）
 
-1. **hNL 算力路线**（BIEFJHU-a 三选一）：① TM/`--hull` ~2.6 核时（需放行 certtm）；② 过夜 plain 36–46 h；③ 挂账。**冻结中**。
-2. **push**：~300 笔 commit 未 push，需你点头。
-3. **VASYYAU DAG 重构**：把 deformation/azim kit 拆到 LA23 上游（多文件 import 结构变更），解 `NEHXMWH` 死锁。
-4. **既有保留项照旧**：LP/kcblrqc 冻结；certtm TM3/Mono* hold；D 证书层 hold。
-5. **终局 `native_decide` 政策**：用户 2026-10-26 裁「暂缓」，维持现状。
+1. **hNL 算力路线：选 TM/`--hull`（2026-11-12）**——恢复 BIEFJHU-a 单盒 TM pilot；certtm 仅此一盒专项解冻，TM3 量产/Mono*/D 层仍 hold；plain 47,415 叶证书作回退。**未启动**。
+2. **DAG：声明切面（DEF-FIX）批准（2026-11-12）**——LA38←LA18 / LA21←LA16 / LA34/LA31←LA18 纯搬运，陈述逐字节；**VASYYAU 本体战役暂缓**，待切面落地后另报预算。**未启动**。
+3. **`real_model_ox3q1h_merge`：放行，当填充料（2026-11-12）**——空槽即发，不占关键路径。**未启动**。
+4. **push**：已完成（2026-11-12，568 笔，续1016）。
+5. **既有保留项照旧**：LP/kcblrqc 冻结；certtm TM3/Mono* hold（除 BIEFJHU-a pilot 外）；D 证书层 hold。
+6. **终局 `native_decide` 政策**：用户 2026-10-26 裁「暂缓」，维持现状。
 
 > 历史裁决与已结案条目（2026-09–11-06）见 `archive/priority-queue-legacy-2026-10.md` §6。
 
