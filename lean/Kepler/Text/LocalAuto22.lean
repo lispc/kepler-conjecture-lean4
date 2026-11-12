@@ -1560,14 +1560,106 @@ theorem is_scs_funlist_basic_p22 (k : ℕ) (d : ℝ) (a0 b0 : List ((ℕ × ℕ)
     rw [la22funlist_edge_mod b0 d k i (by omega)]
     exact hbk (i % k) ⟨Nat.mod_lt i (by omega), hk3⟩
 
+/-- The neighbour set of `vv i` in `E = range (fun j => {vv j, vv (j+1)})` is
+`{vv (i+1), vv (i+(k-1))}` (HOL `Terminal.EE_vv`, terminal.hl:1254). -/
+private theorem la22ee_vv (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
+    (hinj : ∀ i j, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    ee (vv i) (Set.range fun j => ({vv j, vv (j + 1)} : Set V3)) =
+      {vv (i + 1), vv (i + (k - 1))} := by
+  have hk0 : 0 < k := by omega
+  have hinj' : ∀ m n, m < k → n < k → vv m = vv n → m = n :=
+    fun m n hm hn h => hinj m n ⟨hm, hn, h⟩
+  ext w
+  simp only [ee, Set.mem_setOf_eq, Set.mem_range, Set.mem_insert_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨j, hj⟩
+    rw [Set.pair_eq_pair_iff] at hj
+    rcases hj with ⟨hij, hwj⟩ | ⟨hij, hwj⟩
+    · left
+      have hji : j % k = i % k := by
+        refine hinj' (j % k) (i % k) (Nat.mod_lt _ hk0) (Nat.mod_lt _ hk0) ?_
+        rw [periodic_mod_eq_p23 hper j, periodic_mod_eq_p23 hper i, hij]
+      have hmod : (j + 1) % k = (i + 1) % k := Nat.ModEq.add_right 1 hji
+      rw [← hwj, ← periodic_mod_eq_p23 hper (j + 1), ← periodic_mod_eq_p23 hper (i + 1), hmod]
+    · right
+      have hj1 : (j + 1) % k = i % k := by
+        refine hinj' ((j + 1) % k) (i % k) (Nat.mod_lt _ hk0) (Nat.mod_lt _ hk0) ?_
+        rw [periodic_mod_eq_p23 hper (j + 1), periodic_mod_eq_p23 hper i, hwj]
+      have hjmod : j % k = (i + (k - 1)) % k := by
+        have step : j % k = (j + 1 + (k - 1)) % k := by
+          rw [show j + 1 + (k - 1) = j + k by omega, Nat.add_mod_right]
+        rw [step, Nat.add_mod, hj1, ← Nat.add_mod]
+      rw [← hij, ← periodic_mod_eq_p23 hper j, ← periodic_mod_eq_p23 hper (i + (k - 1)), hjmod]
+  · rintro (rfl | rfl)
+    · exact ⟨i, rfl⟩
+    · refine ⟨i + k - 1, ?_⟩
+      rw [show i + k - 1 + 1 = i + k by omega, hper i,
+        show i + k - 1 = i + (k - 1) by omega, Set.pair_comm]
+
 /-- HOL `azim_in_fan_azim` (NEEDS the sigmaFan/ee localization kit). -/
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`) via the new private `la22ee_vv`
+-- neighbour-set computation + `Fan.sigmaFan` minimality.
 theorem azim_in_fan_azim_p22 (vv : ℕ → V3) (E : Set (Set V3)) (k i : ℕ)
     (hper : Periodic vv k) (hk : 3 ≤ k)
     (hinj : ∀ i j, i < k ∧ j < k ∧ vv i = vv j → i = j)
     (hE : E = Set.range fun i => {vv i, vv (i + 1)}) :
     azimInFan (vv i, vv (i + 1)) E =
       azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1))) := by
-  sorry
+  have hk0 : 0 < k := by omega
+  have hEE : ee (vv i) E = {vv (i + 1), vv (i + (k - 1))} := by
+    rw [hE]; exact la22ee_vv vv k i hper hk hinj
+  have hne : vv (i + 1) ≠ vv (i + (k - 1)) := by
+    intro he
+    have h1 : (i + 1) % k < k := Nat.mod_lt _ hk0
+    have h2 : (i + (k - 1)) % k < k := Nat.mod_lt _ hk0
+    have hm : (i + 1) % k = (i + (k - 1)) % k := by
+      refine hinj ((i + 1) % k) ((i + (k - 1)) % k) ⟨h1, h2, ?_⟩
+      rw [periodic_mod_eq_p23 hper (i + 1), periodic_mod_eq_p23 hper (i + (k - 1))]
+      exact he
+    have hle : i + 1 ≤ i + (k - 1) := by omega
+    have hdvd : k ∣ (i + (k - 1)) - (i + 1) := (Nat.modEq_iff_dvd' hle).mp hm
+    have hdk : (i + (k - 1)) - (i + 1) = k - 2 := by omega
+    rw [hdk] at hdvd
+    have hk2 : 0 < k - 2 := by omega
+    exact absurd (Nat.le_of_dvd hk2 hdvd) (by omega)
+  unfold azimInFan
+  rw [hEE]
+  have hcard : 1 < ({vv (i + 1), vv (i + (k - 1))} : Set V3).ncard := by
+    rw [Set.ncard_pair hne]; norm_num
+  rw [if_pos hcard]
+  have hsig : Fan.sigmaFan 0 Set.univ E (vv i) (vv (i + 1)) = vv (i + (k - 1)) := by
+    have hset : Fan.setOfEdge (vv i) Set.univ E = {vv (i + 1), vv (i + (k - 1))} := by
+      ext w
+      show ({vv i, w} ∈ E ∧ w ∈ Set.univ) ↔ w ∈ ({vv (i + 1), vv (i + (k - 1))} : Set V3)
+      simp only [Set.mem_univ, and_true]
+      have hw : w ∈ ee (vv i) E ↔ w ∈ ({vv (i + 1), vv (i + (k - 1))} : Set V3) := by
+        rw [hEE]
+      simpa only [ee, Set.mem_setOf_eq] using hw
+    have hnotsingle : ({vv (i + 1), vv (i + (k - 1))} : Set V3) ≠ {vv (i + 1)} := by
+      intro heq
+      have hz : vv (i + (k - 1)) ∈ ({vv (i + 1)} : Set V3) := by
+        rw [← heq]; simp
+      have hzeq : vv (i + (k - 1)) = vv (i + 1) := by simpa using hz
+      exact hne hzeq.symm
+    unfold Fan.sigmaFan
+    rw [hset, if_neg hnotsingle]
+    obtain ⟨hw1, hw2, -⟩ := Classical.epsilon_spec
+      (p := fun w => w ∈ ({vv (i + 1), vv (i + (k - 1))} : Set V3) ∧ w ≠ vv (i + 1) ∧
+        ∀ w1 ∈ ({vv (i + 1), vv (i + (k - 1))} : Set V3), w1 ≠ vv (i + 1) →
+          azim 0 (vv i) (vv (i + 1)) w ≤ azim 0 (vv i) (vv (i + 1)) w1)
+      ⟨vv (i + (k - 1)), by
+        have hzmem : vv (i + (k - 1)) ∈ ({vv (i + 1), vv (i + (k - 1))} : Set V3) := by simp
+        refine ⟨hzmem, hne.symm, ?_⟩
+        intro w1 hw1 hw1ne
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw1
+        rcases hw1 with h | h
+        · exact absurd h hw1ne
+        · rw [h]⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw1
+    rcases hw1 with h | h
+    · exact absurd h hw2
+    · exact h
+  rw [hsig]
 
 /-- HOL `sol_local_azim`. -/
 theorem sol_local_azim_p22 (vv : ℕ → V3) (k : ℕ)
@@ -1582,10 +1674,20 @@ theorem sol_local_azim_p22 (vv : ℕ → V3) (k : ℕ)
   sorry
 
 /-- HOL `vv_inj_lemma`. -/
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`): `isScsV39` diagonal slot + `BBsV39`.
 theorem vv_inj_lemma_p22 (s : ScsV39) (v : ℕ → V3) (k : ℕ)
     (h1 : isScsV39 s) (h2 : BBsV39 s v) (hk : s.k = k) :
     ∀ i j, i < k ∧ j < k ∧ v i = v j → i = j := by
-  sorry
+  intro i j ⟨hik, hjk, hvij⟩
+  by_contra hne
+  unfold isScsV39 at h1
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag, -⟩ := h1
+  have hik' : i < s.k := by omega
+  have hjk' : j < s.k := by omega
+  have h2le : 2 ≤ s.a i j := hdiag i j ⟨hik', hjk', hne⟩
+  have hale : s.a i j ≤ dist (v i) (v j) := (h2.2.2.1 i j).1
+  have hzero : dist (v i) (v j) = 0 := by rw [hvij, dist_self]
+  linarith
 
 /-- HOL `LOCAL_FAN_AZIM_POS`. -/
 -- PROVED 2026-11-12 (lane `la22aux-w1`): HOL chain
@@ -2290,30 +2392,85 @@ theorem EAR_SOL_NN_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : �
   sorry
 
 /-- HOL `scs_6T1_props`. -/
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`).
 theorem scs_6T1_props_p22 :
     scs6T1.k = 6 ∧ scsBasicV39 scs6T1 ∧
       (∀ vv i j, BBsV39 scs6T1 vv → scsDiag 6 i j → cstab ≤ dist (vv i) (vv j)) ∧
       (∀ vv i, BBsV39 scs6T1 vv → dist (vv i) (vv (i + 1)) = 2) := by
-  sorry
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · exact scs_basic_unadorned_p22
+  · intro vv i j hB hd
+    have hle : csAdj 6 2 cstab i j ≤ dist (vv i) (vv j) := (hB.2.2.1 i j).1
+    have heq : csAdj 6 2 cstab i j = cstab := scs_diag_cs_adj_p22 (a := 2) (b := cstab) hd
+    rwa [heq] at hle
+  · intro vv i hB
+    have h1 : csAdj 6 2 cstab i (i + 1) ≤ dist (vv i) (vv (i + 1)) := (hB.2.2.1 i (i + 1)).1
+    have h2 : dist (vv i) (vv (i + 1)) ≤ csAdj 6 2 6 i (i + 1) := (hB.2.2.1 i (i + 1)).2
+    have e1 : csAdj 6 2 cstab i (i + 1) = 2 := csAdj_adj_p22 (by norm_num : (1:ℕ) < 6)
+    have e2 : csAdj 6 2 6 i (i + 1) = 2 := csAdj_adj_p22 (by norm_num : (1:ℕ) < 6)
+    linarith
 
 /-- HOL `scs_5T1_props`. -/
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`).
 theorem scs_5T1_props_p22 :
     scs5T1.k = 5 ∧ scsBasicV39 scs5T1 ∧
       (∀ vv i j, BBsV39 scs5T1 vv → scsDiag 5 i j → cstab ≤ dist (vv i) (vv j)) ∧
       (∀ vv i, BBsV39 scs5T1 vv → dist (vv i) (vv (i + 1)) = 2) := by
-  sorry
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · exact scs_basic_unadorned_p22
+  · intro vv i j hB hd
+    have hle : csAdj 5 2 cstab i j ≤ dist (vv i) (vv j) := (hB.2.2.1 i j).1
+    have heq : csAdj 5 2 cstab i j = cstab := scs_diag_cs_adj_p22 (a := 2) (b := cstab) hd
+    rwa [heq] at hle
+  · intro vv i hB
+    have h1 : csAdj 5 2 cstab i (i + 1) ≤ dist (vv i) (vv (i + 1)) := (hB.2.2.1 i (i + 1)).1
+    have h2 : dist (vv i) (vv (i + 1)) ≤ csAdj 5 2 6 i (i + 1) := (hB.2.2.1 i (i + 1)).2
+    have e1 : csAdj 5 2 cstab i (i + 1) = 2 := csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)
+    have e2 : csAdj 5 2 6 i (i + 1) = 2 := csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)
+    linarith
 
 /-- HOL `scs_6T1_generic`. -/
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`): thin `RRCWNS_WEAK_p22` wrapper
+-- (`scs_6T1_props_p22` supplies the four `hl` slots through periodicity + `- 1 = 5`).
 theorem scs_6T1_generic_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
     (hB : BBsV39 scs6T1 vv) (ht : taustarV39 scs6T1 vv < 0) :
     scsGeneric vv := by
-  sorry
+  refine RRCWNS_WEAK_p22 h scs6T1 vv hB ?_ ht is_scs_6T1_p22
+    scs_6T1_props_p22.2.1 (fun i j hdij => scs_6T1_props_p22.2.2.1 vv i j hB hdij) ?_
+  · show 3 < 6; norm_num
+  · intro i w _
+    have hk1 : i + (scs6T1.k - 1) = i + 5 := rfl
+    have hedge : dist (vv (i + 5)) (vv ((i + 5) + 1)) = 2 :=
+      scs_6T1_props_p22.2.2.2 vv (i + 5) hB
+    have hv : vv ((i + 5) + 1) = vv i := hB.2.1 i
+    have hd5 : dist (vv i) (vv (i + 5)) = 2 := by
+      rw [dist_comm, ← hv]; exact hedge
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rw [scs_6T1_props_p22.2.2.2 vv i hB]; linarith [h0_eq_p22]
+    · rw [hk1, hd5]; linarith [h0_eq_p22]
+    · exact Or.inr (scs_6T1_props_p22.2.2.2 vv i hB)
+    · rw [hk1]; exact Or.inr hd5
 
 /-- HOL `scs_5T1_generic`. -/
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`): thin `RRCWNS_WEAK_p22` wrapper.
 theorem scs_5T1_generic_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
     (hB : BBsV39 scs5T1 vv) (ht : taustarV39 scs5T1 vv < 0) :
     scsGeneric vv := by
-  sorry
+  refine RRCWNS_WEAK_p22 h scs5T1 vv hB ?_ ht is_scs_5T1_p22
+    scs_5T1_props_p22.2.1 (fun i j hdij => scs_5T1_props_p22.2.2.1 vv i j hB hdij) ?_
+  · show 3 < 5; norm_num
+  · intro i w _
+    have hk1 : i + (scs5T1.k - 1) = i + 4 := rfl
+    have hedge : dist (vv (i + 4)) (vv ((i + 4) + 1)) = 2 :=
+      scs_5T1_props_p22.2.2.2 vv (i + 4) hB
+    have hv : vv ((i + 4) + 1) = vv i := hB.2.1 i
+    have hd4 : dist (vv i) (vv (i + 4)) = 2 := by
+      rw [dist_comm, ← hv]; exact hedge
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rw [scs_5T1_props_p22.2.2.2 vv i hB]; linarith [h0_eq_p22]
+    · rw [hk1, hd4]; linarith [h0_eq_p22]
+    · exact Or.inr (scs_5T1_props_p22.2.2.2 vv i hB)
+    · rw [hk1]; exact Or.inr hd4
 
 /-- HOL `empty_6T1` (giant; the analytic core of the terminal emptiness). -/
 theorem empty_6T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
@@ -2331,9 +2488,89 @@ theorem empty_5T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
 [MOD n]`, 经 hmod 链闭合);hb 证入 a := `(b + j % n) % n`;单射证走
 `Nat.ModEq.add_right (j % n)` 后 omega(须先有 `j % n < n` 在场)。
 μ-bug 备忘: omega 对变元模数 `% n` 无 `< n` 先验, 须显式 `Nat.mod_lt`。 -/
+private theorem la22sum_shift_arith1 (a n j : ℕ) (ha : a < n) :
+    (j + (a + n - j % n)) % n = a := by
+  have hn0 : 0 < n := by omega
+  have hjle : j % n ≤ a + n := by
+    have := Nat.mod_lt j hn0; omega
+  have hsub : j % n + ((a + n) - j % n) = a + n := Nat.add_sub_of_le hjle
+  have hm : Nat.ModEq n (j + ((a + n) - j % n)) ((j % n) + ((a + n) - j % n)) :=
+    Nat.ModEq.add_right _ (Nat.mod_modEq j n).symm
+  rw [hsub] at hm
+  have hm2 : Nat.ModEq n (a + n) a := Nat.add_mod_right a n
+  have hfin := hm.trans hm2
+  have hfin' : (j + (a + n - j % n)) % n = a % n := hfin
+  rwa [Nat.mod_eq_of_lt ha] at hfin'
+
+private theorem la22sum_shift_arith2 (b n j : ℕ) (hb : b < n) :
+    ((j + b) % n + n - j % n) % n = b := by
+  have hn0 : 0 < n := by omega
+  have hjlt : j % n < n := Nat.mod_lt j hn0
+  set c := (j + b) % n with hcdef
+  have hc : c < n := Nat.mod_lt _ hn0
+  have hL : c + n - j % n = c + (n - j % n) :=
+    Nat.add_sub_assoc (le_of_lt hjlt) c
+  have hL2 : c + (n - j % n) + j % n = c + n := by
+    rw [Nat.add_assoc, Nat.sub_add_cancel (le_of_lt hjlt)]
+  have hA : Nat.ModEq n (c + (n - j % n) + j % n) c := by
+    rw [hL2]
+    exact Nat.add_mod_right c n
+  have hc_eq : Nat.ModEq n c (j + b) := Nat.mod_modEq (j + b) n
+  have hb1 : Nat.ModEq n (b + j % n) (b + j) :=
+    Nat.ModEq.add_left b (Nat.mod_modEq j n)
+  have hb2 : Nat.ModEq n (b + j) (j + b) := by rw [Nat.add_comm b j]
+  have hR : Nat.ModEq n (b + j % n) (j + b) := hb1.trans hb2
+  have htot : Nat.ModEq n (c + (n - j % n) + j % n) (b + j % n) :=
+    (hA.trans hc_eq).trans hR.symm
+  have hcancel : Nat.ModEq n (c + (n - j % n)) b :=
+    Nat.ModEq.add_right_cancel' (j % n) htot
+  have htarget : Nat.ModEq n ((j + b) % n + n - j % n) b := by
+    rw [← hcdef, hL]
+    exact hcancel
+  have htarget' : ((j + b) % n + n - j % n) % n = b % n := htarget
+  rwa [Nat.mod_eq_of_lt hb] at htarget'
+
+private theorem la22sum_shift_mod (a n j : ℕ) (ha : a < n) :
+    (j + (a + n - j % n) % n) % n = a := by
+  have hn0 : 0 < n := by omega
+  have h1 : Nat.ModEq n ((a + n - j % n) % n) (a + n - j % n) :=
+    Nat.mod_modEq _ _
+  have h2 : Nat.ModEq n (j + (a + n - j % n) % n) (j + (a + n - j % n)) :=
+    Nat.ModEq.add_left j h1
+  have h3 : Nat.ModEq n (j + (a + n - j % n)) a := by
+    have h := la22sum_shift_arith1 a n j ha
+    have h' : (j + (a + n - j % n)) % n = a % n := by rw [h, Nat.mod_eq_of_lt ha]
+    exact h'
+  have h4 := h2.trans h3
+  have h4' : (j + (a + n - j % n) % n) % n = a % n := h4
+  rwa [Nat.mod_eq_of_lt ha] at h4'
+
+-- PROVED 2026-11-12 (lane `la22emptykit-w1`): `Finset.sum_nbij'` with the
+-- inverse rotation pair `(a + n - j % n) % n` / `(j + b) % n` (the recipe
+-- in the docstring above, plus private mod-arith helpers).
 theorem periodic_sum_shift_p22 (f : ℕ → ℝ) (j n : ℕ) (hper : Periodic f n) (hn : n ≠ 0) :
     Finset.sum (Finset.range n) f = Finset.sum (Finset.range n) (fun i => f (j + i)) := by
-  sorry
+  have hn0 : 0 < n := by omega
+  refine Finset.sum_nbij' (fun a => (a + n - j % n) % n) (fun b => (j + b) % n) ?_ ?_ ?_ ?_ ?_
+  · intro a ha
+    simp only [Finset.mem_range] at ha ⊢
+    exact Nat.mod_lt _ hn0
+  · intro b hb
+    simp only [Finset.mem_range] at hb ⊢
+    exact Nat.mod_lt _ hn0
+  · intro a ha
+    simp only [Finset.mem_range] at ha
+    exact la22sum_shift_mod a n j ha
+  · intro b hb
+    simp only [Finset.mem_range] at hb
+    exact la22sum_shift_arith2 b n j hb
+  · intro a ha
+    simp only [Finset.mem_range] at ha
+    have hmod : (j + (a + n - j % n) % n) % n = a := la22sum_shift_mod a n j ha
+    have haeq : a % n = (j + (a + n - j % n) % n) % n := by
+      rw [Nat.mod_eq_of_lt ha]; exact hmod.symm
+    rw [← periodic_mod_eq_p23 hper a, ← periodic_mod_eq_p23 hper (j + (a + n - j % n) % n),
+      haeq]
 
 /-- HOL `LEMMA_7175074394` (numeric; `c110186` records
 `atn (sqrt 0.110186) < 0.3205` in HOL). -/
