@@ -393,6 +393,277 @@ theorem MOD_ADD_315_p15 (i : ℕ) : ((i + 3) % 5 + 1) % 5 = (i + 4) % 5 := by om
 
 /-! ## Section C: the 5-cycle conclusion and the ball-annulus chain -/
 
+/-! ### Lane `vpwshto-w1` kit (PROVED 2026-11-12): direct proof of `VPWSHTO`
+
+The HOL chain `VPWSHTO1` (VPWSHTO.hl:1698) → `VPWSHTO2` (:1864) → `VPWSHTO`
+(:1978) is replaced by a self-contained analytic route that consumes no
+sorried declaration of this file.
+
+Analytic core (`p15w_chain4`): for `P Q R : V3` with `‖P‖ = ‖Q‖ = ‖R‖ = 2`,
+`S = P + Q`, `τ = 1 + √5 ≤ ‖S‖` and `‖S - R‖ ≤ ‖S‖`, one has `‖R - Q‖ ≤ τ`.
+Proof: `⟪S, R⟫ ≥ 2` and `⟪S, Q⟫ = ‖S‖²/2` follow from the two distance
+constraints; splitting `R`, `Q` into components parallel/perpendicular to `S`
+gives `⟪R, Q⟫ = ⟪S, R⟫/2 + ⟪R⊥, Q⊥⟫`, `‖R⊥‖² = 4 - ⟪S, R⟫²/‖S‖²`,
+`‖Q⊥‖² = 4 - ‖S‖²/4`, and Cauchy–Schwarz bounds `⟪R⊥, Q⊥⟫ ≥ -‖R⊥‖‖Q⊥‖`; with
+`z = ‖S‖² ≥ τ²` the golden-ratio identity
+`z² - 12 z + 16 = (z - τ²) (z - (6 - 2√5)) ≥ 0` yields `‖R - Q‖² ≤ τ²`.
+Sharp at the regular pentagon (all five diagonals `= τ`).
+
+`p15w_yard` is the `VPWSHTO1` four-point conclusion from the same data
+(case split on `‖v - w‖ ≤ τ`).  `p15w_vpwshto2` is the minimal-diagonal
+`VPWSHTO2` step at an arbitrary minimal index `k` (the HOL five-fold
+`MOD_ADD_*` rotation collapses into `omega` index arithmetic), and
+`VPWSHTO_p15` picks a minimal diagonal among the five and applies it. -/
+
+/-- Bundled side lengths of the 5-cycle: `‖vv j - vv (j+1)‖ = 2` for all
+`j < 5` (indices modulo 5). -/
+private theorem p15w_sides (vv : ℕ → V3)
+    (hs01 : ‖vv 0 - vv 1‖ = 2) (hs12 : ‖vv 1 - vv 2‖ = 2)
+    (hs23 : ‖vv 2 - vv 3‖ = 2) (hs34 : ‖vv 3 - vv 4‖ = 2)
+    (hs40 : ‖vv 4 - vv 0‖ = 2) :
+    ∀ j : ℕ, j < 5 → ‖vv j - vv ((j + 1) % 5)‖ = 2 := by
+  intro j hj
+  interval_cases j
+  · have h : (0 + 1) % 5 = 1 := by norm_num
+    rw [h]; exact hs01
+  · have h : (1 + 1) % 5 = 2 := by norm_num
+    rw [h]; exact hs12
+  · have h : (2 + 1) % 5 = 3 := by norm_num
+    rw [h]; exact hs23
+  · have h : (3 + 1) % 5 = 4 := by norm_num
+    rw [h]; exact hs34
+  · have h : (4 + 1) % 5 = 0 := by norm_num
+    rw [h]; exact hs40
+
+/-- Core four-point yardstick (see the section note): `P, Q, R` are the three
+links of an open chain of length `2`; if `S = P + Q` has `‖S‖ ≥ 1 + √5` and
+the end-to-end vector `S - R` is no longer than `S`, then the other
+"diagonal" `‖R - Q‖` stays below `1 + √5`. -/
+private theorem p15w_chain4 (P Q R : V3)
+    (hP : ‖P‖ = 2) (hQ : ‖Q‖ = 2) (hR : ‖R‖ = 2)
+    (hb : 1 + Real.sqrt 5 ≤ ‖P + Q‖)
+    (hmin : ‖P + Q - R‖ ≤ ‖P + Q‖) :
+    ‖R - Q‖ ≤ 1 + Real.sqrt 5 := by
+  have hSpos : 0 < ‖P + Q‖ := lt_of_lt_of_le (by positivity) hb
+  -- (1) `2 ≤ ⟪P + Q, R⟫` from `‖P + Q - R‖ ≤ ‖P + Q‖`
+  have hSR : (2 : ℝ) ≤ inner ℝ (P + Q) R := by
+    have hsq : ‖(P + Q) - R‖ ^ 2 ≤ ‖P + Q‖ ^ 2 :=
+      pow_le_pow_left₀ (norm_nonneg _) hmin 2
+    rw [norm_sub_sq_real, hR] at hsq
+    linarith
+  -- (2) `⟪P + Q, Q⟫ = ‖P + Q‖² / 2` from `‖(P+Q) - Q‖ = ‖P‖ = 2 = ‖Q‖`
+  have hPQ : (P + Q) - Q = P := by abel
+  have hSQ : inner ℝ (P + Q) Q = ‖P + Q‖ ^ 2 / 2 := by
+    have hsq2 : ‖(P + Q) - Q‖ ^ 2 = ‖Q‖ ^ 2 := by rw [hPQ, hP, hQ]
+    rw [norm_sub_sq_real] at hsq2
+    linarith
+  -- perpendicular decomposition of `R`, `Q` around `S := P + Q`
+  set S : V3 := P + Q with hSdef
+  set b2 : ℝ := ‖S‖ ^ 2 with hb2def
+  have hb2pos : 0 < b2 := by rw [hb2def]; exact pow_pos hSpos 2
+  have hb2ne : b2 ≠ 0 := ne_of_gt hb2pos
+  set u : ℝ := inner ℝ S R with hudef
+  set v : ℝ := inner ℝ S Q with hvdef
+  set Rp : V3 := R - (u / b2) • S with hRpdef
+  set Qp : V3 := Q - (v / b2) • S with hQpdef
+  have hSS : inner ℝ S S = b2 := by rw [hb2def, real_inner_self_eq_norm_sq]
+  have hRS : inner ℝ R S = u := by rw [hudef, real_inner_comm]
+  have hQS : inner ℝ Q S = v := by rw [hvdef, real_inner_comm]
+  have hu2 : (2 : ℝ) ≤ u := hSR
+  have hv2 : v = b2 / 2 := by
+    show inner ℝ S Q = b2 / 2
+    rw [hSdef, hb2def]
+    exact hSQ
+  -- (3) `⟪R, Q⟫ = u * v / b2 + ⟪R⊥, Q⊥⟫`
+  have hkey : inner ℝ R Q = u * v / b2 + inner ℝ Rp Qp := by
+    rw [hRpdef, hQpdef]
+    simp only [inner_sub_left, inner_sub_right, real_inner_smul_left,
+      real_inner_smul_right, hSS, hRS]
+    field_simp
+    ring
+  -- (4) norms of the perpendicular parts
+  have hRp_sq : ‖Rp‖ ^ 2 = 4 - u ^ 2 / b2 := by
+    rw [hRpdef, norm_sub_sq_real, hR, real_inner_smul_right, hRS]
+    have hnorm : ‖(u / b2) • S‖ ^ 2 = (u / b2) ^ 2 * b2 := by
+      rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, hb2def]
+    rw [hnorm]
+    field_simp
+    ring
+  have hQp_sq : ‖Qp‖ ^ 2 = 4 - b2 / 4 := by
+    rw [hQpdef, norm_sub_sq_real, hQ, real_inner_smul_right, hQS]
+    have hnorm : ‖(v / b2) • S‖ ^ 2 = (v / b2) ^ 2 * b2 := by
+      rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, hb2def]
+    rw [hnorm, hv2]
+    field_simp
+    ring
+  -- (5) Cauchy–Schwarz on the perpendicular parts
+  have hcs : -(‖Rp‖ * ‖Qp‖) ≤ inner ℝ Rp Qp := by
+    have h := abs_real_inner_le_norm Rp Qp
+    have h2 : -|inner ℝ Rp Qp| ≤ inner ℝ Rp Qp := neg_abs_le _
+    linarith
+  have hRp_le : ‖Rp‖ ≤ Real.sqrt (4 - 4 / b2) := by
+    rw [show ‖Rp‖ = Real.sqrt (‖Rp‖ ^ 2) from (Real.sqrt_sq (norm_nonneg Rp)).symm]
+    rw [hRp_sq]
+    apply Real.sqrt_le_sqrt
+    have hu4 : (4 : ℝ) ≤ u ^ 2 := by nlinarith
+    have hdiff : 0 ≤ (u ^ 2 - 4) / b2 := div_nonneg (by linarith) (le_of_lt hb2pos)
+    have heq : u ^ 2 / b2 - 4 / b2 = (u ^ 2 - 4) / b2 := by ring
+    linarith
+  have hQp_le : ‖Qp‖ ≤ Real.sqrt (4 - b2 / 4) := by
+    rw [show ‖Qp‖ = Real.sqrt (‖Qp‖ ^ 2) from (Real.sqrt_sq (norm_nonneg Qp)).symm,
+      hQp_sq]
+  have hprod : ‖Rp‖ * ‖Qp‖ ≤ Real.sqrt (4 - 4 / b2) * Real.sqrt (4 - b2 / 4) :=
+    mul_le_mul hRp_le hQp_le (norm_nonneg Qp) (Real.sqrt_nonneg _)
+  -- (6) lower bound for `⟪R, Q⟫`
+  have hinner_lb :
+      1 - Real.sqrt (4 - 4 / b2) * Real.sqrt (4 - b2 / 4) ≤ inner ℝ R Q := by
+    have huv : u * v / b2 = u / 2 := by
+      rw [hv2]
+      field_simp
+    rw [hkey, huv]
+    linarith
+  -- (7) golden-ratio arithmetic: `‖R - Q‖² ≤ τ²`
+  have hns : ‖R - Q‖ ^ 2 = 8 - 2 * inner ℝ R Q := by
+    rw [norm_sub_sq_real, hR, hQ]; ring
+  have ha2 :
+      ‖R - Q‖ ^ 2 ≤ 6 + 2 * (Real.sqrt (4 - 4 / b2) * Real.sqrt (4 - b2 / 4)) := by
+    rw [hns]; linarith
+  have hS_le : ‖S‖ ≤ 4 := by
+    rw [hSdef]
+    calc ‖P + Q‖ ≤ ‖P‖ + ‖Q‖ := norm_add_le _ _
+      _ = 4 := by rw [hP, hQ]; norm_num
+  have hb2_le : b2 ≤ 16 := by
+    rw [hb2def]; nlinarith [norm_nonneg S]
+  have hb2_ge1 : 1 ≤ b2 := by
+    have h5 : (0 : ℝ) ≤ Real.sqrt 5 := Real.sqrt_nonneg 5
+    nlinarith [hb2def, hS_le]
+  have hsqrt5_sq : Real.sqrt 5 ^ 2 = 5 := Real.sq_sqrt (by norm_num)
+  have htau2 : (1 + Real.sqrt 5) ^ 2 = 6 + 2 * Real.sqrt 5 := by nlinarith
+  have hz_ge : 6 + 2 * Real.sqrt 5 ≤ b2 := by
+    have h := pow_le_pow_left₀ (show (0 : ℝ) ≤ 1 + Real.sqrt 5 by positivity) hb 2
+    rw [hb2def]
+    rwa [htau2] at h
+  have hpoly : 0 ≤ b2 ^ 2 - 12 * b2 + 16 := by
+    have hfac :
+        b2 ^ 2 - 12 * b2 + 16 =
+          (b2 - (6 + 2 * Real.sqrt 5)) * (b2 - (6 - 2 * Real.sqrt 5)) := by
+      nlinarith [hsqrt5_sq]
+    rw [hfac]
+    apply mul_nonneg
+    · linarith
+    · linarith [Real.sqrt_nonneg 5]
+  have hD_le : (4 - 4 / b2) * (4 - b2 / 4) ≤ 5 := by
+    have hident : (4 - 4 / b2) * (4 - b2 / 4) = (17 * b2 - b2 ^ 2 - 16) / b2 := by
+      field_simp
+      ring
+    rw [hident, div_le_iff₀ hb2pos]
+    nlinarith
+  have hA_nn : 0 ≤ 4 - 4 / b2 := by
+    have h : 4 / b2 ≤ 4 := by rw [div_le_iff₀ hb2pos]; nlinarith
+    linarith
+  have hB_nn : 0 ≤ 4 - b2 / 4 := by
+    have h : b2 / 4 ≤ 4 := by rw [div_le_iff₀ (by norm_num : (0 : ℝ) < 4)]; linarith
+    linarith
+  have hP_le : Real.sqrt (4 - 4 / b2) * Real.sqrt (4 - b2 / 4) ≤ Real.sqrt 5 := by
+    have hP2 : (Real.sqrt (4 - 4 / b2) * Real.sqrt (4 - b2 / 4)) ^ 2 ≤ 5 := by
+      rw [mul_pow, Real.sq_sqrt hA_nn, Real.sq_sqrt hB_nn]
+      exact hD_le
+    exact Real.le_sqrt_of_sq_le hP2
+  have hfinal : ‖R - Q‖ ^ 2 ≤ (1 + Real.sqrt 5) ^ 2 := by
+    rw [htau2]
+    linarith
+  have htarget : ‖R - Q‖ ≤ Real.sqrt ((1 + Real.sqrt 5) ^ 2) :=
+    Real.le_sqrt_of_sq_le hfinal
+  rwa [Real.sqrt_sq (by positivity)] at htarget
+
+/-- `VPWSHTO1` (VPWSHTO.hl:1698): four-point folded-chain yardstick.  The
+HOL hypotheses `t ≤ 4` and `v ≠ w` and both non-collinearity assumptions are
+not needed by the analytic proof and are dropped here. -/
+private theorem p15w_yard (v x u w : V3) (t : ℝ)
+    (hvx : ‖v - x‖ = t)
+    (hvu : ‖v - u‖ = 2) (hxw : ‖x - w‖ = 2) (huw : ‖u - w‖ = 2)
+    (hta : t ≤ ‖x - u‖) (htb : t ≤ ‖v - w‖) :
+    min (‖v - w‖) (‖x - u‖) ≤ 1 + Real.sqrt 5 ∧ t ≤ 1 + Real.sqrt 5 := by
+  have hP : ‖v - u‖ = 2 := hvu
+  have hQ : ‖u - w‖ = 2 := huw
+  have hR : ‖x - w‖ = 2 := hxw
+  have hS : (v - u) + (u - w) = v - w := by abel
+  have hSR : (v - u) + (u - w) - (x - w) = v - x := by abel
+  have hRQ : (x - w) - (u - w) = x - u := by abel
+  have ht1 : ‖(v - u) + (u - w) - (x - w)‖ ≤ ‖(v - u) + (u - w)‖ := by
+    rw [hSR, hvx, hS]
+    exact htb
+  have ht2 : t ≤ ‖(x - w) - (u - w)‖ := by
+    rw [hRQ]
+    exact hta
+  by_cases hb : ‖(v - u) + (u - w)‖ ≤ 1 + Real.sqrt 5
+  · have hbw : ‖v - w‖ ≤ 1 + Real.sqrt 5 := by rwa [hS] at hb
+    exact ⟨le_trans (min_le_left _ _) hbw, le_trans htb hbw⟩
+  · have hb' : 1 + Real.sqrt 5 ≤ ‖(v - u) + (u - w)‖ := le_of_lt (lt_of_not_ge hb)
+    have hchain := p15w_chain4 (v - u) (u - w) (x - w) hP hQ hR hb' ht1
+    have hmin' : ‖x - u‖ ≤ 1 + Real.sqrt 5 := by
+      rw [← hRQ]
+      exact hchain
+    exact ⟨le_trans (min_le_right _ _) hmin', le_trans ht2 hchain⟩
+
+/-- `VPWSHTO2` (VPWSHTO.hl:1864) at an arbitrary minimal diagonal index `k`:
+the minimal diagonal is `d k = ‖vv k - vv ((k+2) % 5)‖`, and the other four
+diagonals are `≥ d k`. -/
+private theorem p15w_vpwshto2 (vv : ℕ → V3) (k : ℕ) (hk : k < 5)
+    (hs : ∀ j : ℕ, j < 5 → ‖vv j - vv ((j + 1) % 5)‖ = 2)
+    (hmin : ∀ j : ℕ, j < 5 → ‖vv k - vv ((k + 2) % 5)‖ ≤ ‖vv j - vv ((j + 2) % 5)‖) :
+    ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
+      ‖vv i - vv ((i + 2) % 5)‖ ≤ 1 + Real.sqrt 5 ∧
+      ‖vv i - vv ((i + 3) % 5)‖ ≤ 1 + Real.sqrt 5 := by
+  have hk2 : (k + 2) % 5 < 5 := Nat.mod_lt _ (by norm_num)
+  have hk3 : (k + 3) % 5 < 5 := Nat.mod_lt _ (by norm_num)
+  have hk4 : (k + 4) % 5 < 5 := Nat.mod_lt _ (by norm_num)
+  -- distance data for the four-point yardstick
+  have hvu : ‖vv k - vv ((k + 4) % 5)‖ = 2 := by
+    have hidx : (((k + 4) % 5 + 1) % 5) = k % 5 := by omega
+    have h := hs ((k + 4) % 5) hk4
+    rw [hidx, Nat.mod_eq_of_lt hk] at h
+    rwa [norm_sub_rev] at h
+  have hxw : ‖vv ((k + 2) % 5) - vv ((k + 3) % 5)‖ = 2 := by
+    have hidx : (((k + 2) % 5 + 1) % 5) = (k + 3) % 5 := by omega
+    have h := hs ((k + 2) % 5) hk2
+    rwa [hidx] at h
+  have huw : ‖vv ((k + 4) % 5) - vv ((k + 3) % 5)‖ = 2 := by
+    have hidx : (((k + 3) % 5 + 1) % 5) = (k + 4) % 5 := by omega
+    have h := hs ((k + 3) % 5) hk3
+    rw [hidx] at h
+    rwa [norm_sub_rev] at h
+  have hta : ‖vv k - vv ((k + 2) % 5)‖ ≤ ‖vv ((k + 2) % 5) - vv ((k + 4) % 5)‖ := by
+    have hidx : (((k + 2) % 5 + 2) % 5) = (k + 4) % 5 := by omega
+    have h := hmin ((k + 2) % 5) hk2
+    rwa [hidx] at h
+  have htb : ‖vv k - vv ((k + 2) % 5)‖ ≤ ‖vv k - vv ((k + 3) % 5)‖ := by
+    have hidx : (((k + 3) % 5 + 2) % 5) = k % 5 := by omega
+    have h := hmin ((k + 3) % 5) hk3
+    rw [hidx, Nat.mod_eq_of_lt hk] at h
+    rwa [norm_sub_rev (vv ((k + 3) % 5)) (vv k)] at h
+  -- apply the four-point yardstick to `(vv k, vv (k+2), vv (k+4), vv (k+3))`
+  have hyard := p15w_yard (vv k) (vv ((k + 2) % 5)) (vv ((k + 4) % 5))
+    (vv ((k + 3) % 5)) (‖vv k - vv ((k + 2) % 5)‖) rfl hvu hxw huw hta htb
+  obtain ⟨hminle, htle⟩ := hyard
+  by_cases hcase :
+      ‖vv ((k + 2) % 5) - vv ((k + 4) % 5)‖ ≤ ‖vv k - vv ((k + 3) % 5)‖
+  · refine ⟨(k + 2) % 5, ?_, ?_, ?_⟩
+    · rw [Set.mem_Icc]; omega
+    · have hidx : (((k + 2) % 5 + 2) % 5) = (k + 4) % 5 := by omega
+      rw [hidx]
+      rwa [min_eq_right hcase] at hminle
+    · have hidx : (((k + 2) % 5 + 3) % 5) = k % 5 := by omega
+      rw [hidx, Nat.mod_eq_of_lt hk, norm_sub_rev]
+      exact htle
+  · refine ⟨k, ?_, ?_, ?_⟩
+    · rw [Set.mem_Icc]; omega
+    · exact htle
+    · have hcase' :
+          ‖vv k - vv ((k + 3) % 5)‖ ≤ ‖vv ((k + 2) % 5) - vv ((k + 4) % 5)‖ :=
+        le_of_lt (lt_of_not_ge hcase)
+      rwa [min_eq_left hcase'] at hminle
+
 /-- HOL `VPWSHTO` (VPWSHTO.hl:1978): every 5-cycle of unit edges has a vertex
 whose two pentagon diagonals are at most `1 + sqrt 5`. -/
 theorem VPWSHTO_p15 : ∀ vv : ℕ → V3,
@@ -411,7 +682,15 @@ theorem VPWSHTO_p15 : ∀ vv : ℕ → V3,
     ∃ i : ℕ, i ∈ Set.Icc (0 : ℕ) 4 ∧
       norm (vv i - vv ((i + 2) % 5)) ≤ 1 + Real.sqrt 5 ∧
       norm (vv i - vv ((i + 3) % 5)) ≤ 1 + Real.sqrt 5 := by
-  sorry
+  intro vv h012 h312 h412 h302 h402 h432 h301 h401 h431 h430
+    hs01 hs12 hs23 hs34 hs40
+  -- the ten non-collinearity hypotheses are not needed by the analytic route
+  clear h012 h312 h412 h302 h402 h432 h301 h401 h431 h430
+  have hs := p15w_sides vv hs01 hs12 hs23 hs34 hs40
+  obtain ⟨k, hkmem, hkmin⟩ := Finset.exists_min_image (Finset.range 5)
+    (fun j : ℕ => ‖vv j - vv ((j + 2) % 5)‖) ⟨0, by simp⟩
+  have hk : k < 5 := Finset.mem_range.mp hkmem
+  exact p15w_vpwshto2 vv k hk hs (fun j hj => hkmin j (Finset.mem_range.mpr hj))
 
 /-- HOL `POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR` (VPWSHTO.hl:2114): no annulus
 packing point lies on the closed segment between two others.
