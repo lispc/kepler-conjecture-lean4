@@ -261,6 +261,18 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-12（15:57，续1028）**：**TM pilot 全链完成（用户裁决 ③）——`packIneqABIEFJHUa` 内核关闭成立**。
+① 顶层 4 秒失败根因 = emitter 簿记 bug（`_pos` 发射漏传 `HullTreeC.sound` 的 target 实参，第 6 个潜伏 bug；error 触发 sorry 合成，AGENTS #14 形态）——一行修复重发射，integrity 再 17/17。
+② **终态（全标准三零 sorryAx）**：300 叶 `--hull` 证书 shard 15/15 内核 rc=0（49 min 重放）→ 顶层 `C1965189142aHull_pos` RC=0 → closer **`packIneqABIEFJHUa` RC=0**。**300 叶全部 `by decide +kernel`，零新增公理，585 信任基座计数/清单不变**（公理面比 native_decide 类别更干净）。
+③ 岛协议灌回：17 新 olean 落 `.lake` 影子位，上下文探针复验标准三；**根面不变有双重论证**（主仓源码零引用本证书、不在 `Kepler.Final` 闭包 + 单 2 闸根面探针实测字节同 md5 `246e952c…`）。
+④ 落库建议（车道留编排者裁量）：18 新源文件走 patch + §4 闸（纯新增 diff）；**hNL 接线可使 Assembly SORRIED 56→55**——改头条数字，接线时机请用户示下。certtm 专项解冻到此用完即回 hold（TM3/Mono*/D 证书层不变）。
+
+- **2026-11-12（15:57，续1027）**：**两笔落库 + 一起流程事故处置（defix-small-w1 两单 + jv23-w1 污染事件）**。
+① **SCS_6I1 方案 1B `0d1f8028`**（+144/−122）：7 件上移 LocalConcl——**勘误强闭包**：EVAL 漏扫 `JEJTVGB_p16`（LA16:503）活消费者（LA16↛LocalConcl 必环），被迫同搬 `JEJTVGB_p16`/`nonlinear_imp_lp_main_estimate_p16` 两件；SORRY 净差恰 LA20−3/LocalConcl+3，零 import 边变化；闸 3 build rc=0 + 根面逐字节同。
+② **LFLACKU 3A+3C `db534f91`**（+23/−21）：LA38 断 LA23 赘边——**第二处勘误**：EVAL 漏扫传递消费（LA38 实经 LA38→LA23→LA4 用 `ballAnnulus_norm_bounds` 四处活引用），补 `import LA4` 修复；`pos_imp_scs_arrow_empty_p22` 下移 LA1；LFLACKU_p23 的 DAG 阻塞解除（仍卡 hNL 保留区）；闸 5 build + LocalConcl + 根面全绿。
+③ **jv23-w1 污染事件**：该车道把未编译 LA29 工作件（+85，含 Mathlib 不存在的 `Set.mem_pair`）直接覆盖主仓，混入单 2 闸致 LocalConcl 步假红；处置 = LA29 恢复 + 在途件抢救 `/tmp/jv23-w1_LA29_saved.lean` + 停线纠偏续跑（硬规则重申：主仓是编排者落库领地）。单 2 闸重跑仅 2 分钟（闭包已温），全绿。
+④ 两单章程入档：`docs/def-fix-charters/scs6i1-localconcl/`、`lflacku-3a3c/`。emptykit-3（OCBICBY）已派（LA22 冲突解除）。
+
 - **2026-11-12（14:28，续1026）**：**基线 AE 定档（70→69，JCYFMRP 真还债）**：`55512ac9`。
 ① 实测：K_REACH 2,096,154（+122）/ **SORRIED 69**（清单 diff：closed 恰 `{JCYFMRP_p27}`、added ∅）/ AXIOM 585（0/0）/ MODULES 5,221 / UNIVERSE 2,108,976（+137）/ COVERAGE 99.3920%（−0.0007pp，分母涨）；口径 II 35,731 / 69 / 585 / 46,996。
 ② 文档全套（§6.1 三层）：pq 文件头、map.md AE 节、**TSV 5,894 行原样换装**、AGENTS §1（69 条）、README×2（70→69）、hf-map 状态更新十七。
