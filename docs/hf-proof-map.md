@@ -6,6 +6,13 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（08:44，编排者，十四）**：**`VPWSHTO_p15` 真证落库（`e5a06c77`）——锥内真还债；基线 AC**。
+>   实测：cone `K_REACH 2,095,920`（+16 自足证明体入锥）/ **SORRIED 72**（73→72；清单 diff：
+>   closed 恰 `{Kepler.Text.VPWSHTO_p15}`、added ∅）/ `K_AXIOM 585`（0/0）/ MODULES 5,221 /
+>   UNIVERSE 2,108,791（+16）/ COVERAGE 99.3897%；口径 II 35,497 / 72 / 585 / 46,811。
+>   根面 589 **逐字节 IDENTICAL**；TSV 5,897 行 + manifest PASS。剩余 72 = Assembly 56 + Text 16。
+>   另 `la22emptykit` 基线 AB 为 **cone-neutral**（SORRIED 73 0/0、K_UNIVERSE +28 私有 helper；
+>   文件级 −7 = OCBICBY 资产）。wave 18：`jcyfmrp-w1` / `yobimpp-w1` 在飞 + 1 空位。
 > - **2026-11-12（08:11，编排者，十三）**：**`general_482` 真证收口（`0a1ff76d`）——下游集群闸门打开；基线 AA**。
 >   实测：cone `K_REACH 2,095,904`（+343，证明体 + w3 kit 入锥）/ **SORRIED 73**（74→73；清单 diff：
 >   closed 恰 `{Kepler.Text.general_482_deformation_p21}`、added ∅）/ `K_AXIOM 585`（名单 0/0）/

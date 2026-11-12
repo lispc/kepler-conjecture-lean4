@@ -17,15 +17,17 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AA @`0a1ff76d`（2026-11-12，`general_482` 真证收口）**
-> cone `K_REACH 2,095,904` / **SORRIED 73** / **`K_AXIOM 585`** / MODULES 5,221 /
-> UNIVERSE 2,108,747 / COVERAGE **99.3910%**；口径 II 35,481 / 73 / 585 / 46,767。
-> `docs/e2e-reachability-map.tsv` 已按基线 AA 重写（5,898 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AC @`e5a06c77`（2026-11-12，`VPWSHTO_p15` 真证）**
+> cone `K_REACH 2,095,920` / **SORRIED 72** / **`K_AXIOM 585`** / MODULES 5,221 /
+> UNIVERSE 2,108,791 / COVERAGE **99.3897%**；口径 II 35,497 / 72 / 585 / 46,811。
+> `docs/e2e-reachability-map.tsv` 已按基线 AC 重写（5,897 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 Z/Y/X/W **逐字节 IDENTICAL**）。
-> **SORRIED 73 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 17（`--- SORRIED ---` 段实测）。
-> 较基线 Z：SORRIED 74→73（清单 diff：closed 恰 `{general_482_deformation_p21}`、added ∅；**真还债**）、
-> K_AXIOM 585（0/0）、K_REACH +343（证明体 + w3 kit 入锥）、K_UNIVERSE +70、MODULES +2。
+> （与基线 AA/AB/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 72 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 16（`--- SORRIED ---` 段实测）。
+> 较基线 AB：SORRIED 73→72（清单 diff：closed 恰 `{VPWSHTO_p15}`、added ∅；**真还债**）、
+> K_AXIOM 585（0/0）、K_REACH +16（自足证明体入锥）、K_UNIVERSE +16。
+> **基线 AB @`2201350f`（la22emptykit 七件）为 cone-neutral 中间档**：SORRIED 73（0/0）、
+> K_UNIVERSE +28（私有 helper）、文件级 −7 = 资产（见 map 基线 AB 节与 §8 续1014）。
 >
 > **核心路线图**：[`docs/hf-proof-map.md`](hf-proof-map.md)（九节完成度 + 逐箭头逻辑链 + 缺口清单）。
 > **接手先读**：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（现状 / 用户已定裁决 / 死路与红旗清单 / 环境坑）。
@@ -87,25 +89,24 @@
 ---
 
 
-## 1. 在飞（2026-11-12 08:17，池 **3/3**：wave 17）
+## 1. 在飞（2026-11-12 08:44，池 **3/3**：wave 18）
 
-> 整段交付制；历史 wave 记录见 §8（续990–续1013）与 `history/changelog-archive-2.md`。
+> 整段交付制；历史 wave 记录见 §8（续990–续1014）与 `history/changelog-archive-2.md`。
 >
-> **刚落地（里程碑）**：`general_482_deformation_p21` 真证收口 `0a1ff76d`（+764/−5，LA21 3→2，
-> 探针标准三；派生 `CUXVZOZ_p21`/`CJBDXXN_p21` 同转净）。**基线 AA 已量测定档**
-> （续1012：SORRIED **74→73**，closed 恰 `{general_482_deformation_p21}`；根面 589 逐字节同）。
-> `la22emptykit-w1` **落库 `2201350f`**（续1013：7 件真证、文件级 sorry 70→63；锥内不改 = 资产，
-> 基线 AB 量测中）。
+> **刚落地（里程碑）**：`vpwshto-w1` **LANDED `e5a06c77`**（`VPWSHTO_p15` +280/−1，LA15 11→10，
+> 锥内真还债；附带 `VPWSHTO_PRIME_p15` 转标准三）+ 注释清理 `b0306f50`。**基线 AC 已定档**
+> （续1014：SORRIED **73→72**，closed 恰 `{VPWSHTO_p15}`；根面 589 逐字节同，5,897 行 TSV）。
+> 此前 `general_482` `0a1ff76d`（基线 AA）与 `la22emptykit` `2201350f`（基线 AB，cone-neutral 资产）。
 >
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
 > | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行；**锥内真还债候选** |
-> | `vpwshto-w1` | `VPWSHTO_p15`（锥内直源） | HOL `VPWSHTO.hl:1978`；`VPWSHTO_PRIME_p15` 是 `empty_5T1` 直缺口 |
 > | `yobimpp-w1` | `YOBIMPP_p32`（LA32:1241）+ K7 4M7 梯子 | 08:17 发车（§2.1a #16，自身 45–80 + kit 110–165）；先验 HOL 直接引用闭包，有 sorryAx 上游即 BLOCKED |
+> | （空 1 位） | 待补位 | 按 §2.1c 杠杆顺序：`TFITSKCv1_p27`（K2 500–650，先验 LA27 闭包）；或 EDGE 簇 → `MM_4I2`（LA33） |
 >
-> **最近完成/判词**：`la22emptykit-w1` **LANDED `2201350f`**（7 件，工单 3 BLOCKED）；`g482-482-w4` DONE +
-> 基线 AA 定档（续1012）；`text-est-w1` 报告已归档（§2.1）；`empty-la22` BLOCKED（续1011）/
-> `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
+> **最近完成/判词**：`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
+> （7 件，工单 3 BLOCKED）；`g482-482-w4` DONE + 基线 AA（续1012）；`text-est-w1` 报告已归档（§2.1）；
+> `empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
 >
 ## 2. 排队（按序补位）
 
@@ -222,6 +223,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-12（08:44，续1014）**：**`vpwshto-w1` 落库 `e5a06c77`（`VPWSHTO_p15` 真证，+280/−1）+ 基线 AB/AC 双档定档（SORRIED 73→72）**。
+① **闭件与路线**：`VPWSHTO_p15`（LA15:398）自足解析证明（不搬 HOL 深链——`VPWSHTO2/1/MAX_IF_COPLANAR/…` 整章 11 条在本文件全 `sorry`，逐字搬运即消费 `sorryAx`）：`p15w_chain4`（等模 + 正交分解 + Cauchy–Schwarz + 黄金比恒等式 `(z−τ²)(z−(6−2√5))≥0`）+ `p15w_yard`（HOL `VPWSHTO1` 四点结论）+ `p15w_vpwshto2`（最小对角下标版，HOL `MOD_ADD_*` 旋转坍缩为 `omega`）；本体用 `Finset.exists_min_image`。零 sorried 声明消费、零新 import、陈述/docstring 逐字节未动。
+② **编排者闸（机器证据）**：apply --check PASS；新增行禁词扫描 **0**；删除面恰 **1 行 `  sorry`**；岛编 **RC=0 / 0 error / 10 sorry-decls（11→10，恰 −1）**，警告类型集不变；olean 装池 sha1 `70a819ee…`；探针 `VPWSHTO_p15` = 标准三，附带 `VPWSHTO_PRIME_p15` 同转标准三；回归 `SUBSET_PACKING`/`POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR(2)`/`NORM_COS_ANGLE_LT`/`MOD_ADD_235/315` 逐条不变；`VPWSHTO2/1/200` 仍 `sorryAx`（未动）。附注释清理 `b0306f50`（DISCHARGES 注册表删已证件，1 行注释，零 olean 语义）。
+③ **基线 AB（@`2201350f`，la22emptykit）**：`K_REACH 2,095,904`（0）/ **SORRIED 73（清单 0/0）** / `K_AXIOM 585`（0/0）/ MODULES 5,221（0）/ `K_UNIVERSE 2,108,775`（**+28** 私有 helper）/ COVERAGE 99.3896%；口径 II `35,481 / 73 / 585 / 46,795`。TSV 5,898 行、manifest PASS、根面 589 逐字节同。**定性：cone-neutral**——7 件均不可达（TSV 全表 grep 命中 0；消费者 `empty_6T1/5T1` 仍 `sorry`）⇒ 文件级 −7 是 OCBICBY 资产，不是锥内还债。
+④ **基线 AC（@`e5a06c77`）**：`K_REACH 2,095,920`（**+16**，自足证明体入锥）/ **SORRIED 72（清单 diff：closed 恰 `{VPWSHTO_p15}`、added ∅；真还债）** / `K_AXIOM 585`（0/0）/ MODULES 5,221（0）/ `K_UNIVERSE 2,108,791`（+16）/ COVERAGE **99.3897%**；口径 II `35,497 / 72 / 585 / 46,811`；`TOTAL_VALUE_DECLS 2,095,246`。TSV 换装 **5,897 行**、manifest `--check` PASS、根面 589 **逐字节 IDENTICAL**（`namespace Kepler` 探针 md5 `246e952c…`）。剩余 **72** = Assembly 56（55 `nli*` + 1 hLP）+ **Text 16**。
+⑤ **校准 / 判读**：`VPWSHTO` 实际 **280 行 vs EST 150–230**（上修 22–87%，解析路线 + 10 条前提 `clear` 未省行）；`la22emptykit` 的「薄包装」判断被实测证实（7 件 cone-neutral）。wave 18：`jcyfmrp-w1` / `yobimpp-w1` 在飞 + **1 空位**（按 §2.1c 补 `TFITSKCv1_p27` 或 EDGE→`MM_4I2`，补位前先 probe LA27/LA33 直接引用闭包）。
 
 - **2026-11-12（08:14，续1013）**：**`la22emptykit-w1` 落库 `2201350f`——LA22 七件真证（+244/−7，文件级 sorry 70→63），empty_* 前置 kit 收口**。
 ① **闭件**：`scs_6T1_props_p22`(:2396)/`scs_5T1_props_p22`(:2415)（U1 必需前置）、`scs_6T1_generic_p22`(:2435)/`scs_5T1_generic_p22`(:2456)（工单 1/2，`RRCWNS_WEAK`+props 薄包装）、`vv_inj_lemma_p22`(:1678)/`azim_in_fan_azim_p22`(:1602)（工单 4，新增 private `la22ee_vv` = HOL `Terminal.EE_vv` 孪生）、`periodic_sum_shift_p22`(:2551)（额余量 U4，3 个 private mod-arith helper）。

@@ -747,6 +747,58 @@ reach **+343**、universe 仅 +70（w3 kit 多数不可达）；**MODULES +2** =
 Assembly 56（55 `nli*` + 1 hLP）+ **Text 17**。派生 `CUXVZOZ_p21`/`CJBDXXN_p21`
 同转标准三 ⇒ JCYFMRP / TFITSKCv1 / TFITSKC / LA33 三件 / SCS_6M1 集群闸门开。
 
+### 基线 AB：la22emptykit 七件落库 @ `2201350f`（2026-11-12）
+
+> 触发：`la22emptykit-w1` 落库 `2201350f`（LA22 七件真证，+244/−7，文件级 sorry 70→63）。
+> Assembly 岛协议重编（RC=0 / 0 err / 61 sorry-decls / 110 warn，与基线 AA 逐项同）→ Final →
+> 仪器原样换装（**5,898 行**，行数不变）。manifest `--check` PASS。
+
+| 指标 | 基线 AB | 基线 AA | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,904** | 2,095,904 | 0 |
+| SORRIED | **73** | 73 | 0 |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,221 | 5,221 | 0 |
+| K_UNIVERSE | 2,108,775 | 2,108,747 | **+28** |
+| COVERAGE | 99.3896% | 99.3910% | −0.0014pp |
+| 口径 II（ex-Cases） | K_REACH **35,481** / SORRIED **73** / AXIOM **585** / UNIVERSE **46,795** | 35,481 / 73 / 585 / 46,767 | 0 / 0 / 0 / +28 |
+| TOTAL_VALUE_DECLS | 2,095,230 | 2,095,230 | 0 |
+
+**SORRIED 清单 diff = 0/0；Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**
+（`namespace Kepler` 探针，md5 `246e952c…`）。
+
+**判读**：**cone-neutral**——7 件均不在可达 SORRIED 名单（TSV 全表 grep 命中 0；消费者
+`empty_6T1/5T1` 仍是 `sorry`，`sorry` 证明体不引用前置），**文件级 −7 属资产不是锥内还债**。
+K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达）⇒ COVERAGE 微降是分母涨。
+**工具 ERRATA**：根面探针若写在 `namespace Kepler` 外，`#print axioms` 打印全限定名
+（`Kepler.Graphs.…`），与基线短名格式不同 ⇒ **逐字节比对假红**；固定格式见 handoff pit 18。
+
+### 基线 AC：VPWSHTO_p15 真证 @ `e5a06c77`（2026-11-12）
+
+> 触发：`vpwshto-w1` 落库 `e5a06c77`（`VPWSHTO_p15` 真证，+280/−1，LA15 文件级 sorry 11→10；
+> 附 `VPWSHTO_PRIME_p15` 同转标准三）+ 注释清理 `b0306f50`（DISCHARGES 注册表移除已证件，零语义）。
+> Assembly 岛协议重编（RC=0 / 0 err / 61 sorry-decls / 110 warn）→ Final → 仪器原样换装
+> （**5,897 行**，−1 = SORRIED −1）。manifest `--check` PASS。
+
+| 指标 | 基线 AC | 基线 AB | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,920** | 2,095,904 | **+16** |
+| SORRIED | **72** | 73 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,221 | 5,221 | 0 |
+| K_UNIVERSE | 2,108,791 | 2,108,775 | +16 |
+| COVERAGE | 99.3897% | 99.3896% | +0.0001pp |
+| 口径 II（ex-Cases） | K_REACH **35,497** / SORRIED **72** / AXIOM **585** / UNIVERSE **46,811** | 35,481 / 73 / 585 / 46,795 | +16 / −1 / 0 / +16 |
+| TOTAL_VALUE_DECLS | 2,095,246 | 2,095,230 | +16 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.VPWSHTO_p15`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（`namespace Kepler` 探针 md5 `246e952c…`）。
+
+**判读**：**锥内真还债**（`VPWSHTO_p15` 在基线 AA SORRIED 名单）；reach +16 = 自足解析证明体
+（`p15w_chain4`/`p15w_yard`/`p15w_vpwshto2` 等）入锥；K_UNIVERSE +16 同量。附带收益
+`VPWSHTO_PRIME_p15` 转标准三 ⇒ `empty_5T1` 的一条直缺口消除。剩余 **72** =
+Assembly 56（55 `nli*` + 1 hLP）+ **Text 16**。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的
