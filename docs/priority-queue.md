@@ -101,10 +101,10 @@
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
 > | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行；**锥内真还债候选** |
-> | `yobimpp-w1` | `YOBIMPP_p32`（LA32:1241）+ K7 4M7 梯子 | 08:17 发车（§2.1a #16，自身 45–80 + kit 110–165）；先验 HOL 直接引用闭包，有 sorryAx 上游即 BLOCKED |
 > | `text-closure-w1` | 剩余 16 条 Text sorry 的 HOL 直接引用闭包矩阵（只读侦察） | 08:44 发车；给 GO/BLOCKED 点名表 + 缺陈述清单，供 wave 19 派发 |
+> | （空 2 位） | 待补位 | 补位候选须先过 `text-closure-w1` 矩阵（`yobimpp` 已 BLOCKED：K7 挂 VASYYAU 家族，续1015；VASYYAU 战役仍等 DAG 重构裁决） |
 >
-> **最近完成/判词**：`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
+> **最近完成/判词**：`yobimpp-w1` **BLOCKED**（续1015：YOBIMPP/K7 硬挂 VASYYAU 三 master）；`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
 > （7 件，工单 3 BLOCKED）；`g482-482-w4` DONE + 基线 AA（续1012）；`text-est-w1` 报告已归档（§2.1）；
 > `empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
 >
@@ -157,9 +157,9 @@
 | K3 EDGE 簇 | `EDGE_EQ_2_4I2` 6 件（357 HOL） | 360–520 | #4 |
 | K4a `JCYFMRP_V3_p29` | — | 30–50 | #7/#8/#9 |
 | K4b `JLXFDMJ_p27` | 无 sorry 门（SCS_M_EQ_1 / CHANGE_*_MOD 已证） | 600–800 | #7/#8/#9 |
-| K6 4M6 梯子 | — | 400–565 | #5 |
-| K7 4M7 梯子 | — | 110–165 | #16 |
-| K8 4M8 梯子 | — | 235–600（下限 UNRESOLVED） | #3 |
+| K6 4M6 梯子 | — | 400–565；**ERRATA 08:50：挂 VASYYAU 家族（K7 实测，续1015）** | #5 |
+| K7 4M7 梯子 | — | ~~110–165~~ **ERRATA 08:50（续1015）：不成立——5 条 BB/MM 子件全 sorry，经 `MIN_NOT_STAND_4M7` 硬挂 VASYYAU/TUAPYYU/WKZZEEH；本体 BLOCKED** | #16 |
+| K8 4M8 梯子 | — | 235–600（下限 UNRESOLVED）；**ERRATA 08:50：同 4M6/4M7 家族，先验 VASYYAU 闸** | #3 |
 | K2 `TFITSKCv1_p27` | 含私有 kit 重写 | 500–650 | #11 |
 | K9 TAUM | hNL 阻塞 | 160–240 | #2 |
 | K10 `empty_*` | 14 条（含 11 条无陈述） | 1,400–1,900 | #6 |
@@ -224,6 +224,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-12（08:50，续1015）**：**`yobimpp-w1` 判词 BLOCKED（YOBIMPP_p32 与 K7 4M7 梯子硬挂 VASYYAU 家族）；K7 估算 ERRATA**。
+① **证据链（车道交 + 编排者复测）**：`YOBIMPP`（HOL `MIQMCSN.hl:2453-2490`）实引 `SCS_4M7_ARROW_STAB_4M7_4M6` → 后件（`:2361-2440`）实引 `MIN_NOT_STAND_4M7` → 后件（`:2166-2224`）实引 **`VASYYAU` / `TUAPYYU` / `WKZZEEH`** 三件 master；三者 `LocalAuto1.lean:4883/4897/4922` 均 `:= by sorry`。**编排者复测**（fresh 探针）：`VASYYAU_concl`/`TUAPYYU_concl`/`WKZZEEH_concl`/`MIN_NOT_STAND_4M7_p32`/`SCS_4M7_ARROW_STAB_4M7_4M6_p32`/`YOBIMPP_p32` **全部 `[propext, sorryAx, Classical.choice, Quot.sound]`**。两条析取支均无独立出口（全库无 `MMsV39 scs4M7 = ∅`；6 处 `MMsV39 scs4M6' ≠ ∅` 全带 `XWNHLMD_MM` 条件；`hmn` 109 条合取不含三件）。接上 = 3 条新 `sorryAx` 根入锥（`f4b95c0f` 已否决的搬债式）⇒ 按 AGENTS §2 停手，**0 闭件 / 0 删除 / patch 0 字节 / 主仓零改动**。
+② **ERRATA（§2.1b K7 + scout 报告）**：K7「4M7 的 BB/MM 子件已证或短、EST 110–165、门中」**不成立**——5 条 BB/MM 4M7 子件全仍 `sorry`，且 K7 经 `MIN_NOT_STAND_4M7` 直挂 VASYYAU 家族（~1,815 HOL 行 master 三件 + DAG 重构）。`text-sorry-estimates-2026-11-12.md` §(A)16「外部阻塞：无」→ 应读作「VASYYAU.hl master 三件」。**YOBIMPP/NWDGKXH/MIQMCSN/LA33 三件/SCS_5M2 等凡经 4M6/4M7/4M8 梯子的条目，全部继承此闸**，在 VASYYAU 战役解冻前不再发本体车道。
+③ **正面资产**：4M7 簇 13 条中 **10 条语法闭包 clean**（可标准三；另需 3-row prime 塔 9 件 + 3 条 prime `IS_SCS`，估 300–500 行）——但它们**不移动目标公理面**（无 sorry 被这些件直接 gate），暂不单独开道。
+④ **工具 pits（handoff 19）**：① `lake env lean` 强制输入文件在包根内（`/tmp` 源码需 `--root`/复制进包）；② **岛编 olean 与 `.lake` olean 不要比 sha1**（模块头元数据不同），要比 `declaration uses sorry` 行号集合/警告集合；③ 车道已把直方图与 `.lake` trace 60 条 sorry 行号逐行对齐验证同源。
 - **2026-11-12（08:44，续1014）**：**`vpwshto-w1` 落库 `e5a06c77`（`VPWSHTO_p15` 真证，+280/−1）+ 基线 AB/AC 双档定档（SORRIED 73→72）**。
 ① **闭件与路线**：`VPWSHTO_p15`（LA15:398）自足解析证明（不搬 HOL 深链——`VPWSHTO2/1/MAX_IF_COPLANAR/…` 整章 11 条在本文件全 `sorry`，逐字搬运即消费 `sorryAx`）：`p15w_chain4`（等模 + 正交分解 + Cauchy–Schwarz + 黄金比恒等式 `(z−τ²)(z−(6−2√5))≥0`）+ `p15w_yard`（HOL `VPWSHTO1` 四点结论）+ `p15w_vpwshto2`（最小对角下标版，HOL `MOD_ADD_*` 旋转坍缩为 `omega`）；本体用 `Finset.exists_min_image`。零 sorried 声明消费、零新 import、陈述/docstring 逐字节未动。
 ② **编排者闸（机器证据）**：apply --check PASS；新增行禁词扫描 **0**；删除面恰 **1 行 `  sorry`**；岛编 **RC=0 / 0 error / 10 sorry-decls（11→10，恰 −1）**，警告类型集不变；olean 装池 sha1 `70a819ee…`；探针 `VPWSHTO_p15` = 标准三，附带 `VPWSHTO_PRIME_p15` 同转标准三；回归 `SUBSET_PACKING`/`POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR(2)`/`NORM_COS_ANGLE_LT`/`MOD_ADD_235/315` 逐条不变；`VPWSHTO2/1/200` 仍 `sorryAx`（未动）。附注释清理 `b0306f50`（DISCHARGES 注册表删已证件，1 行注释，零 olean 语义）。
