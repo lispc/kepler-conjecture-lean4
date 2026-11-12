@@ -6,6 +6,7 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（12:45，编排者，十六）**：**基线 AD——双台阶锥内真还债（72→70）**：`real_model_ox3q1h_merge`（`2b634e5b`，PA25 +800/−4：53 叶 case 树 + 私件装配器；HOL `partial_merge` 的 ML 求值在 Lean 物化为显式树）+ K3 EDGE 簇收口（`cc33026a`，LA33 +452/−14：本体 `MM_4I2_IMP_4T2_4T1_p33`，原始对 = `CUXVZOZ_p21`/`CJBDXXN_p21` 实例，dagcut 解环兑现）。实测：K_REACH 2,096,032（+112）/ **SORRIED 70**（清单 diff closed 恰 2 件、added ∅）/ AXIOM 585（0/0）/ UNIVERSE 2,108,839（+48）/ COVERAGE 99.3927%；口径 II 35,609 / 70 / 585 / 46,859。根面 589 逐字节同；TSV 5,895 行 + manifest PASS。剩余 70 = Assembly 56 + Text 14。中间档：`04ab3cac` DAG 切面四刀（cone-neutral，解锁 JCYFMRP 波/K3 簇/OCBICBY）。在飞：JCYFMRP 波 / urrcell / biefjhu-tm。
 > - **2026-11-12（09:15，编排者，十五）**：**wave 18 收工；16 条 Text sorry 闭包矩阵实测（1 GO / 3 PARTIAL / 12 BLOCKED）**。
 >   零 intra-list 阻塞，但新增两类硬阻塞：**DAG 反向边**（JCYFMRP/LFLACKU/SCS_6I1/OCBICBY 所在模块
 >   不能 import 其上游）与 **VASYYAU 闸**（K6/K7/K8 三条 4M6/4M7/4M8 梯子全继承 LA1 三 master）。

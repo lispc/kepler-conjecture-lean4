@@ -773,6 +773,33 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 **工具 ERRATA**：根面探针若写在 `namespace Kepler` 外，`#print axioms` 打印全限定名
 （`Kepler.Graphs.…`），与基线短名格式不同 ⇒ **逐字节比对假红**；固定格式见 handoff pit 18。
 
+### 基线 AD：ox3q1h + K3 簇收口 @ `cc33026a`（2026-11-12）
+
+> 触发：`2b634e5b`（`real_model_ox3q1h_merge` 真证，PA25 +800/−4，ox3q1h-w1：53 叶 case 树 +
+> 私件装配器；体量超 EST 170–240 系 HOL `partial_merge` 的 ML 求值在 Lean 须物化为显式树）+
+> `cc33026a`（K3 EDGE 簇收口，LA33 +452/−14，k3edge-w1 续派：kit 5 件 + 本体
+> `MM_4I2_IMP_4T2_4T1_p33`；原始对 = `CUXVZOZ_p21`/`CJBDXXN_p21` 实例——dagcut `04ab3cac`
+> 解环 `LA33→LA21` 后兑现）。仪器原样换装（**5,895 行**，−2 = SORRIED −2）。manifest `--check` PASS。
+
+| 指标 | 基线 AD | 基线 AC | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,096,032** | 2,095,920 | **+112** |
+| SORRIED | **70** | 72 | **−2** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,221 | 5,221 | 0 |
+| K_UNIVERSE | 2,108,839 | 2,108,791 | +48 |
+| COVERAGE | 99.3927% | 99.3897% | +0.0030pp |
+| 口径 II（ex-Cases） | K_REACH **35,609** / SORRIED **70** / AXIOM **585** / UNIVERSE **46,859** | 35,497 / 72 / 585 / 46,811 | +112 / −2 / 0 / +48 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.real_model_ox3q1h_merge`、`Kepler.Text.MM_4I2_IMP_4T2_4T1_p33`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：**双台阶锥内真还债**（两件均在 AC 名单：ox3q1h = 闭包矩阵 strict GO，K3 本体 = row 8 目标）。
+K_REACH +112 = 两个证明体（53 叶装配器 + EDGE 簇 6 件）入锥；K_UNIVERSE +48 同向。剩余 **70** =
+Assembly 56（55 `nli*` + 1 hLP）+ **Text 14**。附带：`pkrmQuarter` 随 ox3q1h 转标准三；
+K3 簇 LA33 只剩 2 件簇外债（`SCS_4I2_IMP_SCS_4T1_p33`/`SCS_4I1_IMP_SCS_4I2_p33`，被
+JCYFMRP_V3/JLXFDMJ 族卡，矩阵 row 9/10）。
+
 ### 基线 AC：VPWSHTO_p15 真证 @ `e5a06c77`（2026-11-12）
 
 > 触发：`vpwshto-w1` 落库 `e5a06c77`（`VPWSHTO_p15` 真证，+280/−1，LA15 文件级 sorry 11→10；

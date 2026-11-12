@@ -17,17 +17,17 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AC @`e5a06c77`（2026-11-12，`VPWSHTO_p15` 真证）**
-> cone `K_REACH 2,095,920` / **SORRIED 72** / **`K_AXIOM 585`** / MODULES 5,221 /
-> UNIVERSE 2,108,791 / COVERAGE **99.3897%**；口径 II 35,497 / 72 / 585 / 46,811。
-> `docs/e2e-reachability-map.tsv` 已按基线 AC 重写（5,897 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AD @`cc33026a`（2026-11-12，ox3q1h + K3 簇收口）**
+> cone `K_REACH 2,096,032` / **SORRIED 70** / **`K_AXIOM 585`** / MODULES 5,221 /
+> UNIVERSE 2,108,839 / COVERAGE **99.3927%**；口径 II 35,609 / 70 / 585 / 46,859。
+> `docs/e2e-reachability-map.tsv` 已按基线 AD 重写（5,895 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AA/AB/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 72 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 16（`--- SORRIED ---` 段实测）。
-> 较基线 AB：SORRIED 73→72（清单 diff：closed 恰 `{VPWSHTO_p15}`、added ∅；**真还债**）、
-> K_AXIOM 585（0/0）、K_REACH +16（自足证明体入锥）、K_UNIVERSE +16。
-> **基线 AB @`2201350f`（la22emptykit 七件）为 cone-neutral 中间档**：SORRIED 73（0/0）、
-> K_UNIVERSE +28（私有 helper）、文件级 −7 = 资产（见 map 基线 AB 节与 §8 续1014）。
+> （与基线 AC/AB/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 70 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 14（`--- SORRIED ---` 段实测）。
+> 较基线 AC：SORRIED 72→70（清单 diff：closed 恰 `{real_model_ox3q1h_merge, MM_4I2_IMP_4T2_4T1_p33}`、
+> added ∅；**双台阶真还债**）、K_AXIOM 585（0/0）、K_REACH +112、K_UNIVERSE +48。
+> 中间档：`04ab3cac` DAG 切面四刀（cone-neutral，解锁 JCYFMRP 波 + K3 簇 + OCBICBY）、
+> `1c540609` K3 kit 1/6（锥外资产）；AC/AB 各节见 map。
 >
 > **核心路线图**：[`docs/hf-proof-map.md`](hf-proof-map.md)（九节完成度 + 逐箭头逻辑链 + 缺口清单）。
 > **接手先读**：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（现状 / 用户已定裁决 / 死路与红旗清单 / 环境坑）。
@@ -258,6 +258,12 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-12（12:45，续1023）**：**基线 AD 定档（72→70 双台阶真还债）**：`real_model_ox3q1h_merge`（`2b634e5b`，PA25 +800/−4）+ K3 簇收口（`cc33026a`，LA33 +452/−14）。
+① 实测：K_REACH 2,096,032（+112）/ **SORRIED 70**（清单 diff：closed 恰 `{real_model_ox3q1h_merge, MM_4I2_IMP_4T2_4T1_p33}`、added ∅）/ AXIOM 585（0/0）/ MODULES 5,221 / UNIVERSE 2,108,839（+48）/ COVERAGE 99.3927%（+0.0030pp）；口径 II 35,609 / 70 / 585 / 46,859。
+② 文档全套已刷（§6.1 三层）：pq 文件头、map.md 基线 AD 节、**TSV 5,895 行原样换装**、`AGENTS.md` §1（72→70）、`README`/`README.zh`（入口层 78→70 漂移修正）、hf-proof-map 状态更新十六。
+③ 根面 589 逐字节同（md5 `246e952c…`）；manifest `--check` PASS。剩余 70 = Assembly 56 + Text 14。
+④ 工具注记：仪器末行 `(interpreter) unknown declaration 'main'` 为 `--run` 收尾良性噪声，输出完整（对比 AC 档同现象）。
 
 - **2026-11-12（11:53，续1022）**：**用户裁决两份 DEF-FIX 新案（scout dagcut-eval-w1 工单，续1020）+ 两车道撞 2h 上限续跑**。
 ① **`SCS_6I1` 方案 1B：批准**——5 件（3 链 + `OEHDBEN` 对，60 行）上移 LocalConcl，零 import 边变化、SCC 不变。
