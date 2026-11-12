@@ -89,20 +89,27 @@
 ---
 
 
-## 1. 在飞（2026-11-12 09:15，池 **0/3**：wave 18 收工）
+## 1. 在飞（2026-11-12 午后，池 **6/6**；用户两次确认并发、无需错开）
 
-> 整段交付制；历史 wave 记录见 §8（续990–续1014）与 `history/changelog-archive-2.md`。
+> 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
+> lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
+> （内核重放才占 lean 槽，窗口与编排者约）；车道编译前自查 memory pressure（≥2 即等）。
 >
 > **刚落地（里程碑）**：`vpwshto-w1` **LANDED `e5a06c77`**（`VPWSHTO_p15` +280/−1，LA15 11→10，
 > 锥内真还债；附带 `VPWSHTO_PRIME_p15` 转标准三）+ 注释清理 `b0306f50`。**基线 AC 已定档**
 > （续1014：SORRIED **73→72**，closed 恰 `{VPWSHTO_p15}`；根面 589 逐字节同，5,897 行 TSV）。
 > 此前 `general_482` `0a1ff76d`（基线 AA）与 `la22emptykit` `2201350f`（基线 AB，cone-neutral 资产）。
 >
+> **派单（2026-11-12 午后；用户已确认 4 车道组合，与发车同批记录）**：
+>
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
-> **池空 0/3 —— 收工。** `text-closure-w1` 已交付（1 GO / 3 PARTIAL / 12 BLOCKED，报告
-> [`archive/scouts/text-closure-matrix-2026-11-12.md`](archive/scouts/text-closure-matrix-2026-11-12.md)），
-> 摘要见 §2.1d。
+> | `dagcut-w2` | **DEF-FIX 四刀**：10 声明搬迁（LA38←LA18 / LA34←LA18 / LA31←LA18 / LA21←LA16） | **LANDED `04ab3cac`**（章程 `902396d0`；+228/−190；闸 11 模块 rc=0 + LA27+import LA21 解锁 RC=0 + 根面 589 逐字节同 md5 `246e952c…`；cone-neutral，基线 AC 保持）；**同车道续 JCYFMRP 证明波（在飞）** |
+> | `k3edge-w1` | K3 EDGE 簇（LA33）→ `MM_4I2_IMP_4T2_4T1_p33` 本体 | **已交付**：kit 1/6 可落（`EXPAND_DIAG_4_DIST_p33`，标准三，patch-kit 待闸）；其余 5+本体被环 `LA33→LA21→LA16→LA33` 卡（对矩阵 row 8 / 基线 AA 记 ERRATA）——**dagcut 砍 LA21→LA16 后已验 `LA33+import LA21` 无环**，编排者全图 SCC 模拟确认；探针全备好（+350 行，锥外资产），落库后续派 |
+> | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25:10378，HOL `OXLZLEZ3.hl:6099-6238`） | 用户裁决 ①（填充料）；**在飞**；落库预期 72→71 + 复测 `pkrmQuarter` |
+> | `biefjhu-tm-w2` | BIEFJHU-a TM pilot：~184–185 叶 `--hull` 证书 + `emit_lean --hull` + 重放包就绪 | 用户裁决 ③；**在飞**（CPU）；certtm 仅此一盒解冻；**内核重放窗口与编排者约** |
+> | `dagcut-eval-w1` | dagcut 后效侦察：SCS_6I1 链上移 / OCBICBY 的 LA22→LA38 可达性 / LFLACKU 的 LA38 两件下移 | **在飞**（2026-11-12 补派，用户确认）；纯分析零 patch，产出 3 份 DEF-FIX 工单草案 |
+> | `urrcell-w1` | K13 kit 先行：`CLOSED_MCELL` k=2 分支 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`（PA13/Geom-Aff） | **待发**：后台槽满（4 任务在跑），闸或任一车道收线后自动补位；Geom/Aff 近根文件、非必要不动 |
 >
 > **用户裁决（2026-11-12 08:55，已执行）**：两车道回来后**总结收工，不发新车**；
 > 交接文档：[`handoff-2026-11-12.md`](handoff-2026-11-12.md)。
@@ -251,6 +258,14 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-12（11:28，续1019）**：**两笔落库：DEF-FIX 章程 la-dag-cuts `902396d0` + DAG 声明切面四刀 `04ab3cac`（dagcut-w2，+228/−190；用户裁决 ②a；cone-neutral，基线 AC 保持）**。
+① **内容**：LA38←LA18（`azimCycle_p18`）、LA34←LA18、LA31←LA18（`w5cC_*` 两件）、LA21←LA16（`taum_dih_y_p16` 块 4 件）共 **10 声明纯搬迁零重命名**；LA18/LA16 补 `import LocalAuto21`（consumer 补边），LA21 换 4 条无环 import（XivphksKit/PackingAuto18/LocalAuto38Bridge/LA22），LA31 改 7 条。
+② **对 demo 配方的修正（不修正则落库即炸）**：`dag_wave_demo.diff` 是**同名复制**而 donor 保留——切边后 donor 闭包含 LA21，donor 重编必撞 `already declared`（demo 只编了 5 个受益模块从未重编 donor，隐患未暴露）。生产版改**真搬**并实测重编 LA16/LA18 零炸。LA38 侧未走 demo 的 `azimCycle_p38` 改名，sorry 定理陈述行逐字未动。
+③ **冻结自检**：编排者独立复核（worktree apply + 三多重集比对）——6 文件 theorem/lemma 签名、含 sorry 行、def 签名 diff 恰 = 10 搬迁，91 条 sorry 行全守恒，零就地编辑。
+④ **闸（编排者亲跑）**：11 模块 `lake build` rc=0（LA21 步 23 min 吸收上游 olean 补齐，其余 4s–3m43s）+ LA21 岛协议 RC=0 + **LA27+import LA21 解锁 RC=0**（解锁边不进本 patch，留给 JCYFMRP 波）+ 根面 589 逐字节同（md5 `246e952cde4498a802ca0aabe6842d79`）。
+⑤ **解锁面**：编排者全图模拟（540 模块）零环、`LA33 ∉ closure(LA21)` ⇒ **k3edge 的环 `LA33→LA21→LA16→LA33` 随本 patch 解除**——K3 其余 5 件+本体的结构性卡点消除（k3edge-w1 对矩阵 row 8「无环」与基线 AA「闸门开」记 ERRATA：均漏算 LA21→LA16→LA33）。
+⑥ **在飞**：JCYFMRP 证明波（agent-0 续，LA27 收 JCYFMRP_p27 预期 72→71）、ox3q1h、biefjhu-tm、scout dagcut-eval-w1；**待发**：urrcell-w1（K13，后台槽满）、k3edge kit 闸（槽满，下一空档执行）。
 
 - **2026-11-12（09:15，续1018）**：**wave 18 收工——闭包矩阵入档（1 GO / 3 PARTIAL / 12 BLOCKED）+ 交接文档 `handoff-2026-11-12.md` 落盘；用户裁决「不发新车」执行完毕**。
 ① **矩阵**：`text-closure-w1` 225 条 `#print axioms` 实测 16 条 Text sorry——**零 intra-list 阻塞**（16 条互不依赖；红上游全是锥外 sorry）。判词：**1 GO**（`real_model_ox3q1h_merge`，22/22 绿零缺；用户保留待裁决）/ **3 PARTIAL**（`MM_4I2_IMP_4T2_4T1` K3 360–520 唯一干净有界 kit；`UAGHHBM` 缺 2 条 inline `isScs`；`URRPHBZ2` K13 180–310）/ **12 BLOCKED**。报告归档 [`archive/scouts/text-closure-matrix-2026-11-12.md`](archive/scouts/text-closure-matrix-2026-11-12.md)（225 行），摘要入 §2.1d，§2 排队按矩阵重写。
