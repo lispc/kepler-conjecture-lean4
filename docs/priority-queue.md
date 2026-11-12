@@ -123,13 +123,13 @@
 > 只保留**当前**可执行项；2026-10 的历史队列（PA22/nli/W6/LV/PA24 等）已归档到
 > `archive/priority-queue-legacy-2026-10.md`。
 
-> 依据 = §2.1d 实测矩阵（2026-11-12）。**当前没有「直接可发」的锥内 Text 件**；下列均需先满足前置。
+> 依据 = §2.1d 实测矩阵 + dagcut-eval（续1020）。在飞见 §1；下列为排队序。
 
-1. **`real_model_ox3q1h_merge`（唯一 strict GO；2026-11-12 用户放行，当填充料）**：PA25:10378；一层 22/22 绿、零缺、同文件，EST 170–240；空槽即发，不占关键路径。
-2. **DAG 波（先切后证；2026-11-12 用户批准切面，DEF-FIX）**：`JCYFMRP_p27`（两波：切 LA38←LA18、LA21←LA16，再证 ~300–430）→ `JCYFMRP_V3`/`TFITSKCv1` → `TFITSKC`；VASYYAU 本体暂缓。同法评估 `LFLACKU`（LA23↛LA22/38）、`SCS_6I1`（LA20↛LA27/26）、`OCBICBY`（LA22↛LA38）。
-3. **VASYYAU/vt 战役**（等 DAG 重构裁决）：`MIQMCSN`(K8)/`NWDGKXH`(K6)/`YOBIMPP`(K7) 三条 4M6/4M7/4M8 梯子**全部**继承 LA1 `VASYYAU`/`TUAPYYU`/`WKZZEEH` 三 master（~1,815 HOL 行）。
-4. **可 kit 先行的 PARTIAL**：`MM_4I2_IMP_4T2_4T1_p33`（K3 EDGE 簇 360–520，唯一干净有界 kit；本体 180–260）；`URRPHBZ2`（K13 180–310 + 本体 650–950）；`UAGHHBM_p30`（kit 120–250 + 本体 800–1,300，冻结）。
-5. **其余冻结**：`TameLp.fully_surrounded_perimeter_bound`（WSEWPCH 章 1,000–1,500）、`SCS_5M2`（K4b 600–800 + K4c）、`TFITSKC`（K2）、hLP `lpArchiveCertificatesDebt`（等 LP 解冻）。
+1. **DAG 波后半（切面已落 `04ab3cac`）**：JCYFMRP 证明波**在飞**（agent-0，预期 72→71）→ `JCYFMRP_V3` →（`TFITSKCv1` = K2 500–650，检查点后再定）；**两个新 DEF-FIX 用户已批（2026-11-12 中午）**：`SCS_6I1` 方案 1B（5 件 60 行上移 LocalConcl，零 import 边变化，详见 EVAL.md）与 `LFLACKU` 3A+3C（删 LA38→LA23 赘边 + `pos_imp_scs_arrow_empty_p22` 下移 LA1，~21 行，低优先）——等槽各派一小车道，章程随车交付。
+2. **K3 剩余 5 件 + 本体**：kit 1/6 已落 `1c540609`；环已由 dagcut 解除，探针 +350 行备好（RC=0/标准三），**下一空档续派 agent-2**。
+3. **OCBICBY emptykit-3（排 JCYFMRP 波后）**：dagcut 后 `LA22+import LA38` 无环（2138 边模拟）；11 条 `empty_*` 缺陈述与证明**同 commit**（禁裸壳，净 −14 sorry）+ 3 红；逐条清单在 `lane_snapshots/dagcut-eval-w1/EVAL.md` §3.2。
+4. **K13 kit**：urrcell-w1 在飞（`CLOSED_MCELL` k=2 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`；URRPHBZ2 本体 650–950 冻结）。
+5. **冻结/战役项**：VASYYAU/vt 本体（裁决 ②b 暂缓，待 JCYFMRP 簇收口后报预算）；`SCS_5M2`（K4b 600–800 + K4c）；`TameLp`（WSEWPCH 1,000–1,500）；`UAGHHBM` 本体；hLP（LP 解冻裁决）。
 
 
 ### 2.1 Text 18 条 sorry 工作量估算（2026-11-12，只读车道 `text-est-w1`）
@@ -258,6 +258,12 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-12（11:53，续1022）**：**用户裁决两份 DEF-FIX 新案（scout dagcut-eval-w1 工单，续1020）+ 两车道撞 2h 上限续跑**。
+① **`SCS_6I1` 方案 1B：批准**——5 件（3 链 + `OEHDBEN` 对，60 行）上移 LocalConcl，零 import 边变化、SCC 不变。
+② **`LFLACKU` 3A+3C：批准、低优先**——删 LA38→LA23 赘边（0 活引用）+ `pos_imp_scs_arrow_empty_p22` 下移 LA1，~21 行；切通后仍卡 `TAUM_STD_POS_p23`（hNL 保留区），纯前置清扫。
+③ 两案已入 §2 排队，等槽各派一小车道，DEF-FIX 章程随车交付。
+④ **运营勘误（编排者自纠）**：后台任务默认 2h 上限——ox3q1h-w1 与 biefjhu-tm-w2 首跑同时撞线（均深度作业中：前者 46 案树生成器+装配修错中，后者 C 路线叶级验证中），已双双续跑并要求**里程碑落盘制**（每可验证节点即覆盖写 lane_snapshots，防再撞线丢成果）。
 
 - **2026-11-12（11:47，续1021）**：**一笔落库：K3 EDGE 簇 kit 1/6 `1c540609`（k3edge-w1；`EXPAND_DIAG_4_DIST_p33` 真证，+42/−3；锥外资产 cone-neutral）**。
 ① **证法**：纯 mod-4 搬运——`EXPAND_DIAG_4_p33` 给 `j % 4 = (i+2) % 4`，`SCS_DIAG_ADD1_p33` + `EXPAND_DIAG_4_p33` 给 `(i+3) % 4 = (j+1) % 4`，两对距离经 `BB_VV_FUN_EQ_p26`（mod-4 周期单射/满射）搬到陈述形；`_hmn`（hNL 假设）**未消费**。
