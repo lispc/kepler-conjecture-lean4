@@ -87,7 +87,7 @@
 ---
 
 
-## 1. 在飞（2026-11-12 08:15，池 **2/3**：wave 17）
+## 1. 在飞（2026-11-12 08:17，池 **3/3**：wave 17）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1013）与 `history/changelog-archive-2.md`。
 >
@@ -101,11 +101,11 @@
 > |---|---|---|
 > | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行；**锥内真还债候选** |
 > | `vpwshto-w1` | `VPWSHTO_p15`（锥内直源） | HOL `VPWSHTO.hl:1978`；`VPWSHTO_PRIME_p15` 是 `empty_5T1` 直缺口 |
+> | `yobimpp-w1` | `YOBIMPP_p32`（LA32:1241）+ K7 4M7 梯子 | 08:17 发车（§2.1a #16，自身 45–80 + kit 110–165）；先验 HOL 直接引用闭包，有 sorryAx 上游即 BLOCKED |
 >
 > **最近完成/判词**：`la22emptykit-w1` **LANDED `2201350f`**（7 件，工单 3 BLOCKED）；`g482-482-w4` DONE +
 > 基线 AA 定档（续1012）；`text-est-w1` 报告已归档（§2.1）；`empty-la22` BLOCKED（续1011）/
-> `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。**池空 1 位**：按 §2.1 杠杆顺序补位
-> （`TFITSKCv1_p27` 私有 kit 或 `real_model_ox3q1h_merge`）。
+> `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
 >
 ## 2. 排队（按序补位）
 
