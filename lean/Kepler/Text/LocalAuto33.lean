@@ -149,7 +149,19 @@ DISCHARGES (2026-11-05, la33-straight-w1; 2 more): `SCS_4I2_STRAIGHT_p33` and
   `EDGE_EQ_2_4I2_ALL_p33`, i.e. the `CJBDXXN`/`general_482_deformation`
   check-completeness leg (LocalAuto21, outside this file's import closure) —
   gap list in the lane DELIVERY.
--/
+
+DISCHARGES (2026-11-12, k3edge-w1; 1 of the 8 EDGE-cluster sorries): the
+  mod-4 transport `EXPAND_DIAG_4_DIST_p33` — pure `EXPAND_DIAG_4_p33` /
+  `SCS_DIAG_ADD1_p33` mod arithmetic riding `BB_VV_FUN_EQ_p26` (standard
+  three, no `main_nonlinear_terminal_v11` content).  The remaining 5 kit
+  items and the body `MM_4I2_IMP_4T2_4T1_p33` are NOT closable in this file:
+  their HOL routes bottom out at `CUXVZOZ`/`CJBDXXN` (deformation engine,
+  now proved clean in LocalAuto21), but LocalAuto21 transitively imports
+  this file (LA21 -> LA16 -> LA33, LA16:109), so the engine is outside this
+  file's import closure (import would create a cycle).  Conditional probes
+  (reductions + body from the two primordial lemmas as hypotheses, all
+  standard three) and the precise DEF-FIX unblock workorder are in the lane
+  DELIVERY (k3edge-w1). -/
 
 import Kepler.Text.FanBaseKit
 import Kepler.Text.LocalAuto1
@@ -2399,11 +2411,38 @@ theorem EDGE_EQ_2_4I2_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) 
     dist (v (i + 1)) (v (i + 2)) = 2 := sorry
   -- DISCHARGES: NEEDS ARDBZYE.hl EDGE_EQ_2_4I2.
 
-/-- HOL `EXPAND_DIAG_4_DIST` (ARDBZYE.hl:2084).  NEEDS: as `EDGE_EQ_2_4I2_p33`. -/
+/-- HOL `EXPAND_DIAG_4_DIST` (ARDBZYE.hl:2084).  DISCHARGED 2026-11-12
+(k3edge-w1): pure mod-4 transport — `EXPAND_DIAG_4_p33` gives
+`j % 4 = (i + 2) % 4` and `SCS_DIAG_ADD1_p33` + `EXPAND_DIAG_4_p33` give
+`(i + 3) % 4 = (j + 1) % 4`; the two distance facts then ride
+`BB_VV_FUN_EQ_p26` (mod-k injectivity/surjectivity of `v`) from
+`(v i, v j)` resp. `(v (i + 1), v (j + 1))` to the stated pairs.  No
+`main_nonlinear_terminal_v11` content consumed (`_hmn` unused). -/
 theorem EXPAND_DIAG_4_DIST_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3)
     (i j : ℕ) (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j)
     (h3a : 3 ≤ dist (v i) (v j)) (h3b : 3 < dist (v (i + 1)) (v (j + 1))) :
-    3 ≤ dist (v i) (v (i + 2)) ∧ 3 < dist (v (i + 1)) (v (i + 3)) := sorry
+    3 ≤ dist (v i) (v (i + 2)) ∧ 3 < dist (v (i + 1)) (v (i + 3)) := by
+  have hbb : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
+  have hscs : isScsV39 scs4I2 := SCS_4I2_IS_SCS_p33
+  -- first diagonal: `v j = v (i + 2)` from `j % 4 = (i + 2) % 4`
+  have hmod_ij : j % 4 = (i + 2) % 4 := EXPAND_DIAG_4_p33 i j hd
+  have hvj : v j = v (i + 2) := by
+    have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb j (i + 2)).mpr
+    rw [K_SCS_4I2_p33] at h
+    exact h hmod_ij
+  -- second diagonal: `(i + 3) % 4 = (j + 1) % 4`, hence `v (j + 1) = v (i + 3)`
+  have hd1 : scsDiag 4 (i + 1) (j + 1) := SCS_DIAG_ADD1_p33 i j hd
+  have hd1' : scsDiag 4 (j + 1) (i + 1) :=
+    ⟨fun h => hd1.1 h.symm, fun h => hd1.2.2 h.symm, fun h => hd1.2.1 h.symm⟩
+  have hmod2 : (i + 1) % 4 = (j + 3) % 4 := EXPAND_DIAG_4_p33 (j + 1) (i + 1) hd1'
+  have hkey : (i + 3) % 4 = (j + 1) % 4 := by omega
+  have hvj1 : v (j + 1) = v (i + 3) := by
+    have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb (j + 1) (i + 3)).mpr
+    rw [K_SCS_4I2_p33] at h
+    exact h hkey.symm
+  refine ⟨?_, ?_⟩
+  · rw [← hvj]; exact h3a
+  · rw [← hvj1]; exact h3b
   -- DISCHARGES: NEEDS ARDBZYE.hl EXPAND_DIAG_4_DIST.
 
 /-- HOL `B_LE_CSTAB_SCS_4I2_prime` (ARDBZYE.hl:2107). -/
