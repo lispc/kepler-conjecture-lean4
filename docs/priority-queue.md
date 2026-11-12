@@ -106,7 +106,7 @@
 > |---|---|---|
 > | `dagcut-w2` | **DEF-FIX 四刀**：10 声明搬迁（LA38←LA18 / LA34←LA18 / LA31←LA18 / LA21←LA16） | **LANDED `04ab3cac`**（章程 `902396d0`；+228/−190；闸 11 模块 rc=0 + LA27+import LA21 解锁 RC=0 + 根面 589 逐字节同 md5 `246e952c…`；cone-neutral，基线 AC 保持）；**同车道续 JCYFMRP 证明波（在飞）** |
 > | `k3edge-w1` | K3 EDGE 簇（LA33）→ `MM_4I2_IMP_4T2_4T1_p33` 本体 | kit 1/6 **LANDED `1c540609`**（闸：SORRY 9→8 + 探针标准三）；其余 5 件+本体：环已由 dagcut 解除、探针 +350 行备好——**待后台槽续派 agent-2** |
-> | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25:10378，HOL `OXLZLEZ3.hl:6099-6238`） | 用户裁决 ①（填充料）；**在飞**；落库预期 72→71 + 复测 `pkrmQuarter` |
+> | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25 +800/−4；53 叶 case 树） | **LANDED `2b634e5b`**（用户裁决 ①；闸：build rc=0 + 目标/pkrmQuarter 双探针标准三 + 根面逐字节同）；**锥内 SORRIED 72→71（Text 16→15）**，基线 AD 档图仪器在跑 |
 > | `biefjhu-tm-w2` | BIEFJHU-a TM pilot：~184–185 叶 `--hull` 证书 + `emit_lean --hull` + 重放包就绪 | 用户裁决 ③；**在飞**（CPU）；certtm 仅此一盒解冻；**内核重放窗口与编排者约** |
 > | `dagcut-eval-w1` | dagcut 后效侦察：SCS_6I1 / OCBICBY / LFLACKU 三切面 | **已交付**（续1020）：SCS_6I1 = GO-DEF-FIX 1B（5 件上移 LocalConcl，零边变化）｜OCBICBY = DAG 解环，emptykit-3 打包（JCYFMRP 波后派）｜LFLACKU = 3A+3C ~21 行（仍卡 hNL）；**两 DEF-FIX 新案待用户批** |
 > | `urrcell-w1` | K13 kit 先行：`CLOSED_MCELL` k=2 分支 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`（PA13/Geom-Aff） | **待发**：后台槽满（4 任务在跑），闸或任一车道收线后自动补位；Geom/Aff 近根文件、非必要不动 |

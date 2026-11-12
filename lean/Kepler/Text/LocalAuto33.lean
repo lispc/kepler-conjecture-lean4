@@ -161,7 +161,18 @@ DISCHARGES (2026-11-12, k3edge-w1; 1 of the 8 EDGE-cluster sorries): the
   file's import closure (import would create a cycle).  Conditional probes
   (reductions + body from the two primordial lemmas as hypotheses, all
   standard three) and the precise DEF-FIX unblock workorder are in the lane
-  DELIVERY (k3edge-w1). -/
+  DELIVERY (k3edge-w1).
+
+DISCHARGES (2026-11-12, k3edge-w1 wave 2; the remaining 6 of the 8 EDGE-cluster
+  sorries): `EDGE_EQ_2_4I2_p33` / `EDGE_EQ_2_4I2_1_p33` as the
+  `CUXVZOZ_p21`/`CJBDXXN_p21` (LocalAuto21, post-dagcut `04ab3cac`) instances
+  at `p1 := i + 1`; `EDGE_EQ_2_4I2_2/3/ALL_p33` and the body
+  `MM_4I2_IMP_4T2_4T1_p33` on top (`ASSUME_MIN_DIAG_p33` split + direct
+  `BBsV39 scs4T2/scs4T1` walks + `XWNHLMD_MM_p33`).  New import
+  `Kepler.Text.LocalAuto21` (cycle-free: dagcut broke LA21 -> LA16).  LA33
+  sorry-decls 8 -> 2 (the two out-of-cluster stragglers `SCS_4I2_IMP_SCS_4T1`
+  / `SCS_4I1_IMP_SCS_4I2` stay).  All seven = `[propext, Classical.choice,
+  Quot.sound]`. -/
 
 import Kepler.Text.FanBaseKit
 import Kepler.Text.LocalAuto1
@@ -169,6 +180,7 @@ import Kepler.Text.LocalAuto12
 import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto20
+import Kepler.Text.LocalAuto21
 import Kepler.Text.LocalAuto22
 import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto27
@@ -2404,11 +2416,119 @@ theorem SCS_4I2_STRAIGHT_ALL_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ �
   exact ⟨h0, h1, h2, h3⟩
   -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I2_STRAIGHT_ALL.
 
-/-- HOL `EDGE_EQ_2_4I2` (ARDBZYE.hl:1965).  NEEDS: the terminal case bank. -/
+/-- HOL `EDGE_EQ_2_4I2` (ARDBZYE.hl:1965).  DISCHARGED 2026-11-12 (k3edge-w1):
+the `CUXVZOZ_p21` instance at `p1 := i + 1` (dagcut `04ab3cac` opened the
+LA21 engine to this file).  Side conditions: `hd` from `SCS_4I2_3_LE_A_p33`
++ 4-periodicity; `ha` by the mod-4 psort-class analysis (excluded class
+`{(i), (i+2)}`, the other diagonal `> 3` from the inlined
+`EXPAND_DIAG_4_DIST_p33` second conjunct); `hb` via `four_h0_lt_six_p20`;
+`hang`/`hcase` from `SCS_4I2_STRAIGHT_p33` through the
+`BB_RHO_NODE_IVS_p26` interior-angle bridge; `h2`/`hdc` from
+`EDGE_4I2_LE_2H0_p33` + `two_h0_le_cstab_p20`. -/
 theorem EDGE_EQ_2_4I2_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) (i j : ℕ)
     (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j) (h3a : 3 ≤ dist (v i) (v j))
     (h3b : 3 < dist (v (i + 1)) (v (j + 1))) :
-    dist (v (i + 1)) (v (i + 2)) = 2 := sorry
+    dist (v (i + 1)) (v (i + 2)) = 2 := by
+  have hbb : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
+  have hscs : isScsV39 scs4I2 := SCS_4I2_IS_SCS_p33
+  have hgen : scsGeneric v := SCS_4I2_GENERIC_p33 v hv
+  have hp : Periodic v 4 := by
+    have hper := (MMs_imp_BBs_p33 hv).2.1
+    rwa [K_SCS_4I2_p33] at hper
+  have hvt : ∀ a b : ℕ, a % 4 = b % 4 → v a = v b := by
+    intro a b hab
+    have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb a b).mpr
+    rw [K_SCS_4I2_p33] at h
+    exact h hab
+  -- interior-angle bridge: `interiorAngle1 0 FF (v p) = azim 0 (v p) (v (p+1)) (v (p+3))`
+  have hia : ∀ p : ℕ, interiorAngle1 0 (Set.range fun k => (v k, v (k + 1))) (v p) =
+      azim 0 (v p) (v (p + 1)) (v (p + 3)) := by
+    intro p
+    have hbr := BB_RHO_NODE_IVS_p26 scs4I2 4 v (v p) (Set.range v)
+        (Set.range fun k => ({v k, v (k + 1)} : Set V3))
+        (Set.range fun k => (v k, v (k + 1))) p K_SCS_4I2_p33 rfl rfl rfl rfl hscs
+        (by norm_num) hbb
+    obtain ⟨hrho, hivs⟩ := hbr
+    show azim 0 (v p) (rhoNode1 (Set.range fun k => (v k, v (k + 1))) (v p))
+        (ivsRhoNode1 (Set.range fun k => (v k, v (k + 1))) (v p)) = _
+    rw [hrho, hivs]
+    have hp31 : p + 4 - 1 = p + 3 := by omega
+    rw [hp31]
+  -- psort residue form
+  have h4r : ∀ x y : ℕ, psort 4 (x, y) =
+      (if x % 4 ≤ y % 4 then (x % 4, y % 4) else (y % 4, x % 4)) := fun x y => rfl
+  -- the three interior-angle bounds from straightness
+  have hang1 : interiorAngle1 0 (Set.range fun k => (v k, v (k + 1))) (v (i + 1)) < Real.pi := by
+    rw [hia (i + 1)]
+    exact SCS_4I2_STRAIGHT_p33 _hmn v (i + 1) hv
+  have hcase1 : interiorAngle1 0 (Set.range fun k => (v k, v (k + 1))) (v (i + 1 + 1)) < Real.pi := by
+    rw [show i + 1 + 1 = i + 2 from rfl, hia (i + 2)]
+    exact SCS_4I2_STRAIGHT_p33 _hmn v (i + 2) hv
+  -- the strict other-diagonal bound (`EXPAND_DIAG_4_DIST_p33` conjunct two,
+  -- inlined: this declaration precedes it in file order)
+  have hv13 : 3 < dist (v (i + 1)) (v (i + 3)) := by
+    have hd1 : scsDiag 4 (i + 1) (j + 1) := SCS_DIAG_ADD1_p33 i j hd
+    have hd1' : scsDiag 4 (j + 1) (i + 1) :=
+      ⟨fun h => hd1.1 h.symm, fun h => hd1.2.2 h.symm, fun h => hd1.2.1 h.symm⟩
+    have hmod2 : (i + 1) % 4 = (j + 3) % 4 := EXPAND_DIAG_4_p33 (j + 1) (i + 1) hd1'
+    have hkey : (i + 3) % 4 = (j + 1) % 4 := by omega
+    have hvj1 : v (j + 1) = v (i + 3) := by
+      have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb (j + 1) (i + 3)).mpr
+      rw [K_SCS_4I2_p33] at h
+      exact h hkey.symm
+    rw [← hvj1]; exact h3b
+  -- the a-table strictness on diagonals (excluded psort class = `(i + 4, i + 2)`)
+  have ha : ∀ a' b' : ℕ, scsDiag 4 a' b' →
+      psort 4 (a', b') ≠ psort 4 (i + 1 + 3, i + 1 + 1) →
+      scs4I2.a a' b' < dist (v a') (v b') := by
+    intro a' b' hd' hne'
+    have hmod : b' % 4 = (a' + 2) % 4 := EXPAND_DIAG_4_p33 a' b' hd'
+    have hclass : a' % 4 = i % 4 ∨ a' % 4 = (i + 1) % 4 ∨ a' % 4 = (i + 2) % 4 ∨
+        a' % 4 = (i + 3) % 4 := by
+      have h1 : a' % 4 < 4 := Nat.mod_lt _ (by norm_num)
+      have h2 : i % 4 < 4 := Nat.mod_lt _ (by norm_num)
+      omega
+    have e1 : (i + 1 + 3) % 4 = i % 4 := by omega
+    have e2 : (i + 1 + 1) % 4 = (i + 2) % 4 := by omega
+    rcases hclass with h | h | h | h
+    · exfalso
+      apply hne'
+      have hb2 : b' % 4 = (i + 2) % 4 := by rw [hmod]; omega
+      rw [h4r a' b', h4r (i + 1 + 3) (i + 1 + 1), h, hb2, e1, e2]
+      try (split_ifs <;> simp only [Prod.mk.injEq] <;> omega)
+    · have ea : v a' = v (i + 1) := hvt a' (i + 1) h
+      have eb : v b' = v (i + 3) := hvt b' (i + 3) (by rw [hmod]; omega)
+      rw [a_diag_4I2_p33 a' b' hd', ea, eb]
+      exact hv13
+    · exfalso
+      apply hne'
+      have hb0 : b' % 4 = i % 4 := by rw [hmod]; omega
+      rw [h4r a' b', h4r (i + 1 + 3) (i + 1 + 1), h, hb0, e1, e2]
+      try (split_ifs <;> simp only [Prod.mk.injEq] <;> omega)
+    · have ea : v a' = v (i + 3) := hvt a' (i + 3) h
+      have eb : v b' = v (i + 1) := hvt b' (i + 1) (by rw [hmod]; omega)
+      rw [a_diag_4I2_p33 a' b' hd', ea, eb, dist_comm]
+      exact hv13
+  -- the b-table slack on diagonals
+  have hb : ∀ a' b' : ℕ, scsDiag 4 a' b' → 4 * h0 < scs4I2.b a' b' := by
+    intro a' b' hd'
+    rw [b_diag_4I2_p33 a' b' hd']
+    exact four_h0_lt_six_p20
+  -- CUXVZOZ instantiation at `p1 := i + 1`
+  exact CUXVZOZ_p21 _hmn scs4I2 (Set.range fun k => (v k, v (k + 1))) 4 (i + 1) v
+    rfl hscs (K_SCS_4I2_p33.symm) (by norm_num) hv SCS_4I2_BASIC_p33 hgen
+    (by
+      rw [show i + 1 + 3 = i + 4 by omega, hp i]
+      exact SCS_4I2_3_LE_A_p33 v hbb i (i + 2) (SCS_DIAG_4_ADD0_p33 i))
+    ha hb hang1 (Or.inr hcase1)
+    (a_edge_4I2_p33 (i + 1))
+    (le_of_eq (b_edge_4I2_p33 (i + 1)))
+    (by
+      rw [show i + 1 + 3 = i + 4 by omega, hp i]
+      exact (EDGE_4I2_LE_2H0_p33 v hbb i).2)
+    (by
+      rw [show i + 1 + 3 = i + 4 by omega, hp i]
+      exact (EDGE_4I2_LE_2H0_p33 v hbb i).1.trans two_h0_le_cstab_p20)
   -- DISCHARGES: NEEDS ARDBZYE.hl EDGE_EQ_2_4I2.
 
 /-- HOL `EXPAND_DIAG_4_DIST` (ARDBZYE.hl:2084).  DISCHARGED 2026-11-12
@@ -2456,40 +2576,358 @@ theorem B_LE_CSTAB_SCS_4I2_prime_p33 (i : ℕ) :
   · simp only [scs4I2, mkUnadornedV39, csAdj, if_neg hneg, if_pos hpos]
     exact le_refl _
 
-/-- HOL `EDGE_EQ_2_4I2_1` (ARDBZYE.hl:2118).  NEEDS: as `EDGE_EQ_2_4I2_p33`. -/
+/-- HOL `EDGE_EQ_2_4I2_1` (ARDBZYE.hl:2118).  DISCHARGED 2026-11-12 (k3edge-w1):
+the mirrored `CJBDXXN_p21` instance at `p1 := i + 1` (backward edge: the
+`ha12`/`hb12` slots evaluate the a/b table at `((i+1), (i+4))` via `csAdj`
+split-ifs), conclusion `DIST_SYM`-flipped. -/
 theorem EDGE_EQ_2_4I2_1_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) (i j : ℕ)
     (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j) (h3a : 3 ≤ dist (v i) (v j))
     (h3b : 3 < dist (v (i + 1)) (v (j + 1))) :
-    dist (v i) (v (i + 1)) = 2 := sorry
+    dist (v i) (v (i + 1)) = 2 := by
+  have hbb : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
+  have hscs : isScsV39 scs4I2 := SCS_4I2_IS_SCS_p33
+  have hgen : scsGeneric v := SCS_4I2_GENERIC_p33 v hv
+  have hp : Periodic v 4 := by
+    have hper := (MMs_imp_BBs_p33 hv).2.1
+    rwa [K_SCS_4I2_p33] at hper
+  have hvt : ∀ a b : ℕ, a % 4 = b % 4 → v a = v b := by
+    intro a b hab
+    have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb a b).mpr
+    rw [K_SCS_4I2_p33] at h
+    exact h hab
+  have hia : ∀ p : ℕ, interiorAngle1 0 (Set.range fun k => (v k, v (k + 1))) (v p) =
+      azim 0 (v p) (v (p + 1)) (v (p + 3)) := by
+    intro p
+    have hbr := BB_RHO_NODE_IVS_p26 scs4I2 4 v (v p) (Set.range v)
+        (Set.range fun k => ({v k, v (k + 1)} : Set V3))
+        (Set.range fun k => (v k, v (k + 1))) p K_SCS_4I2_p33 rfl rfl rfl rfl hscs
+        (by norm_num) hbb
+    obtain ⟨hrho, hivs⟩ := hbr
+    show azim 0 (v p) (rhoNode1 (Set.range fun k => (v k, v (k + 1))) (v p))
+        (ivsRhoNode1 (Set.range fun k => (v k, v (k + 1))) (v p)) = _
+    rw [hrho, hivs]
+    have hp31 : p + 4 - 1 = p + 3 := by omega
+    rw [hp31]
+  have h4r : ∀ x y : ℕ, psort 4 (x, y) =
+      (if x % 4 ≤ y % 4 then (x % 4, y % 4) else (y % 4, x % 4)) := fun x y => rfl
+  have hang1 : interiorAngle1 0 (Set.range fun k => (v k, v (k + 1))) (v (i + 1)) < Real.pi := by
+    rw [hia (i + 1)]
+    exact SCS_4I2_STRAIGHT_p33 _hmn v (i + 1) hv
+  have hcase1 : interiorAngle1 0 (Set.range fun k => (v k, v (k + 1))) (v (i + 1 + 3)) < Real.pi := by
+    rw [show i + 1 + 3 = i + 4 by omega, hp i, hia i]
+    exact SCS_4I2_STRAIGHT_p33 _hmn v i hv
+  have hv13 : 3 < dist (v (i + 1)) (v (i + 3)) := by
+    have hd1 : scsDiag 4 (i + 1) (j + 1) := SCS_DIAG_ADD1_p33 i j hd
+    have hd1' : scsDiag 4 (j + 1) (i + 1) :=
+      ⟨fun h => hd1.1 h.symm, fun h => hd1.2.2 h.symm, fun h => hd1.2.1 h.symm⟩
+    have hmod2 : (i + 1) % 4 = (j + 3) % 4 := EXPAND_DIAG_4_p33 (j + 1) (i + 1) hd1'
+    have hkey : (i + 3) % 4 = (j + 1) % 4 := by omega
+    have hvj1 : v (j + 1) = v (i + 3) := by
+      have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb (j + 1) (i + 3)).mpr
+      rw [K_SCS_4I2_p33] at h
+      exact h hkey.symm
+    rw [← hvj1]; exact h3b
+  have ha : ∀ a' b' : ℕ, scsDiag 4 a' b' →
+      psort 4 (a', b') ≠ psort 4 (i + 1 + 1, i + 1 + 3) →
+      scs4I2.a a' b' < dist (v a') (v b') := by
+    intro a' b' hd' hne'
+    have hmod : b' % 4 = (a' + 2) % 4 := EXPAND_DIAG_4_p33 a' b' hd'
+    have hclass : a' % 4 = i % 4 ∨ a' % 4 = (i + 1) % 4 ∨ a' % 4 = (i + 2) % 4 ∨
+        a' % 4 = (i + 3) % 4 := by
+      have h1 : a' % 4 < 4 := Nat.mod_lt _ (by norm_num)
+      have h2 : i % 4 < 4 := Nat.mod_lt _ (by norm_num)
+      omega
+    have e1 : (i + 1 + 3) % 4 = i % 4 := by omega
+    have e2 : (i + 1 + 1) % 4 = (i + 2) % 4 := by omega
+    rcases hclass with h | h | h | h
+    · exfalso
+      apply hne'
+      have hb2 : b' % 4 = (i + 2) % 4 := by rw [hmod]; omega
+      rw [h4r a' b', h4r (i + 1 + 1) (i + 1 + 3), h, hb2, e2, e1]
+      try (split_ifs <;> simp only [Prod.mk.injEq] <;> omega)
+    · have ea : v a' = v (i + 1) := hvt a' (i + 1) h
+      have eb : v b' = v (i + 3) := hvt b' (i + 3) (by rw [hmod]; omega)
+      rw [a_diag_4I2_p33 a' b' hd', ea, eb]
+      exact hv13
+    · exfalso
+      apply hne'
+      have hb0 : b' % 4 = i % 4 := by rw [hmod]; omega
+      rw [h4r a' b', h4r (i + 1 + 1) (i + 1 + 3), h, hb0, e2, e1]
+      try (split_ifs <;> simp only [Prod.mk.injEq] <;> omega)
+    · have ea : v a' = v (i + 3) := hvt a' (i + 3) h
+      have eb : v b' = v (i + 1) := hvt b' (i + 1) (by rw [hmod]; omega)
+      rw [a_diag_4I2_p33 a' b' hd', ea, eb, dist_comm]
+      exact hv13
+  have hb : ∀ a' b' : ℕ, scsDiag 4 a' b' → 4 * h0 < scs4I2.b a' b' := by
+    intro a' b' hd'
+    rw [b_diag_4I2_p33 a' b' hd']
+    exact four_h0_lt_six_p20
+  have ha12 : scs4I2.a (i + 1) (i + 1 + 3) = 2 := by
+    simp only [scs4I2, mkUnadornedV39, csAdj]
+    split_ifs with h1 h2 <;> first | rfl | (exfalso; omega)
+  have hb12 : scs4I2.b (i + 1) (i + 1 + 3) ≤ 2 * h0 := by
+    simp only [scs4I2, mkUnadornedV39, csAdj]
+    split_ifs with h1 h2 <;> first | rfl | (exfalso; omega)
+  have h := CJBDXXN_p21 _hmn scs4I2 (Set.range fun k => (v k, v (k + 1))) 4 (i + 1) v
+    rfl hscs (K_SCS_4I2_p33.symm) (by norm_num) hv SCS_4I2_BASIC_p33 hgen
+    (by
+      rw [show i + 1 + 3 = i + 4 by omega, hp i, dist_comm]
+      exact SCS_4I2_3_LE_A_p33 v hbb i (i + 2) (SCS_DIAG_4_ADD0_p33 i))
+    ha hb hang1 (Or.inr hcase1) ha12 hb12
+    (by
+      rw [dist_comm]
+      exact (EDGE_4I2_LE_2H0_p33 v hbb (i + 1)).2)
+    (by
+      rw [dist_comm]
+      exact (EDGE_4I2_LE_2H0_p33 v hbb (i + 1)).1.trans two_h0_le_cstab_p20)
+  rw [show i + 1 + 3 = i + 4 by omega, hp i, dist_comm] at h
+  exact h
   -- DISCHARGES: NEEDS ARDBZYE.hl EDGE_EQ_2_4I2_1.
 
-/-- HOL `EDGE_EQ_2_4I2_2` (ARDBZYE.hl:2235).  NEEDS: as `EDGE_EQ_2_4I2_p33`. -/
+/-- HOL `EDGE_EQ_2_4I2_2` (ARDBZYE.hl:2235).  DISCHARGED 2026-11-12 (k3edge-w1):
+`EDGE_EQ_2_4I2_1_p33` at the shifted diagonal pair `(i+2, i)`
+(`SCS_DIAG_4_ADD0_p33` symmetry-flipped), distances `DIST_SYM`-transported
+from `EXPAND_DIAG_4_DIST_p33`. -/
 theorem EDGE_EQ_2_4I2_2_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) (i j : ℕ)
     (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j) (h3a : 3 ≤ dist (v i) (v j))
     (h3b : 3 < dist (v (i + 1)) (v (j + 1))) :
-    dist (v (i + 2)) (v (i + 3)) = 2 := sorry
+    dist (v (i + 2)) (v (i + 3)) = 2 := by
+  obtain ⟨h02, h13⟩ := EXPAND_DIAG_4_DIST_p33 _hmn v i j hv hd h3a h3b
+  -- the shifted diagonal pair `(i + 2, i)`
+  have hd2 : scsDiag 4 (i + 2) i := by
+    have h := SCS_DIAG_4_ADD0_p33 i
+    exact ⟨fun hh => h.1 hh.symm, fun hh => h.2.2 hh.symm, fun hh => h.2.1 hh.symm⟩
+  have h3a' : 3 ≤ dist (v (i + 2)) (v i) := by
+    rw [dist_comm]; exact h02
+  have h3b' : 3 < dist (v (i + 2 + 1)) (v (i + 1)) := by
+    rw [show i + 2 + 1 = i + 3 by omega, dist_comm]; exact h13
+  have h := EDGE_EQ_2_4I2_1_p33 _hmn v (i + 2) i hv hd2 h3a' h3b'
+  rwa [show i + 2 + 1 = i + 3 by omega] at h
   -- DISCHARGES: NEEDS ARDBZYE.hl EDGE_EQ_2_4I2_2.
 
-/-- HOL `EDGE_EQ_2_4I2_3` (ARDBZYE.hl:2256).  NEEDS: as `EDGE_EQ_2_4I2_p33`. -/
+/-- HOL `EDGE_EQ_2_4I2_3` (ARDBZYE.hl:2256).  DISCHARGED 2026-11-12 (k3edge-w1):
+`EDGE_EQ_2_4I2_p33` at `(i+2, i)` + 4-periodicity (`v (i+4) = v i`) +
+`DIST_SYM`. -/
 theorem EDGE_EQ_2_4I2_3_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) (i j : ℕ)
     (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j) (h3a : 3 ≤ dist (v i) (v j))
     (h3b : 3 < dist (v (i + 1)) (v (j + 1))) :
-    dist (v i) (v (i + 3)) = 2 := sorry
+    dist (v i) (v (i + 3)) = 2 := by
+  obtain ⟨h02, h13⟩ := EXPAND_DIAG_4_DIST_p33 _hmn v i j hv hd h3a h3b
+  have hd2 : scsDiag 4 (i + 2) i := by
+    have h := SCS_DIAG_4_ADD0_p33 i
+    exact ⟨fun hh => h.1 hh.symm, fun hh => h.2.2 hh.symm, fun hh => h.2.1 hh.symm⟩
+  have h3a' : 3 ≤ dist (v (i + 2)) (v i) := by
+    rw [dist_comm]; exact h02
+  have h3b' : 3 < dist (v (i + 2 + 1)) (v (i + 1)) := by
+    rw [show i + 2 + 1 = i + 3 by omega, dist_comm]; exact h13
+  have h := EDGE_EQ_2_4I2_p33 _hmn v (i + 2) i hv hd2 h3a' h3b'
+  -- `h : dist (v (i + 2 + 1)) (v (i + 2 + 2)) = 2`; fold to `(i + 3, i)` by 4-periodicity
+  have hp : Periodic v 4 := by
+    have hper := (MMs_imp_BBs_p33 hv).2.1
+    rwa [K_SCS_4I2_p33] at hper
+  have e1 : i + 2 + 1 = i + 3 := by omega
+  have e2 : i + 2 + 2 = i + 4 := by omega
+  rw [e1, e2, hp i, dist_comm] at h
+  exact h
   -- DISCHARGES: NEEDS ARDBZYE.hl EDGE_EQ_2_4I2_3.
 
-/-- HOL `EDGE_EQ_2_4I2_ALL` (ARDBZYE.hl:2282).  NEEDS: as `EDGE_EQ_2_4I2_p33`. -/
+/-- HOL `EDGE_EQ_2_4I2_ALL` (ARDBZYE.hl:2282).  DISCHARGED 2026-11-12
+(k3edge-w1): the four residues `i, i+1, i+2, i+3` from the four EDGE
+lemmas; arbitrary `i'` by mod-4 transport (`BB_VV_FUN_EQ_p26`). -/
 theorem EDGE_EQ_2_4I2_ALL_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3) (i j : ℕ)
     (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j) (h3a : 3 ≤ dist (v i) (v j))
     (h3b : 3 < dist (v (i + 1)) (v (j + 1))) :
-    ∀ i', dist (v i') (v (i' + 1)) = 2 := sorry
+    ∀ i', dist (v i') (v (i' + 1)) = 2 := by
+  have he1 : dist (v i) (v (i + 1)) = 2 := EDGE_EQ_2_4I2_1_p33 _hmn v i j hv hd h3a h3b
+  have he2 : dist (v (i + 1)) (v (i + 2)) = 2 := EDGE_EQ_2_4I2_p33 _hmn v i j hv hd h3a h3b
+  have hd2 : scsDiag 4 (i + 2) i := by
+    have h := SCS_DIAG_4_ADD0_p33 i
+    exact ⟨fun hh => h.1 hh.symm, fun hh => h.2.2 hh.symm, fun hh => h.2.1 hh.symm⟩
+  have h3a' : 3 ≤ dist (v (i + 2)) (v i) := by
+    rw [dist_comm]
+    exact (EXPAND_DIAG_4_DIST_p33 _hmn v i j hv hd h3a h3b).1
+  have h3b' : 3 < dist (v (i + 2 + 1)) (v (i + 1)) := by
+    rw [show i + 2 + 1 = i + 3 by omega, dist_comm]
+    exact (EXPAND_DIAG_4_DIST_p33 _hmn v i j hv hd h3a h3b).2
+  have he3 : dist (v (i + 2)) (v (i + 3)) = 2 := by
+    have h := EDGE_EQ_2_4I2_1_p33 _hmn v (i + 2) i hv hd2 h3a' h3b'
+    rwa [show i + 2 + 1 = i + 3 by omega] at h
+  have he4 : dist (v i) (v (i + 3)) = 2 := by
+    have h := EDGE_EQ_2_4I2_p33 _hmn v (i + 2) i hv hd2 h3a' h3b'
+    have hp : Periodic v 4 := by
+      have hper := (MMs_imp_BBs_p33 hv).2.1
+      rwa [K_SCS_4I2_p33] at hper
+    rw [show i + 2 + 1 = i + 3 by omega, show i + 2 + 2 = i + 4 by omega, hp i,
+      dist_comm] at h
+    exact h
+  -- the four edges at residues `i, i+1, i+2, i+3`
+  intro i'
+  have hbb : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
+  have hscs : isScsV39 scs4I2 := SCS_4I2_IS_SCS_p33
+  -- generic transport: `v a = v b` from a mod-4 equality
+  have hvt : ∀ a b : ℕ, a % 4 = b % 4 → v a = v b := by
+    intro a b hab
+    have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb a b).mpr
+    rw [K_SCS_4I2_p33] at h
+    exact h hab
+  have hcases : i' % 4 = (i + 0) % 4 ∨ i' % 4 = (i + 1) % 4 ∨
+      i' % 4 = (i + 2) % 4 ∨ i' % 4 = (i + 3) % 4 := by
+    have h1 : i' % 4 < 4 := Nat.mod_lt _ (by norm_num)
+    have h2 : i % 4 < 4 := Nat.mod_lt _ (by norm_num)
+    omega
+  rcases hcases with h0 | h1 | h2 | h3
+  · have e0 : v i' = v i := hvt i' (i + 0) h0
+    have e1 : v (i' + 1) = v (i + 1) := hvt (i' + 1) (i + 1) (by omega)
+    rw [e0, e1]; exact he1
+  · have e0 : v i' = v (i + 1) := hvt i' (i + 1) h1
+    have e1 : v (i' + 1) = v (i + 2) := hvt (i' + 1) (i + 2) (by omega)
+    rw [e0, e1]; exact he2
+  · have e0 : v i' = v (i + 2) := hvt i' (i + 2) h2
+    have e1 : v (i' + 1) = v (i + 3) := hvt (i' + 1) (i + 3) (by omega)
+    rw [e0, e1]; exact he3
+  · have e0 : v i' = v (i + 3) := hvt i' (i + 3) h3
+    have e1 : v (i' + 1) = v (i + 4) := hvt (i' + 1) (i + 4) (by omega)
+    have hp : Periodic v 4 := by
+      have hper := (MMs_imp_BBs_p33 hv).2.1
+      rwa [K_SCS_4I2_p33] at hper
+    rw [e0, e1, hp i, dist_comm]
+    exact he4
+
   -- DISCHARGES: NEEDS ARDBZYE.hl EDGE_EQ_2_4I2_ALL.
 
-/-- HOL `MM_4I2_IMP_4T2_4T1` (ARDBZYE.hl:2339).  NEEDS: the terminal
-min-diag case bank. -/
+/-- HOL `MM_4I2_IMP_4T2_4T1` (ARDBZYE.hl:2339).  DISCHARGED 2026-11-12
+(k3edge-w1): `ASSUME_MIN_DIAG_p33` reduction, then the
+`dist (v (i+1)) (v (j+1)) = 3 ∨ 3 < …` split — the `= 3` branch closes
+through `DIST_DIAG_2_CASES_EQ_3_p33` (all diagonals `= 3`) into a direct
+`BBsV39 scs4T2` four-cell walk and `XWNHLMD_MM_p33`; the `3 <` branch rides
+`EDGE_EQ_2_4I2_ALL_p33` (all edges `= 2`) into `BBsV39 scs4T1` and
+`XWNHLMD_MM_p33`. -/
 theorem MM_4I2_IMP_4T2_4T1_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3)
     (i j : ℕ) (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j)
     (hc : dist (v i) (v j) ≤ cstab) :
-    MMsV39 scs4T1 ≠ ∅ ∨ MMsV39 scs4T2 ≠ ∅ := sorry
+    MMsV39 scs4T1 ≠ ∅ ∨ MMsV39 scs4T2 ≠ ∅ := by
+  -- shared 4-periodicity and transports
+  have hbb : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
+  have hscs : isScsV39 scs4I2 := SCS_4I2_IS_SCS_p33
+  have hp : Periodic v 4 := by
+    have hper := (MMs_imp_BBs_p33 hv).2.1
+    rwa [K_SCS_4I2_p33] at hper
+  have hvt : ∀ a b : ℕ, a % 4 = b % 4 → v a = v b := by
+    intro a b hab
+    have h := (BB_VV_FUN_EQ_p26 scs4I2 v hscs hbb a b).mpr
+    rw [K_SCS_4I2_p33] at h
+    exact h hab
+  have per4 : ∀ n : ℕ, v n = v (n % 4) := by
+    intro n
+    have key : ∀ m : ℕ, v (n % 4 + 4 * m) = v (n % 4) := by
+      intro m
+      induction m with
+      | zero => simp
+      | succ k ih =>
+        have he : n % 4 + 4 * (k + 1) = (n % 4 + 4 * k) + 4 := by omega
+        rw [he, hp (n % 4 + 4 * k)]
+        exact ih
+    have h := key (n / 4)
+    rwa [Nat.mod_add_div n 4] at h
+  have ered : ∀ n r : ℕ, n % 4 = r → v n = v r := fun n r hr => by
+    rw [per4 n, hr]
+  -- reduce to the min-diagonal instance (HOL `ASSUME_MIN_DIAG`)
+  refine ASSUME_MIN_DIAG_p33 v ?_ i j hv hd hc
+  intro i' j' hv' hd' hc' hmin
+  have hbb' : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv'
+  -- the two diagonal lower bounds
+  have h3a' : 3 ≤ dist (v i') (v j') := SCS_4I2_3_LE_A_p33 v hbb' i' j' hd'
+  have h3b' : 3 ≤ dist (v (i' + 1)) (v (j' + 1)) :=
+    SCS_4I2_3_LE_A_p33 v hbb' (i' + 1) (j' + 1) (SCS_DIAG_ADD1_p33 i' j' hd')
+  rcases eq_or_lt_of_le h3b' with heq3 | hlt3
+  · -- case `dist (v (i' + 1)) (v (j' + 1)) = 3`: all diagonals equal 3, target 4T2
+    have hdij : dist (v i') (v j') = 3 :=
+      le_antisymm (hmin.trans (le_of_eq heq3.symm)) h3a'
+    obtain ⟨hd02, hd13⟩ := DIST_DIAG_2_CASES_EQ_3_p33 v i' j' hv' hd' hdij heq3.symm
+    have hpd : ∀ a b : ℕ, scsDiag 4 a b → dist (v a) (v b) = 3 := by
+      intro a b hdab
+      rcases diag_pair_cases_p33 a b hdab with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩
+      · rw [ered a 0 r1, ered b 2 r2]; exact hd02
+      · rw [ered a 1 r1, ered b 3 r2]; exact hd13
+      · rw [ered a 2 r1, ered b 0 r2, dist_comm]; exact hd02
+      · rw [ered a 3 r1, ered b 1 r2, dist_comm]; exact hd13
+    have hbb42 : BBsV39 scs4T2 v := by
+      refine ⟨hbb'.1, ?_, ?_, ?_⟩
+      · rw [K_SCS_4T2_p33]; exact hbb'.2.1
+      · intro a b
+        simp only [scs4T2, mkUnadornedV39, csAdj]
+        split_ifs with h0 h1
+        · refine ⟨dist_nonneg, ?_⟩
+          have e : v a = v b := hvt a b h0
+          rw [e, dist_self]
+        · rcases h1 with h1 | h1
+          · refine ⟨?_, ?_⟩
+            · have e : v b = v (a + 1) := hvt b (a + 1) h1
+              rw [e]
+              exact (EDGE_4I2_LE_2H0_p33 v hbb' a).2
+            · have e : v b = v (a + 1) := hvt b (a + 1) h1
+              rw [e]
+              exact (EDGE_4I2_LE_2H0_p33 v hbb' a).1
+          · refine ⟨?_, ?_⟩
+            · have e : v a = v (b + 1) := hvt a (b + 1) h1.symm
+              rw [e, dist_comm]
+              exact (EDGE_4I2_LE_2H0_p33 v hbb' b).2
+            · have e : v a = v (b + 1) := hvt a (b + 1) h1.symm
+              rw [e, dist_comm]
+              exact (EDGE_4I2_LE_2H0_p33 v hbb' b).1
+        · have hdab : scsDiag 4 a b :=
+            ⟨h0, fun hh => h1 (Or.inl hh.symm), fun hh => h1 (Or.inr hh.symm)⟩
+          refine ⟨?_, ?_⟩
+          · have h2 := (hbb'.2.2.1 a b).1
+            rw [a_diag_4I2_p33 a b hdab] at h2
+            exact h2
+          · have h2 := hpd a b hdab
+            rw [h2]
+      · rw [K_SCS_4T2_p33]; exact hbb'.2.2.2
+    exact Or.inr (XWNHLMD_MM_p33 scs4I2 scs4T2 v hscs SCS_4T2_IS_SCS_p33
+      SCS_4I2_BASIC_p33 SCS_4T2_BASIC_p33 (by rw [K_SCS_4I2_p33, K_SCS_4T2_p33]) hv'
+      hbb42 (le_refl _))
+  · -- case `3 < dist (v (i' + 1)) (v (j' + 1))`: all edges equal 2, target 4T1
+    have hall : ∀ i', dist (v i') (v (i' + 1)) = 2 :=
+      EDGE_EQ_2_4I2_ALL_p33 _hmn v i' j' hv' hd' h3a' hlt3
+    have hbb41 : BBsV39 scs4T1 v := by
+      refine ⟨hbb'.1, ?_, ?_, ?_⟩
+      · rw [K_SCS_4T1_p33]; exact hbb'.2.1
+      · intro a b
+        simp only [scs4T1, mkUnadornedV39, csAdj]
+        split_ifs with h0 h1
+        · refine ⟨dist_nonneg, ?_⟩
+          have e : v a = v b := hvt a b h0
+          rw [e, dist_self]
+        · rcases h1 with h1 | h1
+          · refine ⟨?_, ?_⟩
+            · have e : v b = v (a + 1) := hvt b (a + 1) h1
+              rw [e]
+              exact le_of_eq (hall a).symm
+            · have e : v b = v (a + 1) := hvt b (a + 1) h1
+              rw [e]
+              exact le_of_eq (hall a)
+          · refine ⟨?_, ?_⟩
+            · have e : v a = v (b + 1) := hvt a (b + 1) h1.symm
+              rw [e, dist_comm]
+              exact le_of_eq (hall b).symm
+            · have e : v a = v (b + 1) := hvt a (b + 1) h1.symm
+              rw [e, dist_comm]
+              exact le_of_eq (hall b)
+        · have hdab : scsDiag 4 a b :=
+            ⟨h0, fun hh => h1 (Or.inl hh.symm), fun hh => h1 (Or.inr hh.symm)⟩
+          refine ⟨?_, ?_⟩
+          · have h2 := (hbb'.2.2.1 a b).1
+            rw [a_diag_4I2_p33 a b hdab] at h2
+            exact h2
+          · have h2 := (hbb'.2.2.1 a b).2
+            rw [b_diag_4I2_p33 a b hdab] at h2
+            exact h2
+      · rw [K_SCS_4T1_p33]; exact hbb'.2.2.2
+    exact Or.inl (XWNHLMD_MM_p33 scs4I2 scs4T1 v hscs SCS_4T1_IS_SCS_p33
+      SCS_4I2_BASIC_p33 SCS_4T1_BASIC_p33 (by rw [K_SCS_4I2_p33, K_SCS_4T1_p33]) hv'
+      hbb41 (le_refl _))
+
   -- DISCHARGES: NEEDS ARDBZYE.hl MM_4I2_IMP_4T2_4T1.
 
 /-- HOL `ARDBZYE` (ARDBZYE.hl:2514), the master `4I2` arrow.  DISCHARGED
