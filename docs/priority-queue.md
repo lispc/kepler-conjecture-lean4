@@ -89,7 +89,7 @@
 ---
 
 
-## 1. 在飞（2026-11-12 08:44，池 **3/3**：wave 18）
+## 1. 在飞（2026-11-12 09:11，池 **1/3**：wave 18 收尾）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1014）与 `history/changelog-archive-2.md`。
 >
@@ -100,11 +100,12 @@
 >
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
-> | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行；**锥内真还债候选** |
-> | `text-closure-w1` | 剩余 16 条 Text sorry 的 HOL 直接引用闭包矩阵（只读侦察） | 08:44 发车；给 GO/BLOCKED 点名表 + 缺陈述清单，供 wave 19 派发 |
-> | （空 2 位） | 待补位 | 补位候选须先过 `text-closure-w1` 矩阵（`yobimpp` 已 BLOCKED：K7 挂 VASYYAU 家族，续1015；VASYYAU 战役仍等 DAG 重构裁决） |
+> | `text-closure-w1` | 剩余 16 条 Text sorry 的 HOL 直接引用闭包矩阵（只读侦察） | 08:44 发车；给 GO/BLOCKED 点名表 + 缺陈述清单，供下一会话派发 |
 >
-> **最近完成/判词**：`yobimpp-w1` **BLOCKED**（续1015：YOBIMPP/K7 硬挂 VASYYAU 三 master）；`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
+> **用户裁决（2026-11-12 08:55）**：这两个车道回来后**总结收工，不发新车**；交接文档见
+> [`handoff-2026-11-12.md`](handoff-2026-11-12.md)。
+>
+> **最近完成/判词**：`jcyfmrp-w1` **BLOCKED**（续1017：LA27↛LA21 import 环，DAG+DEF-FIX 先行）；`yobimpp-w1` **BLOCKED**（续1015：YOBIMPP/K7 硬挂 VASYYAU 三 master）；`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
 > （7 件，工单 3 BLOCKED）；`g482-482-w4` DONE + 基线 AA（续1012）；`text-est-w1` 报告已归档（§2.1）；
 > `empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
 >
@@ -131,7 +132,7 @@
 
 | # | sorry | 位置 | 数学含义（一句） | 依赖（18 内 / 新拉入） | 被依赖 | 自身 EST | 置信 |
 |---|---|---|---|---|---|---|---|
-| 1 | `JCYFMRP_p27` | LA27:495 | 钉边存在性：∃ 相邻边 dist=2 | 无（CUXVZOZ 已证） | `JCYFMRP_V3` 链 | 300–430 | 中 |
+| 1 | `JCYFMRP_p27` | LA27:495 | 钉边存在性：∃ 相邻边 dist=2 | 证明面无依赖（CUXVZOZ 已证）；**import 面 BLOCKED：LA27↛LA21（成环，续1017）** | `JCYFMRP_V3` 链 | 300–430（证明面）+ DAG 两波 ~1,500–2,000 | 中 |
 | 2 | `LFLACKU_p23` | LA23:303 | `{3I1} → ∅` 箭头 | 新拉入：TAUM_STD_POS + TAUM_EXTREMAL（hNL） | JEJTVGB | 25–45 | 高 |
 | 3 | `MIQMCSN_p32` | LA32:1576 | 4M8 → {4M6′,3T7,3T4} | 新拉入：5 条 LA32 + 2 条二阶 | MIQMCSN_discharged | 45–80 | 中 |
 | 4 | `MM_4I2_IMP_4T2_4T1_p33` | LA33:2450 | 对角闭合 ⇒ 4T1∨4T2 非空 | 新拉入：EDGE 簇 6 件（K3） | ARDBZYE | 180–260 | 中 |
@@ -224,6 +225,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-12（09:11，续1017）**：**`jcyfmrp-w1` 判词 BLOCKED——`JCYFMRP` 证明面已开但 import 前提为假（LA27↛LA21 成环）；DAG 切面已实测验证**。
+① **证明面复核（fresh 探针）**：`CUXVZOZ_p21`/`CJBDXXN_p21`/`general_482_deformation_p21` **均标准三**——「唯一缺口已开」在**证明面成立**。
+② **致命前提（机器证据）**：`LocalAuto27.lean` imports = LA1/LA14/LA24/LA25/LA35；若加 `LocalAuto21` 则成环：**LA21→LA16→LA26→LA27**（LA16 imports LA26+LA27，LA26 imports LA27）与 **LA21→LA38→LA18→LA27**（LA38 imports LA18，LA18 imports LA27）。两种失败模式已复现：无 olean 时报 `object file …LocalAuto27.olean does not exist`；有旧 olean 时 **43 条 `already declared`**（编译器加载自己的旧 olean）。所有原计划 donor（LA21/LA28/LA31/LA34）都反向可达 LA27。
+③ **已实测的解锁切面（shadow，RC=0）**：`LA38←LA18` 面仅 10 行 def（`azimCycle_p18`）；`LA21←LA16` 面 ~139 行（taum_dih_y bundle/periodic/w5cC 对）+ 4 条无环 import。切后 `LA27 + import LocalAuto21` **RC=0 / 4 sorry warnings**，`CUXVZOZ_p21` 仍标准三；LA34←LA18（12 行）、LA31←LA18（28 行）同样验证。**demo `dag_wave_demo.diff`（326 行）NOT FOR LANDING**：LA38 变体重命名 `azimCycle_p18` 会动一条 sorry 定理陈述行 ⇒ 生产须走 **DEF-FIX** 保陈述逐字节。
+④ **剩余成本**：证明波 ~1,500–2,000 行 / 5–6 文件（`AURSIPD` 闭包 874 行或 LA18→LA27 切（会移动两条现有 sorry）、`BB_RHO_NODE_IVS`+`DIST_EDGE` 182 行、HOL 装配 ~300 行）⇒ **建议两波：先 DAG+DEF-FIX 闸，再证明**，不单车道硬闯。
+⑤ **ERRATA（§2.1a #1 + scout）**：`JCYFMRP`「无依赖（CUXVZOZ 已证）」只在**证明面**成立；**import 面 BLOCKED**（LA27 不可 import LA21）。另：车道提示的 `ODXLSTCv2_p31` 依赖 `ZLZTHIC_concl_p31`/`MHAEYJN_concl_p31` —— **编排者 fresh 探针显示这 4 件均已是标准三**（concl 与 twins 全绿），该提示按过时处理，不构成新闸。
 - **2026-11-12（08:52，续1016）**：**用户裁决执行：`git push origin main` 成功**——`7746f26b..3527ff74`（**568 笔**）已上远端；「~300 笔未推」挂账清零。已上远端的近期内容：基线 AA/AB/AC 全套文档与 TSV、`general_482`（`0a1ff76d`）、`la22emptykit`（`2201350f`）、`vpwshto`（`e5a06c77`）、续1013–1015 台账、handoff pit 17–20。
 - **2026-11-12（08:50，续1015）**：**`yobimpp-w1` 判词 BLOCKED（YOBIMPP_p32 与 K7 4M7 梯子硬挂 VASYYAU 家族）；K7 估算 ERRATA**。
 ① **证据链（车道交 + 编排者复测）**：`YOBIMPP`（HOL `MIQMCSN.hl:2453-2490`）实引 `SCS_4M7_ARROW_STAB_4M7_4M6` → 后件（`:2361-2440`）实引 `MIN_NOT_STAND_4M7` → 后件（`:2166-2224`）实引 **`VASYYAU` / `TUAPYYU` / `WKZZEEH`** 三件 master；三者 `LocalAuto1.lean:4883/4897/4922` 均 `:= by sorry`。**编排者复测**（fresh 探针）：`VASYYAU_concl`/`TUAPYYU_concl`/`WKZZEEH_concl`/`MIN_NOT_STAND_4M7_p32`/`SCS_4M7_ARROW_STAB_4M7_4M6_p32`/`YOBIMPP_p32` **全部 `[propext, sorryAx, Classical.choice, Quot.sound]`**。两条析取支均无独立出口（全库无 `MMsV39 scs4M7 = ∅`；6 处 `MMsV39 scs4M6' ≠ ∅` 全带 `XWNHLMD_MM` 条件；`hmn` 109 条合取不含三件）。接上 = 3 条新 `sorryAx` 根入锥（`f4b95c0f` 已否决的搬债式）⇒ 按 AGENTS §2 停手，**0 闭件 / 0 删除 / patch 0 字节 / 主仓零改动**。
