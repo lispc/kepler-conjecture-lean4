@@ -89,7 +89,7 @@
 ---
 
 
-## 1. 在飞（2026-11-12 09:11，池 **1/3**：wave 18 收尾）
+## 1. 在飞（2026-11-12 09:15，池 **0/3**：wave 18 收工）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1014）与 `history/changelog-archive-2.md`。
 >
@@ -100,10 +100,12 @@
 >
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
-> | `text-closure-w1` | 剩余 16 条 Text sorry 的 HOL 直接引用闭包矩阵（只读侦察） | 08:44 发车；给 GO/BLOCKED 点名表 + 缺陈述清单，供下一会话派发 |
+> **池空 0/3 —— 收工。** `text-closure-w1` 已交付（1 GO / 3 PARTIAL / 12 BLOCKED，报告
+> [`archive/scouts/text-closure-matrix-2026-11-12.md`](archive/scouts/text-closure-matrix-2026-11-12.md)），
+> 摘要见 §2.1d。
 >
-> **用户裁决（2026-11-12 08:55）**：这两个车道回来后**总结收工，不发新车**；交接文档见
-> [`handoff-2026-11-12.md`](handoff-2026-11-12.md)。
+> **用户裁决（2026-11-12 08:55，已执行）**：两车道回来后**总结收工，不发新车**；
+> 交接文档：[`handoff-2026-11-12.md`](handoff-2026-11-12.md)。
 >
 > **最近完成/判词**：`jcyfmrp-w1` **BLOCKED**（续1017：LA27↛LA21 import 环，DAG+DEF-FIX 先行）；`yobimpp-w1` **BLOCKED**（续1015：YOBIMPP/K7 硬挂 VASYYAU 三 master）；`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
 > （7 件，工单 3 BLOCKED）；`g482-482-w4` DONE + 基线 AA（续1012）；`text-est-w1` 报告已归档（§2.1）；
@@ -114,11 +116,13 @@
 > 只保留**当前**可执行项；2026-10 的历史队列（PA22/nli/W6/LV/PA24 等）已归档到
 > `archive/priority-queue-legacy-2026-10.md`。
 
-1. **OCBICBY 解封专项**（锥内直源巨件）：14 条 `empty_*` —— LA22 前置 kit **已清 7 件**（`la22emptykit` `2201350f`：props/generic/vv_inj/azim_in_fan_azim/periodic_sum_shift），但 `empty_6T1/5T1` 本体仍卡 `sol_local_azim` / `terminal_hex_taum` / `terminal_pent_taum2` / `VPWSHTO_PRIME` / `EAR_SOL_NN` 等；1 条 LA38 `empty_3T2` 需先解 import 环；**11 条树内无陈述**，必须先立真陈述（走 SF/新件，禁止 sorry 壳）。分批 E1–E7 见 `lane_snapshots/ocbicby-w1/DELIVERY.md`。
-2. **general_482 下游接线**（闸已开 `0a1ff76d`）：`JCYFMRP_p27`（≈300–430 行，在飞）→ `TFITSKCv1_p27`（私有 kit 400–700 行）→ `TFITSKC_p27`（13 行 demo 已备，NOT FOR LANDING）→ LA33 三件（`MM_4I2_IMP_4T2_4T1` / `SCS_4I1_IMP_SCS_4I2` / `SCS_4I2_IMP_SCS_4T1`）→ `SCS_6M1_IMP_SCS_6T1`。
-3. **VASYYAU/vt 战役**（等 DAG 重构裁决）：`MIQMCSN_p32` / `NWDGKXH_p32` / `YOBIMPP_p32` —— ~1,815 HOL 行 + LA23 上游 import 拓扑调整（当前反向 import 成环）。
-4. **独立叶剩余**：`SCS_6I1_BERAK_BY_CSTAB`（需 SCS_6M1 链）/ `LFLACKU_p23` / `SCS_5M2_IMP_SCS_5T1_p29` / `UAGHHBM_p30`。
-5. **用户保留**：`TameLp.fully_surrounded_perimeter_bound`（等 hNKE/B1 裁决）、`real_model_ox3q1h_merge`（ox3q1h DEFHOLE）、PA13 `URRPHBZ2`、hLP `lpArchiveCertificatesDebt`（等 LP 解冻）。
+> 依据 = §2.1d 实测矩阵（2026-11-12）。**当前没有「直接可发」的锥内 Text 件**；下列均需先满足前置。
+
+1. **用户保留项（唯一 strict GO，等裁决）**：`real_model_ox3q1h_merge`（PA25:10378；一层 22/22 绿、零缺、同文件，EST 170–240）——用户保留理由（ox3q1h DEFHOLE）需先明确是否放行。
+2. **DAG 波（先切后证）**：`JCYFMRP_p27`（两波：DEF-FIX 切 LA38←LA18、LA21←LA16，再证 ~300–430）→ `JCYFMRP_V3`/`TFITSKCv1` → `TFITSKC`；同法 `LFLACKU`（LA23↛LA22/38）、`SCS_6I1`（LA20↛LA27/26）、`OCBICBY`（LA22↛LA38）——均需声明上移/DEF-FIX，非单车道硬闯。
+3. **VASYYAU/vt 战役**（等 DAG 重构裁决）：`MIQMCSN`(K8)/`NWDGKXH`(K6)/`YOBIMPP`(K7) 三条 4M6/4M7/4M8 梯子**全部**继承 LA1 `VASYYAU`/`TUAPYYU`/`WKZZEEH` 三 master（~1,815 HOL 行）。
+4. **可 kit 先行的 PARTIAL**：`MM_4I2_IMP_4T2_4T1_p33`（K3 EDGE 簇 360–520，唯一干净有界 kit；本体 180–260）；`URRPHBZ2`（K13 180–310 + 本体 650–950）；`UAGHHBM_p30`（kit 120–250 + 本体 800–1,300，冻结）。
+5. **其余冻结**：`TameLp.fully_surrounded_perimeter_bound`（WSEWPCH 章 1,000–1,500）、`SCS_5M2`（K4b 600–800 + K4c）、`TFITSKC`（K2）、hLP `lpArchiveCertificatesDebt`（等 LP 解冻）。
 
 
 ### 2.1 Text 18 条 sorry 工作量估算（2026-11-12，只读车道 `text-est-w1`）
@@ -184,6 +188,28 @@
 - **对旧 triage 的更正**：`general_482` 已闭；`RRCWNSJ_p26`、`SCS_4I2_STRAIGHT(_ALL)`、`LEPJBDJ` 已证；LA32 的 `SCS_OPP_REFL_p13`/`YXIONXL2_p13` 是 `ScsV39P13` 型不可用，改用 `YXIONXL2_p33`（LA33:495，`LA32→LA33` import 无环）。
 - **移植系数**：tactic-bash **1.2–1.45×**（g482 实测 1.23×、rrw 1.43×、deform 1.31×）、解析搬运 **1.8–2.0×**、纯装配 **0.4–0.9×**。
 
+
+**2.1d 闭包实测矩阵（2026-11-12，只读车道 `text-closure-w1`；225 条 `#print axioms`）**
+
+> 完整报告（16 行大表 + 逐条一层上游明细 + ERRATA E1–E10）：
+> [`archive/scouts/text-closure-matrix-2026-11-12.md`](archive/scouts/text-closure-matrix-2026-11-12.md)。
+> **这里只引用判词，不抄数。**
+
+- **判词：1 GO / 3 PARTIAL / 12 BLOCKED**；**零 intra-list 阻塞**——16 条之间无相互依赖，
+  所有红上游都是**锥外 sorry** ⇒ 证目标会把红件先拉进锥（SORRIED 先涨后降）。
+- **唯一 strict GO**：`real_model_ox3q1h_merge`（一层 22/22 绿、零缺、同文件；EST 170–240）——
+  但属 §2.5 用户保留项，需裁决后派发。
+- **PARTIAL（可 kit 先行）**：`MM_4I2_IMP_4T2_4T1_p33`（K3 EDGE 簇 360–520，**唯一干净有界 kit**）、
+  `UAGHHBM_p30`（13 引理全绿，只缺 2 条 inline `isScs` 事实；本体 800–1,300 冻结）、
+  `URRPHBZ2`（K13 180–310；本体 650–950）。
+- **BLOCKED 三类**：① **DAG 反向边**（新类别）— `JCYFMRP`（LA27↛LA21/26/28/34）、`LFLACKU`
+  （LA23↛LA22/38）、`SCS_6I1`（LA20↛LA27/26）、`OCBICBY`（LA22↛LA38）；② **VASYYAU 闸** —
+  `NWDGKXH`(K6)/`YOBIMPP`(K7)/`MIQMCSN`(K8) 全部继承 LA1 三 master；③ 内容红/无陈述 —
+  `TFITSKC`(K2)、`SCS_4I1/4I2`(JLXFDMJ+JCYFMRP_V3)、`SCS_5M2`(K4b+K4c)、`TameLp`(WSEWPCH)。
+- **对 2.1c 的更正**：杠杆排序与「Wave 0」原案作废——JCYFMRP 不是无阻塞件；4M6/4M7/4M8 三条
+  梯子同闸；`real_model` 是唯一可直接开证的（但用户保留）。Wave 重排见交接文档
+  [`handoff-2026-11-12.md`](handoff-2026-11-12.md) §5。
+
 ## 3–5. 战术 / 中期 / 长期
 
 > 原 §3 两周战术排序、§4 中期（1–2 月）、§5 长期/终局（2026-10-25 战略备忘录）已整体迁出：
@@ -224,6 +250,12 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-12（09:15，续1018）**：**wave 18 收工——闭包矩阵入档（1 GO / 3 PARTIAL / 12 BLOCKED）+ 交接文档 `handoff-2026-11-12.md` 落盘；用户裁决「不发新车」执行完毕**。
+① **矩阵**：`text-closure-w1` 225 条 `#print axioms` 实测 16 条 Text sorry——**零 intra-list 阻塞**（16 条互不依赖；红上游全是锥外 sorry）。判词：**1 GO**（`real_model_ox3q1h_merge`，22/22 绿零缺；用户保留待裁决）/ **3 PARTIAL**（`MM_4I2_IMP_4T2_4T1` K3 360–520 唯一干净有界 kit；`UAGHHBM` 缺 2 条 inline `isScs`；`URRPHBZ2` K13 180–310）/ **12 BLOCKED**。报告归档 [`archive/scouts/text-closure-matrix-2026-11-12.md`](archive/scouts/text-closure-matrix-2026-11-12.md)（225 行），摘要入 §2.1d，§2 排队按矩阵重写。
+② **新阻塞类别**：**DAG 反向边**（JCYFMRP LA27↛LA21/26/28/34；LFLACKU LA23↛LA22/38；SCS_6I1 LA20↛LA27/26；OCBICBY LA22↛LA38）与 **VASYYAU 闸**（K6/K7/K8 全继承 LA1 三 master；仅 K3 干净）。ERRATA E1–E10 见报告 §4。
+③ **交接**：[`handoff-2026-11-12.md`](handoff-2026-11-12.md) 共 10 节——基线 AC 数字、本轮 14 笔 commit 表、两条 BLOCKED 判词与 DAG 配方、矩阵摘要、下一会话起点（用户裁决 → DEF-FIX DAG 波 → K3 kit → URRPHBZ2）、待裁决 3 项、pit 17–20、车道快照索引与复现命令、文档地图、收工 checklist。
+④ **状态**：无在飞车道、无未验收交付、无未入账判词；工作树提交后干净；本轮新 commit 再 push 一次即与远端完全同步。
 
 - **2026-11-12（09:11，续1017）**：**`jcyfmrp-w1` 判词 BLOCKED——`JCYFMRP` 证明面已开但 import 前提为假（LA27↛LA21 成环）；DAG 切面已实测验证**。
 ① **证明面复核（fresh 探针）**：`CUXVZOZ_p21`/`CJBDXXN_p21`/`general_482_deformation_p21` **均标准三**——「唯一缺口已开」在**证明面成立**。

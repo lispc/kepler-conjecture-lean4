@@ -6,6 +6,12 @@
 >
 > ## 状态更新
 >
+> - **2026-11-12（09:15，编排者，十五）**：**wave 18 收工；16 条 Text sorry 闭包矩阵实测（1 GO / 3 PARTIAL / 12 BLOCKED）**。
+>   零 intra-list 阻塞，但新增两类硬阻塞：**DAG 反向边**（JCYFMRP/LFLACKU/SCS_6I1/OCBICBY 所在模块
+>   不能 import 其上游）与 **VASYYAU 闸**（K6/K7/K8 三条 4M6/4M7/4M8 梯子全继承 LA1 三 master）。
+>   唯一 strict GO = `real_model_ox3q1h_merge`（用户保留）。报告归档
+>   `archive/scouts/text-closure-matrix-2026-11-12.md`；交接 `handoff-2026-11-12.md`。
+>   本轮落库：`general_482`（AA，74→73）、`la22emptykit`（AB，资产）、`VPWSHTO_p15`（AC，73→72）。
 > - **2026-11-12（08:44，编排者，十四）**：**`VPWSHTO_p15` 真证落库（`e5a06c77`）——锥内真还债；基线 AC**。
 >   实测：cone `K_REACH 2,095,920`（+16 自足证明体入锥）/ **SORRIED 72**（73→72；清单 diff：
 >   closed 恰 `{Kepler.Text.VPWSHTO_p15}`、added ∅）/ `K_AXIOM 585`（0/0）/ MODULES 5,221 /
