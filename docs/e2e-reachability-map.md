@@ -718,6 +718,35 @@ reach **+77**、universe +113（其中 19 条 w3 引理不可达 + 证明体新�
 （J 收工后第一条：不同于 `pkLeafRankCriticalEdge` 与 `mnt11_anchor`）。剩余 **74** =
 Assembly 56（55 `nli*` + 1 hLP）+ **Text 18**。
 
+### 基线 AA：general_482 真证收口 @ `0a1ff76d`（2026-11-12）
+
+> 触发：`g482-482-w4` 落库 `0a1ff76d`（`general_482_deformation_p21` 本体，HOL
+> `CUXVZOZ.hl:3649-4289` 640 行 → Lean **+764/−5**，LA21 sorry-decls 3→2，探针标准三）。
+> Assembly 走岛协议重编（**RC=0 / 0 err / 61 sorry-decls / 110 warn**，与基线 Z 逐项相同）
+> → `Final` 重编根面探针 → 仪器原样换装 `docs/e2e-reachability-map.tsv`
+> （**5,898 行**，+1 = SORRIED −1 而 K_MODULES +2）；manifest `--check` PASS。
+
+| 指标 | 基线 AA | 基线 Z | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,095,904** | 2,095,561 | **+343** |
+| SORRIED | **73** | 74 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,221 | 5,219 | +2 |
+| K_UNIVERSE | 2,108,747 | 2,108,677 | +70 |
+| COVERAGE | 99.3910% | 99.3796% | +0.0114pp |
+| 口径 II（ex-Cases） | K_REACH **35,481** / SORRIED **73** / AXIOM **585** / UNIVERSE **46,767** | 35,138 / 74 / 585 / 46,697 | +343 / −1 / 0 / +70 |
+| TOTAL_VALUE_DECLS | 2,095,230 | 2,094,887 | +343 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.general_482_deformation_p21`}**，added = ∅。
+**Axiom 名单 diff = 0/0**（585 对逐行相同）。根面 589 与基线 Z/Y/X/W **逐字节 IDENTICAL**
+（`root.txt` md5 `246e952c…` 与 mntdedup 验收留存的基线副本同哈希）。
+
+**判读**：`general_482` 证明体（19 条 `g482w3_*` 求和 lemma + 变形/最小性主链）入锥 ⇒
+reach **+343**、universe 仅 +70（w3 kit 多数不可达）；**MODULES +2** = 证明体点亮 2 个此前
+不可达模块。**SORRIED −1 是真还债**（Text 章级 18→17）。剩余 **73** =
+Assembly 56（55 `nli*` + 1 hLP）+ **Text 17**。派生 `CUXVZOZ_p21`/`CJBDXXN_p21`
+同转标准三 ⇒ JCYFMRP / TFITSKCv1 / TFITSKC / LA33 三件 / SCS_6M1 集群闸门开。
+
 ## v2.2 仪器校准：`.lake` 污染与 scratch farm（2026-11-03）
 
 **症状**：直接拿主仓现成 olean 跑 e2e 会读到 `SORRIED 129`，而 HEAD `5384f11d` 的

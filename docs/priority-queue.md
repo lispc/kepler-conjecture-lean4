@@ -17,15 +17,15 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 Z @`75ed6d07`（2026-11-12，`RRCWNSJ_p26` 真证）**
-> cone `K_REACH 2,095,561` / **SORRIED 74** / **`K_AXIOM 585`** / MODULES 5,219 /
-> UNIVERSE 2,108,677 / COVERAGE **99.3796%**；口径 II 35,138 / 74 / 585 / 46,697。
-> `docs/e2e-reachability-map.tsv` 已按基线 Z 重写（5,897 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AA @`0a1ff76d`（2026-11-12，`general_482` 真证收口）**
+> cone `K_REACH 2,095,904` / **SORRIED 73** / **`K_AXIOM 585`** / MODULES 5,221 /
+> UNIVERSE 2,108,747 / COVERAGE **99.3910%**；口径 II 35,481 / 73 / 585 / 46,767。
+> `docs/e2e-reachability-map.tsv` 已按基线 AA 重写（5,898 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 Y/X/W **逐字节 IDENTICAL**）。
-> **SORRIED 74 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 18（`--- SORRIED ---` 段实测）。
-> 较基线 Y：SORRIED 75→74（清单 diff：closed 恰 `{RRCWNSJ_p26}`、added ∅；**真还债**）、
-> K_AXIOM 585（0/0）、K_REACH +77（证明体 kit 入锥）、K_UNIVERSE +113。
+> （与基线 Z/Y/X/W **逐字节 IDENTICAL**）。
+> **SORRIED 73 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 17（`--- SORRIED ---` 段实测）。
+> 较基线 Z：SORRIED 74→73（清单 diff：closed 恰 `{general_482_deformation_p21}`、added ∅；**真还债**）、
+> K_AXIOM 585（0/0）、K_REACH +343（证明体 + w3 kit 入锥）、K_UNIVERSE +70、MODULES +2。
 >
 > **核心路线图**：[`docs/hf-proof-map.md`](hf-proof-map.md)（九节完成度 + 逐箭头逻辑链 + 缺口清单）。
 > **接手先读**：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（现状 / 用户已定裁决 / 死路与红旗清单 / 环境坑）。
@@ -87,21 +87,23 @@
 ---
 
 
-## 1. 在飞（2026-11-12 08:05，池 **3/3**：wave 16）
+## 1. 在飞（2026-11-12 08:10，池 **3/3**：wave 16 → 17）
 
-> 整段交付制；历史 wave 记录见 §8（续990–续1011）与 `history/changelog-archive-2.md`。
+> 整段交付制；历史 wave 记录见 §8（续990–续1012）与 `history/changelog-archive-2.md`。
 >
 > **刚落地（里程碑）**：`general_482_deformation_p21` 真证收口 `0a1ff76d`（+764/−5，LA21 3→2，
-> 探针标准三；派生 `CUXVZOZ_p21`/`CJBDXXN_p21` 同转净）。基线 AA 量测中（预期 SORRIED 74→73）。
+> 探针标准三；派生 `CUXVZOZ_p21`/`CJBDXXN_p21` 同转净）。**基线 AA 已量测定档**
+> （续1012：SORRIED **74→73**，closed 恰 `{general_482_deformation_p21}`；根面 589 逐字节同）。
 >
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
 > | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行 |
 > | `vpwshto-w1` | `VPWSHTO_p15`（锥内直源） | HOL `VPWSHTO.hl:1978` |
-> | `la22emptykit-w1` | OCBICBY 的 empty 前置 | `scs_6T1/5T1_generic` / `terminal_pent_taum2` / `vv_inj_lemma` / `azim_in_fan_azim` |
+> | `la22emptykit-w1` | OCBICBY 的 empty 前置 | **DELIVERED 7 件**（+244/−7，岛编 70→63 sorry，探针 7/7 标准三；工单 3 `terminal_pent_taum2` BLOCKED）→ 编排者验收中 |
 >
-> **最近完成/判词**：`g482-482-w4` DONE（本笔）；`text-est-w1` 报告已归档（§2.1）；
-> `empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
+> **最近完成/判词**：`g482-482-w4` DONE + 基线 AA 定档（续1012）；`la22emptykit-w1` DELIVERED（验收中）；
+> `text-est-w1` 报告已归档（§2.1）；`empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/
+> `vas-nhx` BLOCKED（续1002，DAG 死锁）。
 >
 ## 2. 排队（按序补位）
 
@@ -219,7 +221,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
-- **2026-11-12（07:26，续1011）**：**`empty-la22-w1` 判词 BLOCKED（两件均缺一串 in-file 前置）；关键 ERRATA：`RRCWNS_WEAK`/`SYNQIWN` 已绿、`scs_*_generic` 是薄包装 ⇒ `la22emptykit-w1` 发车**。
+- **2026-11-12（08:11，续1012）**：**基线 AA 定档 @`0a1ff76d`——SORRIED 74→73（清单 diff closed 恰 `{general_482_deformation_p21}`、added ∅）**。
+① **仪器（`e2e_reach_map`，原样换装 TSV 5,898 行，+1 = SORRIED −1 而 MODULES +2）**：`K_REACH 2,095,904`（**+343**，g482 证明体 + w3 求和 kit 入锥）/ **SORRIED 73** / **`K_AXIOM 585`（名单 585 对逐行 0/0）** / `K_MODULES 5,221`（+2）/ `K_UNIVERSE 2,108,747`（+70）/ COVERAGE **99.3910%**（+0.0114pp）；口径 II `35,481 / 73 / 585 / 46,767`；`TOTAL_VALUE_DECLS 2,095,230`。manifest `--check` **PASS**（585/585 ground、tiling 0 gap/0 dup、data/gen pins OK）。
+② **根面**：Assembly 岛协议重编 **RC=0 / 0 err / 61 sorry-decls / 110 warn**（与基线 Z 逐项同）→ Final 重编 → `#print axioms the_kepler_conjecture_e2e` = **589**；`root.txt` md5 `246e952c…` 与 mntdedup 验收留存的基线副本 **逐字节相同**。**ERRATA（工具）**：本批日志 `cmp /tmp/mnt_accept/root_before.txt` 报 missing（该临时目录已随磁盘清理消失），`REACH_RC=1` 仅由此 cmp 引起、非仪器失败；根面同哈希由归档副本独立复核。
+③ **判读**：SORRIED 构成 Assembly 56（55 `nli*` + 1 hLP）+ **Text 17**；general_482 是 J 收工后第 4 笔净减，且**首次打开下游集群闸门**（`CUXVZOZ_p21`/`CJBDXXN_p21` 同转标准三 ⇒ JCYFMRP / TFITSKCv1 / TFITSKC / LA33 三件 / SCS_6M1）。wave 17 状态：`la22emptykit-w1` **DELIVERED 7 件**（+244/−7，岛编 70→63 sorry，7/7 探针标准三；工单 3 `terminal_pent_taum2` BLOCKED——`angle_sum_5T1`/`LEMMA_7175074394` 仍 sorryAx、`terminal_pent_taum` 无独立陈述、LA19 不可 import）+ `jcyfmrp-w1`/`vpwshto-w1` 在飞。
+
 ① **BLOCKED 证据**：`empty_6T1_p22` / `empty_5T1_p22` 探针均含 `sorryAx`；整文件岛编 RC=0/0err/70 sorry（= 基线，闭件 0）；新 olean sha1 与池内一致（`11bd6ec8…`，非假绿）。**点名上游（全实测 sorryAx）**：6T1 = `vv_inj_lemma_p22`/`azim_in_fan_azim_p22`/`sol_local_azim_p22`/`scs_6T1_generic_p22`/`EAR_SOL_NN_p22`/`DIH_IMP_EULER_A_POS_p22` + **`vv_split_azim_generic`（LA38:2654，import 成环无可达绿孪生）** + **`terminal_hex_taum`（树内无陈述）**；5T1 = `vv_inj_lemma_p22`/`azim_in_fan_azim_p22`/`scs_5T1_generic_p22`/`periodic_sum_shift_p22`/`terminal_pent_taum2_p22` + **`VPWSHTO_PRIME_p15`（LA15 sorryAx）**。
 ② **ERRATA（LA22 文件头过时）**：`RRCWNS_WEAK`/`SYNQIWN` 实测**均标准三**；`scs_{6,5}T1_generic` 在 HOL 只是 `RRCWNS_WEAK`+props 的**薄包装** ⇒ 解除成本可能不高。**正面资产**：`DIHV_EQ_DIH_Y_4PT_B`（Bridge:600）/`DELTA_Y_POS_4POINTS_B`（:503）/`PROPERTIES_GENERIC_LOCAL_FAN_p9`/`JKQEWGV1_p23` 全标准三；LP registry 不是瓶颈（两 mnl id 的 `mainEstimate_*` 是定义非公理）；`AZIM_DIHV_SAME_STRONG`（LA7）标准三且闭包不含 LA22，**可无环 import**（新增 import 决策）；LA38 `tau_fun_azim`/`tau3_taum_40`/`taum_sym2` 绿但只能 `_p22` 复制。
 ③ **`la22emptykit-w1` 发车**：按 U1–U9 顺序先攻 `scs_6T1_generic_p22` / `scs_5T1_generic_p22` / `terminal_pent_taum2_p22`，余量再 `vv_inj_lemma_p22`/`azim_in_fan_azim_p22`。OCBICBY 完整解封仍是一轮 `empty_*` 专项（E1–E7 + U1–U9）。
