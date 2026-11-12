@@ -109,7 +109,7 @@
 > | `ox3q1h-w1` | `real_model_ox3q1h_merge` 真证（PA25 +800/−4；53 叶 case 树） | **LANDED `2b634e5b`**（用户裁决 ①；闸：build rc=0 + 目标/pkrmQuarter 双探针标准三 + 根面逐字节同）；**锥内 SORRIED 72→71（Text 16→15）**，基线 AD 档图仪器在跑 |
 > | `biefjhu-tm-w2` | BIEFJHU-a TM pilot：~184–185 叶 `--hull` 证书 + `emit_lean --hull` + 重放包就绪 | 用户裁决 ③；**在飞**（CPU）；certtm 仅此一盒解冻；**内核重放窗口与编排者约** |
 > | `dagcut-eval-w1` | dagcut 后效侦察：SCS_6I1 / OCBICBY / LFLACKU 三切面 | **已交付**（续1020）：SCS_6I1 = GO-DEF-FIX 1B（5 件上移 LocalConcl，零边变化）｜OCBICBY = DAG 解环，emptykit-3 打包（JCYFMRP 波后派）｜LFLACKU = 3A+3C ~21 行（仍卡 hNL）；**两 DEF-FIX 新案待用户批** |
-> | `urrcell-w1` | K13 kit 先行：`CLOSED_MCELL` k=2 分支 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`（PA13/Geom-Aff） | **待发**：后台槽满（4 任务在跑），闸或任一车道收线后自动补位；Geom/Aff 近根文件、非必要不动 |
+> | `urrcell-w1` | K13 kit：`CLOSED_MCELL` k=2 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`（PA12） | **LANDED `11b1c68e`**（+634/−70；闸：双探针标准三 + 根面逐字节同）；PA12 文件级 sorry 清零，Geom/Aff 零改动；URRPHBZ2 本体 650–950 仍冻结 |
 >
 > **用户裁决（2026-11-12 08:55，已执行）**：两车道回来后**总结收工，不发新车**；
 > 交接文档：[`handoff-2026-11-12.md`](handoff-2026-11-12.md)。
@@ -259,6 +259,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-12（13:30，续1024）**：**一笔落库：K13 kit 2/2 `11b1c68e`（urrcell-w1，PA12 +634/−70；锥外资产 cone-neutral）**。
+① 两件：`CLOSED_MCELL` k=2 + `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS` 双探针标准三；**PA12 文件级 sorry 2→0 清零**。
+② 路线忠实 HOL（ω-list/voronoi 胞 + affDim=1 矛盾；`K + ker Ψ` 坐标闭性 + 线性右逆 section 提升）；缺件全做 PA12 内 private，**Geom/Aff 零改动**（不触发下游重建窗口）。
+③ 簿记决策：`CLOSED_MCELL` PA12 内 :797→:2592 挪位（陈述逐字、避声明顺序成环、PA12 内无消费者）；备选（segment-IVT 就地重证）在 DELIVERY §3。
+④ **侦察 ERRATA**：矩阵 §2.14 点名的两个 private 重导件（`p12_omega2_eq_circumcenter`/`w13_in_affine_ky_lemma1`）实际未用到——依赖全为公开件。
+⑤ 闸（编排者）：apply 路径 sanity + PA12 build rc=0 + 双探针标准三 + 根面 589 逐字节同（md5 `246e952c…`）；基线 AD 保持。另：`ox3q1h` 落库闸中曾踩 lane patch b 路径写成 /tmp 导致 apply 删全文件的雷（已修，运营勘误：落库前必查 `git apply --stat` 路径 + apply 后 diff 删除面）。
 - **2026-11-12（12:45，续1023）**：**基线 AD 定档（72→70 双台阶真还债）**：`real_model_ox3q1h_merge`（`2b634e5b`，PA25 +800/−4）+ K3 簇收口（`cc33026a`，LA33 +452/−14）。
 ① 实测：K_REACH 2,096,032（+112）/ **SORRIED 70**（清单 diff：closed 恰 `{real_model_ox3q1h_merge, MM_4I2_IMP_4T2_4T1_p33}`、added ∅）/ AXIOM 585（0/0）/ MODULES 5,221 / UNIVERSE 2,108,839（+48）/ COVERAGE 99.3927%（+0.0030pp）；口径 II 35,609 / 70 / 585 / 46,859。
 ② 文档全套已刷（§6.1 三层）：pq 文件头、map.md 基线 AD 节、**TSV 5,895 行原样换装**、`AGENTS.md` §1（72→70）、`README`/`README.zh`（入口层 78→70 漂移修正）、hf-proof-map 状态更新十六。
