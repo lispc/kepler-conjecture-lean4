@@ -5203,6 +5203,119 @@ theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
       (vv'' := fun i => vv (i % s''.k + q % s.k))
       s s' s'' p q d' d'' mkj vv hs' hs'' rfl rfl hMM hscs hdiag hsl hd
 
+/-! ### SCS_6I1 hexagon chain upshift (lane defix-small-w1, 2026-11-12; DEF-FIX scheme
+1B of the dagcut-eval-w1 SCS_6I1 verdict): the LA20 hexagon pieces
+`SCS_6M1_IMP_SCS_6T1`, `SCS_6I1_IMP_SCS_6T1`, `SCS_6I1_BERAK_BY_CSTAB`, `OEHDBEN_PRIME`
+and `OEHDBEN` move here verbatim (statements and proof bodies byte-identical, zero import
+edge changes), landing the chain in the one module that sees both its LA20 dependencies
+and the LA26/LA27/LA1 hmn wires.  The three sorries land on this file (LA20 -3 / LocalConcl
++3; tree-wide count and root face unchanged).  ERRATUM to the eval workorder: LA16's
+`JEJTVGB_p16` consumes `OEHDBEN` in live code (LocalAuto16:503) and LA16 cannot import this
+file (cycle), so `JEJTVGB_p16` and its in-file-only consumer `nonlinear_imp_lp_main_estimate_p16`
+move here verbatim as well; both are fully proved, so the sorry delta stays exactly 3. -/
+
+/-- HOL `SCS_6M1_IMP_SCS_6T1` (hexagons.hl:1740). -/
+theorem SCS_6M1_IMP_SCS_6T1 (hmn : main_nonlinear_terminal_v11) :
+    ∀ v : ℕ → V3, v ∈ MMsV39 scs6M1 →
+      (∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)) →
+      v ∈ MMsV39 scs6T1 := by
+  sorry
+  -- NEEDS: the mnt11 lane, all proof-pending in LocalAuto1: RRCWNSJ_concl
+  -- (appendix.hl:1321), JCYFMRP_concl (:1329), JLXFDMJ_concl (:1357),
+  -- MXQTIED_concl (:1288), plus Nuxcoea.MMS_IMP_BBS /
+  -- CHANGE_W_IN_BBS_MOD_IS_SCS and SCS_6M1_IS_SCS / SCS_6T1_IS_SCS (here).
+
+/-- HOL `SCS_6I1_IMP_SCS_6T1` (hexagons.hl:1812). -/
+theorem SCS_6I1_IMP_SCS_6T1 (hmn : main_nonlinear_terminal_v11) :
+    ∀ v : ℕ → V3, v ∈ MMsV39 scs6I1 →
+      (∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)) →
+      v ∈ MMsV39 scs6T1 := by
+  sorry
+  -- NEEDS: SCS_6M1_IMP_SCS_6T1 above (mnt11 lane) plus PEDSLGV2 (LocalAuto1,
+  -- proof pending); the isScs half closes via STAB_6I1_SCS + SCS_6T1_IS_SCS.
+
+/-- HOL `SCS_6I1_BERAK_BY_CSTAB` (hexagons.hl:1831). -/
+theorem SCS_6I1_BERAK_BY_CSTAB (hmn : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs6I1}
+      ({scs6T1} ∪ {x | ∃ i j, scsDiag 6 i j ∧ x = scsStabDiagV39 scs6I1 i j}) := by
+  sorry
+  -- DISCHARGES: hexagons.hl; arrow combining SCS_6I1_IMP_SCS_6T1 with the
+  -- diag-stabilisation destinations.
+
+/-- HOL `OEHDBEN_PRIME` (hexagons.hl:2117). `FZIOTEF_TRANS` through
+`{scs_6T1} ∪ {stab i j | diag}`, the two arrows being
+`SCS_6I1_BERAK_BY_CSTAB` and `FZIOTEF_UNION (FZIOTEF_REFL scs_6T1)
+SET_EQ_DIAG_STAB_6I1`. -/
+theorem OEHDBEN_PRIME (hmn : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs6I1}
+      {scs6T1, scsStabDiagV39 scs6I1 0 2, scsStabDiagV39 scs6I1 0 3} := by
+  have hrefl : scsArrowV39 {scs6T1} {scs6T1} :=
+    FZIOTEF_REFL _ (fun s hs => by
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact SCS_6T1_IS_SCS)
+  have hunion : scsArrowV39 ({scs6T1} ∪ {x | ∃ i j, scsDiag 6 i j ∧
+        x = scsStabDiagV39 scs6I1 i j})
+      ({scs6T1} ∪ {scsStabDiagV39 scs6I1 0 2, scsStabDiagV39 scs6I1 0 3}) :=
+    FZIOTEF_UNION _ _ _ _ hrefl SET_EQ_DIAG_STAB_6I1
+  exact FZIOTEF_TRANS _ _ _ (SCS_6I1_BERAK_BY_CSTAB hmn) hunion
+
+/-- HOL `OEHDBEN` (hexagons.hl:2135): the master arrow breaking the hexagon
+into the 6T1 / 5M1 / 4M2 / 3M1 terminals. `FZIOTEF_TRANS` through the
+`OEHDBEN_PRIME` middle set, then `FZIOTEF_UNION (FZIOTEF_REFL scs_6T1)
+(FZIOTEF_UNION AQICLXA FZIOTEF)`. -/
+theorem OEHDBEN (hmn : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
+  have hrefl : scsArrowV39 {scs6T1} {scs6T1} :=
+    FZIOTEF_REFL _ (fun s hs => by
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact SCS_6T1_IS_SCS)
+  have hset : (({scs6T1} ∪ ({scs3M1, scs5M1} ∪ {scs4M2}) : Set ScsV39)) =
+      {scs6T1, scs5M1, scs4M2, scs3M1} := by
+    ext s
+    simp [Set.mem_insert_iff]
+    tauto
+  have hunion : scsArrowV39 ({scs6T1, scsStabDiagV39 scs6I1 0 2,
+        scsStabDiagV39 scs6I1 0 3})
+      ({scs6T1} ∪ ({scs3M1, scs5M1} ∪ {scs4M2})) :=
+    FZIOTEF_UNION _ _ _ _ hrefl (FZIOTEF_UNION _ _ _ _ AQICLXA FZIOTEF)
+  rw [hset] at hunion
+  exact FZIOTEF_TRANS _ _ _ (OEHDBEN_PRIME hmn) hunion
+
+/-- HOL `JEJTVGB` (JEJTVGB.hl:218): `main_nonlinear_terminal_v11` implies
+`JEJTVGB_assume_v39`.
+NEEDS: Hexagons.OEHDBEN — the arrow in the JEJTVGB.hl breakdown reads
+`{scs6I1} -> {scs6T1, scs5M1, scs4M2, scs3M1}` (hexagons.hl:2135), while
+LocalAuto1's registry binding `OEHDBEN_concl` (appendix.hl:1394) carries
+the older `{..., scs3T1}` form, so the mechanical assembly
+(`JEJTVGB_case_breakdown_p16` + the 22 remaining `*_concl` arrows +
+`BKOSSGE_p16`) is short exactly that one theorem.  In HOL the step is
+pure rewriting (`REWRITE_TAC (map UNDISCH2 [...])`). -/
+theorem JEJTVGB_p16 (h : main_nonlinear_terminal_v11) : JEJTVGB_assume_v39 := by
+  exact JEJTVGB_case_breakdown_p16 h (OEHDBEN h) OTMTOTJ1_concl OTMTOTJ2_concl
+    OTMTOTJ3_concl OTMTOTJ4_concl
+    (p16h_arrow_congr HIJQAHA_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF1_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF2_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr CNICGSF3_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    CNICGSF4_concl
+    (p16h_arrow_congr CNICGSF5_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    FYSSVEV_concl ARDBZYE_concl AUEAHEH_concl
+    (p16h_arrow_congr VQFYMZY_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr BNAWVNH_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr RAWZDIB_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr MFKLVDK_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    (p16h_arrow_congr RYPDIXT_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    NWDGKXH_concl
+    (p16h_arrow_congr YOBIMPP_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
+    MIQMCSN_concl BKOSSGE_p16
+
+/-- HOL `nonlinear_imp_lp_main_estimate` (JEJTVGB.hl:244). -/
+theorem nonlinear_imp_lp_main_estimate_p16 :
+    main_nonlinear_terminal_v11 → lp_main_estimate := fun h =>
+  lp_main_estimate_JEJTVGB_p16.2 (JEJTVGB_p16 h)
+
 /-! ### (d) Twin proved but the shape delta is not bridgeable (4 after
       SF-87 wired QKNVMLB3; was 5) -/
 
@@ -5211,7 +5324,8 @@ rebased this exit onto the corpus original form -- mnt11 antecedent, tail
 slot `scs3M1`).  Debt-consolidating wiring, sorryAx standing: the twin's
 body is a pure `FZIOTEF_TRANS`/`FZIOTEF_REFL`/`FZIOTEF_UNION` combination
 (combinators clean); the axiom arrives from `AQICLXA` (LA20:986),
-`FZIOTEF` (LA20:1008) and `SCS_6I1_BERAK_BY_CSTAB` (LA20:1221) in the
+`FZIOTEF` (LA20:1008) and `SCS_6I1_BERAK_BY_CSTAB` (this file's own
+since the 2026-11-12 upshift; was LA20:1221) in the
 mnt11 bank (deep roots `AQICLXA_SLICE` LA20:957 / `FUNOUYH_SLICE`
 LA20:999); the debt has those known roots and self-clears when they
 close. -/
@@ -5376,23 +5490,25 @@ inputs (e.g. `YXIONXL1` via an LA12 wave input, `PQCSXWG2` via
 /-! ### Consumption upshift (lane la1concl-reroute-w1, 2026-10):
 the `JEJTVGB_p16` assembly assembled from THIS file's WIRE exits, so the
 e2e cone consumes the assembly layer instead of the LocalAuto1 registry
-sorries.  Statement = `LocalAuto16.JEJTVGB_p16` verbatim; body =
+sorries.  Statement = this file's own `JEJTVGB_p16` (the LA16 original,
+upshifted here 2026-11-12 by lane defix-small-w1) verbatim; body =
 `LocalAuto16.JEJTVGB_case_breakdown_p16` with the 21 registry slots
 refilled from this file's `*_discharged` exits (`_concl` -> `_discharged`,
 positions verbatim modulo the arrow-set-equality shims, which are the same
 `p16h_arrow_congr` wraps as in LocalAuto16).  The a01 slot keeps
-`(OEHDBEN h)` and the a23 slot keeps `BKOSSGE_p16` (both LA16/LA20
-originals, debt-identical to today's chain).  Zero new proof debt: no new
+`(OEHDBEN h)` (this file's own since the upshift) and the a23 slot keeps
+`BKOSSGE_p16` (LA16 original, debt-identical to today's chain).  Zero new proof debt: no new
 proof obligation is discharged here, the axiom faces of all 21 exits are
 untouched. -/
 
 /-- HOL `JEJTVGB` assembly, consumption-upshift version (lane
-la1concl-reroute-w1): same statement as `LocalAuto16.JEJTVGB_p16`, with
+la1concl-reroute-w1): same statement as this file's `JEJTVGB_p16` (the
+LA16 original, upshifted into this file by lane defix-small-w1), with
 the LocalAuto1 registry arrows replaced by this file's `*_discharged`
 exits (debt flows along the proof term, per the ASSEMBLY WAVE contract).
 After `Kepler.Assembly` re-points its two consumption sites at
-`nonlinear_imp_lp_main_estimate_p16_discharged`, the old
-`LocalAuto16.JEJTVGB_p16` chain leaves the e2e cone. -/
+`nonlinear_imp_lp_main_estimate_p16_discharged`, the moved
+`JEJTVGB_p16` chain stays outside the e2e cone (registry fidelity only). -/
 theorem JEJTVGB_p16_discharged (h : main_nonlinear_terminal_v11) :
     JEJTVGB_assume_v39 := by
   exact JEJTVGB_case_breakdown_p16 h (OEHDBEN h) OTMTOTJ1_discharged

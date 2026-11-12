@@ -28,10 +28,12 @@ case-analysis, as one bundle,
 
 FILE MAP
   Section A (JEJTVGB): `scsArrowTransSing_p16`, the 23-arrow
-    `JEJTVGB_case_breakdown_p16`, `JEJTVGB_p16` (assembled from the
-    appendix `*_concl` arrows of LocalAuto1 plus `BKOSSGE_p16`), the
-    definition `lp_main_estimate`, `lp_main_estimate_JEJTVGB_p16`,
-    `nonlinear_imp_lp_main_estimate_p16`.
+    `JEJTVGB_case_breakdown_p16`, the definition `lp_main_estimate`,
+    `lp_main_estimate_JEJTVGB_p16`.  (`JEJTVGB_p16` and
+    `nonlinear_imp_lp_main_estimate_p16` upshifted to `LocalConcl` verbatim
+    on 2026-11-12, lane defix-small-w1 DEF-FIX 1B: they consume `OEHDBEN`,
+    which moved there with the SCS_6I1 chain and which LA16 cannot reach --
+    `LocalConcl` imports this file, so the import would cycle.)
   Section B (XIVPHKS): moved verbatim to `Kepler.Text.XivphksKit`
     (`FSQKWKK_p16`, `XIVPHKS_p16`, `XIVPHKS_SHIFT_p16`), re-exported
     through the import below.
@@ -130,14 +132,16 @@ open Kepler.Geom Set Classical
 
 /-! ### p16h_* helper block (JEJTVGB wave; pure addition, zero-taint kit)
 
-Assembly kit closing `BKOSSGE_p16`, `JEJTVGB_case_breakdown_p16` and
-`JEJTVGB_p16` (HOL BKOSSGE.hl:304-396 / JEJTVGB.hl:23-230).  Every item
+Assembly kit closing `BKOSSGE_p16` and `JEJTVGB_case_breakdown_p16`
+(HOL BKOSSGE.hl:304-396 / JEJTVGB.hl:23-230); the assembled `JEJTVGB_p16`
+(and its consumer `nonlinear_imp_lp_main_estimate_p16`) upshifted to
+`LocalConcl` verbatim on 2026-11-12 (lane defix-small-w1, DEF-FIX 1B),
+since they consume `OEHDBEN`, which moved there with the SCS_6I1 chain.
+Every item
 here is self-contained: no `main_nonlinear_terminal_v11` premise, no
 sorried upstream arrow is *declared* here (the sorried arrows are only
 *consumed* at the assembly sites, as the ledger allows).  Consumed
-upstream (assembly level): LocalAuto20.OEHDBEN (the hexagons.hl:2135
-form, which settles the SF OEHDBEN drift by plan (a) — import of the
-existing port, no twin), LocalAuto22.OCBICBY_p22 / scs_arrow_sing_empty_p22 /
+upstream (assembly level): LocalAuto22.OCBICBY_p22 / scs_arrow_sing_empty_p22 /
 is_scs_3{M1,T1,T5}_p22, LocalAuto23.s_init_list_alt_p23 / LFLACKU_p23,
 LocalAuto26.XWNHLMD_MM_p26, LocalAuto27.EAPGLE_p27, LocalAuto28.MMS_IMP_BBS_p28. -/
 
@@ -490,34 +494,6 @@ theorem JEJTVGB_case_breakdown_p16 (h : main_nonlinear_terminal_v11)
   · exact (scs_arrow_sing_empty_p22 scs5I3).1 e5I3
   · exact (scs_arrow_sing_empty_p22 scs4I3).1 e4I3
 
-/-- HOL `JEJTVGB` (JEJTVGB.hl:218): `main_nonlinear_terminal_v11` implies
-`JEJTVGB_assume_v39`.
-NEEDS: Hexagons.OEHDBEN — the arrow in the JEJTVGB.hl breakdown reads
-`{scs6I1} -> {scs6T1, scs5M1, scs4M2, scs3M1}` (hexagons.hl:2135), while
-LocalAuto1's registry binding `OEHDBEN_concl` (appendix.hl:1394) carries
-the older `{..., scs3T1}` form, so the mechanical assembly
-(`JEJTVGB_case_breakdown_p16` + the 22 remaining `*_concl` arrows +
-`BKOSSGE_p16`) is short exactly that one theorem.  In HOL the step is
-pure rewriting (`REWRITE_TAC (map UNDISCH2 [...])`). -/
-theorem JEJTVGB_p16 (h : main_nonlinear_terminal_v11) : JEJTVGB_assume_v39 := by
-  exact JEJTVGB_case_breakdown_p16 h (OEHDBEN h) OTMTOTJ1_concl OTMTOTJ2_concl
-    OTMTOTJ3_concl OTMTOTJ4_concl
-    (p16h_arrow_congr HIJQAHA_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr CNICGSF1_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr CNICGSF2_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr CNICGSF3_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    CNICGSF4_concl
-    (p16h_arrow_congr CNICGSF5_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    FYSSVEV_concl ARDBZYE_concl AUEAHEH_concl
-    (p16h_arrow_congr VQFYMZY_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr BNAWVNH_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr RAWZDIB_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr MFKLVDK_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    (p16h_arrow_congr RYPDIXT_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    NWDGKXH_concl
-    (p16h_arrow_congr YOBIMPP_concl rfl (by ext s; simp [Set.mem_insert_iff]; tauto))
-    MIQMCSN_concl BKOSSGE_p16
-
 /-- HOL `lp_main_estimate` (JEJTVGB.hl:232, `new_definition` of the
 equation with `Appendix.JEJTVGB_concl`). -/
 def lp_main_estimate : Prop := JEJTVGB_concl
@@ -525,11 +501,6 @@ def lp_main_estimate : Prop := JEJTVGB_concl
 /-- HOL `lp_main_estimate_JEJTVGB` (JEJTVGB.hl:236). -/
 theorem lp_main_estimate_JEJTVGB_p16 :
     JEJTVGB_assume_v39 ↔ lp_main_estimate := Iff.rfl
-
-/-- HOL `nonlinear_imp_lp_main_estimate` (JEJTVGB.hl:244). -/
-theorem nonlinear_imp_lp_main_estimate_p16 :
-    main_nonlinear_terminal_v11 → lp_main_estimate := fun h =>
-  lp_main_estimate_JEJTVGB_p16.2 (JEJTVGB_p16 h)
 
 /-! ## Section B: XIVPHKS.hl (moved to `Kepler.Text.XivphksKit`)
 

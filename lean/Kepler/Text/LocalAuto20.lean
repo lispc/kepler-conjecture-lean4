@@ -24,10 +24,14 @@ Encoding:
   `SET_EQ_DIAG_STAB_6I1_02/03`, `SET_EQ_DIAG_STAB_6I1`, `OEHDBEN_PRIME`,
   `OEHDBEN` are fully proved (5 `is_scs_adj` systems via `Kepler.Text.LocalAuto22`'s
   W5 kit, 5 funlist systems + `STAB_6I1_SCS` by direct residue case work here).
-  Remaining `sorry`s (7): `AQICLXA_SLICE`/`FUNOUYH_SLICE` (NEED
-   `LocalAuto1.LKGRQUI_concl`), `AQICLXA`/`FZIOTEF` (NEED `YXIONXL3_concl` +
-   `PROP_EQU_IS_SCS`), and the three `main_nonlinear_terminal_v11` implications
-   (NEED the mnt11 lane: RRCWNSJ/JCYFMRP/JLXFDMJ/MXQTIED, all LocalAuto1).
+  Upshift 2026-11-12 (lane defix-small-w1, DEF-FIX 1B): `OEHDBEN_PRIME`/`OEHDBEN`
+  and the three mnt11 implications `SCS_6M1_IMP_SCS_6T1`/
+  `SCS_6I1_IMP_SCS_6T1`/`SCS_6I1_BERAK_BY_CSTAB` moved to `LocalConcl` verbatim
+  (zero import edge changes).
+  Remaining `sorry`s: none in this file.  (The "7" this line long claimed
+  was already stale at HEAD: the AQICLXA/FZIOTEF slice arrows were proved
+  by the la20-bank-w1 wave, leaving the three mnt11 implications as the
+  only code sorries -- and the upshift above moved those to `LocalConcl`.)
 - Fill-wave 2026-09-19 re-scan: all 7 blockers still open. `LKGRQUI_concl`
   (LocalAuto1:950), `YXIONXL3_concl` (LocalAuto1:945), `RRCWNSJ_concl`
   (:1334), `JCYFMRP_concl` (:1342), `JLXFDMJ_concl` (:1371), `MXQTIED_concl`
@@ -1623,34 +1627,6 @@ theorem SCS_M_5M2 : scsM scs5M2 = {0} := by
 
 /-! ## Mod/symmetrie kit and terminal implications (hexagons.hl:1740-2165) -/
 
-/-- HOL `SCS_6M1_IMP_SCS_6T1` (hexagons.hl:1740). -/
-theorem SCS_6M1_IMP_SCS_6T1 (hmn : main_nonlinear_terminal_v11) :
-    ∀ v : ℕ → V3, v ∈ MMsV39 scs6M1 →
-      (∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)) →
-      v ∈ MMsV39 scs6T1 := by
-  sorry
-  -- NEEDS: the mnt11 lane, all proof-pending in LocalAuto1: RRCWNSJ_concl
-  -- (appendix.hl:1321), JCYFMRP_concl (:1329), JLXFDMJ_concl (:1357),
-  -- MXQTIED_concl (:1288), plus Nuxcoea.MMS_IMP_BBS /
-  -- CHANGE_W_IN_BBS_MOD_IS_SCS and SCS_6M1_IS_SCS / SCS_6T1_IS_SCS (here).
-
-/-- HOL `SCS_6I1_IMP_SCS_6T1` (hexagons.hl:1812). -/
-theorem SCS_6I1_IMP_SCS_6T1 (hmn : main_nonlinear_terminal_v11) :
-    ∀ v : ℕ → V3, v ∈ MMsV39 scs6I1 →
-      (∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)) →
-      v ∈ MMsV39 scs6T1 := by
-  sorry
-  -- NEEDS: SCS_6M1_IMP_SCS_6T1 above (mnt11 lane) plus PEDSLGV2 (LocalAuto1,
-  -- proof pending); the isScs half closes via STAB_6I1_SCS + SCS_6T1_IS_SCS.
-
-/-- HOL `SCS_6I1_BERAK_BY_CSTAB` (hexagons.hl:1831). -/
-theorem SCS_6I1_BERAK_BY_CSTAB (hmn : main_nonlinear_terminal_v11) :
-    scsArrowV39 {scs6I1}
-      ({scs6T1} ∪ {x | ∃ i j, scsDiag 6 i j ∧ x = scsStabDiagV39 scs6I1 i j}) := by
-  sorry
-  -- DISCHARGES: hexagons.hl; arrow combining SCS_6I1_IMP_SCS_6T1 with the
-  -- diag-stabilisation destinations.
-
 /-- HOL `STAB_MOD` (hexagons.hl:1903). -/
 theorem STAB_MOD (s : ScsV39) (i j : ℕ) (hs : isScsV39 s) :
     scsStabDiagV39 s (i % s.k) (j % s.k) = scsStabDiagV39 s i j := by
@@ -1902,47 +1878,6 @@ theorem SET_EQ_DIAG_STAB_6I1 :
     · constructor
       · simp
       · exact fun hh => h02 hh
-
-/-- HOL `OEHDBEN_PRIME` (hexagons.hl:2117). `FZIOTEF_TRANS` through
-`{scs_6T1} ∪ {stab i j | diag}`, the two arrows being
-`SCS_6I1_BERAK_BY_CSTAB` and `FZIOTEF_UNION (FZIOTEF_REFL scs_6T1)
-SET_EQ_DIAG_STAB_6I1`. -/
-theorem OEHDBEN_PRIME (hmn : main_nonlinear_terminal_v11) :
-    scsArrowV39 {scs6I1}
-      {scs6T1, scsStabDiagV39 scs6I1 0 2, scsStabDiagV39 scs6I1 0 3} := by
-  have hrefl : scsArrowV39 {scs6T1} {scs6T1} :=
-    FZIOTEF_REFL _ (fun s hs => by
-      rw [Set.mem_singleton_iff] at hs
-      subst hs
-      exact SCS_6T1_IS_SCS)
-  have hunion : scsArrowV39 ({scs6T1} ∪ {x | ∃ i j, scsDiag 6 i j ∧
-        x = scsStabDiagV39 scs6I1 i j})
-      ({scs6T1} ∪ {scsStabDiagV39 scs6I1 0 2, scsStabDiagV39 scs6I1 0 3}) :=
-    FZIOTEF_UNION _ _ _ _ hrefl SET_EQ_DIAG_STAB_6I1
-  exact FZIOTEF_TRANS _ _ _ (SCS_6I1_BERAK_BY_CSTAB hmn) hunion
-
-/-- HOL `OEHDBEN` (hexagons.hl:2135): the master arrow breaking the hexagon
-into the 6T1 / 5M1 / 4M2 / 3M1 terminals. `FZIOTEF_TRANS` through the
-`OEHDBEN_PRIME` middle set, then `FZIOTEF_UNION (FZIOTEF_REFL scs_6T1)
-(FZIOTEF_UNION AQICLXA FZIOTEF)`. -/
-theorem OEHDBEN (hmn : main_nonlinear_terminal_v11) :
-    scsArrowV39 {scs6I1} {scs6T1, scs5M1, scs4M2, scs3M1} := by
-  have hrefl : scsArrowV39 {scs6T1} {scs6T1} :=
-    FZIOTEF_REFL _ (fun s hs => by
-      rw [Set.mem_singleton_iff] at hs
-      subst hs
-      exact SCS_6T1_IS_SCS)
-  have hset : (({scs6T1} ∪ ({scs3M1, scs5M1} ∪ {scs4M2}) : Set ScsV39)) =
-      {scs6T1, scs5M1, scs4M2, scs3M1} := by
-    ext s
-    simp [Set.mem_insert_iff]
-    tauto
-  have hunion : scsArrowV39 ({scs6T1, scsStabDiagV39 scs6I1 0 2,
-        scsStabDiagV39 scs6I1 0 3})
-      ({scs6T1} ∪ ({scs3M1, scs5M1} ∪ {scs4M2})) :=
-    FZIOTEF_UNION _ _ _ _ hrefl (FZIOTEF_UNION _ _ _ _ AQICLXA FZIOTEF)
-  rw [hset] at hunion
-  exact FZIOTEF_TRANS _ _ _ (OEHDBEN_PRIME hmn) hunion
 
 /-! ## la20-bank-w1 probe: assembly modulo the slice arrows (zero sorry).
 
