@@ -102,7 +102,7 @@
 > |---|---|---|
 > | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行；**锥内真还债候选** |
 > | `yobimpp-w1` | `YOBIMPP_p32`（LA32:1241）+ K7 4M7 梯子 | 08:17 发车（§2.1a #16，自身 45–80 + kit 110–165）；先验 HOL 直接引用闭包，有 sorryAx 上游即 BLOCKED |
-> | （空 1 位） | 待补位 | 按 §2.1c 杠杆顺序：`TFITSKCv1_p27`（K2 500–650，先验 LA27 闭包）；或 EDGE 簇 → `MM_4I2`（LA33） |
+> | `text-closure-w1` | 剩余 16 条 Text sorry 的 HOL 直接引用闭包矩阵（只读侦察） | 08:44 发车；给 GO/BLOCKED 点名表 + 缺陈述清单，供 wave 19 派发 |
 >
 > **最近完成/判词**：`vpwshto-w1` **LANDED `e5a06c77`** + 基线 AC（续1014）；`la22emptykit-w1` LANDED `2201350f`
 > （7 件，工单 3 BLOCKED）；`g482-482-w4` DONE + 基线 AA（续1012）；`text-est-w1` 报告已归档（§2.1）；
