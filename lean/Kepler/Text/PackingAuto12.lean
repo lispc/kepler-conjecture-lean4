@@ -787,73 +787,433 @@ theorem BARV_IMP_HL_1_POS_LT (V : Set V3) (ul : List V3)
   rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2, hhl]
   exact div_pos (dist_pos.mpr hne) (by norm_num)
 
-/-! ## marchal2.hl:541 CLOSED_MCELL -/
+/-! ### Closure kit for the `CLOSED_MCELL` `k = 2` wedge `affGe`
+(all private, PA12-internal)
 
-/-- HOL `CLOSED_MCELL` (marchal2.hl:541): every Marchal cell is closed.
-Cases `k = 0,1,3,4` are proved from CLOSED_ROGERS / cone-openness /
-finite-hull closedness; the `k = 2` case needs `IsClosed (affGe …)` (the
-affine-combination set of Geom/Aff.lean), not yet available upstream —
-sorried for `k = 2` only. -/
-theorem CLOSED_MCELL (V : Set V3) (ul : List V3)
-    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) :
-    ∀ k : ℕ, IsClosed (mcell k V ul) := by
-  intro k
-  rcases Nat.lt_or_ge k 4 with hk | hk
-  · interval_cases k
-    · -- k = 0: rogers \ open ball
-      show IsClosed (mcell0 V ul)
-      rw [mcell0]
-      exact (CLOSED_ROGERS V ul hs hp hb).inter Metric.isOpen_ball.isClosed_compl
-    · -- k = 1: (rogers ∩ closedBall) \ open cone
-      show IsClosed (mcell1 V ul)
-      rw [mcell1]
-      split_ifs with hle
-      · have hc2 : Continuous fun x : V3 =>
-            (x - hdV ul) ⬝ᵥ (hdV ul.tail - hdV ul) := by fun_prop
-        have hc1 : Continuous fun x : V3 => dist x (hdV ul)
-            * dist (hdV ul.tail) (hdV ul)
-            * (hl (truncateSimplex 1 ul) / Real.sqrt 2) := by fun_prop
-        have hopen : IsOpen (rconeGt (hdV ul) (hdV ul.tail)
-            (hl (truncateSimplex 1 ul) / Real.sqrt 2)) := by
-          have hF : Continuous fun x : V3 =>
-              (x - hdV ul) ⬝ᵥ (hdV ul.tail - hdV ul)
-              - dist x (hdV ul) * dist (hdV ul.tail) (hdV ul)
-                * (hl (truncateSimplex 1 ul) / Real.sqrt 2) := hc2.sub hc1
-          have hset : rconeGt (hdV ul) (hdV ul.tail)
-                (hl (truncateSimplex 1 ul) / Real.sqrt 2)
-              = (fun x : V3 => (x - hdV ul) ⬝ᵥ (hdV ul.tail - hdV ul)
-                  - dist x (hdV ul) * dist (hdV ul.tail) (hdV ul)
-                    * (hl (truncateSimplex 1 ul) / Real.sqrt 2)) ⁻¹'
-                Set.Ioi 0 := by
-            ext x
-            simp [rconeGt, Set.mem_preimage, sub_pos]
-          rw [hset]
-          exact hF.isOpen_preimage _ isOpen_Ioi
-        exact ((CLOSED_ROGERS V ul hs hp hb).inter Metric.isClosed_closedBall).inter
-          hopen.isClosed_compl
-      · exact isClosed_empty
-    · -- k = 2: cones ∩ affGe — needs IsClosed (affGe …)
-      show IsClosed (mcell2 V ul)
-      rw [mcell2]
-      split_ifs with hcond
-      · sorry
-        -- NEEDS: IsClosed (affGe …), upstream Geom/Aff gap
-      · exact isClosed_empty
-    · -- k = 3: finite hull
-      show IsClosed (mcell3 V ul)
-      rw [mcell3]
-      split_ifs with hcond
-      · exact (Set.Finite.isCompact_convexHull ℝ
-          (Set.Finite.union (p12_setOfList_finite (truncateSimplex 2 ul))
-            (Set.finite_singleton (mxi V ul)))).isClosed
-      · exact isClosed_empty
-  · -- k ≥ 4: dispatch resolves to mcell4
-    rw [mcell, if_neg (by omega : ¬(k = 0)), if_neg (by omega : ¬(k = 1)),
-      if_neg (by omega : ¬(k = 2)), if_neg (by omega : ¬(k = 3))]
-    rw [mcell4]
-    split_ifs with hlt
-    · exact (Set.Finite.isCompact_convexHull ℝ (p12_setOfList_finite ul)).isClosed
-    · exact isClosed_empty
+HOL `CLOSED_MCELL`'s `k = 2` case consumed Geomdetail's `CLOSED_AFF_GE`; here
+the wedge `affGe {a,b} {c,d}` is closed by a direct finite-dimensional
+argument (`p12_isClosed_affGe_pair_pair`): after `AFF_GE_2_2` reparametrizes
+the wedge as the translate of the image of the closed slab
+`K = {r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2}` under the linear map sending
+coordinates to `(b - a, c - a, d - a)`-combinations, a linear right-inverse
+section lifts convergent sequences, and closedness of `K + ker` is checked
+coordinate-wise (`p12_closed_slab_add_subspace`: a subspace of `ℝ²` plus the
+closed orthant is the orthant, a closed half-plane, or all of `ℝ²`,
+`p12_closed_orthant_add_line`'s nine sign cases). No Geom/Aff change. -/
+
+section
+open scoped Pointwise
+
+private theorem p12_sub_mul_le_of_ge_div {a t x : ℝ} (ha : a < 0) (h : x / a ≤ t) :
+    0 ≤ x - t * a := by
+  have h2 : (t - x / a) * a ≤ 0 := mul_nonpos_of_nonneg_of_nonpos (sub_nonneg.2 h) ha.le
+  have e : (t - x / a) * a = t * a - x := by
+    rw [sub_mul, div_mul_cancel₀ _ (ne_of_lt ha)]
+  have h3 : t * a - x ≤ 0 := by rwa [e] at h2
+  linarith
+
+private theorem p12_sub_mul_le_of_le_div {a t x : ℝ} (ha : 0 < a) (h : t ≤ x / a) :
+    0 ≤ x - t * a := by
+  have h2 : 0 ≤ (x / a - t) * a := mul_nonneg (sub_nonneg.2 h) ha.le
+  have e : (x / a - t) * a = x - t * a := by
+    rw [sub_mul, div_mul_cancel₀ _ ha.ne']
+  rwa [e] at h2
+
+private theorem p12_orthant_span_mem {a b x y : ℝ} {t : ℝ}
+    (hx : 0 ≤ x - t * a) (hy : 0 ≤ y - t * b) :
+    (x, y) ∈ (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+      (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) :=
+  ⟨(x - t * a, y - t * b), ⟨hx, hy⟩, t • (a, b),
+    Submodule.mem_span_singleton.2 ⟨t, rfl⟩, by
+      ext <;> simp only [Prod.fst_add, Prod.snd_add, Prod.smul_mk, smul_eq_mul] <;> ring⟩
+/-- 9-case: the closed plane orthant stays closed after adding any line. -/
+private theorem p12_closed_orthant_add_line (a b : ℝ) :
+    IsClosed (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+      (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) := by
+  rcases lt_trichotomy a 0 with han | haz | hap
+  · rcases lt_trichotomy b 0 with hbn | hbz | hbp
+    · -- a < 0, b < 0 : whole plane
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = Set.univ := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_univ, iff_true]
+        apply p12_orthant_span_mem
+        · exact p12_sub_mul_le_of_ge_div han (le_max_left (x / a) (y / b))
+        · exact p12_sub_mul_le_of_ge_div hbn (le_max_right (x / a) (y / b))
+      rw [hset]; exact isClosed_univ
+    · -- a < 0, b = 0 : the upper half-plane {0 ≤ q.2}
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ q.2} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, ⟨hp1, hp2⟩, q, hqspan, hpq⟩
+          obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+          have hq2 : q.2 = 0 := by
+            have e := congrArg Prod.snd htq
+            simpa [Prod.smul_mk, smul_eq_mul, hbz] using e.symm
+          have e2 : p.2 + q.2 = y := by
+            have e := congrArg Prod.snd hpq
+            simpa using e
+          rw [← e2, hq2, add_zero]; exact hp2
+        · intro hy
+          apply p12_orthant_span_mem (t := x / a)
+          · exact p12_sub_mul_le_of_ge_div han le_rfl
+          · rw [hbz, mul_zero, sub_zero]; exact hy
+      rw [hset]; exact isClosed_Ici.preimage continuous_snd
+    · -- a < 0, b > 0 : the half-plane {-b*q.1 + a*q.2 ≤ 0}
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | -b * q.1 + a * q.2 ≤ 0} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, ⟨hp1, hp2⟩, q, hqspan, hpq⟩
+          obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+          have hq1 : q.1 = t * a := by
+            have e := congrArg Prod.fst htq
+            simpa [Prod.smul_mk, smul_eq_mul] using e.symm
+          have hq2 : q.2 = t * b := by
+            have e := congrArg Prod.snd htq
+            simpa [Prod.smul_mk, smul_eq_mul] using e.symm
+          have e1 : p.1 + q.1 = x := by
+            have e := congrArg Prod.fst hpq
+            simpa using e
+          have e2 : p.2 + q.2 = y := by
+            have e := congrArg Prod.snd hpq
+            simpa using e
+          have key : -b * x + a * y = -b * p.1 + a * p.2 := by
+            rw [← e1, ← e2, hq1, hq2]; ring
+          rw [key]
+          have h1 : 0 ≤ p.1 * b := mul_nonneg hp1 hbp.le
+          have e1' : -b * p.1 = -(p.1 * b) := by ring
+          have h2 : a * p.2 ≤ 0 := by nlinarith
+          rw [e1']; exact add_nonpos (neg_nonpos.2 h1) h2
+        · intro hxy
+          apply p12_orthant_span_mem (t := x / a)
+          · exact p12_sub_mul_le_of_ge_div han le_rfl
+          · have h' : a * y ≤ b * x := by linarith
+            have e : y - (x / a) * b = (a * y - b * x) / a := by
+              field_simp [ne_of_lt han]
+            rw [e]
+            exact div_nonneg_of_nonpos (sub_nonpos.2 h') han.le
+      rw [hset]
+      exact isClosed_Iic.preimage
+        ((continuous_const.mul continuous_fst).add (continuous_const.mul continuous_snd))
+  · rcases lt_trichotomy b 0 with hbn | hbz | hbp
+    · -- a = 0, b < 0 : the right half-plane {0 ≤ q.1}
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ q.1} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, ⟨hp1, hp2⟩, q, hqspan, hpq⟩
+          obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+          have hq1 : q.1 = 0 := by
+            have e := congrArg Prod.fst htq
+            simpa [Prod.smul_mk, smul_eq_mul, haz] using e.symm
+          have e1 : p.1 + q.1 = x := by
+            have e := congrArg Prod.fst hpq
+            simpa using e
+          rw [← e1, hq1, add_zero]; exact hp1
+        · intro hx
+          apply p12_orthant_span_mem (t := y / b)
+          · rw [haz, mul_zero, sub_zero]; exact hx
+          · exact p12_sub_mul_le_of_ge_div hbn le_rfl
+      rw [hset]; exact isClosed_Ici.preimage continuous_fst
+    · -- a = 0, b = 0 : the orthant itself
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, hp, q, hqspan, hpq⟩
+          have hq : q = (0, 0) := by
+            obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+            rw [← htq]
+            simp [Prod.smul_mk, smul_eq_mul, haz, hbz]
+          have e1 : p.1 = x := by
+            have e := congrArg Prod.fst hpq
+            simpa [hq] using e
+          have e2 : p.2 = y := by
+            have e := congrArg Prod.snd hpq
+            simpa [hq] using e
+          rw [← e1, ← e2]; exact hp
+        · intro hy
+          refine ⟨(x, y), hy, (0, 0), Submodule.mem_span_singleton.2 ⟨0, zero_smul _ _⟩,
+            add_zero _⟩
+      rw [hset]
+      exact (isClosed_Ici.preimage continuous_fst).inter (isClosed_Ici.preimage continuous_snd)
+    · -- a = 0, b > 0 : the right half-plane {0 ≤ q.1}
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ q.1} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, ⟨hp1, hp2⟩, q, hqspan, hpq⟩
+          obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+          have hq1 : q.1 = 0 := by
+            have e := congrArg Prod.fst htq
+            simpa [Prod.smul_mk, smul_eq_mul, haz] using e.symm
+          have e1 : p.1 + q.1 = x := by
+            have e := congrArg Prod.fst hpq
+            simpa using e
+          rw [← e1, hq1, add_zero]; exact hp1
+        · intro hx
+          apply p12_orthant_span_mem (t := y / b)
+          · rw [haz, mul_zero, sub_zero]; exact hx
+          · exact p12_sub_mul_le_of_le_div hbp le_rfl
+      rw [hset]; exact isClosed_Ici.preimage continuous_fst
+  · rcases lt_trichotomy b 0 with hbn | hbz | hbp
+    · -- a > 0, b < 0 : the half-plane {-b*q.1 + a*q.2 ≥ 0}
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ -b * q.1 + a * q.2} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, ⟨hp1, hp2⟩, q, hqspan, hpq⟩
+          obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+          have hq1 : q.1 = t * a := by
+            have e := congrArg Prod.fst htq
+            simpa [Prod.smul_mk, smul_eq_mul] using e.symm
+          have hq2 : q.2 = t * b := by
+            have e := congrArg Prod.snd htq
+            simpa [Prod.smul_mk, smul_eq_mul] using e.symm
+          have e1 : p.1 + q.1 = x := by
+            have e := congrArg Prod.fst hpq
+            simpa using e
+          have e2 : p.2 + q.2 = y := by
+            have e := congrArg Prod.snd hpq
+            simpa using e
+          have key : -b * x + a * y = -b * p.1 + a * p.2 := by
+            rw [← e1, ← e2, hq1, hq2]; ring
+          rw [key]
+          have h1 : 0 ≤ -b * p.1 := mul_nonneg (by linarith) hp1
+          have h2 : 0 ≤ a * p.2 := mul_nonneg hap.le hp2
+          linarith
+        · intro hxy
+          apply p12_orthant_span_mem (t := y / b)
+          · have h' : b * x ≤ a * y := by linarith
+            have e : x - (y / b) * a = (b * x - a * y) / b := by
+              field_simp [ne_of_lt hbn]
+            rw [e]
+            exact div_nonneg_of_nonpos (sub_nonpos.2 h') hbn.le
+          · exact p12_sub_mul_le_of_ge_div hbn le_rfl
+      rw [hset]
+      exact isClosed_Ici.preimage
+        ((continuous_const.mul continuous_fst).add (continuous_const.mul continuous_snd))
+    · -- a > 0, b = 0 : the upper half-plane {0 ≤ q.2}
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ q.2} := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, ⟨hp1, hp2⟩, q, hqspan, hpq⟩
+          obtain ⟨t, htq⟩ := Submodule.mem_span_singleton.1 hqspan
+          have hq2 : q.2 = 0 := by
+            have e := congrArg Prod.snd htq
+            simpa [Prod.smul_mk, smul_eq_mul, hbz] using e.symm
+          have e2 : p.2 + q.2 = y := by
+            have e := congrArg Prod.snd hpq
+            simpa using e
+          rw [← e2, hq2, add_zero]; exact hp2
+        · intro hy
+          apply p12_orthant_span_mem (t := x / a)
+          · exact p12_sub_mul_le_of_le_div hap le_rfl
+          · rw [hbz, mul_zero, sub_zero]; exact hy
+      rw [hset]; exact isClosed_Ici.preimage continuous_snd
+    · -- a > 0, b > 0 : whole plane
+      have hset : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          (Submodule.span ℝ {(a, b)} : Set (ℝ × ℝ))) = Set.univ := by
+        ext ⟨x, y⟩
+        simp only [Set.mem_univ, iff_true]
+        apply p12_orthant_span_mem
+        · exact p12_sub_mul_le_of_le_div hap (min_le_left (x / a) (y / b))
+        · exact p12_sub_mul_le_of_le_div hbp (min_le_right (x / a) (y / b))
+      rw [hset]; exact isClosed_univ
+
+
+
+/-! ### Slab + subspace in ℝ³, and the affGe closedness helper -/
+
+private theorem p12_closed_slab_add_subspace (T : Submodule ℝ (ℝ × ℝ × ℝ)) :
+    IsClosed (({r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2} : Set (ℝ × ℝ × ℝ)) +
+      (T : Set (ℝ × ℝ × ℝ))) := by
+  let π₀ : (ℝ × ℝ × ℝ) →ₗ[ℝ] (ℝ × ℝ) :=
+    { toFun := fun r => (r.2.1, r.2.2)
+      map_add' := fun x y => rfl
+      map_smul' := fun c x => rfl }
+  have hcont : Continuous π₀ := π₀.continuous_of_finiteDimensional
+  set W := Submodule.map π₀ T with hWdef
+  have hbase : (({r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2} : Set (ℝ × ℝ × ℝ)) +
+      (T : Set (ℝ × ℝ × ℝ)))
+      = π₀ ⁻¹' (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) + (W : Set (ℝ × ℝ))) := by
+    ext z
+    simp only [Set.mem_add, Set.mem_setOf_eq, Set.mem_preimage]
+    constructor
+    · rintro ⟨k, ⟨hk1, hk2⟩, t, ht, rfl⟩
+      exact ⟨(k.2.1, k.2.2), ⟨hk1, hk2⟩, π₀ t, ⟨t, ht, rfl⟩, map_add π₀ k t⟩
+    · rintro ⟨p, ⟨hp1, hp2⟩, w, ⟨t, ht, hwt⟩, hzp⟩
+      have h2 : z.2.1 = p.1 + t.2.1 := by
+        have e := congrArg Prod.fst hzp
+        have e2 := congrArg Prod.fst hwt
+        have e3 : p.1 + w.1 = z.2.1 := by simpa [π₀] using e
+        have e4 : w.1 = t.2.1 := by simpa [π₀] using e2.symm
+        linarith
+      have h3 : z.2.2 = p.2 + t.2.2 := by
+        have e := congrArg Prod.snd hzp
+        have e2 := congrArg Prod.snd hwt
+        have e3 : p.2 + w.2 = z.2.2 := by simpa [π₀] using e
+        have e4 : w.2 = t.2.2 := by simpa [π₀] using e2.symm
+        linarith
+      exact ⟨(z.1 - t.1, (p.1, p.2)), ⟨hp1, hp2⟩, t, ht,
+        Prod.ext_iff.2 ⟨sub_add_cancel _ _, Prod.ext_iff.2 ⟨h2.symm, h3.symm⟩⟩⟩
+  rw [hbase]
+  have hWcl : IsClosed (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+      (W : Set (ℝ × ℝ))) := by
+    rcases eq_or_ne W ⊥ with hbot | hne
+    · rw [hbot]
+      have hsb : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+          ((⊥ : Submodule ℝ (ℝ × ℝ)) : Set (ℝ × ℝ))) = {q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} := by
+        ext z
+        simp only [Set.mem_add, Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨p, hp, q, hq, hpq⟩
+          simp only [SetLike.mem_coe, Submodule.mem_bot] at hq
+          rw [← hpq, hq, add_zero]
+          exact hp
+        · intro hp
+          exact ⟨z, hp, 0, Submodule.zero_mem _, add_zero z⟩
+      rw [hsb]
+      exact (isClosed_Ici.preimage continuous_fst).inter (isClosed_Ici.preimage continuous_snd)
+    · rcases eq_or_ne W ⊤ with htop | hne2
+      · rw [htop]
+        have hsb : (({q : ℝ × ℝ | 0 ≤ q.1 ∧ 0 ≤ q.2} : Set (ℝ × ℝ)) +
+            ((⊤ : Submodule ℝ (ℝ × ℝ)) : Set (ℝ × ℝ))) = Set.univ := by
+          ext z
+          constructor
+          · intro _
+            exact Set.mem_univ _
+          · intro _
+            exact ⟨0, ⟨le_rfl, le_rfl⟩, z, Submodule.mem_top, zero_add z⟩
+        rw [hsb]
+        exact isClosed_univ
+      · obtain ⟨v, hvW, hv0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hne
+        have hspan : W = Submodule.span ℝ {v} := by
+          have hle : Submodule.span ℝ {v} ≤ W := Submodule.span_le.2 (Set.singleton_subset_iff.2 hvW)
+          apply le_antisymm
+          · by_contra hcon
+            have hlt : Submodule.span ℝ {v} < W := lt_of_le_of_ne hle (fun e ↦ hcon (e.symm ▸ le_refl _))
+            have hf1 : Module.finrank ℝ ↥(Submodule.span ℝ {v}) = 1 := finrank_span_singleton hv0
+            have hf2 := Submodule.finrank_lt_finrank_of_lt hlt
+            have hf3 : Module.finrank ℝ ↥W ≤ Module.finrank ℝ (ℝ × ℝ) := Submodule.finrank_le W
+            have hf4 : Module.finrank ℝ (ℝ × ℝ) = 2 := by simp [Module.finrank_prod]
+            have htop' : W = ⊤ := Submodule.eq_top_of_finrank_eq (by rw [hf4]; omega)
+            exact hne2 htop'
+          · exact hle
+        rw [hspan]
+        have hvv : ((Submodule.span ℝ {(v.1, v.2)} : Submodule ℝ (ℝ × ℝ)) : Set (ℝ × ℝ))
+            = ((Submodule.span ℝ {v}) : Set (ℝ × ℝ)) := by
+          rw [show ((v.1, v.2) : ℝ × ℝ) = v from Prod.eta v]
+        rw [hvv]
+        exact p12_closed_orthant_add_line v.1 v.2
+  exact hWcl.preimage hcont
+
+private def p12_affGeLin (a b c d : V3) : (ℝ × ℝ × ℝ) →ₗ[ℝ] V3 where
+  toFun r := r.1 • (b - a) + r.2.1 • (c - a) + r.2.2 • (d - a)
+  map_add' x y := by
+    simp only [Prod.fst_add, Prod.snd_add, add_smul]
+    abel
+  map_smul' c x := by
+    simp [Prod.smul_fst, Prod.smul_snd, smul_add, smul_smul, smul_eq_mul]
+
+private theorem p12_Ψ_image_closed (a b c d : V3) :
+    IsClosed ((p12_affGeLin a b c d) ''
+      ({r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2} : Set (ℝ × ℝ × ℝ))) := by
+  set Ψ := p12_affGeLin a b c d with hΨdef
+  have hKcl : IsClosed (({r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2} : Set (ℝ × ℝ × ℝ)) +
+      (LinearMap.ker Ψ : Set _)) := p12_closed_slab_add_subspace (LinearMap.ker Ψ)
+  have hGcl : IsClosed ((LinearMap.range Ψ : Submodule ℝ V3) : Set V3) :=
+    Submodule.closed_of_finiteDimensional _
+  have hseq : IsSeqClosed (Ψ '' {r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2}) := by
+    intro x y hxy hx
+    choose z hz using fun n ↦ (Set.mem_image _ _ _).1 (hxy n)
+    have hxmem : ∀ n, x n ∈ (LinearMap.range Ψ : Submodule ℝ V3) := fun n ↦ by
+      rw [LinearMap.mem_range]
+      exact ⟨z n, (hz n).2⟩
+    have hy : y ∈ (LinearMap.range Ψ : Submodule ℝ V3) :=
+      hGcl.isSeqClosed hxmem hx
+    obtain ⟨σ, hσ⟩ : ∃ σ : (LinearMap.range Ψ) →ₗ[ℝ] (ℝ × ℝ × ℝ),
+        Ψ.rangeRestrict ∘ₗ σ = LinearMap.id := by
+      apply LinearMap.exists_rightInverse_of_surjective
+      exact LinearMap.range_rangeRestrict Ψ
+    have hσkey : ∀ w : (LinearMap.range Ψ), Ψ (σ w) = w.1 := fun w ↦ by
+      have hw := LinearMap.congr_fun hσ w
+      exact congrArg Subtype.val hw
+    have hσcont : Continuous σ := σ.continuous_of_finiteDimensional
+    have hsub : ∀ n, σ ⟨x n, hxmem n⟩ ∈
+        (({r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2} : Set (ℝ × ℝ × ℝ)) +
+          (LinearMap.ker Ψ : Set _)) := by
+      intro n
+      have hk : Ψ (σ ⟨x n, hxmem n⟩ - z n) = 0 := by
+        rw [map_sub, hσkey, (hz n).2, sub_self]
+      refine ⟨z n, (hz n).1, σ ⟨x n, hxmem n⟩ - z n, ?_, by abel⟩
+      exact hk
+    have hlim : Filter.Tendsto (fun n ↦ σ ⟨x n, hxmem n⟩) Filter.atTop
+        (nhds (σ ⟨y, hy⟩)) := hσcont.tendsto _ |>.comp (tendsto_subtype_rng.2 hx)
+    obtain ⟨k, hk, t, ht, heq⟩ := hKcl.isSeqClosed hsub hlim
+    have heq' : k + t = σ ⟨y, hy⟩ := heq
+    refine ⟨k, hk, ?_⟩
+    have hy' : y = Ψ (σ ⟨y, hy⟩) := (hσkey ⟨y, hy⟩).symm
+    have e1 : Ψ (σ ⟨y, hy⟩) = Ψ (k + t) := by rw [heq']
+    rw [map_add, LinearMap.mem_ker.1 ht, add_zero] at e1
+    exact (hy'.trans e1).symm
+  exact hseq.isClosed
+
+private theorem p12_isClosed_affGe_pair_pair {a b c d : V3}
+    (hdis : Disjoint ({a, b} : Set V3) ({c, d} : Set V3)) :
+    IsClosed (affGe {a, b} {c, d}) := by
+  have hrep : affGe {a, b} {c, d}
+      = (a + ·) '' ((p12_affGeLin a b c d) ''
+        ({r : ℝ × ℝ × ℝ | 0 ≤ r.2.1 ∧ 0 ≤ r.2.2} : Set (ℝ × ℝ × ℝ))) := by
+    rw [AFF_GE_2_2 a b c d hdis]
+    ext y
+    simp only [Set.mem_image, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨t1, t2, t3, t4, ht3, ht4, hsum, hty⟩
+      refine ⟨p12_affGeLin a b c d (t2, t3, t4), ⟨(t2, t3, t4), ⟨ht3, ht4⟩, rfl⟩, ?_⟩
+      have ht1 : (1:ℝ) - t2 - t3 - t4 = t1 := by linarith
+      rw [← ht1] at hty
+      rw [hty]
+      show a + (t2 • (b - a) + t3 • (c - a) + t4 • (d - a))
+          = (1 - t2 - t3 - t4) • a + t2 • b + t3 • c + t4 • d
+      module
+    · rintro ⟨z, ⟨r, ⟨hr1, hr2⟩, hΨ⟩, hzy⟩
+      refine ⟨1 - r.1 - r.2.1 - r.2.2, r.1, r.2.1, r.2.2, hr1, hr2, by ring, ?_⟩
+      rw [← hzy, ← hΨ]
+      show a + (r.1 • (b - a) + r.2.1 • (c - a) + r.2.2 • (d - a))
+          = (1 - r.1 - r.2.1 - r.2.2) • a + r.1 • b + r.2.1 • c + r.2.2 • d
+      module
+  rw [hrep]
+  exact (Homeomorph.addLeft a).isClosed_image.2 (p12_Ψ_image_closed a b c d)
+
+
+/-! ### Scratch 2: disjointness + the two kit theorems -/
+private theorem p12_sqrt2_lt_two : Real.sqrt 2 < 2 := by
+  have h2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  nlinarith [Real.sqrt_nonneg 2]
+
+private theorem p12_barV_head_tail_ne {V : Set V3} {u0 u1 u2 u3 : V3}
+    (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3]) : u0 ≠ u1 := by
+  have hbar1 : barV V 1 [u0, u1] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 1 3 [u0, u1, u2, u3] hb (by norm_num)
+    rwa [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2] at h
+  have haff := MHFTTZN1 V [u0, u1] 1 hp hbar1
+  intro he
+  rw [he, show setOfList [u1, u1] = ({u1} : Set V3) by ext x; simp [setOfList]] at haff
+  rw [affDim_singleton] at haff
+  omega
+
+end
 
 /-! ## marchal2.hl:609 BARV_IMP_u0_IN_V -/
 
@@ -1055,14 +1415,54 @@ theorem EVENTUALLY_RADIAL_CONVEX_HULL_4_sub1 (a b c d : V3)
 
 /-! ## marchal2.hl:1014 U0_NOT_IN_CONVEX_HULL_FROM_ROGERS -/
 
-/-- HOL `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS` (marchal2.hl:1014). Sorried:
-geometric giant (the omega points stay off the first vertex's spot). -/
+/-- HOL `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS` (marchal2.hl:1014): the first
+vertex is not in the hull of the three omega points. Follows the HOL route:
+each omega point lies in the convex cell `voronoiList V (truncate 1 ul)`
+(`OMEGA_LIST_N_IN_VORONOI_LIST_GEN`), so the hull does too
+(`Convex.convexHull_eq`); head membership would put `u0` in
+`voronoiClosed V u1`, forcing `dist u0 u1 = 0` and contradicting the
+1-truncation dimension `MHFTTZN1` (`p12_barV_head_tail_ne`). -/
 theorem U0_NOT_IN_CONVEX_HULL_FROM_ROGERS (V : Set V3) (ul : List V3)
     (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul) :
     hdV ul ∉ convexHull ℝ {omegaListN V ul 1, omegaListN V ul 2,
       omegaListN V ul 3} := by
-  sorry
-  -- NEEDS: omega points off the first vertex's spot (geometric giant)
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul _hb
+  subst hul
+  have hu0V : u0 ∈ V := BARV_IMP_u0_IN_V V [u0, u1, u2, u3] u0 u1 u2 u3 _hs _hp _hb rfl
+  have hu01 : u0 ≠ u1 := p12_barV_head_tail_ne _hp _hb
+  have hω1 := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 1 1 _hp _hs _hb
+    (by norm_num) (by norm_num)
+  have hω2 := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 1 2 _hp _hs _hb
+    (by norm_num) (by norm_num)
+  have hω3 := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 1 3 _hp _hs _hb
+    (by norm_num) (by norm_num)
+  have hVL : convexHull ℝ (voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]))
+      = voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]) :=
+    (CONVEX_VORONOI_LIST _ _).convexHull_eq
+  have hsub : {omegaListN V [u0, u1, u2, u3] 1, omegaListN V [u0, u1, u2, u3] 2,
+        omegaListN V [u0, u1, u2, u3] 3}
+      ⊆ voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact hω1
+    · exact hω2
+    · exact hω3
+  have hhull : convexHull ℝ {omegaListN V [u0, u1, u2, u3] 1,
+        omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3}
+      ⊆ voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]) := by
+    rw [← hVL]
+    exact convexHull_mono hsub
+  intro hcon
+  have hu0mem : u0 ∈ voronoiList V (truncateSimplex 1 [u0, u1, u2, u3]) :=
+    hhull hcon
+  have hu0vc : u0 ∈ voronoiClosed V u1 := by
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2, voronoiList, voronoiSet,
+      Set.mem_sInter] at hu0mem
+    exact hu0mem _ ⟨u1, by simp [setOfList], rfl⟩
+  have h0 := hu0vc u0 hu0V
+  rw [dist_self] at h0
+  exact hu01 (dist_eq_zero.1 (le_antisymm h0 dist_nonneg))
 
 /-! ## marchal2.hl:1151 RADIAL_VS_RADIAL_NORM -/
 
@@ -2095,6 +2495,170 @@ theorem MXI_EXPLICIT_OLD (V : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
   have hh : hdV ul = u0 := by rw [hul]; rfl
   rw [hh] at hdist
   exact ⟨s, hseg, hdist, hs⟩
+
+private theorem p12_mcell2_affGe_disjoint (V : Set V3) (ul : List V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
+    (h3 : Real.sqrt 2 ≤ hl ul) :
+    Disjoint ({hdV ul, hdV ul.tail} : Set V3) ({mxi V ul, omegaListN V ul 3} : Set V3) := by
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  subst hul
+  have hu0V : u0 ∈ V := BARV_IMP_u0_IN_V V [u0, u1, u2, u3] u0 u1 u2 u3 hs hp hb rfl
+  have hu1V : u1 ∈ V := by
+    have hv := hb.2 [u0, u1] ⟨by refine ⟨[u2, u3], rfl⟩, by norm_num⟩
+    exact hv.2.1 (by simp [setOfList])
+  have hu01 : u0 ≠ u1 := p12_barV_head_tail_ne hp hb
+  have hin : ∀ {i : ℕ} {v : V3} {wl : List V3},
+      omegaListN V [u0, u1, u2, u3] i ∈ voronoiList V wl →
+      v ∈ setOfList wl → omegaListN V [u0, u1, u2, u3] i ∈ voronoiClosed V v := by
+    intro i v wl hmem hv
+    rw [voronoiList, voronoiSet, Set.mem_sInter] at hmem
+    exact hmem _ ⟨v, hv, rfl⟩
+  have hω2' := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 2 hb (by norm_num)
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2] at hω2'
+  have hω2u0 : omegaListN V [u0, u1, u2, u3] 2 ∈ voronoiClosed V u0 :=
+    hin hω2' (by simp [setOfList])
+  have hω2u1 : omegaListN V [u0, u1, u2, u3] 2 ∈ voronoiClosed V u1 :=
+    hin hω2' (by simp [setOfList])
+  have hω3' := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 3 hb (by norm_num)
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 u2 u3)] at hω3'
+  have hω3u0 : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiClosed V u0 :=
+    hin hω3' (by simp [setOfList])
+  have hω3u1 : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiClosed V u1 :=
+    hin hω3' (by simp [setOfList])
+  rw [Set.disjoint_left]
+  intro a ha ha'
+  simp only [hdV, Set.mem_insert_iff, Set.mem_singleton_iff, List.headD_cons] at ha ha'
+  rcases ha with h0 | h1
+  · subst a
+    rcases ha' with hm | hw3
+    · by_cases hc : Real.sqrt 2 ≤ hl (truncateSimplex 2 [u0, u1, u2, u3])
+      · have hm2 : mxi V [u0, u1, u2, u3] = omegaListN V [u0, u1, u2, u3] 2 := by
+          simp only [mxi, if_pos hc]
+        rw [hm2] at hm
+        have h := hω2u1
+        rw [← hm] at h
+        have h0 := h u0 hu0V
+        rw [dist_self] at h0
+        exact hu01 (dist_eq_zero.1 (le_antisymm h0 dist_nonneg))
+      · have hlt : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2 := lt_of_not_ge hc
+        obtain ⟨s, _hs1, hs2, hs3⟩ :=
+          MXI_EXPLICIT V [u0, u1, u2, u3] u0 u1 u2 u3 hs hp hb rfl hlt h3
+        rw [hs3, ← hm] at hs2
+        simp only [hdV, List.headD_cons] at hs2
+        rw [dist_self] at hs2
+        have hpos : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.2 (by norm_num)
+        linarith
+    · have h := hω3u1
+      rw [← hw3] at h
+      have h0 := h u0 hu0V
+      rw [dist_self] at h0
+      exact hu01 (dist_eq_zero.1 (le_antisymm h0 dist_nonneg))
+  · subst a
+    rcases ha' with hm | hw3
+    · by_cases hc : Real.sqrt 2 ≤ hl (truncateSimplex 2 [u0, u1, u2, u3])
+      · have hm2 : mxi V [u0, u1, u2, u3] = omegaListN V [u0, u1, u2, u3] 2 := by
+          simp only [mxi, if_pos hc]
+        rw [hm2] at hm
+        have hm' : u1 = omegaListN V [u0, u1, u2, u3] 2 := hm
+        have h := hω2u0
+        rw [← hm'] at h
+        have h0 := h u1 hu1V
+        rw [dist_self] at h0
+        exact hu01 (dist_eq_zero.1 (le_antisymm h0 dist_nonneg)).symm
+      · have hlt : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2 := lt_of_not_ge hc
+        obtain ⟨s, _hs1, hs2, hs3⟩ :=
+          MXI_EXPLICIT V [u0, u1, u2, u3] u0 u1 u2 u3 hs hp hb rfl hlt h3
+        have hm' : u1 = mxi V [u0, u1, u2, u3] := hm
+        rw [hs3, ← hm'] at hs2
+        simp only [hdV, List.headD_cons] at hs2
+        have hp2 := hp.dist_ge_two hu0V hu1V hu01
+        linarith [p12_sqrt2_lt_two]
+    · have hw3' : u1 = omegaListN V [u0, u1, u2, u3] 3 := hw3
+      have h := hω3u0
+      rw [← hw3'] at h
+      have h0 := h u1 hu1V
+      rw [dist_self] at h0
+      exact hu01 (dist_eq_zero.1 (le_antisymm h0 dist_nonneg)).symm
+
+/-! ## marchal2.hl:541 CLOSED_MCELL -/
+
+/-- HOL `CLOSED_MCELL` (marchal2.hl:541): every Marchal cell is closed.
+Cases `k = 0,1,3,4` are proved from CLOSED_ROGERS / cone-openness /
+finite-hull closedness; the `k = 2` case closes the wedge `affGe` with the
+in-file finite-dimension helper `p12_isClosed_affGe_pair_pair` (the HOL
+original used Geomdetail's `CLOSED_AFF_GE`). RELOCATED below `MXI_EXPLICIT`
+(both the `p12_mcell2_affGe_disjoint` side condition and the `u0 ∈ V`
+lemma are defined later in this file; the statement is unchanged). -/
+theorem CLOSED_MCELL (V : Set V3) (ul : List V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) :
+    ∀ k : ℕ, IsClosed (mcell k V ul) := by
+  intro k
+  rcases Nat.lt_or_ge k 4 with hk | hk
+  · interval_cases k
+    · -- k = 0: rogers \ open ball
+      show IsClosed (mcell0 V ul)
+      rw [mcell0]
+      exact (CLOSED_ROGERS V ul hs hp hb).inter Metric.isOpen_ball.isClosed_compl
+    · -- k = 1: (rogers ∩ closedBall) \ open cone
+      show IsClosed (mcell1 V ul)
+      rw [mcell1]
+      split_ifs with hle
+      · have hc2 : Continuous fun x : V3 =>
+            (x - hdV ul) ⬝ᵥ (hdV ul.tail - hdV ul) := by fun_prop
+        have hc1 : Continuous fun x : V3 => dist x (hdV ul)
+            * dist (hdV ul.tail) (hdV ul)
+            * (hl (truncateSimplex 1 ul) / Real.sqrt 2) := by fun_prop
+        have hopen : IsOpen (rconeGt (hdV ul) (hdV ul.tail)
+            (hl (truncateSimplex 1 ul) / Real.sqrt 2)) := by
+          have hF : Continuous fun x : V3 =>
+              (x - hdV ul) ⬝ᵥ (hdV ul.tail - hdV ul)
+              - dist x (hdV ul) * dist (hdV ul.tail) (hdV ul)
+                * (hl (truncateSimplex 1 ul) / Real.sqrt 2) := hc2.sub hc1
+          have hset : rconeGt (hdV ul) (hdV ul.tail)
+                (hl (truncateSimplex 1 ul) / Real.sqrt 2)
+              = (fun x : V3 => (x - hdV ul) ⬝ᵥ (hdV ul.tail - hdV ul)
+                  - dist x (hdV ul) * dist (hdV ul.tail) (hdV ul)
+                    * (hl (truncateSimplex 1 ul) / Real.sqrt 2)) ⁻¹'
+                Set.Ioi 0 := by
+            ext x
+            simp [rconeGt, Set.mem_preimage, sub_pos]
+          rw [hset]
+          exact hF.isOpen_preimage _ isOpen_Ioi
+        exact ((CLOSED_ROGERS V ul hs hp hb).inter Metric.isClosed_closedBall).inter
+          hopen.isClosed_compl
+      · exact isClosed_empty
+    · -- k = 2: both cones are closed (CLOSED_RCONE_GE with `0 < a` from
+      -- BARV_IMP_HL_1_POS_LT) and the wedge `affGe {HD, HD TL} {mxi, ω3}` is
+      -- closed by `p12_isClosed_affGe_pair_pair`, whose disjointness side
+      -- condition `p12_mcell2_affGe_disjoint` comes from the packing /
+      -- voronoi_closed distance arguments
+      show IsClosed (mcell2 V ul)
+      rw [mcell2]
+      split_ifs with hcond
+      · have ha : 0 < hl (truncateSimplex 1 ul) / Real.sqrt 2 := by
+          exact div_pos (BARV_IMP_HL_1_POS_LT V ul hs hp hb)
+            (Real.sqrt_pos.2 (by norm_num))
+        exact ((CLOSED_RCONE_GE (hdV ul) (hdV ul.tail) _ ha).inter
+          (CLOSED_RCONE_GE (hdV ul.tail) (hdV ul) _ ha)).inter
+          (p12_isClosed_affGe_pair_pair
+            (p12_mcell2_affGe_disjoint V ul hs hp hb hcond.2))
+      · exact isClosed_empty
+    · -- k = 3: finite hull
+      show IsClosed (mcell3 V ul)
+      rw [mcell3]
+      split_ifs with hcond
+      · exact (Set.Finite.isCompact_convexHull ℝ
+          (Set.Finite.union (p12_setOfList_finite (truncateSimplex 2 ul))
+            (Set.finite_singleton (mxi V ul)))).isClosed
+      · exact isClosed_empty
+  · -- k ≥ 4: dispatch resolves to mcell4
+    rw [mcell, if_neg (by omega : ¬(k = 0)), if_neg (by omega : ¬(k = 1)),
+      if_neg (by omega : ¬(k = 2)), if_neg (by omega : ¬(k = 3))]
+    rw [mcell4]
+    split_ifs with hlt
+    · exact (Set.Finite.isCompact_convexHull ℝ (p12_setOfList_finite ul)).isClosed
+    · exact isClosed_empty
+
 
 /-! ## marchal2.hl:2942 proj_point (the file's one new_definition) -/
 
