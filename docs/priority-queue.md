@@ -17,17 +17,17 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AD @`cc33026a`（2026-11-12，ox3q1h + K3 簇收口）**
-> cone `K_REACH 2,096,032` / **SORRIED 70** / **`K_AXIOM 585`** / MODULES 5,221 /
-> UNIVERSE 2,108,839 / COVERAGE **99.3927%**；口径 II 35,609 / 70 / 585 / 46,859。
-> `docs/e2e-reachability-map.tsv` 已按基线 AD 重写（5,895 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AE @`55512ac9`（2026-11-12，`JCYFMRP_p27` 真证）**
+> cone `K_REACH 2,096,154` / **SORRIED 69** / **`K_AXIOM 585`** / MODULES 5,221 /
+> UNIVERSE 2,108,976 / COVERAGE **99.3920%**；口径 II 35,731 / 69 / 585 / 46,996。
+> `docs/e2e-reachability-map.tsv` 已按基线 AE 重写（5,894 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AC/AB/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 70 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 14（`--- SORRIED ---` 段实测）。
-> 较基线 AC：SORRIED 72→70（清单 diff：closed 恰 `{real_model_ox3q1h_merge, MM_4I2_IMP_4T2_4T1_p33}`、
-> added ∅；**双台阶真还债**）、K_AXIOM 585（0/0）、K_REACH +112、K_UNIVERSE +48。
-> 中间档：`04ab3cac` DAG 切面四刀（cone-neutral，解锁 JCYFMRP 波 + K3 簇 + OCBICBY）、
-> `1c540609` K3 kit 1/6（锥外资产）；AC/AB 各节见 map。
+> （与基线 AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 69 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 13（`--- SORRIED ---` 段实测）。
+> 较基线 AD：SORRIED 70→69（清单 diff：closed 恰 `{JCYFMRP_p27}`、added ∅；**真还债**）、
+> K_AXIOM 585（0/0）、K_REACH +122、K_UNIVERSE +137。
+> 中间档：`04ab3cac` DAG 切面四刀（cone-neutral，解锁 JCYFMRP 波/K3 簇/OCBICBY）、
+> `1c540609` K3 kit 1/6、`11b1c68e` K13 kit 2/2（均锥外资产）；AD/AC/AB 各节见 map。
 >
 > **核心路线图**：[`docs/hf-proof-map.md`](hf-proof-map.md)（九节完成度 + 逐箭头逻辑链 + 缺口清单）。
 > **接手先读**：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（现状 / 用户已定裁决 / 死路与红旗清单 / 环境坑）。
@@ -261,6 +261,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-12（14:28，续1026）**：**基线 AE 定档（70→69，JCYFMRP 真还债）**：`55512ac9`。
+① 实测：K_REACH 2,096,154（+122）/ **SORRIED 69**（清单 diff：closed 恰 `{JCYFMRP_p27}`、added ∅）/ AXIOM 585（0/0）/ MODULES 5,221 / UNIVERSE 2,108,976（+137）/ COVERAGE 99.3920%（−0.0007pp，分母涨）；口径 II 35,731 / 69 / 585 / 46,996。
+② 文档全套（§6.1 三层）：pq 文件头、map.md AE 节、**TSV 5,894 行原样换装**、AGENTS §1（69 条）、README×2（70→69）、hf-map 状态更新十七。
+③ 根面 589 逐字节同；manifest PASS。剩余 69 = Assembly 56 + Text 13。
+④ 在飞：tfitskcv1-w1（K2，过则 69→68 + 打开 TFITSKC/V2/V3）、defix-small-w1（两小 DEF-FIX）、biefjhu-tm（三续）；排队：emptykit-3 等 agent-8 落库。
 - **2026-11-12（14:28，续1025）**：**一笔落库：JCYFMRP_p27 真证 `55512ac9`（dagcut-w2/w2，LA27 +824/−179；锥内 70→69，Text 14→13）**。
 ① **内容**：+import LA21（dagcut 解锁边）等 9 import + `open Fan` + 4 private kit（arc_mem/diag_ps/diag_sp/flat_residues_coplanar）+ ~370 行证明体；FEKTYIY_p27 块逐字节前移 169 行（消费次序所需，内容零改动）；冻结自检 SIG 删 0 增恰 4 / SORRY 删 1 增 0。
 ② **闸（编排者）**：apply sanity + LA27/LocalConcl/TameLp 三 build rc=0 + JCYFMRP/FEKTYIY 双探针标准三 + 根面 589 逐字节同（md5 `246e952c…`）。

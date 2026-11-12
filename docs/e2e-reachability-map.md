@@ -773,6 +773,30 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 **工具 ERRATA**：根面探针若写在 `namespace Kepler` 外，`#print axioms` 打印全限定名
 （`Kepler.Graphs.…`），与基线短名格式不同 ⇒ **逐字节比对假红**；固定格式见 handoff pit 18。
 
+### 基线 AE：JCYFMRP_p27 真证 @ `55512ac9`（2026-11-12）
+
+> 触发：`55512ac9`（`JCYFMRP_p27` 真证，LA27 +824/−179，dagcut-w2/w2：解锁边 +import LA21 等
+> 9 import + open Fan + 4 private kit + ~370 行证明体；FEKTYIY_p27 逐字节前移 169 行）。
+> 仪器原样换装（**5,894 行**，−1 = SORRIED −1）。manifest `--check` PASS。
+
+| 指标 | 基线 AE | 基线 AD | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,096,154** | 2,096,032 | **+122** |
+| SORRIED | **69** | 70 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,221 | 5,221 | 0 |
+| K_UNIVERSE | 2,108,976 | 2,108,839 | +137 |
+| COVERAGE | 99.3920% | 99.3927% | −0.0007pp |
+| 口径 II（ex-Cases） | K_REACH **35,731** / SORRIED **69** / AXIOM **585** / UNIVERSE **46,996** | 35,609 / 70 / 585 / 46,859 | +122 / −1 / 0 / +137 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.JCYFMRP_p27`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：**锥内真还债**。K_REACH +122 = JCYFMRP 证明体（4 私件 kit + 370 行主链）入锥；
+K_UNIVERSE +137 略大于 reach（私有 helper 部分不可达）⇒ COVERAGE 微降 0.0007pp 是分母涨，非回退。
+剩余 **69** = Assembly 56（55 `nli*` + 1 hLP）+ **Text 13**。LA27 剩 3 sorry：
+TFITSKCv1/TFITSKC（K2 波在飞，agent-9）+ JLXFDMJ（K4b 巨件）。
+
 ### 基线 AD：ox3q1h + K3 簇收口 @ `cc33026a`（2026-11-12）
 
 > 触发：`2b634e5b`（`real_model_ox3q1h_merge` 真证，PA25 +800/−4，ox3q1h-w1：53 叶 case 树 +
