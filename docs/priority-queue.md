@@ -87,31 +87,96 @@
 ---
 
 
-## 1. 在飞（2026-11-12 07:36，池 **3/3**：wave 15）
+## 1. 在飞（2026-11-12 08:05，池 **3/3**：wave 16）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1011）与 `history/changelog-archive-2.md`。
 >
+> **刚落地（里程碑）**：`general_482_deformation_p21` 真证收口 `0a1ff76d`（+764/−5，LA21 3→2，
+> 探针标准三；派生 `CUXVZOZ_p21`/`CJBDXXN_p21` 同转净）。基线 AA 量测中（预期 SORRIED 74→73）。
+>
 > | 车道 | 目标 | 备注 |
 > |---|---|---|
-> | `g482-482-w4` | `general_482_deformation_p21` 本体续写 | 接 w2/w3 的 `Body2.lean` 511 行 + T2–T8；上游 44/44 标准三；剩 ~316 行 |
-> | `vpwshto-w1` | `VPWSHTO_p15`（锥内直源） | HOL `VPWSHTO.hl:1978`；5-cycle 单位边 ⇒ 某顶点两条五边形对角 ≤ 1+√5 |
+> | `jcyfmrp-w1` | `JCYFMRP_p27`（锥内直源） | 唯一缺口 `CUXVZOZ` 已随 general_482 转净；HOL ~300 行 |
+> | `vpwshto-w1` | `VPWSHTO_p15`（锥内直源） | HOL `VPWSHTO.hl:1978` |
 > | `la22emptykit-w1` | OCBICBY 的 empty 前置 | `scs_6T1/5T1_generic` / `terminal_pent_taum2` / `vv_inj_lemma` / `azim_in_fan_azim` |
 >
-> **最近判词**：`empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，import DAG 死锁）/ `g482-482-w2` STOPPED（续1007，单件规模）。
-> **最近落库**：`rrw` `75ed6d07`（RRCWNSJ_p26 真证）/ `g482-482-w3` `3d8db02b`（19 条求和 kit）/ `la7gen` `001731a7`（LA7 GENERIC 真证）。
-
-
+> **最近完成/判词**：`g482-482-w4` DONE（本笔）；`text-est-w1` 报告已归档（§2.1）；
+> `empty-la22` BLOCKED（续1011）/ `ocbicby` BLOCKED（续1010）/ `vas-nhx` BLOCKED（续1002，DAG 死锁）。
+>
 ## 2. 排队（按序补位）
 
 > 只保留**当前**可执行项；2026-10 的历史队列（PA22/nli/W6/LV/PA24 等）已归档到
 > `archive/priority-queue-legacy-2026-10.md`。
 
 1. **OCBICBY 解封专项**（锥内直源巨件）：14 条 `empty_*` —— 2 条 LA22 前置在攻（`la22emptykit`）；1 条 LA38 `empty_3T2` 需先解 import 环；**11 条树内无陈述**，必须先立真陈述（走 SF/新件，禁止 sorry 壳）。分批 E1–E7 见 `lane_snapshots/ocbicby-w1/DELIVERY.md`。
-2. **general_482 下游接线**（待 w4 绿）：`JCYFMRP_p27`（≈300 行搬运）→ `TFITSKCv1_p27`（私有 kit 400–700 行）→ `TFITSKC_p27`（13 行 demo 已备，NOT FOR LANDING）→ LA33 三件（`MM_4I2_IMP_4T2_4T1` / `SCS_4I1_IMP_SCS_4I2` / `SCS_4I2_IMP_SCS_4T1`）→ `SCS_6M1_IMP_SCS_6T1`。
+2. **general_482 下游接线**（闸已开 `0a1ff76d`）：`JCYFMRP_p27`（≈300–430 行，在飞）→ `TFITSKCv1_p27`（私有 kit 400–700 行）→ `TFITSKC_p27`（13 行 demo 已备，NOT FOR LANDING）→ LA33 三件（`MM_4I2_IMP_4T2_4T1` / `SCS_4I1_IMP_SCS_4I2` / `SCS_4I2_IMP_SCS_4T1`）→ `SCS_6M1_IMP_SCS_6T1`。
 3. **VASYYAU/vt 战役**（等 DAG 重构裁决）：`MIQMCSN_p32` / `NWDGKXH_p32` / `YOBIMPP_p32` —— ~1,815 HOL 行 + LA23 上游 import 拓扑调整（当前反向 import 成环）。
 4. **独立叶剩余**：`SCS_6I1_BERAK_BY_CSTAB`（需 SCS_6M1 链）/ `LFLACKU_p23` / `SCS_5M2_IMP_SCS_5T1_p29` / `UAGHHBM_p30`。
 5. **用户保留**：`TameLp.fully_surrounded_perimeter_bound`（等 hNKE/B1 裁决）、`real_model_ox3q1h_merge`（ox3q1h DEFHOLE）、PA13 `URRPHBZ2`、hLP `lpArchiveCertificatesDebt`（等 LP 解冻）。
 
+
+### 2.1 Text 18 条 sorry 工作量估算（2026-11-12，只读车道 `text-est-w1`）
+
+> **口径**：`自身 EST` = 该条自己的证明体 + 专属 private kit，**不含**任何 sorry 依赖；
+> 依赖的 sorry 成本记在它自己那行。共享 kit 单列（§2.1b），不重复计入各行。
+> 全表是 **EST**（区间 + 置信度），不是承诺。完整报告（依赖图 / 逐条论证 / 校准系数 /
+> UNRESOLVED 清单）：[`archive/scouts/text-sorry-estimates-2026-11-12.md`](archive/scouts/text-sorry-estimates-2026-11-12.md)。
+
+**2.1a 逐条自身增量**
+
+| # | sorry | 位置 | 数学含义（一句） | 依赖（18 内 / 新拉入） | 被依赖 | 自身 EST | 置信 |
+|---|---|---|---|---|---|---|---|
+| 1 | `JCYFMRP_p27` | LA27:495 | 钉边存在性：∃ 相邻边 dist=2 | 无（CUXVZOZ 已证） | `JCYFMRP_V3` 链 | 300–430 | 中 |
+| 2 | `LFLACKU_p23` | LA23:303 | `{3I1} → ∅` 箭头 | 新拉入：TAUM_STD_POS + TAUM_EXTREMAL（hNL） | JEJTVGB | 25–45 | 高 |
+| 3 | `MIQMCSN_p32` | LA32:1576 | 4M8 → {4M6′,3T7,3T4} | 新拉入：5 条 LA32 + 2 条二阶 | MIQMCSN_discharged | 45–80 | 中 |
+| 4 | `MM_4I2_IMP_4T2_4T1_p33` | LA33:2450 | 对角闭合 ⇒ 4T1∨4T2 非空 | 新拉入：EDGE 簇 6 件（K3） | ARDBZYE | 180–260 | 中 |
+| 5 | `NWDGKXH_p32` | LA32:1030 | 4M6′ → {4T3,4T5} | 新拉入：4M6 梯子 5 件（K6） | NWDGKXH_discharged | 25–45 | 中 |
+| 6 | `OCBICBY_p22` | LA22:3856 | 14 个 T-系统 → ∅ | 新拉入：3 现有 + 11 条无陈述（K10） | JEJTVGB | 70–110 | 中 |
+| 7 | `SCS_4I1_IMP_SCS_4I2_p33` | LA33:2487 | 4I1 ⇒ 4I2 非空 | 新拉入：V3_p29 + JLXFDMJ_p27（K4a/K4b） | SCS_4I1_ARROW 链 | 75–110 | 中 |
+| 8 | `SCS_4I2_IMP_SCS_4T1_p33` | LA33:1817 | 4I2 ⇒ 4T1 非空 | 同上三元组 | ARDBZYE | 90–130 | 中 |
+| 9 | `SCS_5M2_IMP_SCS_5T1_p29` | LA29:3651 | 5M2 ⇒ 5T1 非空 | 新拉入：V3 + JLXFDMJ + IUNBUIG + xrr + EGHNAVX | HIJ_STEP_1 | 330–480 | 低 |
+| 10 | `SCS_6I1_BERAK_BY_CSTAB` | LA20:1647 | 6I1 → {6T1} + stab | 新拉入：2 条 hexagons + 3 条 LA1 wire（K11） | OEHDBEN_PRIME | 65–95 | 中 |
+| 11 | `TFITSKC_p27` | LA27:331 | 钉边沿链传递 | 新拉入：`TFITSKCv1_p27`（K2） | TFITSKC_discharged | 20–35 | 高 |
+| 12 | `fully_surrounded_perimeter_bound` | TameLp:925 | 全被包围扇周长 ≤ 2π | 新拉入：WSEWPCH ~1,150 HOL（K12） | MQMSMAB | 10–20 | 高/UNRESOLVED |
+| 13 | `UAGHHBM_p30` | LA30:1204 | 子分保持 SCS | 新拉入：2 条 isScs **无陈述**（K14） | UAGHHBM_discharged | 800–1,300 | 高 |
+| 14 | `URRPHBZ2` | PA13:361 | Marchal cell 最终径向 | 新拉入：CLOSED_MCELL k=2 + U0_NOT（K13） | QZYZMJC | 650–950 | 中 |
+| 15 | `VPWSHTO_p15` | LA15:398 | 五边形顶点两对角线 ≤ 1+√5 | 新拉入：同章 10 件 | LA15 下游 | 150–230 | 中 |
+| 16 | `YOBIMPP_p32` | LA32:1241 | 4M7 → 4 目标 | 新拉入：2 条 LA32 + 4M7 子件（K7） | YOBIMPP_discharged | 45–80 | 中 |
+| 17 | `general_482_deformation_p21` | LA21:4489 | 482 形变主定理 | — | 6 条下游 | **784（已兑现 `0a1ff76d`）** | — |
+| 18 | `real_model_ox3q1h_merge` | PA25:10378 | ox3q1h 4 季界 | 无 | pkrmQuarter | 170–240 | 中-高 |
+
+**2.1b 共享 kit（一次性，不重复计入各行）**
+
+| kit | 内容 | EST | 受益 |
+|---|---|---|---|
+| K3 EDGE 簇 | `EDGE_EQ_2_4I2` 6 件（357 HOL） | 360–520 | #4 |
+| K4a `JCYFMRP_V3_p29` | — | 30–50 | #7/#8/#9 |
+| K4b `JLXFDMJ_p27` | 无 sorry 门（SCS_M_EQ_1 / CHANGE_*_MOD 已证） | 600–800 | #7/#8/#9 |
+| K6 4M6 梯子 | — | 400–565 | #5 |
+| K7 4M7 梯子 | — | 110–165 | #16 |
+| K8 4M8 梯子 | — | 235–600（下限 UNRESOLVED） | #3 |
+| K2 `TFITSKCv1_p27` | 含私有 kit 重写 | 500–650 | #11 |
+| K9 TAUM | hNL 阻塞 | 160–240 | #2 |
+| K10 `empty_*` | 14 条（含 11 条无陈述） | 1,400–1,900 | #6 |
+| K11 SCS_6I1 链 | — | 200–320 | #10 |
+| K12 WSEWPCH | 章级 | 1,000–1,500 | #12 |
+| K13 URRPHBZ2 gates | — | 180–310 | #14 |
+| K14 UAGHHBM restriction-isScs | 含 2 条无陈述 | 120–250 | #13 |
+
+**2.1c 总账 / 杠杆 / 顺序**
+
+- **naive 求和**（只看各行自身）：17 条活件 **3,050–4,640**；含已兑现 g482 则 18 条 **3,834–5,424**。
+- **DAG 去重后的真实成本**（自身 + 共享 kit + 新拉入的 sorry）：**≈9,330–13,580**（含 g482 已花 784）。
+  去重后比 naive 多 **≈5,500–8,200**——「证一条会新拉进一串债」；自身工作量只占真实成本 **~30–36%**。
+- **杠杆排序**：`JCYFMRP_p27`（300–430，配 V3 解锁 4 条）> `JLXFDMJ_p27`（600–800，解锁 3 条）
+  > `SCS_4T3_IS_SCS`（110–170）> EDGE 簇。**最快干净 −1**：`real_model_ox3q1h_merge`（170–240，无依赖）。
+- **建议 3 车道序**：
+  - **Wave 0**：A `real_model` → `JCYFMRP`；B 4M6 梯子 → `NWDGKXH`；C EDGE 簇 → `MM_4I2`。
+  - **Wave 1**：A `JCYFMRP_V3` + `JLXFDMJ` → `SCS_4I2/4I1`；B `TFITSKCv1` → `TFITSKC`；C 4M7/4M8 → `YOBIMPP`/`MIQMCSN`。
+  - **Wave 2**：`SCS_5M2`、`SCS_6I1`。
+  - **冻结/低 ROI**：`LFLACKU`（hNL）、`OCBICBY`（11 条无陈述）、`UAGHHBM`（2 条无陈述）、`TameLp`（WSEWPCH 章）、`URRPHBZ2`（Geom/Aff 缺件）、`VPWSHTO`（整章 11 件）。
+- **对旧 triage 的更正**：`general_482` 已闭；`RRCWNSJ_p26`、`SCS_4I2_STRAIGHT(_ALL)`、`LEPJBDJ` 已证；LA32 的 `SCS_OPP_REFL_p13`/`YXIONXL2_p13` 是 `ScsV39P13` 型不可用，改用 `YXIONXL2_p33`（LA33:495，`LA32→LA33` import 无环）。
+- **移植系数**：tactic-bash **1.2–1.45×**（g482 实测 1.23×、rrw 1.43×、deform 1.31×）、解析搬运 **1.8–2.0×**、纯装配 **0.4–0.9×**。
 
 ## 3–5. 战术 / 中期 / 长期
 
