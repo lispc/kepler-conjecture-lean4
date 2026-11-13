@@ -262,6 +262,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（13:25，续1033）**：**nextbox-scout 交付（下一盒推荐 = TSKAJXY-XLLIPLS，待用户点头 certtm 窗口）+ TameLp 便宜门车道发车（tamelp-door-w1，agent-34）+ urrcellbody-w3 再截断**。
+① **scout 结论（案头零编译，SCOUT.md 8 节）**：54 条 nli* 归约 = **11 个 TM 可消费盒** + 2 个缺 case JSON 的生成模板族（ZTGIJCF4×10 / QITNPEA1×4，可重建）+ 5 条非盒注册表直挂。三候选：**TSKAJXY-XLLIPLS 第一**（原始 ~1,826 格 → TM 3k–8k 叶，唯一严格+无析取+全数值 dyadic，case 在库免 hand-hybrid，重放估 0.5–1.5 天；战略收益 = gamma4fgcy IExpr 编码+bridge 是 ≥15 条 nli* 共享前置）；QZECFIC wt0 第二；QITNPEA-linear 五银行第三（≥2×10⁵ 叶/件，定位战略后续）。标定：BIEFJHU-a 原始 162 格 ↔ TM 300 叶（×1.85）。
+② **裁决待用户**：下一盒 = TSKAJXY-XLLIPLS 是否批（certtm 解冻是单盒专项，BIEFJHU-a 后需逐盒点头）；UNRESOLVED：certtm 能否直吃 plain case JSON 未验证（XLLIPLS 无 hybrid 变体，或需机械预改写）；止损触发 = certtm 探针重演 w2 尾区型全档 NEG → 切候选 B。
+③ **TameLp 便宜门发车**（agent-34：hNKE 供给件 60–120，W19/W24 链直投 LocalFanPerimeterGeneric:116；SF gap 触发即停手上报）。
+④ **urrcellbody-w3 再截断**（13 min，中断潮今日第 9 例）：断在「取 erHull4 错误列表」；**里程碑纪律违反——b/ 快照为空**，工作面 187,244 B 已从 /tmp 抢救但未落快照；编译日志 s1_r2.log RC=1 在案。resume 僵尸锁第 6 例，等 90s×2 后 fresh 接管 w4。**缓解升级：工单「恢复第一步=覆盖写 b/」改为硬性第一条，车道开场先落盘后干活。**
+
 - **2026-11-13（13:10，续1032）**：**一笔落库：uagkit-w6 K14 kit `5f7c511a`（LA30 +381/−7，UAGHHBM_p30 两条 inline isScs 缺口补齐）+ 四项冻结件裁决全批执行 + rg 新规入 AGENTS §7.1**。
 ① **K14 落库（编排者独立闸全绿）**：岛编 RC=0/0 err（唯一 warning = UAGHHBM_p30:1578 本体 sorry 在案债）；双 private 探针（全限名同模块拼接法）标准三零 sorryAx；根面 589 逐字节同（md5 `246e952c…`）；olean 装池。cone-neutral 零 sorry 删除。
 ② **ERRATA（续1030 记法更正）**：「uagkit 五车道修错循环、需 0.5 工作日」**不成立**——23 个 error 是 **w1 初版 patch 的陈旧现场**，w3 把 w1 初版误当 w2 终版修（w4 cmp 实锤），w2 终版早已全修；w6 零编辑、全链亲跑复验 6 分钟收口。`~/c17_backup/gate_uag3.log` 已标注「w1 初版现场，陈旧，勿据此派单」。教训：**工件快照必须带版本身份**（初版/终版混用已烧掉 w3-w5 三条车道 + 编排者一轮亲试）。
