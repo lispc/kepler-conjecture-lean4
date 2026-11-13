@@ -3034,6 +3034,23 @@ private theorem jlxfdmj_ge4 (hmnl : main_nonlinear_terminal_v11) :
           hr0def, mod_add_c_p27 (c := 1) hk1']
       exact ev_of (i0 + s.k - db) edb edb1 hBdb
 
+/-- Public form of the landed `jlxfdmj_ge4` with the HOL premise `3 < s.k`
+(`JLXFDMJ.hl:214-224`; recovered from lane `jlxfdmj-w1`'s public
+`JLXFDMJ_ge4_p27`).  Consumers are all `k ∈ {4,5,6}` (`scs6M1`/`scs6I1` k=6,
+LA33 k=4, `scs5M2` k=5), so they discharge `3 < s.k` by `norm_num`.  The
+original `JLXFDMJ_p27` statement is untouched (k=3 case remains open). -/
+theorem JLXFDMJ_ge4_p27 :
+    main_nonlinear_terminal_v11 →
+      ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
+        3 < s.k → isScsV39 s → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+          dist (v i) (v (i + 1)) = 2 →
+            (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) → (scsM s).ncard ≤ 1 →
+              (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+                (∀ i, s.a i (i + 1) < s.b i (i + 1)) →
+                  s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
+                    ∀ j, j % s.k ∉ scsM s → dist (v j) (v (j + 1)) = 2 := by
+  exact jlxfdmj_ge4
+
 /-- HOL `JLXFDMJ_concl` (JLXFDMJ.hl:214). The `∀ j` premise uses the faithful
 `j % s.k ∉ scsM s` (HOL `~(j MOD k IN scs_M_v39 s)`). -/
 theorem JLXFDMJ_p27 :
