@@ -665,6 +665,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（05:25，续1091）**：**用户批 1+2，双车道复飞——tauxkit-w1（agent-60：tau_x kit 考古+章程草案，全程只读）+ enclosed4-w1（agent-61：LA38 enclosed 集群 5 件，4T3 收口供料）**。
+① tau_x kit 立项背景：两桩（taumX_p19/tauResidualX_p19，常量锚 0）消费者面经编排者初查仅 LA19/LA38——换真身影响面小，正适合立项；车道任务 = HOL 考古 + 消费者逐件影响表（哪件仍真/哪件需 SF，机器证据）+ charter-draft.md（格式先例 docs/def-fix-charters/ox3q1h-deffix、p21-anchor）。产出后用户批章程本体，再派施工车道。
+② enclosed 集群（vv_enclosed4/enclosed_sym/enclosed_sym2/enclosed4_lemma/IN_V_IMP_AZIM_LESS_PI_ALT）：quad4t3-w1 判词里与 LP wrapper 分列的 5 件几何件；车道先逐件验明与 LP 无关再证，有消费 LP 桩的移 BLOCKED。
+③ 文件面：60=只读零面；61=LA38（今晚 t4crux 后未动）；用户 V14（PWE4）在飞 LA23——零冲突。两债进度不变：5M2 ✓；OCBICBY 等本批供料。
+
 - **2026-11-14（05:05，续1090）**：**OCBICBY 6T1 支几何主体 `hex51-w1` PARTIAL 落库 `6f4d4492`（LA22 纯新增 +331/−0，双探针标准三）+ 战略卡点定性：OCBICBY 三支剩余全部同根卡 tau_x kit 假桩**。
 ① 交付：`empty6T1_setSum6` + `empty6T1_hex_bridge_p22`（HOL OCBICBY.hl:2860-3077 全部几何主体：注册表 6459846571 + 12 非共线 + 6 split + key6 恒等式 + 4×tau3_taum_40 + linarith；桥接口 = hnum + ht4nn 两假设）。
 ② **BLOCKED 根因归并（三案同根）**：4T3 终杀（4680581274+enclosed）、6T1 终杀（terminal_hex_234_reduction 塔基）、5T1 终杀（pent 塔）全部最终卡在 **OWZLKVY4 tau_x kit 假桩族**（`taumX_p19`/`tauResidualX_p19` 0 常量锚）——SF 级不许绕；hex51-w1 正式建议 **tau_x kit 并案立项**（与 pq 续1056 判词合流），解锁后 hex51-w2 装配骨架 ~60-80 行 + 4T3 收口 60-90 行 ⇒ 三支全收 ⇒ OCBICBY 14 支齐套可总装配。
