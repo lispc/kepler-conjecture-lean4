@@ -8,8 +8,8 @@
 - 终局（**用户 2026-11-06 裁决**）：**不比 Flyspeck/Isabelle 更差**，不是完美标准三。
   验收式：`#print axioms Kepler.the_kepler_conjecture_e2e`（`lean/Kepler/Final.lean:22`）
   = `[propext, Classical.choice, Quot.sound]` ∪ **恰好 585 条地面 `native_decide` 公理**，且
-  1. **零 `sorryAx`**（锥内 69 条 sorry 是唯一还算"债"的东西：55 `nli*` + 1 hLP + 13 Text 章级；
-     基线 AE `55512ac9`，2026-11-12）；
+  1. **零 `sorryAx`**（锥内 67 条 sorry 是唯一还算"债"的东西：54 `nli*` + 1 hLP + 12 Text 章级；
+     基线 AF `766f8896`，2026-11-13）；
   2. 每条公理的陈述是**封闭可判定的地面事实**（无自由变量、无对无限类型的量词），
      进 manifest、可 replay、注明数据源与生成器版本；
   3. 与原文形式化的 `same*`/`pre_iso_test*` **同数据、同信任类别**（见
@@ -71,6 +71,21 @@
   （无需重启），单次编译又会长回去 **+3.2 GB**。所以 **`swapused` 本身不是告警指标**；
   判据 = `kern.memorystatus_vm_pressure_level`（1 正常 / 2 警告 / 4 危急）+
   `pageouts` 增量 + 并发编译数。**不许只看 `Pages free`**（macOS 的 free 常年很小）。
+- **lake 无并行度开关，默认全核扇出——编排者禁裸多目标 `lake build`（2026-11-13
+  用户确认；00:35/09:05 两次崩溃的根因）**：一次 `lake build <N 模块>` 的闭包重编最多
+  12 个 lean 并发；Graphs/Interval 的 native_decide **分片实测单进程峰值 12.6 GB**
+  （`/usr/bin/time -l`，TopReplayHexShardS000）⇒ 12 路扇出 = 150 GB 需求 ≫ 36 GB 物理
+  ⇒ swap 爆炸 ⇒ 驱动连环崩 ⇒ kernel panic（panic 表象 bcmwlan，实为内存枯竭）。
+  ② **编排者编译批 = 1（2026-11-13 用户裁定：保持 1 个 lean 进程，慢就慢点，
+  单进程也就几个 GB）；车道并行每车道 ≤1 lean**；批/次间过**编排者护栏**：
+  `lean 进程数 ≤2` ∧ `lean 总 RSS ≤20 GB` ∧ `pressure <2`
+  （护栏脚本 `~/c17_backup/orch_guard.sh`，编译前 source 之）；
+  ②b **shard 类（Graphs/Interval native_decide）禁用 `lake build`**——单目标也会
+  12 路扇出（2026-11-13 实测 pressure 4）；必须直编
+  `lake env lean -o .lake/build/lib/lean/<Mod>.olean <Src>.lean`（严格 1 进程，
+  岛协议同款），逐个串行。
+  ③ **orphan 保险**：编排 build 脚本必须内嵌 PPID 自检（`[ $PPID = 1 ] → 自杀`），
+  2026-11-13 实测应用退出后 detached build 变 orphan **整夜继续烧**直至机器崩溃。
 - 用户保留项：certtm 的 TM3 / Mono* hold；D 证书层解冻 hold。不要单方面动。
   **专项解冻（2026-11-11 用户明批，仅此一项）**：BIEFJHU-a 的 TM 证书 pilot 可动 certtm；
   **TM3 量产扫全库、Mono\* 进 universe、D 证书层解冻仍然 hold**，跑完本 pilot 即回到 hold 态。

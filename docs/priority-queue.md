@@ -17,17 +17,18 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AE @`55512ac9`（2026-11-12，`JCYFMRP_p27` 真证）**
-> cone `K_REACH 2,096,154` / **SORRIED 69** / **`K_AXIOM 585`** / MODULES 5,221 /
-> UNIVERSE 2,108,976 / COVERAGE **99.3920%**；口径 II 35,731 / 69 / 585 / 46,996。
-> `docs/e2e-reachability-map.tsv` 已按基线 AE 重写（5,894 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AF @`766f8896`（2026-11-13，TFITSKC + hNL 接线双台阶）**
+> cone `K_REACH 2,097,556` / **SORRIED 67** / **`K_AXIOM 585`** / MODULES 5,241 /
+> UNIVERSE 2,110,383 / COVERAGE **99.3922%**；口径 II 35,856 / 67 / 585 / 47,126。
+> `docs/e2e-reachability-map.tsv` 已按基线 AF 重写（5,912 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 69 构成**：Assembly 56（55 `nli*` + 1 hLP）+ Text 13（`--- SORRIED ---` 段实测）。
-> 较基线 AD：SORRIED 70→69（清单 diff：closed 恰 `{JCYFMRP_p27}`、added ∅；**真还债**）、
-> K_AXIOM 585（0/0）、K_REACH +122、K_UNIVERSE +137。
-> 中间档：`04ab3cac` DAG 切面四刀（cone-neutral，解锁 JCYFMRP 波/K3 簇/OCBICBY）、
-> `1c540609` K3 kit 1/6、`11b1c68e` K13 kit 2/2（均锥外资产）；AD/AC/AB 各节见 map。
+> （与基线 AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 67 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 12（`--- SORRIED ---` 段实测）。
+> 较基线 AE：SORRIED 69→67（清单 diff：closed 恰 `{TFITSKC_p27, nliRest1965189142a}`、added ∅；
+> **双台阶真还债**——TFITSKC = K2 门兑现；接线 = BIEFJHU-a TM pilot 闭环、Assembly 首条 nli* 清偿）、
+> K_AXIOM 585（0/0）、K_REACH +9,402（证书树 + 证明体入锥）、MODULES +20（证书模块首达）。
+> 中间档：`04ab3cac` DAG 切面四刀（cone-neutral 解锁件）、`3cb72c17` TM 18 文件（300 叶证书）；
+> 各节见 map。
 >
 > **核心路线图**：[`docs/hf-proof-map.md`](hf-proof-map.md)（九节完成度 + 逐箭头逻辑链 + 缺口清单）。
 > **接手先读**：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（现状 / 用户已定裁决 / 死路与红旗清单 / 环境坑）。
@@ -260,6 +261,14 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（11:30，续1029）**：**基线 AF 定档（69→67 双台阶）+ 本日 9 笔落库 + 机器三次崩溃的事故链与新规**。
+① **真还债两笔**：`TFITSKC_p27`（`2dd2f699`，K2 门兑现）+ **接线**（`766f8896`，`nliRest1965189142a := packIneqABIEFJHUa`——BIEFJHU-a TM pilot 闭环，Assembly 56 条 nli* 首条实质清偿；300 叶 `by decide +kernel` 入锥、零新公理、585 基座不动）。AF 实测：K_REACH 2,097,556（+9,402）/ **SORRIED 67**（closed 恰 `{TFITSKC_p27, nliRest1965189142a}`、added ∅）/ AXIOM 585 / MODULES 5,241（+20）/ COVERAGE 99.3922%；TSV 5,912 行 + manifest PASS + 根面逐字节同。剩余 67 = Assembly 55 + Text 12。
+② **同批锥外资产 5 笔**：jv23（`2b4dd377`：V2∉叉 + PROPERTIES_GENERIC_p29）、emptykit-3 wave1（`452a8cf6`：empty_3T2 + LA22 七件 + import LA38）、jkqewgv1 全刀（`d7a07a11`：+363 复用 LA23 已证 JKQEWGV1_p23 路线，**LA19 无环独立重验——emptykit-3"import 即环"记勘误，empty_6T1_p22 升级可解**）、V2∈/V3（`5a1306fe`）、tfitskcv1（`7a08f96f`，K2）。
+③ **机器三次内存崩溃事故链（00:35 kernel panic + 09:05 重置 + 午后）**：根因 = lake 无并行度开关默认 12 路扇出 × Graphs 分片实测 12.6 GB/进程 ⇒ 150 GB 需求 vs 36 GB 物理；且应用退出后 detached build 变 orphan 整夜烧。**新规已入 AGENTS §4**：编排者编译 1-lean 直编（`lake env lean -o`，shard 类禁 `lake build`）、护栏（lean≤2/RSS≤20G/pressure<2，`~/c17_backup/orch_guard.sh`）、orphan 自杀（PPID=1 退出）、先测 RSS 再定批。`.lake` 软链事故（cp -R 灌软链农场）处置：实体农场硬链接恢复 7,229/7,229 + 拓扑序直编 78 模块 + Final 闭包审计（1,033 历史 missing 为常态）。
+④ **运营教训（phantom sorryAx）**：Lean 4.32 olean 的公理集是**序列化时点快照**、跨模块不重算——同闸批内 sorry→真证翻转时，直编下游必须确认上游 olean 已落池（mtime 核对），编完立刻复探；否则下游存储条目永久烘焙幻影 sorryAx（V2/V3 实测踩坑，agent-12 五环证据链定位）。
+⑤ **subagent"turn 无端中断"潮**：今日 6 例（agent-13/14/16/19/20/21）+ resume 僵尸实例 3 例；缓解 = 工单切小 + 工件法（FIXPLAN/逐步落盘）+ fresh 接管。uagkit（K14）三修零产出已改编排者手工修；K4c（LA18 两件）挂起（WIP 在 k4cprep-w2_rescue/）。
+⑥ **在飞**：agent-17（6I1 证明波，Text 下一格候选）；挂起：uagkit 手工修、K4c。下一波候选：JLXFDMJ（K4b，LA33 唯一剩余红）、OCBICBY wave2（quad 四件，雷区配方现成）、6I1 后评估。
 
 - **2026-11-12（15:57，续1028）**：**TM pilot 全链完成（用户裁决 ③）——`packIneqABIEFJHUa` 内核关闭成立**。
 ① 顶层 4 秒失败根因 = emitter 簿记 bug（`_pos` 发射漏传 `HullTreeC.sound` 的 target 实参，第 6 个潜伏 bug；error 触发 sorry 合成，AGENTS #14 形态）——一行修复重发射，integrity 再 17/17。

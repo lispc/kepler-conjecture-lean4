@@ -773,6 +773,30 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 **工具 ERRATA**：根面探针若写在 `namespace Kepler` 外，`#print axioms` 打印全限定名
 （`Kepler.Graphs.…`），与基线短名格式不同 ⇒ **逐字节比对假红**；固定格式见 handoff pit 18。
 
+### 基线 AF：TFITSKC + hNL 接线 @ `766f8896`（2026-11-13）
+
+> 触发：`5a1306fe`（`JCYFMRP_V2`∈-叉 + `JCYFMRP_V3`）+ 本档两笔真还债：`TFITSKC_p27`（K2 门兑现，
+> tfitskc-w1）+ **`nliRest1965189142a := packIneqABIEFJHUa`（BIEFJHU-a TM pilot 闭环，300 叶
+> `by decide +kernel` 证书入锥，零新增公理）**。仪器原样换装（**5,912 行**，证书模块入表）。manifest `--check` PASS。
+
+| 指标 | 基线 AF | 基线 AE | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,097,556** | 2,096,154 | **+9,402** |
+| SORRIED | **67** | 69 | **−2** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,241 | 5,221 | **+20** |
+| K_UNIVERSE | 2,110,383 | 2,108,976 | +1,407 |
+| COVERAGE | 99.3922% | 99.3920% | +0.0002pp |
+| 口径 II（ex-Cases） | K_REACH **35,856** / SORRIED **67** / AXIOM **585** / UNIVERSE **47,126** | 35,731 / 69 / 585 / 46,996 | +125 / −2 / 0 / +130 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.TFITSKC_p27`、`Kepler.Assembly.nliRest1965189142a`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：**双台阶真还债**——TFITSKC 是 Text 12 之一；接线是 Assembly 56 条 nli* 的首条实质清偿
+（证书信任类别**优于** native_decide：纯内核归约无编译器信任，585 基座分毫未动）。K_REACH +9,402 =
+300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
+剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
+
 ### 基线 AE：JCYFMRP_p27 真证 @ `55512ac9`（2026-11-12）
 
 > 触发：`55512ac9`（`JCYFMRP_p27` 真证，LA27 +824/−179，dagcut-w2/w2：解锁边 +import LA21 等
