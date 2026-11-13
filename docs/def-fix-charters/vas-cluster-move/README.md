@@ -1,9 +1,10 @@
-# DEF-FIX 章程草案：LA23 VASYYAU 簇下移（`LocalAuto23Vas`）
+# DEF-FIX 章程：LA23 VASYYAU 簇下移（`LocalAuto23Vas`）
 
-> **状态：DRAFT / 待用户批准（未执行，主仓零改动）**。拟案：2026-11-13 编排者（VASYYAU 闸族）。
+> **状态：APPROVED（用户 2026-11-13 21:14 批准；V3 执行，待 V2 交付后发车）**。拟案：2026-11-13 编排者（VASYYAU 闸族）。
 > 依据：AGENTS §2「定义改动只走 DEF-FIX 通道」+ `docs/def-fix-charters/la-dag-cuts/README.md`
 > 先例（用户 2026-11-12 已批裁决 ②a：纯搬运、保陈述逐字节、零 sorry 增减）。
-> 本文只提案；落地须用户点头后由单车道执行并 shadow 编译验证。
+> **批准范围**：§3 的 14 条声明逐字节下移 + §4 的 import 边（新模块汇点）；不含 §4 末的 LocalConcl
+> 增 import（留给收口车道）、不含任何陈述/定义体改动。
 
 ## 0. 一句话
 
@@ -103,7 +104,7 @@ VASYYAU 战役的三个硬巨人（`NEHXMWH` / `BZQNDMN` / `JOTSWIX` / `LEMMA_PW
 | 未来 `LocalConcl` 加 import 时环 | 低 | 新模块只 import 上游；LocalConcl 已是汇点 |
 | 语义漂移 | 无 | 纯搬运，零编辑；byte-check 脚本把关 |
 
-## 8. 待用户裁决
+## 8. 用户裁决
 
-- [ ] **批准本搬运**（纯搬运、零陈述改动、零 sorry 增减）→ 排队 V3 执行（V2 交付后发车）。
-- 批准后 V3 = shadow 验证 + patch + charter 状态更新；不批准则 R3 仍按 D1/D2 路线另议。
+- [x] **批准本搬运**（用户 2026-11-13 21:14；纯搬运、零陈述改动、零 sorry 增减）→ V3 执行（V2 交付后发车）。
+- V3 = shadow 验证（LA23 / LocalAuto23Vas / LA25 / 根面）+ patch + 本 charter 状态更新为 LANDED。

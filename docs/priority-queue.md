@@ -284,6 +284,17 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（21:15，续1064）**：**用户批准 R3 DEF-FIX 章程 `vas-cluster-move`（21:14）——V3 排入 V2 交付后立即发车**。
+① 批准范围（章程 §3/§4）：`LocalAuto23.lean:427-646` 连续块 **14 条声明逐字节**搬入新汇点模块
+`lean/Kepler/Text/LocalAuto23Vas.lean`（import `LocalAuto1`/`LocalAuto21`/`LocalAuto22`/`LocalAuto23` + Mathlib；
+`namespace Kepler.Text` + `open Kepler.Geom Set Classical` + LA23 同款 set_option），donor 删块（含 LA23 头部
+FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给收口车道）、不含任何陈述/定义体改动。
+② 不变量（V3 闸必核）：14 条签名行逐字节 EQUAL；全库 sorry 数零增减（块内 12 条 sorry 随迁）；
+零 axiom/admit/native_decide；LA23 import 零变化；无消费者（14 名全树零代码引用）；根面 md5 不变。
+③ 落地验证：shadow farm 串行编 `LocalAuto23Vas` / `LocalAuto23` / `LocalAuto25`（RC=0/error 0）→
+编排者亲跑根面 + 一笔 commit。V3 = 单 lane，与 V2 不并发（恒 1 lane）。
+④ 下一条：续1065。
+
 - **2026-11-13（21:09，续1062）**：**R3 DAG 死锁最小解立成 DEF-FIX 章程草案：LA23 VASYYAU 簇下移（只提案，未执行）**。
 ① **机器证据**：`LocalAuto23.lean:427-646` 连续块 = 14 条声明（`MOD_4_CASES_p23`/`ab4_assumption_reduction{,_2,_sym}_p23`/`PERIODIC_INJ_MOD_p23`/`deform_azim_sum_p23`/`NEHXMWH_p23`/`BZQNDMN_p23`/`JOTSWIX_p23`/`LEMMA_PWE{1,2,3,4}_p23`/`LINDIH_11_p23`；12 条 sorry）——`rg` 全树源面**零代码引用**（只余 LA23 头注释 + LA25:2238/2249 注释）。
 ② **方案**：整块逐字节搬进新汇点模块 `lean/Kepler/Text/LocalAuto23Vas.lean`（import `LocalAuto1`/`LocalAuto21`/`LocalAuto23` + Mathlib），donor 删块；陈述逐字节、sorry 零增减、零 axiom/native_decide、无现有消费者、新增边全指向上游 ⇒ 静态无环。搬后簇的证明车道可直接吃 LA21/22 的 azim/deform kit（`INTERIOR_ANGLE1_AZIM_p22` = V1 新证），R3 解除，且**不需要** D1/D2 的 kit 上移。
