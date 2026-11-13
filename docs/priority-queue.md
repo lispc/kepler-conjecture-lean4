@@ -123,11 +123,14 @@
 > **V12 `a01eeb54`**（`LINDIH_11_p23` 真证 +144/−3，标准三；`lindihpi_lt_y_small_p11`（LA11:765）+
 > b=3.86 + registry 9368433105/8405387449；atn(√3.86)<1.1 补角+S₆ Taylor 私有复证）；
 > **V13 `b87f947a`**（`LEMMA_PWE3_p23` 真证 +304/−1，标准三；registry 2073661826 +
-> 5550839403 delta/full + `vas10_obtuse_of_delta4` + `LINDIH_11_p23` 复用 + 私有 `hb31c`）。
-> 十三笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→1）。
-> **在飞 V14 `vaspwe4-w14`**：`LEMMA_PWE4_p23`（**簇内最后一条**，HOL `JOTSWIX.hl:3648-3922`，275 行；
-> PWE3 的 (p+3) 镜像；registry 2073661826/5550839403 六参镜像 + V10/V12/V13 私有件复用；
-> 删除面恰 1 → 模块零 sorry 收官）。
+> 5550839403 delta/full + `vas10_obtuse_of_delta4` + `LINDIH_11_p23` 复用 + 私有 `hb31c`）；
+> **V14 `8a9e801a`**（`LEMMA_PWE4_p23` 真证 +308/−1，标准三；PWE3 的 (p+3) 镜像；
+> **VASYYAU 簇闭环：`LocalAuto23Vas.lean` 14 条声明全部零 sorryAx，编译 sorry-decls=0、14/14 探针标准三**）。
+> 十四笔均非锥内资产（锥内 SORRIED 仍 62/61；簇内 sorry 12→0）。
+> **在飞 V15 `vaswkz-w15`**：新建 `VasMasterKit.lean`，首个 master kit **`WKZZEEH_kit`**
+> （HOL `VASYYAU.hl:720-911`，191 行；与 LA1 `WKZZEEH_concl` 陈述逐字同形；输入 = `JOTSWIX_p23`（V14 簇）
+> + `ASSWPOW_p25`（LA25:2050）+ `B_LE_2h0_2_SCS_M_4_p25` + `BB_VV_FUN_EQ`/`xrr_sym`；
+> 新文件零 sorry）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -303,6 +306,22 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（04:59，续1091）**：**🏁 V14 `vaspwe4-w14` 落库 `8a9e801a`（`LEMMA_PWE4_p23` 真证 +308/−1）——VASYYAU 簇闭环（14/14 声明零 sorryAx）；V15 `vaswkz-w15` 发车（首个 master kit `WKZZEEH_kit`）**。
+① **V14 交付**：HOL `JOTSWIX.hl:3648-3922`（PWE3 的 (p+3) 镜像）——长对角 registry `2073661826` 移到 `(p+3)`
+（新私有 `hb31 : b(p+3,p)=2h0` + `hb01 : b p (p+1)=cstab`）；短对角 A/B 互换：`LINDIH_11_p23` 在 `(p+1)`
+（y4=2 来自 `hd1`），`5550839403 delta`/`5550839403` 双盒 + `dih_y_mono` 在 `(p+3)`；尾 `1.1+2.0=3.1<π` 反证；
+新增 6 行私有 `hncol_p3'` 桥接 `g482w3_deltaY_pos` 的集合字面序。
+② **编排者闸（亲跑）**：worktree@`128dea1a` apply RC=0；删除面恰 1 sorry；禁项 0/0/0/0；直编 **rc=0/error 0**
+（**sorry-decls 1→0**，219 s / 8.35 GB）；装池；探针 **14/14 标准三**；根面 md5 **`246e952c…` 逐字节同**。
+commit `8a9e801a`，已 push。**战役里程碑：V3 的簇下移 → V4-V14 十一笔真证，`LocalAuto23Vas.lean`
+14 条声明（原 12 条 sorry giant + 2 条已证）全部零 sorryAx。**
+③ **V15 `vaswkz-w15`（在飞）**：新建 `VasMasterKit.lean`（DAG sink，后续 master kit 的宿主）——
+`WKZZEEH_kit`（HOL `VASYYAU.hl:720-911`，191 行；与 LA1 `WKZZEEH_concl` 陈述逐字同形）；
+输入 `JOTSWIX_p23`（V14 簇）+ `ASSWPOW_p25`（LA25:2050）+ `B_LE_2h0_2_SCS_M_4_p25` + `BB_VV_FUN_EQ`/`xrr_sym`；
+新文件零 sorry、≤450 行。
+④ 口径：V14 非锥内（本战役不直接改锥内计数；p32 三件待接线）；**簇内 sorry = 0**。
+⑤ 下一条：续1092。
 
 - **2026-11-14（04:33，续1090）**：**V13 `vaspwe3-w13` 落库 `b87f947a`（`LEMMA_PWE3_p23` 真证 +304/−1）——簇内 sorry 2→1；V14 `vaspwe4-w14` 发车（PWE4，簇内最后一 件）**。
 ① **V13 交付**：HOL `JOTSWIX.hl:3370-3647`——PWE1/PWE2 双支骨架换 PWE3 的 hypothesis/registry：
