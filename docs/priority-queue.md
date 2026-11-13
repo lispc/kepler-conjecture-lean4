@@ -468,6 +468,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（23:58，续1081）**：**OCBICBY 4T2 空壳支 `quad4t2-w1` 交付落库 `d0639252`（LA22 纯新增 +247/−0）——Text 7 #2 最大剩余块备料落地**。
+① 四件：`emptykit_apos_4T2`/`emptykit_azim_4T2`（私）+ `empty_4T2`（公，HOL terminal.hl:2888）+ `OCBICBY_4T2_p22`（公，4T2 支成品）。OCBICBY_p22 本体仍 sorry——14 支齐套后装配（t4crux 情报：4T3/4T4/4T5 同款，模板已验证两次）。
+② 路线：terminal_quad_lemma 0.467 + 周期坍缩 + 对角钉死 + quad_split + tau3_taum_40×2 + `ineq_5691615370_asym`（93bf9f73）12 槽 + 周长事实 σ>8.472 + registry 9563139965 d/e/f 分流。HOL 行段对照（terminal.hl:2888-3060 / OCBICBY.hl:4740-4761 / main_estimate_ineq.hl:2637/2657/2676）在 DELIVERY §2。
+③ 闸（亲跑）：apply--check@3212add7 PASS（用户 V6 `e2d0ad27` 未触 LA22）；纯新增零删除、添加行禁词 0；直编 RC=0/error 0（79.8 s）+ `empty_4T2`/`OCBICBY_4T2_p22` 双探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
+④ 假失败第 3 例入册：agent-55 23:13 报 failed「turn ended without final message」，wire.jsonl 实存活（后于 23:35 自然停笔）——§7.1-24 准则再验证。
+⑤ 在飞 1：pent2iunb-w1（agent-54，55 min 活跃）；用户 V7（LA23 ab4 收尾两件）。SORRIED 62 未动（4T2 支为锥外备料；OCBICBY_p22 装配时才转锥内还债）。
+
 - **2026-11-13（23:10，续1078）**：**双车道发车（用户批，恒 ≤2 直至两债落地）——pent2iunb-w1（agent-54：LA18 `deform_pent_exists_p18`→`IUNBUIG_p18`→余量再推 5M2 本体）+ quad4t2-w1（agent-55：LA22 OCBICBY 4T2 空壳支）**。用户令：假死耐心等待，不抢发新车。
 ① A 线依据：三腿齐（N1/N2/N3）+ N4 ✓ 后 n2def DELIVERY §6 点名的解锁件；`deform_planar_exists_p21` 债清可消费；LA18 无人占。侦察包 = n2def DELIVERY §1/§6 + N3 DELIVERY + HOL IUNBUIG.hl。
 ② B 线依据：t4crux 路线勘误后 ineq 侧零阻塞；模板 = 同文件 4T4/4T5 支（:3257/:3427 `terminal_quad_lemma`+`emptykit_apos/azim` 消费）；骨架链 quad_lemma→正性扫描→vv_periodic→quad_split→tau3_taum→registry 9563139965 d/e/f。⚠️ LA22 用户会话今日曾触 → 交付前按最新 HEAD 重基。
