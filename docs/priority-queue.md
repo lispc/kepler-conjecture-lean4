@@ -129,10 +129,13 @@
 > **V15 `08b1bec4`**（`VasMasterKit.lean` 新文件 183 行，首个 master kit **`WKZZEEH_kit`** 标准三；
 > 与 LA1 `WKZZEEH_concl` 陈述逐字同形；JOTSWIX_p23 + ASSWPOW_p25 + B_LE_pair + xrr_sym 组装）；
 > **V16 `3d09cc4c`**（`TUAPYYU_kit` 追加 +26/−0，标准三；`VasTuaKit.TUAPYYU1_vaskit` 喂
-> `NEHXMWH_p23`(p+2)+`BZQNDMN_p23`(p+3)，唯一桥 hFF 的 `Set.range`/`image_univ`）。
-> 十六笔均非锥内资产（锥内 SORRIED 61；簇内 sorry 12→0；master kit **2/4**）。
-> **在飞 V17 `pweiwbz-w17`**：PWEIWBZ 第一笔——私有 `pweiwbz_C1`（C 支 `str(p+1)` + `a(p+3)p=2` 组三片叶子，
-> HOL `VASYYAU.hl:1173-1607`；结论 `dist(v p)(v(p+1))=2`；不加 `PWEIWBZ_kit` 本体）。
+> `NEHXMWH_p23`(p+2)+`BZQNDMN_p23`(p+3)，唯一桥 hFF 的 `Set.range`/`image_univ`）；
+> **V17 `e24de5e9`**（PWEIWBZ 第一笔 +122/−0：私有 `pweiwbz_C1`（str(p+1) 支 a30=2 叶）+
+> `pweiwbz_str_uniq`（至多一条 str 索引，免债重推）；两件标准三；**ERRATA：HOL :1267-1607 实为 str p 支**）。
+> 十七笔均非锥内资产（锥内 SORRIED 61；簇内 sorry 12→0；master kit 2/4；PWEIWBZ 叶 1/10）。
+> **在飞 V18 `pweiwbz-w18`**：PWEIWBZ 第二笔——`str p` 支 C-prep（HOL :1173-1306）私有 `pweiwbz_prep` +
+> 首叶 `pweiwbz_B_a30eq2`（HOL :1308-1391；TUAPYYU_kit@p+1 + PWE1 + CJBDXXN + CQAOQLR）；
+> 前提面 `hns1/hns3/hs1/hn/ha/ha30`；禁止消费 WGDHPPI/NOT_STR_IN_CASES_4_p25（带 sorryAx）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -308,6 +311,23 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（05:59，续1094）**：**V17 `pweiwbz-w17` 落库 `e24de5e9`（PWEIWBZ 第一笔 +122/−0）——叶 1/10；V18 `pweiwbz-w18` 发车（`str p` 支 C-prep + 首叶）**。
+① **V17 交付**：`VasMasterKit.lean` 两个私有件——`pweiwbz_C1`（str(p+1) 支 a30=2 叶，HOL :1897-1924
+28 行：`YEBWJNG_kit@p+3` + `CQAOQLR_p16@p+3` 收口）+ `pweiwbz_str_uniq`（k=4 至多一条 str 索引）。
+**装债发现**：`WGDHPPI_concl`/`WGDHPPI_p25`/`NOT_STR_IN_CASES_4_p25`/`NOT_STR_IN_CASES_4_1_p25`
+实测带 `sorryAx` ⇒ 未消费；改用标准三的 `AURSIPD_p18` + `STR_MOD_EQ_p25` 就地重推（`pweiwbz_str_uniq` 免债）。
+② **编排者闸（亲跑）**：worktree@`399aea0b` apply RC=0；禁项 0/0/0/0；直编 **rc=0/error 0 / sorry-decls=0**
+（3.7 s / 5.88 GB）；装池；探针 `WKZZEEH_kit`/`TUAPYYU_kit` 标准三；两私有件 in-file 增补 probe
+（`Kepler.Text.pweiwbz_C1`/`_str_uniq`）均标准三；根面 md5 **`246e952c…` 逐字节同**。commit `e24de5e9`，已 push。
+③ **ERRATA（工单行号）**：HOL `:1267-1607`（含 a30=2 三片 :1308/:1394/:1501）属 **`str p ∧ ¬str(p+1)` 支**
+（LEMMA_PWE1/2 前提含 `scsIsStr s v p`）；`str(p+1)` 支是 :1784-2348，其 a30=2 叶只一片（:1897-1924），
+即 V17 的 `pweiwbz_C1`。V18 起按正确分支施工。
+④ **V18 `pweiwbz-w18`（在飞）**：`str p` 支 C-prep（HOL :1173-1306）→ 私有 `pweiwbz_prep` +
+首叶 `pweiwbz_B_a30eq2`（:1308-1391；`TUAPYYU_kit` + PWE1 + CJBDXXN + CQAOQLR）；前提面
+`hns1/hns3/hs1/hn/ha/ha30`；prep 陈述须可被后续 23=2/23=2h0 两叶复用（DELIVERY 附前提↔生产者表）。
+⑤ 口径：V17 非锥内（锥内 61 不变）；PWEIWBZ 叶 1/10（C1 完成；str p 三叶 + str(p+1) 五叶 + 两散叶余）。
+⑥ 下一条：续1095。
 
 - **2026-11-14（05:25，续1093）**：**V16 `vastua-w16` 落库 `3d09cc4c`（`TUAPYYU_kit` +26/−0，标准三）——master kit 2/4；V17 `pweiwbz-w17` 发车（PWEIWBZ 第一笔）**。
 ① **V16 交付**：`VasMasterKit.lean` 追加 `TUAPYYU_kit`——与 LA1 `TUAPYYU_concl`（:5264-5272）modulo 定理名
