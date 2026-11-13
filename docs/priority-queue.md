@@ -726,6 +726,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（07:55，续1101）**：**taumxsym-w1 收线落库 `1dcbe0cd`（C3+C6 双证，LA38 +37/−6，闸全绿）——C 件 2/6 落地**。
+① `taum_taum_x`（HOL terminal.hl:169）：6×sqrt_mul_self + 自底向上 unfold（组合子先于叶子，unfold 单遍不回溯——实烧雷区入 §7.1 候选）+ ring（taum_123 纯 ring 级）。`taum_x_sym`（:3752）：3×dihY_swap23_p38.symm + ring。LA38 in-file sorry 41→39。
+② 闸（亲跑）：apply--check@c895e02 PASS；删除面恰 2 sorry+4 注释；添加行禁词 0；直编 12.6 s RC=0/err0 + 双探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
+③ 锥内影响：车道判词称两件锥内（SORRIED 62→60 / Text 7→5）——**待仪器复测确认**；若确，则为今晚第二、三笔锥内真还债。
+④ 在飞：taugen-w1（agent-62，C1+C4，快照尚无交付、wire 活跃——用户「Tau 车道结束」指 taumxsym；taugen 继续跑到交付）。用户 V21（PWEIWBZ a12≠2 组）在飞。下一波顺位不变：hex51-w2、vv_enclosed4 装配、OCBICBY 收口。
+
 - **2026-11-14（07:40，续1099）**：**DEF-FIX 双章程一笔落库 `7beae732`（9 桩真身化，闸全绿）+ 解锁波首笔 `5b56bcc1`（enclosed_sym/sym2 真证）+ 双证明车道复飞**。
 ① **7beae732**（tauxkit-realify + enclosed4-anchor 合批）：LA19 的 taumX_p19/tauResidualX_p19（0 常量桩）+ LA38 的 5 桩（taudP38/taudXP38/taumXP38/tauResidualXP38/flatTermXP38）改指 LA1 `_t11` 真身；cayleyRP38→IneqClosureDefs.cayleyR 别名（10th 参数柯里化）+ enclosedP38→sqrt(quadraticRootPlus(abcOfQuadraticP38(muRP38…)))（声明下移过 muRP38）+import IneqClosureDefs。DF 闸（编排者亲跑）：LA19 岛编 7.7 s RC=0/err0；LA38 岛编 11.1 s RC=0/err0；**8 别名 rfl 全过 + 旧假命题消失验证**（probe_a 的 change 步编译失败于 :51:2，RC=1 实证）；根面 589 md5 246e952c 逐字节同；双 olean 装池。章程正式化入 `docs/def-fix-charters/{tauxkit-realify,enclosed4-anchor}/`（APPROVED 头）。
 ② **5b56bcc1**（解锁波首笔）：enclosed_sym/sym2 真证（enclosed4-w1 shadow 稿，simp 集按本仓别名变体适配 `[abcOfQuadraticP38, muRP38, cayleyRP38, cayleyR]` 首试即过；各 7 行 + maxRecDepth 65536）；删除面恰 2 sorry+4 注释；探针标准三、根面同。enclosed 集群 5 件 = 3/5 真证。
