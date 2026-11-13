@@ -704,4 +704,219 @@ private theorem pweiwbz_B_a30eq2 (h : main_nonlinear_terminal_v11) (s : ScsV39)
           show (p + 3) + 2 = p + 5 by omega] using h1
       simpa only [hp4, hp5] using hstep
 
+/-! ## `PWEIWBZ`, `str p` branch, `a(p+3) p ≠ 2` group (VASYYAU.hl:1611-1783)
+
+Under `str p` the value table forces `a(p+3)p ∈ {2, 2*h0}`; the `= 2` group is
+`pweiwbz_B_a30eq2` above.  This section covers the complementary
+`a(p+3)p ≠ 2` group:
+
+* HOL :1611-1699 — `A_NOT_EQ2_IMP_B @ p+3` gives `a(p+3)(p+4) = 2*h0` and
+  `b(p+3)(p+4) = cstab`; `PRO_ADD_NOT_IN_SCS_M @ {p+1, p+3}` puts both
+  residues in `scsM`, so `B_LE_2h0_2_SCS_M_4_1 @ p` gives
+  `b(p+2)(p+3) ≤ 2*h0`, `B_LE_2h0_IMP_B @ p+2` gives `a(p+2)(p+3) = 2`, and
+  `YEBWJNG @ p+2` pins `dist(v(p+2),v(p+3)) = 2`.  `TUAPYYU @ p+1`
+  localises `dist(v(p+1),v(p+2))` to `{2*h0, cstab}`; in both cases
+  `LEMMA_PWE3 @ p` supplies the `dihV` bound at `v(p+1)` that is CJBDXXN's
+  `hcase` first disjunct, and `CJBDXXN @ p+1` lands on
+  `dist(v(p+1),v p) = 2`.
+* HOL :1703-1780 — the second leaf is the `b`-value label (`1 2 = cstab`)
+  inside the same `TUAPYYU` split; the Lean statement carries no value label,
+  so a single `rcases` covers both (V18 precedent: value labels are not part
+  of the Lean statement).
+
+The `str p` C-prep is re-derived here instead of reusing `pweiwbz_prep`:
+the latter is stated with `a(p+3)p = 2` and its `a34`/`b34`/`bp3p` fields are
+the `= 2` values.  Only the `a30`-independent surface is needed below. -/
+private theorem pweiwbz_B_a30ne2 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s) (hb : scsBasicV39 s) (hk : s.k = 4)
+    (hv : v ∈ MMsV39 s)
+    (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j)
+    (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+    (hns1 : ¬scsIsStr s v (p + 1)) (hns3 : ¬scsIsStr s v (p + 3)) (hs1 : scsIsStr s v p)
+    (hn : norm (v p) = 2) (ha : s.a p (p + 1) = 2) (ha30 : s.a (p + 3) p ≠ 2) :
+    dist (v p) (v (p + 1)) = 2 := by
+  let FF : Set (V3 × V3) := Set.range fun i => (v i, v (i + 1))
+  have hFF : Set.range (fun i => (v i, v (i + 1))) = FF := rfl
+  -- ═══ A. substrate: generic position, periodicity, the local fan ═══
+  have hgen : scsGeneric v := GSXRFWM_p33 s v his hk hv
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hv
+  have hper : Periodic v 4 := by
+    have h1 := hBB.2.1
+    rw [hk] at h1
+    exact h1
+  have his' : isScsV39 s := his
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpb, -, hsym, -, -, -, -, -, -, -, -⟩ := his
+  have hpa4 : Periodic2 s.a 4 := hk ▸ hpa
+  have hpb4 : Periodic2 s.b 4 := hk ▸ hpb
+  have hcl : ConvexLocalFan (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF :=
+    BBS_IMP_CONVEX_LOCAL_FAN_p34 s 4 v (by omega) hk hBB
+  have hcl2 : convexLocalFan_p2 (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF := w15_clf2 hcl
+  have hrho : ∀ j : ℕ, rhoNode1 FF (v j) = v (j + 1) ∧
+      ivsRhoNode1 FF (v j) = v (j + 3) := by
+    intro j
+    obtain ⟨h1, h2⟩ := BB_RHO_NODE_IVS_p26 s 4 v (v j) (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF j hk rfl rfl rfl rfl his'
+      (by omega) hBB
+    exact ⟨h1, by rw [h2, show j + 4 - 1 = j + 3 by omega]⟩
+  have hangLe : ∀ j : ℕ, azim 0 (v j) (v (j + 1)) (v (j + 3)) ≤ Real.pi := by
+    intro j
+    have h0 := IN_V_IMP_AZIM_LESS_PI (V := Set.range v)
+      (E := Set.range fun i => ({v i, v (i + 1)} : Set V3)) (FF := FF)
+      hcl2 (v j) ⟨j, rfl⟩ (v (j + 3)) ⟨j + 3, rfl⟩
+    rw [show rhoNode1_p2 FF (v j) = v (j + 1) by
+      rw [show rhoNode1_p2 FF (v j) = rhoNode1 FF (v j) from rfl, (hrho j).1]] at h0
+    exact h0
+  have hia : ∀ j : ℕ, azim 0 (v j) (v (j + 1)) (v (j + 3)) =
+      interiorAngle1 0 FF (v j) := by
+    intro j
+    have h1 := INTERIOR_ANGLE1_AZIM_p22 s v j his' hBB (by rw [hk]; norm_num) FF hFF.symm
+    rw [hk] at h1
+    simpa only [show j + (4 - 1) = j + 3 by omega] using h1
+  have hiaLt : ∀ j : ℕ, ¬scsIsStr s v j → interiorAngle1 0 FF (v j) < Real.pi := by
+    intro j hj
+    have hle := hangLe j
+    have hne : azim 0 (v j) (v (j + 1)) (v (j + 3)) ≠ Real.pi := by
+      intro he
+      exact hj (by simpa only [scsIsStr, hk] using he)
+    rw [← hia j]
+    exact lt_of_le_of_ne hle hne
+  -- ═══ B. at-most-one-straight consequence at `p+2` ═══
+  have hns2 : ¬scsIsStr s v (p + 2) := by
+    intro hc
+    have e := pweiwbz_str_uniq h s v his' hk hv (p + 2) p hc hs1
+    omega
+  -- ═══ C. diagonal bounds ═══
+  have hdiagLt : ∀ i j : ℕ, scsDiag 4 i j → s.a i j < dist (v i) (v j) := by
+    intro i j hd
+    exact (hdiag i j hd).1.trans_lt (hdiag i j hd).2.1
+  have hdiag3 : ∀ i j : ℕ, scsDiag 4 i j → 3 ≤ dist (v i) (v j) := by
+    intro i j hd
+    linarith [show (3 : ℝ) < cstab by norm_num [cstab], (hdiag i j hd).2.1]
+  have hdiagB : ∀ i j : ℕ, scsDiag 4 i j → 4 * h0 < s.b i j :=
+    fun i j hd => (hdiag i j hd).2.2
+  have hdiagP2P : scsDiag 4 (p + 2) p := by
+    unfold scsDiag
+    refine ⟨?_, ?_, ?_⟩ <;> omega
+  -- ═══ D. value table: the `(p,p+1)` and `(p+1,p+4)` rows ═══
+  have hvalLt : ∀ i : ℕ, s.a i (i + 1) < s.b i (i + 1) :=
+    fun i => CONDTION_A_LT_B_p25 s hval i
+  have hb01 : s.b p (p + 1) = 2 * h0 := A_EQ2_IMP_B_p25 s p hval ha
+  have ha14 : s.a (p + 1) (p + 4) = 2 :=
+    ((hpa4 (p + 1) p).2).trans (((hsym (p + 1) p).1).trans ha)
+  have hb14 : s.b (p + 1) (p + 4) = 2 * h0 :=
+    ((hpb4 (p + 1) p).2).trans (((hsym (p + 1) p).2.2.2.1).trans hb01)
+  -- ═══ E. the `(p+3,p)` edge is `(2*h0, cstab)` on this branch (HOL :1614-1616) ═══
+  have hne34 : s.a (p + 3) (p + 4) ≠ 2 := fun hc =>
+    ha30 (((hpa4 (p + 3) p).2).symm.trans hc)
+  obtain ⟨ha34, hb34⟩ := A_NOT_EQ2_IMP_B_p25 s (p + 3) hval hne34
+  have ha30' : s.a (p + 3) p = 2 * h0 := ((hpa4 (p + 3) p).2).symm.trans ha34
+  have hbp3p : s.b (p + 3) p = cstab := ((hpb4 (p + 3) p).2).symm.trans hb34
+  -- ═══ F. non-collinearity at `v(p+1)` and the `azim = dihV` bridge ═══
+  have hvne : ∀ i j : ℕ, v i = v j → i % 4 = j % 4 := by
+    intro i j he
+    have h1 := (BB_VV_FUN_EQ_p26 s v his' hBB i j).mp he
+    rwa [hk] at h1
+  have hnc1 : ¬Collinear ℝ ({0, v (p + 1), v (p + 2)} : Set V3) :=
+    PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF (v (p + 1)) (v (p + 2))
+      hcl.1 ⟨p + 1, rfl⟩ ⟨p + 2, rfl⟩
+      (fun he => by have h1 := hvne (p + 1) (p + 2) he; omega) hgen
+  have hnc2 : ¬Collinear ℝ ({0, v (p + 1), v p} : Set V3) :=
+    PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF (v (p + 1)) (v p)
+      hcl.1 ⟨p + 1, rfl⟩ ⟨p, rfl⟩
+      (fun he => by have h1 := hvne (p + 1) p he; omega) hgen
+  have hle1 : azim 0 (v (p + 1)) (v (p + 2)) (v p) ≤ Real.pi := by
+    have h1 := hangLe (p + 1)
+    rw [show (p + 1) + 3 = p + 4 by omega] at h1
+    rw [hper p] at h1
+    exact h1
+  have haz1 : azim 0 (v (p + 1)) (v (p + 2)) (v p) =
+      dihV 0 (v (p + 1)) (v (p + 2)) (v p) :=
+    AZIM_DIHV_SAME_STRONG hnc1 hnc2 hle1
+  -- ═══ G. the `a(p+1)(p+2)` split (HOL :1262-1292 vs. :1294 onward) ═══
+  by_cases hA : s.a (p + 1) (p + 2) = 2
+  · -- `a12 = 2`: `YEBWJNG @ p+1` + `CQAOQLR @ p` (HOL :1281-1292)
+    have hY : dist (v (p + 1)) (v (p + 2)) = 2 :=
+      YEBWJNG_kit h s v (p + 1) his' hb hk hv hdiag hval hns1 hns2 hA
+    have hb12 : s.b (p + 1) (p + 2) = 2 * h0 := A_EQ2_IMP_B_p25 s (p + 1) hval hA
+    have hif := CQAOQLR_p16 h s v p (by rw [hk]; norm_num) his' hv hgen hb
+      (fun i j hd => hdiag i j (by rw [hk] at hd; exact hd))
+      (by rw [hb01]; norm_num [h0])
+      (by rw [hb12]; norm_num [h0])
+      (hvalLt (p + 2))
+      (by
+        have e : p + s.k - 1 = p + 3 := by rw [hk]; omega
+        rw [e, ha30', hbp3p]
+        norm_num [h0, cstab])
+      ha (le_of_eq hb01) hA (le_of_eq hb12)
+    exact hif.mpr hY
+  · -- ═══ H. `a12 ≠ 2`: `a12 = 2*h0`, `b12 = cstab` (HOL :1294-1306) ═══
+    obtain ⟨ha12, hb12⟩ := A_NOT_EQ2_IMP_B_p25 s (p + 1) hval hA
+    -- both residues land in `scsM`; `b(p+2)(p+3) ≤ 2*h0` (HOL :1617-1618)
+    have hmem1 : (p + 1) % 4 ∈ scsM s :=
+      PRO_ADD_NOT_IN_SCS_M_p25 s (p + 1) 4 his' hk ha12
+    have hmem3 : (p + 3) % 4 ∈ scsM s :=
+      PRO_ADD_NOT_IN_SCS_M_p25 s (p + 3) 4 his' hk ha34
+    have hsub : {((p + 1) % 4), ((p + 3) % 4)} ⊆ scsM s := by
+      intro x hx
+      rcases Set.mem_insert_iff.mp hx with hx | hx
+      · rw [hx]; exact hmem1
+      · rw [Set.mem_singleton_iff] at hx
+        rw [hx]; exact hmem3
+    have hb23le : s.b (p + 2) (p + 3) ≤ 2 * h0 :=
+      B_LE_2h0_2_SCS_M_4_1_p25 s his' hk hsub
+    obtain ⟨ha23, hb23⟩ := B_LE_2h0_IMP_B_p25 s (p + 2) hval hb23le
+    -- `YEBWJNG @ p+2`: the `(p+2,p+3)` edge is `2` (HOL :1620-1622)
+    have hY2 : dist (v (p + 2)) (v (p + 3)) = 2 :=
+      YEBWJNG_kit h s v (p + 2) his' hb hk hv hdiag hval hns2 hns3 ha23
+    -- `TUAPYYU @ p+1`: `dist(p+1,p+2) ∈ {a12, b12}` (HOL :1626-1628)
+    have hTU := TUAPYYU_kit h s v (p + 1) his' hb hk hv hdiag hval hns1 hns2
+    have hd2 : 2 * h0 ≤ dist (v (p + 1)) (v (p + 2)) := by
+      rcases hTU with he | he
+      · rw [he]
+        exact le_of_eq ha12.symm
+      · rw [he, hb12]
+        norm_num [h0, cstab]
+    -- `LEMMA_PWE3 @ p`: the `dihV` bound at `v(p+1)` (HOL :1631-1633)
+    have hPWE := LEMMA_PWE3_p23 h s v p his' hb hk hv hdiag hval hgen hns1 hns3 hs1
+      hn ha ha30' hY2 hd2
+    have hPWE' : Real.pi / 2 < dihV 0 (v (p + 1)) (v (p + 2)) (v p) := by
+      rw [DIHV_SYM_2]
+      exact hPWE
+    have hcase1 : Real.pi / 2 < interiorAngle1 0 FF (v (p + 1)) ∨
+        interiorAngle1 0 FF (v ((p + 1) + (4 - 1))) < Real.pi := Or.inl (by
+      rw [← hia (p + 1)]
+      rw [show (p + 1) + 3 = p + 4 by omega, hper p, haz1]
+      exact hPWE')
+    have hd1 : 3 ≤ dist (v ((p + 1) + 1)) (v ((p + 1) + (4 - 1))) := by
+      have h1 := hdiag3 (p + 2) p hdiagP2P
+      simpa only [show (p + 1) + 1 = p + 2 by omega,
+        show (p + 1) + (4 - 1) = p + 4 by omega, hper p] using h1
+    have hang1 : interiorAngle1 0 FF (v (p + 1)) < Real.pi := hiaLt (p + 1) hns1
+    have h2_1 : 2 ≤ dist (v ((p + 1) + 1)) (v (p + 1)) := by
+      rcases hTU with he | he
+      · rw [show (p + 1) + 1 = p + 2 by omega, dist_comm, he, ha12]
+        norm_num [h0]
+      · rw [show (p + 1) + 1 = p + 2 by omega, dist_comm, he, hb12]
+        norm_num [h0, cstab]
+    have hdc1 : dist (v ((p + 1) + 1)) (v (p + 1)) ≤ cstab := by
+      rcases hTU with he | he
+      · rw [show (p + 1) + 1 = p + 2 by omega, dist_comm, he, ha12]
+        norm_num [h0, cstab]
+      · rw [show (p + 1) + 1 = p + 2 by omega, dist_comm, he, hb12]
+    -- `CJBDXXN @ p+1`: the reflected check-completeness (HOL :1636-1699 /
+    -- :1706-1780); the two `TUAPYYU` labels are absorbed above
+    have hCJ := CJBDXXN_p21 h s FF 4 (p + 1) v hFF.symm his' hk.symm (by norm_num) hv hb
+      hgen hd1 (fun i j hdij _ => hdiagLt i j hdij) hdiagB hang1 hcase1
+      ha14 (le_of_eq hb14) h2_1 hdc1
+    have hgoal : dist (v (p + 1)) (v p) = 2 := by
+      simpa only [show (p + 1) + (4 - 1) = p + 4 by omega, hper p] using hCJ
+    rw [dist_comm (v p) (v (p + 1))]
+    exact hgoal
+
 end Kepler.Text
