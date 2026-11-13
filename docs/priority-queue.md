@@ -95,6 +95,8 @@
 ## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
 > **2026-11-13 16:30 接管后盘面**：`jlxfdmj-w4` LANDED `73d6c4e6`；`urrcellbody-w7` LANDED `59208114`（SORRIED 66→65，基线 AH）；三处泄漏交付恢复落库——`c8172dd0`（jlxfdmj-w1 wrapper，免 SF）、`58517f80`（vasw0-w1：YebwjngKit/CQAOQLR/WGDHPPI/YEBWJNG）、`8231788d`（k4cprep-w3：LA18 3 sorry）。**下一步发 L1（6I1）/ L2（LA33）/ L3（OCBICBY）三车道**；L4（K4c/5M2）为第 4 补位。详见 §8 续1042–1045。
+>
+> **在飞（16:35，4 车道）**：`sc6i1close-w1`（L1 6I1）/ `la33keys-w1`（L2 LA33 两件）/ `ocbicby-w3`（L3 OCBICBY）/ `k4c5m2-w1`（L4 5M2+K4c）；均自 HEAD `65b64256`，每车道 ≤1 lean。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -265,6 +267,16 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（16:35，续1046）**：**用户令 push + 发 L1–L4 四车道**。
+① push：`0eb579b86..65b64256f`（54 笔）已推 `origin/main`。
+② 派单（4 条并发，async；均自 HEAD `65b64256` 起）：
+   - `sc6i1close-w1`（L1）：`SCS_6I1_BERAK_BY_CSTAB` 收口；路线 `sc6i1prove-w1/DELIVERY.md` + 新 `JLXFDMJ_ge4_p27`（k=6）。
+   - `la33keys-w1`（L2）：`SCS_4I1_IMP_4I2` + `SCS_4I2_IMP_4T1`（LA33，k=4）。
+   - `ocbicby-w3`（L3）：`OCBICBY_p22` wave3；emptykit-3 wave1 已落（`452a8cf6`），从 quad 4T5 起手。
+   - `k4c5m2-w1`（L4）：`SCS_5M2_IMP_5T1`（k=5）主目标 + K4c LA18 内部装配备选。
+③ 纪律：每车道 ≤1 lean + `guard_wait`（4 路会互相等槽）；主仓零改动；不 commit/push；**patch 必须落快照**（§7.1-23）。
+④ 下一条：续1047。
 
 - **2026-11-13（16:25，续1045）**：**三处泄漏交付全部 pick 落库：jlxfdmj-w1 / vasw0-w1 / k4cprep-w3**（用户令审计 lane_snapshots 后）。
 ① **A `c8172dd0`**：LA27 公共 `JLXFDMJ_ge4_p27`（HOL `3 < s.k` 前提，wrapper on landed private `jlxfdmj_ge4`，+17/−0）——**免 SF**（原陈述不动；用户 16:00 裁「新方案好就用新方案」）；探针标准三、原 `JLXFDMJ_p27` 面不变、根面同。
