@@ -726,6 +726,10 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（08:00，续1102）**：**第三车 enclosed4-final-w1 发车（agent-64：enclosed 集群收官三件套 CAYLEYR_5POINTS→enclosed4_lemma→vv_enclosed4，3/5→5/5）**——用户从两候选（enclosed 收官 vs hex51-w2）中选定确定性更高的收官线；hex51-w2 顺延至 taugen-w1 收线后的空位（6T1+5T1 杠杆更大但有 OWZLKVY4 家族 DB 墙风险）。
+① 工单要点：CAYLEYR_5POINTS（HOL collect_geom2.hl:61-，树内零命中）是 enclosed4_lemma 唯一缺口；vv_enclosed4 装配线叶件 rg 已核全在树内零 LP（~150-300 行）；收齐全链 ⇒ 4T3 几何全闭（只差 LP wrapper 冻结项）。
+② 在飞 2：taugen-w1（agent-62，wire 07:42 静默 8 min 后本笔记时未复——编译/思考相位待定）+ enclosed4-final-w1（agent-64）；用户 V21（PWEIWBZ a12≠2 组）第三。
+
 - **2026-11-14（07:55，续1101）**：**taumxsym-w1 收线落库 `1dcbe0cd`（C3+C6 双证，LA38 +37/−6，闸全绿）——C 件 2/6 落地**。
 ① `taum_taum_x`（HOL terminal.hl:169）：6×sqrt_mul_self + 自底向上 unfold（组合子先于叶子，unfold 单遍不回溯——实烧雷区入 §7.1 候选）+ ring（taum_123 纯 ring 级）。`taum_x_sym`（:3752）：3×dihY_swap23_p38.symm + ring。LA38 in-file sorry 41→39。
 ② 闸（亲跑）：apply--check@c895e02 PASS；删除面恰 2 sorry+4 注释；添加行禁词 0；直编 12.6 s RC=0/err0 + 双探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
