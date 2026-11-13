@@ -366,6 +366,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（21:35，续1066）**：**假死巡检第 1 轮即中奖：n3cross-w1（假失败第 4 案）交付已现（DELIVERY+patch，21:23），独立闸全绿落库 `57faf2ef`——N3 落地，IUNBUIG 腿二通**。
+① 件：`coplanar_cross_reduction_p18` 真证（LA18 +156/−18；声明后移避前向引用、陈述逐字未动；azim=0 支 cross3 点积三件 + π 支复用 w4sg FEKTYIY 块）；in-file sorry 4→3；探针标准三、根面逐字节同。V3 ⬝ᵥ = `Matrix.dotProduct` 经 `WithLp.ofLp` 强制的修法（show 到 Pi 层再 rw）入 DELIVERY 供 §7.1。
+② 巡检机制生效确认：n3cross 从「failed 通知」到落库全程零人工干预之外的损耗；无头在飞清单清零（登记移除）。
+③ IUNBUIG 现状：腿一 vv_split ✓（ffc849da）+ 腿二 N3 ✓（本笔）+ 腿三 N2（deform_planar 真身侦察，待用户点单发车）；本体装配 = 5M2 线下一里程碑。
+④ 下一车道推荐已呈用户（N2 首选 / 4T2-crux 备选），等令。
+
 - **2026-11-13（21:15，续1063）**：**penthex-w4 交付落库 `2623cc5e`（+146/−8，闸全绿）——minimizer 双 cases 转净；并同步用户并行会话的 VASYYAU 战役（续1060-1062：V1 `f8adecea` 已落、V2 在飞、R3 簇 DEF-FIX 章程待批）**。
 ① 两件：`taud_minimizer_cases_p19`（三分支榨 s' + w3 导数对装配）+ `taud_minimizer_terminal_pent_cases_p19`（**pent 件不需要 tau_x kit**——`taud_x_taud` 桥用 sqrt(y²)=y 本地重建，DB 6601228004/1347067436 直取）——pent 塔顶件路径洞开；**234 门剩余 = OWZLKVY4（tau_x kit）+ hex_cases 本体**。
 ② 新雷区入 w4 DELIVERY（rw 收尾 rfl 是 reducible 透明度吃不下同体 def 展开须显式 exact rfl 等 5 条）。
