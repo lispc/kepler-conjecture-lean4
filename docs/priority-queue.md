@@ -284,20 +284,20 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
-- **2026-11-13（21:55，续1062）**：**R3 DAG 死锁最小解立成 DEF-FIX 章程草案：LA23 VASYYAU 簇下移（只提案，未执行）**。
+- **2026-11-13（21:09，续1062）**：**R3 DAG 死锁最小解立成 DEF-FIX 章程草案：LA23 VASYYAU 簇下移（只提案，未执行）**。
 ① **机器证据**：`LocalAuto23.lean:427-646` 连续块 = 14 条声明（`MOD_4_CASES_p23`/`ab4_assumption_reduction{,_2,_sym}_p23`/`PERIODIC_INJ_MOD_p23`/`deform_azim_sum_p23`/`NEHXMWH_p23`/`BZQNDMN_p23`/`JOTSWIX_p23`/`LEMMA_PWE{1,2,3,4}_p23`/`LINDIH_11_p23`；12 条 sorry）——`rg` 全树源面**零代码引用**（只余 LA23 头注释 + LA25:2238/2249 注释）。
 ② **方案**：整块逐字节搬进新汇点模块 `lean/Kepler/Text/LocalAuto23Vas.lean`（import `LocalAuto1`/`LocalAuto21`/`LocalAuto23` + Mathlib），donor 删块；陈述逐字节、sorry 零增减、零 axiom/native_decide、无现有消费者、新增边全指向上游 ⇒ 静态无环。搬后簇的证明车道可直接吃 LA21/22 的 azim/deform kit（`INTERIOR_ANGLE1_AZIM_p22` = V1 新证），R3 解除，且**不需要** D1/D2 的 kit 上移。
 ③ **ERRATA（对续1061③）**：「反向切 `LA22→LA23`（4 个声明）」不便宜——`JKQEWGV2/3_p23` 在 LA23 内有 ~30 条私有 helper 闭包（`w2sg_*`/`w5sg3_*`/`JKQEWGV2_CASE_*`），搬运面远大于簇下移。续1061③ 的「最小切面候选」判词作废，以本条为准。
 ④ 章程：`docs/def-fix-charters/vas-cluster-move/README.md`（含搬运清单/不变量/落地 shadow 验证计划/回滚）。**待用户批 → V3 执行**；未批前 R3 维持原状，V2 不受影响。
 ⑤ 下一条：续1063。
 
-- **2026-11-13（21:35，续1061）**：**VASYYAU V2 `vasgate-w2` 发车——2b 尾段 kit（消费 V1 的 arclength_xrr）**。
+- **2026-11-13（21:05，续1061）**：**VASYYAU V2 `vasgate-w2` 发车——2b 尾段 kit（消费 V1 的 arclength_xrr）**。
 ① 目标：新文件 `lean/Kepler/Text/VasArcKit.lean`，把 HOL `VASYYAU.hl:2594-2844`（`norm(v p)` 分裂后 2b-i/2b-ii 两分支）移植成公共引理；前提 = `VASYYAU_concl`（LA1:5303）全部前提 + 2b 入口（`2 < s.a p (p+1)`、`s.a (p+3) p = 2`、norm 情形），早期分支已推得事实（BBprime/JKQEWGV2/CIZMRRH/AZIM_COND_FOR_COPLANAR/coplanar_aff_gt_simple/CONDTION_A_LT_B）做成显式前提并列表「生产者」。≤450 行，标准三。
 ② 依赖已核：`arclength_xrr_p22`/`xrr_{decreasing,increasing,bounds_2,sym}_p22`（V1 `f8adecea`）、`ARCV_ADD_AFF_GE_p18`、`coplanar_aff_gt_simple_p18`、`IMJXPHRv2_p28`/`WL_IN_BALL_ANNULUS_p28`/`NUXCOEAv2_p28`、`PackingAuto25.DIST_IMP_UPS_X_POS`、`YebwjngKit.KEITDWB_kit`、`h0_CSTAB_LT_4_p25`；arcVarc 桥（PackingAuto22:15601 私有逐字复证）/ACS_MONO 桥（Mathlib `Real.arccos_lt|le_arccos`）/`AFF_GT_SUBSET_AFF_GE` 就地件均在 kit 内解决。
 ③ **关键侦察（编排者实测，入战役图）**：LA22 对 LA23 的引用面**仅 4 个声明** = `JKQEWGV2_p23`（LA23:4760）/`JKQEWGV3_p23`（:5166）/`periodic_mod_eq_p23`（:235）/`range_periodic_image_p23`（:256）。⇒ 最小 DAG 切面候选：把 LA22→LA23 边切成 LA22→(新上游模块)（后两件纯泛函小引理易搬；前两件需核私有闭包），切后 LA23 可直接 import LA22/LA21，NEHXMWH/BZQNDMN/JOTSWIX/PWE1-4 的解锁不再需要 D1 kit 上移。**需 DEF-FIX 章程 + 用户批**，本章程草案与闭包证据由编排者另拟。
 ④ 下一条：续1062。
 
-- **2026-11-13（21:25，续1060）**：**V1 `vasgate-w1` 落库 `f8adecea`（LA22 解析三件，+182/−7）——VASYYAU 战役首批真证，三件全标准三**。
+- **2026-11-13（21:03，续1060）**：**V1 `vasgate-w1` 落库 `f8adecea`（LA22 解析三件，+182/−7）——VASYYAU 战役首批真证，三件全标准三**。
 ① **交付**：`arclength_xrr_p22`（私有桥 `la22_atn2_arccos` 四分支复证 + `√upsX²+(y1²+y2²−y6²)²=4y1²y2²` 塌缩 + `1−xrr/8=(…)/(2y1y2)` 收口）/ `xrr_decreasing_p22`（转发文件内已证 `la22aux_xrr_decreasing`，陈述逐字同）/ `INTERIOR_ANGLE1_AZIM_p22`（`BBsV39` 第四合取 + `hk:3<s.k` → `ConvexLocalFan` → `localFanEquiv_p35` → `DETER_RHO_NODE`/`PRE_IVS_RHO_NODE1_DETE`）。patch 已按最新 LA22（`t5body-w1` `10fd3fef`，sha `174deddb…`）anchor 重基，未碰 import/5T1 段。
 ② **编排者闸（亲跑）**：worktree@`5822bfb1` apply RC=0；删除面恰 3 条 sorry（`rg -c sorry` 75→72）、禁项 0/0/0/0；直编 RC=0/error 0（77.8 s）；新 olean 装主池（旧件备份）；探针三件 + `INTERIOR_ANGLE1_POS`/`xrr_simple_lower|upper`/`xrr_increasing` **8/8 标准三**；`empty_5T1_p22`/`OCBICBY_p22` 仍 sorryAx（预期）；根面 md5 **`246e952c…` 逐字节同**。commit `f8adecea`，已 push `origin/main`。
 ③ **口径**：三件均**非锥内**（锥内 SORRIED 仍 62 = Assembly 55 + Text 7 不变；本笔属非锥内 Text 余债 −3，资产不是真还债，不跑地图仪器）。战役图（`RECON.md`）：四 master + LA25 五转发行全带债；LA23 十件全带债但上游 kit 全绿；SCOUT 8 条 ERRATA；LA23↛LA21/22 成环证据链（LA22:94 / LA21:105 / LA25:114 / LA18:108 / LA16:106-107）。
