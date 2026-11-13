@@ -28,11 +28,12 @@ Encoding:
   `minNum_mem_p30`/`minNum_le_p30`).
 - Same-wave workers own LocalAuto28/29/31-33; nothing is imported from
   them — every shared input is an in-file `_p30` copy.
-- No `native_decide`. The 46 proved items use mod/periodicity folding, psort case analysis, order arithmetic
-  and set-cardinality bookkeeping (`Set.ncard_le_ncard`); the `c = am`
-  edge-branch index-counting cancellations are discharged via
-  `psort_suc_edge_p30`/`psort_suc_ne_p30` (HOL `IMP_SUC_MOD_EQ` kit); the
-  master `UAGHHBM` fork analysis remains `sorry` (NEEDS marker).
+- No `native_decide`. The 47 proved items use mod/periodicity folding, psort
+  case analysis, order arithmetic and set-cardinality bookkeeping
+  (`Set.ncard_le_ncard`); the `c = am` edge-branch index-counting
+  cancellations are discharged via `psort_suc_edge_p30`/`psort_suc_ne_p30`
+  (HOL `IMP_SUC_MOD_EQ` kit); the master `UAGHHBM` fork analysis is the
+  five-branch case split of Section H below.
 
 FILE MAP
   Section 0 (`_p30` substrate): `periodic_mod_p30`, `periodic2_mod_p30`,
@@ -44,9 +45,7 @@ FILE MAP
     `BBs_s_to_restrictionCs1_p30`, `BBs_restrictionCs1_to_s_p30`,
     `BBs_s_to_restrictionCs2_eq_p30`.
 
-  Status: 46 of the 47 HOL theorems are fully proved; only the master
-  `UAGHHBM_p30` carries `sorry` with a NEEDS marker (the `is_scs_v39`
-  restriction-rewrite bash, HOL UAGHHBM.hl:2501-4095).
+  Status: all 47 of the 47 HOL theorems are fully proved; zero `sorry`.
 
   Section A (UAGHHBM.hl:84-146): `PERIODIC_PSORT_p30` (proved),
     `CASE_PSORT_p30` (proved), `C_LE_2_IS_SCS_p30` (proved),
@@ -93,8 +92,7 @@ FILE MAP
     `MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30`.
   Section H (2501-4095): `UAGHHBM_p30`.
 
-  DISCHARGES: every `sorry` carries a NEEDS note naming the blocking
-  HOL input.
+  DISCHARGES: no `sorry` remains in this file.
 -/
 
 import Kepler.Text.LocalAuto1
@@ -1568,13 +1566,19 @@ private theorem isScs_restrictionCs2V39_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
 /-! ## Section H: the master subdivision arrow (UAGHHBM.hl:2501-4095) -/
 
 /-- HOL `UAGHHBM` (UAGHHBM.hl:2501): the forking conclusion
-`scs_arrow_v39 {s} (set_of_list (subdiv_v39 s i j c))`.
-NEEDS: the full fork analysis over `subdivV39`'s four cases (HOL
-UAGHHBM.hl:2501-4095): case splits on `c ≤ s.a i j`, `c ≤ s.am i j`,
-`c < s.bm i j`, `c < s.b i j` with the transfer arguments per branch
-(the two inline `is_scs_v39` restriction facts are now discharged above
-as `isScs_restrictionCs1V39_p30` / `isScs_restrictionCs2V39_p30`), plus
-the edge-regime bookkeeping of Sections D-G. -/
+`scs_arrow_v39 {s} (set_of_list (subdiv_v39 s i j c))`.  The fork
+analysis over `subdivV39`'s case chain (HOL UAGHHBM.hl:2501-4095):
+`c ≤ s.a i j` and the far else-branch give the singleton `[s]` (the
+`MMs` dichotomy is then the excluded middle), `c ≤ s.am i j` gives
+`[restriction_cs2_v39 s i j c]` (the `dist (ww i) (ww j) = c`
+sub-branch is HOL's `c = am` edge-regime, discharged through
+`MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30` with the master's `hne`
+excluding the edge case), `c < s.bm i j` gives the pair
+`[restriction_cs1_v39 s i j c, restriction_cs2_v39 s i j c]` (split on
+`dist (ww i) (ww j) ≤ c` between the cs1 and cs2 transfers), and
+`c < s.b i j` gives `[restriction_cs1_v39 s i j c]`; the `is_scs_v39`
+restrictions are `isScs_restrictionCs1V39_p30` /
+`isScs_restrictionCs2V39_p30` above. -/
 theorem UAGHHBM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ) (hs : isScsV39 s)
     (hij : i % s.k ≠ j % s.k) (hJ : ¬s.J i j) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j)
@@ -1583,6 +1587,155 @@ theorem UAGHHBM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ) (hs : isScsV39 s)
     (hne : (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k) →
       c ≠ s.am i j) :
     scsArrowV39 {s} {t | t ∈ subdivV39 s i j c} := by
-  sorry
+  obtain ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, hpbm, hpb,
+    hpJ, hsym, hch, hdiag0, hdiag, hb3, hbc, hJedge, hJval, hcard⟩ := hs
+  have hs' : isScsV39 s :=
+    ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, hpbm, hpb, hpJ,
+      hsym, hch, hdiag0, hdiag, hb3, hbc, hJedge, hJval, hcard⟩
+  unfold scsArrowV39
+  by_cases hca : c ≤ s.a i j
+  · -- Branch A: `subdivV39 = [s]`.
+    have hmem : ∀ t, t ∈ subdivV39 s i j c ↔ t = s := by
+      intro t
+      unfold subdivV39
+      rw [if_pos hca]
+      simp
+    refine ⟨fun t ht => ?_, ?_⟩
+    · rw [Set.mem_setOf_eq] at ht
+      rw [(hmem t).mp ht]
+      exact hs'
+    · by_cases hem : MMsV39 s = ∅
+      · exact Or.inl fun t ht => by
+          rw [Set.mem_singleton_iff] at ht
+          rw [ht]
+          exact hem
+      · refine Or.inr ⟨s, ?_, hem⟩
+        rw [Set.mem_setOf_eq]
+        exact (hmem s).mpr rfl
+  · by_cases hcam : c ≤ s.am i j
+    · -- Branch B: `subdivV39 = [restrictionCs2V39 s i j c]`.
+      have hmem : ∀ t, t ∈ subdivV39 s i j c ↔
+          t = restrictionCs2V39 s i j c := by
+        intro t
+        unfold subdivV39
+        rw [if_neg hca, if_pos hcam]
+        simp
+      have hiscs : isScsV39 (restrictionCs2V39 s i j c) :=
+        isScs_restrictionCs2V39_p30 s i j c hs' hij hJ h1
+          (hcam.trans (hch i j).2.1) hedge
+      refine ⟨fun t ht => ?_, ?_⟩
+      · rw [Set.mem_setOf_eq] at ht
+        rw [(hmem t).mp ht]
+        exact hiscs
+      · by_cases hem : MMsV39 s = ∅
+        · exact Or.inl fun t ht => by
+            rw [Set.mem_singleton_iff] at ht
+            rw [ht]
+            exact hem
+        · refine Or.inr ⟨restrictionCs2V39 s i j c, ?_, ?_⟩
+          · rw [Set.mem_setOf_eq]
+            exact (hmem _).mpr rfl
+          · obtain ⟨ww, hww⟩ := Set.nonempty_iff_ne_empty.mpr hem
+            by_cases hcd : c < dist (ww i) (ww j)
+            · exact Set.nonempty_iff_ne_empty.mp ⟨ww,
+                MM_IS_NOT_1EMPTY_SUBDIVISION_p30 s i j c ww hs' hk h1 h2 hcam
+                  hww hcd⟩
+            · have hdlec : dist (ww i) (ww j) ≤ c := le_of_not_gt hcd
+              have ham : s.am i j = c :=
+                le_antisymm ((hww.2.2.2.2.1 i j).trans hdlec) hcam
+              have hdc : dist (ww i) (ww j) = c :=
+                le_antisymm hdlec (hcam.trans (hww.2.2.2.2.1 i j))
+              exact Set.nonempty_iff_ne_empty.mp ⟨ww,
+                MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 s i j c ww hs' hk h1
+                  h2 hww hdc ham hne⟩
+    · by_cases hcbm : c < s.bm i j
+      · -- Branch C: `subdivV39 = [cs1, cs2]`.
+        have hmem : ∀ t, t ∈ subdivV39 s i j c ↔
+            t = restrictionCs1V39 s i j c ∨
+              t = restrictionCs2V39 s i j c := by
+          intro t
+          unfold subdivV39
+          rw [if_neg hca, if_neg hcam, if_pos hcbm]
+          simp
+        have hamc : s.am i j ≤ c := le_of_lt (not_le.mp hcam)
+        have hiscs1 : isScsV39 (restrictionCs1V39 s i j c) :=
+          isScs_restrictionCs1V39_p30 s i j c hs' hJ hamc h2
+        have hiscs2 : isScsV39 (restrictionCs2V39 s i j c) :=
+          isScs_restrictionCs2V39_p30 s i j c hs' hij hJ h1
+            (le_of_lt hcbm) hedge
+        refine ⟨fun t ht => ?_, ?_⟩
+        · rw [Set.mem_setOf_eq] at ht
+          rcases (hmem t).mp ht with rfl | rfl
+          · exact hiscs1
+          · exact hiscs2
+        · by_cases hem : MMsV39 s = ∅
+          · exact Or.inl fun t ht => by
+              rw [Set.mem_singleton_iff] at ht
+              rw [ht]
+              exact hem
+          · obtain ⟨ww, hww⟩ := Set.nonempty_iff_ne_empty.mpr hem
+            by_cases hdle : dist (ww i) (ww j) ≤ c
+            · refine Or.inr ⟨restrictionCs1V39 s i j c, ?_, ?_⟩
+              · rw [Set.mem_setOf_eq]
+                exact (hmem _).mpr (Or.inl rfl)
+              · exact Set.nonempty_iff_ne_empty.mp ⟨ww,
+                  MM_IS_NOT_2EMPTY_SUBDIVISION1_p30 s i j c ww hs' hk h1 h2
+                    hcbm hww hdle⟩
+            · have hcd : c < dist (ww i) (ww j) := not_le.mp hdle
+              refine Or.inr ⟨restrictionCs2V39 s i j c, ?_, ?_⟩
+              · rw [Set.mem_setOf_eq]
+                exact (hmem _).mpr (Or.inr rfl)
+              · exact Set.nonempty_iff_ne_empty.mp ⟨ww,
+                  MM_IS_NOT_2EMPTY_SUBDIVISION_p30 s i j c ww hs' hk h1 h2
+                    (not_le.mp hcam) hww hcd⟩
+      · by_cases hcb : c < s.b i j
+        · -- Branch D: `subdivV39 = [restrictionCs1V39 s i j c]`.
+          have hmem : ∀ t, t ∈ subdivV39 s i j c ↔
+              t = restrictionCs1V39 s i j c := by
+            intro t
+            unfold subdivV39
+            rw [if_neg hca, if_neg hcam, if_neg hcbm, if_pos hcb]
+            simp
+          have hamc : s.am i j ≤ c := le_of_lt (not_le.mp hcam)
+          have hiscs1 : isScsV39 (restrictionCs1V39 s i j c) :=
+            isScs_restrictionCs1V39_p30 s i j c hs' hJ hamc h2
+          refine ⟨fun t ht => ?_, ?_⟩
+          · rw [Set.mem_setOf_eq] at ht
+            rw [(hmem t).mp ht]
+            exact hiscs1
+          · by_cases hem : MMsV39 s = ∅
+            · exact Or.inl fun t ht => by
+                rw [Set.mem_singleton_iff] at ht
+                rw [ht]
+                exact hem
+            · obtain ⟨ww, hww⟩ := Set.nonempty_iff_ne_empty.mpr hem
+              have hbmle : s.bm i j ≤ c := le_of_not_gt hcbm
+              have hdle : dist (ww i) (ww j) ≤ c :=
+                (hww.2.2.2.2.2 i j).trans hbmle
+              refine Or.inr ⟨restrictionCs1V39 s i j c, ?_, ?_⟩
+              · rw [Set.mem_setOf_eq]
+                exact (hmem _).mpr rfl
+              · exact Set.nonempty_iff_ne_empty.mp ⟨ww,
+                  MM_IS_NOT_1EMPTY_SUBDIVISION1_p30 s i j c ww hs' hk h1 h2
+                    hbmle hww hdle⟩
+        · -- Branch E: `subdivV39 = [s]` (with `h2 : c ≤ s.b i j` forcing
+          -- `c = s.b i j`, still the tautological singleton branch).
+          have hmem : ∀ t, t ∈ subdivV39 s i j c ↔ t = s := by
+            intro t
+            unfold subdivV39
+            rw [if_neg hca, if_neg hcam, if_neg hcbm, if_neg hcb]
+            simp
+          refine ⟨fun t ht => ?_, ?_⟩
+          · rw [Set.mem_setOf_eq] at ht
+            rw [(hmem t).mp ht]
+            exact hs'
+          · by_cases hem : MMsV39 s = ∅
+            · exact Or.inl fun t ht => by
+                rw [Set.mem_singleton_iff] at ht
+                rw [ht]
+                exact hem
+            · refine Or.inr ⟨s, ?_, hem⟩
+              rw [Set.mem_setOf_eq]
+              exact (hmem s).mpr rfl
 
 end Kepler.Text
