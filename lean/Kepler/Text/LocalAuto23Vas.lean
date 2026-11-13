@@ -319,7 +319,98 @@ theorem deform_azim_sum_p23 (v1 v2 v3 v4 : V3) (f : V3 → ℝ → V3) (e : ℝ)
       ¬ Collinear ℝ ({0, f v1 t, f v4 t} : Set V3) ∧
       azim 0 (f v1 t) (f v2 t) (f v3 t) + azim 0 (f v1 t) (f v3 t) (f v4 t) =
         azim 0 (f v1 t) (f v2 t) (f v4 t) := by
-  sorry
+  -- ── substrate: `Deformation` gives continuity and normalisation at `0` ──
+  have h0mem : (0 : ℝ) ∈ Set.Ioo (-e) e := hdef.1
+  have hcont : ∀ v ∈ ({v1, v2, v3, v4} : Set V3), ∀ r ∈ Set.Ioo (-e) e,
+      ContinuousAt (f v) r := hdef.2.1
+  have hfix0 : ∀ v ∈ ({v1, v2, v3, v4} : Set V3), f v 0 = v := hdef.2.2
+  have hv1 : v1 ∈ ({v1, v2, v3, v4} : Set V3) := by simp
+  have hv2 : v2 ∈ ({v1, v2, v3, v4} : Set V3) := by simp
+  have hv3 : v3 ∈ ({v1, v2, v3, v4} : Set V3) := by simp
+  have hv4 : v4 ∈ ({v1, v2, v3, v4} : Set V3) := by simp
+  have hct1 : ContinuousAt (f v1) 0 := hcont v1 hv1 0 h0mem
+  have hct2 : ContinuousAt (f v2) 0 := hcont v2 hv2 0 h0mem
+  have hct3 : ContinuousAt (f v3) 0 := hcont v3 hv3 0 h0mem
+  have hct4 : ContinuousAt (f v4) 0 := hcont v4 hv4 0 h0mem
+  have hf1 : f v1 0 = v1 := hfix0 v1 hv1
+  have hf2 : f v2 0 = v2 := hfix0 v2 hv2
+  have hf3 : f v3 0 = v3 := hfix0 v3 hv3
+  have hf4 : f v4 0 = v4 := hfix0 v4 hv4
+  -- ── HOL: three `CONTINUOUS_PRESERVE_COLLINEAR` epsilons ──
+  have hnc12 : ¬ Collinear3 (0 : V3) (f v1 0) (f v2 0) := by
+    show ¬ Collinear ℝ ({0, f v1 0, f v2 0} : Set V3)
+    rw [hf1, hf2]
+    exact hc2
+  have hnc13 : ¬ Collinear3 (0 : V3) (f v1 0) (f v3 0) := by
+    show ¬ Collinear ℝ ({0, f v1 0, f v3 0} : Set V3)
+    rw [hf1, hf3]
+    exact hc3
+  have hnc14 : ¬ Collinear3 (0 : V3) (f v1 0) (f v4 0) := by
+    show ¬ Collinear ℝ ({0, f v1 0, f v4 0} : Set V3)
+    rw [hf1, hf4]
+    exact hc4
+  obtain ⟨e12, he12, h12⟩ :=
+    CONTINUOUS_PRESERVE_COLLINEAR (0 : V3) (f v1) (f v2) 0 hct1 hct2 hnc12
+  obtain ⟨e13, he13, h13⟩ :=
+    CONTINUOUS_PRESERVE_COLLINEAR (0 : V3) (f v1) (f v3) 0 hct1 hct3 hnc13
+  obtain ⟨e14, he14, h14⟩ :=
+    CONTINUOUS_PRESERVE_COLLINEAR (0 : V3) (f v1) (f v4) 0 hct1 hct4 hnc14
+  -- ── HOL: the two `WNWSHJT_ALT` branches inside `hcase`, giving some `e`
+  --    with `azim(123) + azim(134) < 2π` on `|t| < e` ──
+  have hsub4 : ({v4, v1, v3} : Set V3) ⊆ ({v1, v2, v3, v4} : Set V3) := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+    rcases hx with rfl | rfl | rfl <;> simp
+  have hsub3 : ({v3, v1, v2} : Set V3) ⊆ ({v1, v2, v3, v4} : Set V3) := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+    rcases hx with rfl | rfl | rfl <;> simp
+  have hsumeps : ∃ es : ℝ, 0 < es ∧ ∀ t, |t| < es →
+      azim 0 (f v1 t) (f v2 t) (f v3 t) + azim 0 (f v1 t) (f v3 t) (f v4 t) <
+        2 * Real.pi := by
+    rcases hcase with ⟨h123, h134pos, _⟩ | ⟨h134, h123pos, _⟩
+    · -- left disjunct: freeze `azim 123`, open `azim 134` with `c = π - azim 123`
+      have hdef4 : Deformation f ({v4, v1, v3} : Set V3) (-e) e :=
+        deformation_subset_p14 f {v4, v1, v3} {v1, v2, v3, v4} (-e) e hsub4 hdef
+      have hlt : azim 0 v1 v3 v4 < Real.pi - azim 0 v1 v2 v3 := by linarith
+      obtain ⟨es, hes, hprop⟩ := WNWSHJT_ALT_p21 v4 v1 v3 f (-e) e
+        (Real.pi - azim 0 v1 v2 v3) hdef4 hc3 hc4 h134pos hlt
+      refine ⟨es, hes, fun t ht => ?_⟩
+      have hp := hprop t ht
+      have h123t := h123 t
+      linarith [hp.1, hp.2, Real.pi_pos]
+    · -- right disjunct: freeze `azim 134`, open `azim 123` with `c = π - azim 134`
+      have hdef3 : Deformation f ({v3, v1, v2} : Set V3) (-e) e :=
+        deformation_subset_p14 f {v3, v1, v2} {v1, v2, v3, v4} (-e) e hsub3 hdef
+      have hlt : azim 0 v1 v2 v3 < Real.pi - azim 0 v1 v3 v4 := by linarith
+      obtain ⟨es, hes, hprop⟩ := WNWSHJT_ALT_p21 v3 v1 v2 f (-e) e
+        (Real.pi - azim 0 v1 v3 v4) hdef3 hc2 hc3 h123pos hlt
+      refine ⟨es, hes, fun t ht => ?_⟩
+      have hp := hprop t ht
+      have h134t := h134 t
+      linarith [hp.1, hp.2, Real.pi_pos]
+  -- ── HOL: `epsilon_triple` twice, then the final window ──
+  obtain ⟨es, hes, hsumall⟩ := hsumeps
+  obtain ⟨eA, heA, hA2, hA3, hA4⟩ := epsilon_triple_p21 e12 e13 e14 he12 he13 he14
+  obtain ⟨eB, heB, hBeA, hBes⟩ := epsilon_pair_p21 eA es heA hes
+  refine ⟨eB, heB, fun t ht => ?_⟩
+  have htA : |t| < eA := hBeA t ht
+  have ht12 : |t| < e12 := hA2 t htA
+  have ht13 : |t| < e13 := hA3 t htA
+  have ht14 : |t| < e14 := hA4 t htA
+  have hts : |t| < es := hBes t ht
+  have hnc2t : ¬ Collinear3 (0 : V3) (f v1 t) (f v2 t) :=
+    h12 t (by rwa [zero_sub, abs_neg])
+  have hnc3t : ¬ Collinear3 (0 : V3) (f v1 t) (f v3 t) :=
+    h13 t (by rwa [zero_sub, abs_neg])
+  have hnc4t : ¬ Collinear3 (0 : V3) (f v1 t) (f v4 t) :=
+    h14 t (by rwa [zero_sub, abs_neg])
+  have hsum_t := hsumall t hts
+  have hxv : f v1 t ≠ 0 := fun hzero =>
+    hnc2t (collinear3_of_eq (v := (0 : V3)) (w := f v1 t) (w1 := f v2 t) hzero)
+  exact ⟨hnc2t, hnc3t, hnc4t,
+    (sum3_azim_fan (x := (0 : V3)) (v := f v1 t) (u := f v2 t) (w1 := f v3 t)
+      (w2 := f v4 t) hxv hnc2t hnc3t hnc4t hsum_t).symm⟩
 
 /-- HOL `NEHXMWH` (JOTSWIX.hl:1171): the quad endpoint lemma for the
 `(p+2)`-opposite interior angles. NEEDS: `BBprime2_v39`/`BBs_v39`
