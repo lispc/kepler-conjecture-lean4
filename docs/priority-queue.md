@@ -108,11 +108,12 @@
 > **V5 `7389ff6b`**（`deform_azim_sum_p23` 真证 +92/−1，标准三；NEHXMWH/BZQNDMN/JOTSWIX 实引 6 次）；
 > **V6 `e2d0ad27`**（**keystone `NEHXMWH_p23` 真证 +605/−1**，标准三；31 依赖件零 sorryAx；
 > HOL 508 行 giant：MMs→BBs + deform_simplex_edge_exists + ab4 + 2×deform_azim_sum + WNWSHJT +
-> 7ε min + LEMMA_1834976363 + MMs_minimize_tau_fun + tau3 三件 + 端点反证）。
-> 六笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→9）。
-> **在飞 V7 `vasab4b-w7`**：`ab4_assumption_reduction2_p23` + `ab4_assumption_reduction_sym_p23`
-> （HOL `JOTSWIX.hl:693-900` / `:900-1084`；BZQNDMN/JOTSWIX 的最后两块前置；复用 V4 骨架；
-> 删除面恰 2 sorry，若超 450 先交 `_sym`）。
+> 7ε min + LEMMA_1834976363 + MMs_minimize_tau_fun + tau3 三件 + 端点反证）；
+> **V7 `6a3e4ea5`**（`ab4_assumption_reduction2_p23` + `_sym_p23` 双证 +353/−2，标准三；
+> 新增 private `ab4_assemble_row_p23` 参数化 V4 骨架）。
+> 七笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→7）。
+> **在飞 V8 `vasbzq-w8`**：`BZQNDMN_p23`（NEHXMWH 的 (p+3)-opposite 孪生，HOL `JOTSWIX.hl:1679-2203`，525 行；
+> V6 模板 + `_sym`/deform_azim_sum 前置已齐；删除面恰 1 sorry）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -288,6 +289,19 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（23:58，续1083）**：**V7 `vasab4b-w7` 落库 `6a3e4ea5`（ab4 两变体双证 +353/−2）——BZQNDMN/JOTSWIX 前置全齐；V8 `vasbzq-w8` 发车（孪生 `BZQNDMN_p23`）**。
+① **V7 交付**：`ab4_assumption_reduction2_p23`（HOL :693-900，b 侧 j≡p+1 用 `PERIODIC_INJ_MOD` 冻结 + `hb3` 收边）+
+`ab4_assumption_reduction_sym_p23`（:900-1084，固定点平移 `v(p+1)`，行引理平移 + 绕回支 `hAcong`/`hsym` 反证）；
+新增 **private `ab4_assemble_row_p23`**（把 V4 的「%4 行引理 + 四分类装配」参数化到任意 `q`），两新定理只供 substrate + 两行引理。
+② **编排者闸（亲跑）**：worktree@`597fb7a7` apply RC=0；删除面恰 2 sorry；禁项 0/0/0/0；直编 **rc=0/error 0**
+（sorry-decls 9→7）；装池；探针两目标件 **标准三**、V4 件重探仍标准三、其余 12 名 axioms 逐行同 HEAD
+（7 条仍 sorryAx）；根面 md5 **`246e952c…` 逐字节同**。commit `6a3e4ea5`，已 push。
+③ **V8 `vasbzq-w8`（在飞）**：`BZQNDMN_p23`（HOL :1679-2203，525 行孪生）——V6 `NEHXMWH` 模板 + V7 `_sym` +
+V5 deform_azim_sum；差异：hang 换 `(p+3)`、deform_simplex 参数 `(v p, v(p+1), v(p+2))`、1834 六参数序；
+删除面恰 1；允许超 450 软线（V6 605 先例）。
+④ 口径：V7 非锥内（锥内 62 不变）；簇内 sorry 7 余（BZQNDMN/JOTSWIX/PWE1-4/LINDIH_11）。
+⑤ 下一条：续1084。
 
 - **2026-11-13（23:35，续1080）**：**V7 `vasab4b-w7` 发车——`ab4_assumption_reduction2_p23` + `ab4_assumption_reduction_sym_p23`（BZQNDMN/JOTSWIX 的最后两块前置）**。
 ① 目标：`LocalAuto23Vas.lean` 内真证两变体（HOL `JOTSWIX.hl:693-900` / `:900-1084`）；复用 V4 的
