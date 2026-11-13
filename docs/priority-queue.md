@@ -91,6 +91,8 @@
 
 ## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
+> **2026-11-13 15:22 接管注记（新编排者 ZCode 主会话）**：用户令在飞两车道（`urrcellbody-w7` / `tmxllipls-w1`）交 kimi code 侧收口，不杀；本会话发 **`jlxfdmj-w4`**（fresh，从 `jlxfdmj-w3/` 接续包）——K4b 三线钥匙，Text 11→8 通道。两车道 15:11–15:19 仍活（w7 两轮直编、TM 四次自重启且样本全 NEG），详见 §8 续1042。
+
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
 > （内核重放才占 lean 槽，窗口与编排者约）；车道编译前自查 memory pressure（≥2 即等）。
@@ -260,6 +262,11 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（15:22，续1042）**：**新编排者（ZCode 主会话）接管**；用户令：在飞两车道交 kimi code 侧收口（不杀、不干预），主线发 jlxfdmj-w4。
+① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
+② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
+③ **下一条**：续1043。
 
 - **2026-11-13（15:08，续1041）**：**用户指令：全部车道收工、不再起新、等指令——执行完毕**。
 ① urrcellbody-w7 停前抢救最新 WIP（202,821 B 落盘 w7 快照）；tmxllipls-w1 无头循环杀进程 + 留 STAND DOWN 尾条（成果 cert 链已安全，恢复口径见 handoff §3-4）；顺手清杀 14.5h 孤儿 `lean --run A00.lean`（ppid=1，昨夜遗留）。
