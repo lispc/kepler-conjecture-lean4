@@ -1799,6 +1799,1241 @@ theorem SCS_M_EQ_1_p27 (s : ScsV39) (x : ℕ) :
   apply hp i
   rw [← hxp]; exact hi
 
+/-! ## Section JLXFDMJ (lane jlxfdmj-w4, 2026-11-13): opposite-system kit + the
+`3 < s.k` main propagation lemma
+
+  Private ports of the HOL `JLXFDMJ` proof (`scripts/local/JLXFDMJ.hl:227-818`):
+  the opposite-system kit (`scsOppV39` SCS + generic/basic transports), the
+  backward propagation step `jlx_bwd_step` (HOL `CQAOQLR` opposite route), the
+  modular-distance arithmetic (`jlx_fwd_dist_spec`/`jlx_bwd_dist_spec` +
+  uniqueness/complement), and the main lemma `jlxfdmj_ge4` = HOL `JLXFDMJ`
+  restricted to `3 < scs_k_v39 s` (the HOL statement's first hypothesis; the
+  registry summary `appendix.hl` dropped it — SF draft in the lane delivery).
+  `JLXFDMJ_p27` itself keeps its unfilled proof pending that SF decision
+  (k = 3 case); its axiom face is unchanged.
+-/
+
+/-! ### jlxfdmj-w2: opposite-system kit (private ports; every source proved) -/
+
+-- ——— swbopp kit: verbatim from LocalAuto24 `swbopp_*` (private, LA24:1191-1300) ———
+
+/-- Residue `φ x = k - (x % k + 1)` is below `k` for `1 ≤ k`. (LA24 `swbopp_phi_lt`.) -/
+private theorem jlxswb_phi_lt {k : ℕ} (hk : 1 ≤ k) (x : ℕ) :
+    k - (x % k + 1) < k := by
+  have h : x % k < k := Nat.mod_lt x (by omega)
+  omega
+
+/-- Equal residues below `k` give equal indices. (LA24 `swbopp_mod_eq`.) -/
+private theorem jlxswb_mod_eq {k p q : ℕ} (h : p % k = q % k) (hp : p < k)
+    (hq : q < k) : p = q := by
+  have h1 : p % k = p := Nat.mod_eq_of_lt hp
+  have h2 : q % k = q := Nat.mod_eq_of_lt hq
+  omega
+
+/-- HOL `OPP_SUC_MOD`: `φ` is an involution on residues. (LA24 `swbopp_phi_inv`.) -/
+private theorem jlxswb_phi_inv {k : ℕ} (hk : k ≠ 0) (x : ℕ) :
+    k - ((k - (x % k + 1)) % k + 1) = x % k := by
+  have hlt : x % k < k := Nat.mod_lt x (by omega)
+  have h1 : (k - (x % k + 1)) % k = k - (x % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hlt; omega)
+  rw [h1]
+  omega
+
+/-- The `φ`-pair `(φ i, φ (i + 1))` is a reversed adjacent pair modulo `k`.
+(LA24 `swbopp_pair_adj`.) -/
+private theorem jlxswb_pair_adj {k : ℕ} (hk : 1 ≤ k) (i : ℕ) :
+    k - (i % k + 1) = (k - ((i + 1) % k + 1) + 1) % k := by
+  have hi : i % k < k := Nat.mod_lt i (by omega)
+  by_cases hlt : i % k + 1 < k
+  · have hw1 : (i + 1) % k = i % k + 1 := by
+      rw [← Nat.mod_add_mod i k 1]
+      exact Nat.mod_eq_of_lt hlt
+    rw [hw1]
+    have hR : k - (i % k + 1 + 1) + 1 < k := by have := hi; omega
+    rw [Nat.mod_eq_of_lt hR]
+    omega
+  · have heq : i % k + 1 = k := by omega
+    have hw1 : (i + 1) % k = 0 := by
+      rw [← Nat.mod_add_mod i k 1, heq, Nat.mod_self]
+    rw [hw1, heq, Nat.sub_self]
+    have hR : k - (0 + 1 : ℕ) + 1 = k := by omega
+    rw [hR, Nat.mod_self]
+
+/-- Orientation swap for the `φ`-pair (LA24 `swbopp_adj_swap`). -/
+private theorem jlxswb_adj_swap {k : ℕ} (hk : 1 ≤ k) {x y : ℕ}
+    (h : (k - (y % k + 1)) % k = (k - (x % k + 1) + 1) % k) :
+    x % k = (y + 1) % k := by
+  have hx : x % k < k := Nat.mod_lt x (by omega)
+  have hy : y % k < k := Nat.mod_lt y (by omega)
+  have hmod : (k - (y % k + 1)) % k = k - (y % k + 1) :=
+    Nat.mod_eq_of_lt (by have := hy; omega)
+  rw [hmod] at h
+  have hrhs : (k - (x % k + 1) + 1) % k = (k - x % k) % k := by
+    have hsh : k - (x % k + 1) + 1 = k - x % k := by have := hx; omega
+    rw [hsh]
+  rw [hrhs] at h
+  rw [(Nat.mod_add_mod y k 1).symm]
+  by_cases hx0 : x % k = 0
+  · have h2 : (k - x % k) % k = 0 := by rw [hx0, Nat.sub_zero, Nat.mod_self]
+    rw [h2] at h
+    have hyk : y % k + 1 = k := by have := h; have := hy; omega
+    rw [hx0, hyk, Nat.mod_self]
+  · have h2 : (k - x % k) % k = k - x % k :=
+      Nat.mod_eq_of_lt (by have := hx; omega)
+    rw [h2] at h
+    have hxy : y % k + 1 = x % k := by
+      have h3 := h; have := hy; have := hx; omega
+    rw [hxy]
+    exact (Nat.mod_modEq x k).symm
+
+/-- Adjacent-pair value transport (LA24 `swbopp_b_adj`). -/
+private theorem jlxswb_b_adj {k : ℕ} {b : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 b k) (hsymg : ∀ i j, b i j = b j i)
+    {x y : ℕ} (h : x % k = (y + 1) % k) :
+    b x y = b (y % k) (y % k + 1) := by
+  have hk0 : k ≠ 0 := by omega
+  have hylt : y % k < k := Nat.mod_lt y (by omega)
+  have hyk : (y + 1) % k = (y % k + 1) % k := (Nat.mod_add_mod y k 1).symm
+  rw [hyk] at h
+  have hred : b (x % k) (y % k) = b x y :=
+    (periodic2Mod1 hk0 hper x (y % k)).trans (periodic2Mod2 hk0 hper x y)
+  rw [← hred]
+  by_cases hlt : y % k + 1 < k
+  · have hxk : x % k = y % k + 1 := by rw [h, Nat.mod_eq_of_lt hlt]
+    rw [hxk, hsymg (y % k + 1) (y % k)]
+  · have heq : y % k + 1 = k := by omega
+    have hxk : x % k = 0 := by rw [h, heq, Nat.mod_self]
+    rw [hxk, hsymg 0 (y % k)]
+    exact (hper (y % k) 0).2.symm.trans
+      (congrArg (b (y % k)) (show (0 : ℕ) + k = y % k + 1 from by rw [Nat.zero_add, heq]))
+
+/-- Pointwise key (LA24 `swbopp_key`). -/
+private theorem jlxswb_key {k : ℕ} {g : ℕ → ℕ → ℝ}
+    (hk : 1 ≤ k) (hper : Periodic2 g k) (hsymg : ∀ i j, g i j = g j i) (i : ℕ) :
+    g (k - (i % k + 1)) (k - ((i + 1) % k + 1))
+      = g (k - 1 - ((i + 1) % k)) (k - 1 - ((i + 1) % k) + 1) := by
+  have htr := jlxswb_b_adj (b := g) hk hper hsymg
+    (x := k - (i % k + 1)) (y := k - ((i + 1) % k + 1))
+    (by rw [Nat.mod_eq_of_lt (jlxswb_phi_lt hk i)]; exact jlxswb_pair_adj hk i)
+  rw [htr, Nat.mod_eq_of_lt (jlxswb_phi_lt hk (i + 1))]
+  rw [show k - ((i + 1) % k + 1) = k - 1 - ((i + 1) % k) from by
+    have hw : (i + 1) % k < k := Nat.mod_lt (i + 1) (by omega)
+    omega]
+
+/-- HOL `OPP_IS_SCS` (verbatim from LA24 `swb_opp_isscs_p24`, private). -/
+private theorem jlx_opp_isscs (s : ScsV39) (hs : isScsV39 s) : isScsV39 (scsOppV39 s) := by
+  obtain ⟨hd, h3, hk6, hlo, hhi, hstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym5, hch, hdiag0,
+    hdiag, hb3, hbc, hjn, hjab, hcard⟩ := hs
+  have hk3' : 3 ≤ s.k := h3
+  have hk6' : s.k ≤ 6 := hk6
+  have hpa' : Periodic2 s.a s.k := hpa
+  have hpb' : Periodic2 s.b s.k := hpb
+  have hsymA : ∀ i j, s.a i j = s.a j i := fun i j => (hsym5 i j).1
+  have hsymB : ∀ i j, s.b i j = s.b j i := fun i j => (hsym5 i j).2.2.2.1
+  have hjn' : ∀ i j, s.J i j → j % s.k = (i + 1) % s.k ∨ i % s.k = (j + 1) % s.k := hjn
+  have hjab' : ∀ i j, s.J i j → s.a i j = Real.sqrt 8 ∧ s.b i j = cstab := hjab
+  have hcard' : {i | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))}.ncard + s.k ≤ 6 := hcard
+  have hk0 : s.k ≠ 0 := by omega
+  have hmodlt : ∀ i : ℕ, i % s.k < s.k := fun i => Nat.mod_lt i (by omega)
+  have hlt : ∀ i, s.k - (i % s.k + 1) < s.k := by
+    intro i
+    have := hmodlt i
+    omega
+  have hflipinj : ∀ i j, i < s.k → j < s.k → s.k - (i % s.k + 1) = s.k - (j % s.k + 1) → i = j := by
+    intro i j hi hj hc
+    have h4 : i % s.k = j % s.k := by
+      have h2 := hmodlt i
+      have h3 := hmodlt j
+      omega
+    rw [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at h4
+    exact h4
+  have key : ∀ y x : ℕ, y < s.k → x < s.k → s.k - (x + 1) = (s.k - y) % s.k → y = (x + 1) % s.k := by
+    intro y x hy hx hc
+    have hs : (x + 1) % s.k = (x % s.k + 1) % s.k :=
+      Nat.ModEq.add_right 1 (Nat.ModEq.symm (Nat.mod_modEq x s.k))
+    rw [hs, Nat.mod_eq_of_lt hx]
+    rcases Nat.eq_zero_or_pos y with h0 | h0
+    · subst h0
+      rw [Nat.sub_zero, Nat.mod_self] at hc
+      have hxy : x + 1 = s.k := by omega
+      rw [hxy, Nat.mod_self]
+    · rw [Nat.mod_eq_of_lt (by omega)] at hc
+      have hxy : x + 1 = y := by omega
+      rw [hxy, Nat.mod_eq_of_lt hy]
+  show isScsV39 (ScsV39.mk s.k s.d (peropp2 s.a s.k) (peropp2 s.am s.k) (peropp2 s.bm s.k)
+    (peropp2 s.b s.k) (peropp2 s.J s.k) (peropp s.lo s.k) (peropp s.hi s.k)
+    (peropp s.str s.k))
+  refine ⟨hd, hk3', hk6', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact peropp_periodic s.lo s.k
+  · exact peropp_periodic s.hi s.k
+  · exact peropp_periodic s.str s.k
+  · exact peropp_periodic s.str s.k
+  · intro p q
+    show s.a (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.a (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.am (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.am (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.am (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.bm (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.bm (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.bm (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.b (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.b (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1))
+        = s.b (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    show s.J (s.k - ((p + s.k) % s.k + 1)) (s.k - (q % s.k + 1)) =
+        s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) ∧
+      s.J (s.k - (p % s.k + 1)) (s.k - ((q + s.k) % s.k + 1)) =
+        s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    rw [Nat.add_mod_right, Nat.add_mod_right]
+    exact ⟨rfl, rfl⟩
+  · intro p q
+    exact ⟨(hsym5 (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).1,
+      (hsym5 (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.1,
+      (hsym5 (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.1,
+      (hsym5 (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.1,
+      (hsym5 (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))).2.2.2.2⟩
+  · intro p q
+    exact hch (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+  · intro p
+    exact hdiag0 (s.k - (p % s.k + 1))
+  · intro p q hpq
+    have hne : s.k - (p % s.k + 1) ≠ s.k - (q % s.k + 1) := by
+      intro hcon
+      have e1 : s.k - ((s.k - (p % s.k + 1)) % s.k + 1) = p % s.k := jlxswb_phi_inv hk0 p
+      have e2 : s.k - ((s.k - (q % s.k + 1)) % s.k + 1) = q % s.k := jlxswb_phi_inv hk0 q
+      rw [Nat.mod_eq_of_lt (jlxswb_phi_lt (by omega) p)] at e1
+      rw [Nat.mod_eq_of_lt (jlxswb_phi_lt (by omega) q)] at e2
+      exact hpq.2.2 (jlxswb_mod_eq (k := s.k) (by rw [← e1, ← e2, hcon]) hpq.1 hpq.2.1)
+    show 2 ≤ s.a (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1))
+    exact hdiag _ _ ⟨jlxswb_phi_lt (by omega) p, jlxswb_phi_lt (by omega) q, hne⟩
+  · intro p hp3
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) < 4
+    rw [jlxswb_key (by omega) hpb hsymB p]
+    exact hb3 _ hp3
+  · intro p hp6
+    show s.b (s.k - (p % s.k + 1)) (s.k - ((p + 1) % s.k + 1)) ≤ cstab
+    rw [jlxswb_key (by omega) hpb hsymB p]
+    exact hbc _ hp6
+  · intro p q hpq
+    show q % s.k = (p + 1) % s.k ∨ p % s.k = (q + 1) % s.k
+    have hJs : s.J (s.k - (p % s.k + 1)) (s.k - (q % s.k + 1)) := hpq
+    rcases hjn' _ _ hJs with h | h
+    · exact Or.inr (jlxswb_adj_swap (by omega) h)
+    · exact Or.inl (jlxswb_adj_swap (by omega) h)
+  · intro p q hpq
+    exact hjab' _ _ hpq
+  · show {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+        (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard + s.k ≤ 6
+    have hcardT : {i | i < s.k ∧ (2 * h0 < s.b (s.k - (i % s.k + 1))
+          (s.k - ((i + 1) % s.k + 1)) ∨
+        2 < s.a (s.k - (i % s.k + 1)) (s.k - ((i + 1) % s.k + 1)))}.ncard
+        = {j | j < s.k ∧ (2 * h0 < s.b j (j + 1) ∨ 2 < s.a j (j + 1))}.ncard := by
+      refine Set.ncard_congr
+        (f := fun i (_ : i ∈ (_ : Set ℕ)) => s.k - 1 - ((i + 1) % s.k)) ?_ ?_ ?_
+      · rintro i ⟨hi, hbad | hbad⟩
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [jlxswb_key (by omega) hpb hsymB i] at hbad
+          exact Or.inl hbad
+        · have hlt : (i + 1) % s.k < s.k := Nat.mod_lt (i + 1) (by omega)
+          refine ⟨by omega, ?_⟩
+          rw [jlxswb_key (by omega) hpa hsymA i] at hbad
+          exact Or.inr hbad
+      · rintro i j hi hb hcon
+        obtain ⟨hi, -⟩ := hi
+        obtain ⟨hj, -⟩ := hb
+        have hcon' : s.k - 1 - ((i + 1) % s.k) = s.k - 1 - ((j + 1) % s.k) := hcon
+        by_cases hik : i + 1 < s.k
+        · by_cases hjk : j + 1 < s.k
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have e1 : (i + 1) % s.k = i + 1 := Nat.mod_eq_of_lt hik
+            have hjk1 : j + 1 = s.k := by omega
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+        · by_cases hjk : j + 1 < s.k
+          · have hjk1 : i + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = j + 1 := Nat.mod_eq_of_lt hjk
+            rw [e1, e2] at hcon'
+            omega
+          · have hik1 : i + 1 = s.k := by omega
+            have hjk1 : j + 1 = s.k := by omega
+            have e1 : (i + 1) % s.k = 0 := by rw [hik1, Nat.mod_self]
+            have e2 : (j + 1) % s.k = 0 := by rw [hjk1, Nat.mod_self]
+            rw [e1, e2] at hcon'
+            omega
+      · rintro j ⟨hj, hbad⟩
+        set i := (2 * s.k - 2 - j) % s.k with hiv
+        have hi : i < s.k := by rw [hiv]; exact Nat.mod_lt _ (by omega)
+        have hi1 : (i + 1) % s.k = (2 * s.k - 1 - j) % s.k := by
+          rw [hiv, Nat.mod_add_mod (2 * s.k - 2 - j) s.k 1,
+            show 2 * s.k - 2 - j + 1 = 2 * s.k - 1 - j from by omega]
+        have hfi : s.k - 1 - ((i + 1) % s.k) = j := by
+          rw [hi1]
+          by_cases hjk1 : j = s.k - 1
+          · rw [hjk1, show 2 * s.k - 1 - (s.k - 1) = s.k from by omega, Nat.mod_self]
+            omega
+          · have hmod : (2 * s.k - 1 - j) % s.k = s.k - 1 - j := by
+              have hj2 : j ≤ s.k - 2 := by omega
+              rw [show 2 * s.k - 1 - j = s.k + (s.k - 1 - j) from by omega,
+                Nat.add_mod, Nat.mod_self, Nat.zero_add, Nat.mod_modEq _ _,
+                Nat.mod_eq_of_lt (by omega)]
+            rw [hmod]
+            omega
+        refine ⟨i, ⟨hi, ?_⟩, hfi⟩
+        rw [jlxswb_key (by omega) hpb hsymB i, jlxswb_key (by omega) hpa hsymA i, hfi]
+        exact hbad
+    rw [hcardT]
+    exact hcard'
+
+-- ——— SYM_0 kit: verbatim from LocalAuto16 (private, LA16:1295-1512) ———
+
+/-- HOL `ELEMENT1_SYM_0`. (LA16 `ELEMENT1_SYM_0_p16`.) -/
+private theorem jlx_element1_sym (a : V3) :
+    ({-a} : Set V3) = (fun x : V3 => -x) '' {a} := by
+  simp
+
+/-- The negation map on `V3` is injective. (LA16 `negInjSym_p16`.) -/
+private theorem jlx_neg_inj_sym : Function.Injective (fun x : V3 => -x) :=
+  fun _ _ h => by simpa using h
+
+/-- HOL `ELEMENT2_SYM_0`. (LA16 `element2Neg_p16`.) -/
+private theorem jlx_element2_neg (a b : V3) :
+    ({-a, -b} : Set V3) = Set.image (fun x : V3 => -x) ({a, b} : Set V3) := by
+  rw [Set.image_insert_eq, Set.image_singleton]
+
+/-- HOL `REFL_SYM_0`. (LA16 `reflNeg_p16`.) -/
+private theorem jlx_refl_neg (A : Set V3) :
+    Set.image (fun x : V3 => -x) (Set.image (fun x : V3 => -x) A) = A := by
+  simp
+
+/-- HOL `INTER_SYM_0`. (LA16 `interNeg_p16`.) -/
+private theorem jlx_inter_neg (e1 e2 : Set V3) :
+    Set.image (fun x : V3 => -x) (e1 ∩ e2)
+      = Set.image (fun x : V3 => -x) e1 ∩ Set.image (fun x : V3 => -x) e2 := by
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_image]
+  constructor
+  · rintro ⟨y, ⟨hy1, hy2⟩, rfl⟩
+    exact ⟨⟨y, hy1, rfl⟩, ⟨y, hy2, rfl⟩⟩
+  · rintro ⟨⟨y1, hy1, rfl⟩, ⟨y2, hy2, hy12⟩⟩
+    have hyy : y1 = y2 := neg_inj.mp hy12.symm
+    exact ⟨y1, ⟨hy1, hyy ▸ hy2⟩, rfl⟩
+
+/-- HOL `VEC0_SYM_0`. (LA16 `vec0Neg_p16`.) -/
+private theorem jlx_vec0_neg :
+    Set.image (fun x : V3 => -x) ({0} : Set V3) = ({0} : Set V3) := by
+  ext x
+  simp
+
+/-- HOL `AFF_GE_VEC0_SYM_0` / `AFF_LT_VEC0_SYM_0`, sign-generic core.
+(LA16 `affsignNegPt_p16`.) -/
+private theorem jlx_affsign_neg {e : Set V3} {w : V3} {sgn : ℝ → Prop}
+    (hw : Affsign sgn ({0} : Set V3) (Set.image (fun x : V3 => -x) e) w) :
+    Affsign sgn ({0} : Set V3) e (-w) := by
+  obtain ⟨f, hfin, hwv, hfp, hfsum⟩ := hw
+  have hU : Set.image (fun x : V3 => -x) (({0} : Set V3) ∪ e)
+      = ({0} : Set V3) ∪ Set.image (fun x : V3 => -x) e := by
+    rw [Set.image_union, jlx_vec0_neg]
+  have hfinA : ((({0} : Set V3) ∪ e : Set V3)).Finite :=
+    (Set.finite_image_iff jlx_neg_inj_sym.injOn).mp (by rw [hU]; exact hfin)
+  have heq : hfin.toFinset = hfinA.toFinset.image (fun x : V3 => -x) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_image,
+      Set.mem_union, Set.mem_singleton_iff]
+    constructor
+    · rintro (rfl | ⟨y, hy, rfl⟩)
+      · exact ⟨0, Or.inl rfl, by simp⟩
+      · exact ⟨y, Or.inr hy, rfl⟩
+    · rintro ⟨a, (rfl | hy), rfl⟩
+      · exact Or.inl (by simp)
+      · exact Or.inr ⟨a, hy, rfl⟩
+  refine ⟨fun y => f (-y), hfinA, ?_, ?_, ?_⟩
+  · calc -w = ∑ x ∈ hfin.toFinset, f x • (-x) := by
+          rw [hwv]
+          simp only [Finset.sum_neg_distrib, smul_neg]
+      _ = ∑ x ∈ hfinA.toFinset.image (fun x : V3 => -x), f x • (-x) := by rw [heq]
+      _ = ∑ y ∈ hfinA.toFinset, f (-y) • y := by
+          simp only [Finset.sum_image (f := fun z : V3 => f z • (-z))
+            (g := fun x : V3 => -x) jlx_neg_inj_sym.injOn, neg_neg]
+  · intro z hz
+    exact hfp (-z) ⟨z, hz, rfl⟩
+  · show (∑ y ∈ hfinA.toFinset, f (-y)) = 1
+    rw [← Finset.sum_image (f := f) (g := fun x : V3 => -x) jlx_neg_inj_sym.injOn, ← heq]
+    exact hfsum
+
+/-- HOL `AFF_GE_VEC0_SYM_0`. (LA16 `affGeNeg_p16`.) -/
+private theorem jlx_affGe_neg (e : Set V3) :
+    affGe ({0} : Set V3) (Set.image (fun x : V3 => -x) e)
+      = Set.image (fun x : V3 => -x) (affGe ({0} : Set V3) e) := by
+  ext v
+  constructor
+  · intro hv
+    have hv' : Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3)
+        (Set.image (fun x : V3 => -x) e) v := hv
+    refine ⟨-v, ?_, by simp⟩
+    show Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3) e (-v)
+    exact jlx_affsign_neg (sgn := fun x : ℝ => 0 ≤ x) hv'
+  · rintro ⟨u, hu, rfl⟩
+    show Affsign (fun x : ℝ => 0 ≤ x) ({0} : Set V3)
+      (Set.image (fun x : V3 => -x) e) (-u)
+    refine jlx_affsign_neg (sgn := fun x : ℝ => 0 ≤ x)
+      (e := Set.image (fun x : V3 => -x) e) ?_
+    rw [jlx_refl_neg e]
+    exact hu
+
+/-- HOL `AFF_LT_VEC0_SYM_0`. (LA16 `affLtNeg_p16`.) -/
+private theorem jlx_affLt_neg (e : Set V3) :
+    affLt ({0} : Set V3) (Set.image (fun x : V3 => -x) e)
+      = Set.image (fun x : V3 => -x) (affLt ({0} : Set V3) e) := by
+  ext v
+  constructor
+  · intro hv
+    have hv' : Affsign (fun x : ℝ => x < 0) ({0} : Set V3)
+        (Set.image (fun x : V3 => -x) e) v := hv
+    refine ⟨-v, ?_, by simp⟩
+    show Affsign (fun x : ℝ => x < 0) ({0} : Set V3) e (-v)
+    exact jlx_affsign_neg (sgn := fun x : ℝ => x < 0) hv'
+  · rintro ⟨u, hu, rfl⟩
+    show Affsign (fun x : ℝ => x < 0) ({0} : Set V3)
+      (Set.image (fun x : V3 => -x) e) (-u)
+    refine jlx_affsign_neg (sgn := fun x : ℝ => x < 0)
+      (e := Set.image (fun x : V3 => -x) e) ?_
+    rw [jlx_refl_neg e]
+    exact hu
+
+/-- A `k`-periodic sequence satisfies `v k = v 0`. (LA16 `periodicZero_p16`.) -/
+private theorem jlx_periodic_zero {v : ℕ → V3} {k : ℕ} (hper : Periodic v k) :
+    v k = v 0 := by
+  have h := hper 0
+  rwa [Nat.zero_add] at h
+
+/-- The opposite of an edge is an edge (LA16 `oppEdgeIndex_p16`). -/
+private theorem jlx_opp_edge_index {v : ℕ → V3} {k : ℕ} (hk : 1 < k)
+    (hper : Periodic v k) (i : ℕ) :
+    ∃ j : ℕ, ({v (k - (i % k + 1)), v (k - ((i + 1) % k + 1))} : Set V3)
+      = ({v j, v (j + 1)} : Set V3) := by
+  have hp : i % k < k := Nat.mod_lt _ (by omega)
+  have hq : (i + 1) % k = (i % k + 1) % k := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt hk]
+  rcases Nat.lt_or_ge (i % k + 1) k with hlt | hge
+  · refine ⟨k - (i % k) - 2, ?_⟩
+    have hq' : (i + 1) % k = i % k + 1 := by rw [hq, Nat.mod_eq_of_lt hlt]
+    have e1 : k - (i % k + 1) = k - (i % k) - 2 + 1 := by omega
+    have e2 : k - (i % k + 1 + 1) = k - (i % k) - 2 := by omega
+    rw [hq', e1, e2, Set.pair_comm]
+  · have hpk : i % k + 1 = k := by omega
+    refine ⟨k - 1, ?_⟩
+    have hq0 : (i + 1) % k = 0 := by rw [hq, hpk, Nat.mod_self]
+    have e1 : k - (i % k + 1) = 0 := by rw [hpk, Nat.sub_self]
+    have e2 : k - ((i + 1) % k + 1) = k - 1 := by rw [hq0]
+    have hk1 : k - 1 + 1 = k := by omega
+    rw [e1, e2, hk1, jlx_periodic_zero hper, Set.pair_comm]
+
+/-- HOL `SCS_GENERIC_SYM_0` (LA16:1464, verbatim body). -/
+private theorem jlx_generic_opp (s : ScsV39) (v : ℕ → V3) (h1 : BBsV39 s v)
+    (h2 : isScsV39 s) (h3 : scsGeneric v) :
+    scsGeneric (fun i => -(v (s.k - (i % s.k + 1)))) := by
+  have hper : Periodic v s.k := by
+    have h := h1
+    unfold BBsV39 at h
+    exact h.2.1
+  have hk3 : 3 ≤ s.k := by
+    have h := h2
+    unfold isScsV39 at h
+    exact h.2.1
+  have hk : 1 < s.k := by omega
+  unfold scsGeneric Generic at h3 ⊢
+  intro v' w u hmem hu
+  obtain ⟨i, hi⟩ := hmem
+  obtain ⟨j, hj⟩ := hu
+  have hV : -u ∈ Set.range v := by
+    refine ⟨s.k - (j % s.k + 1), ?_⟩
+    rw [← hj]
+    simp
+  have hE : ({-v', -w} : Set V3) ∈ Set.range (fun i => ({v i, v (i + 1)} : Set V3)) := by
+    have hstep : ({-v', -w} : Set V3)
+        = Set.image (fun x : V3 => -x)
+            ({-(v (s.k - (i % s.k + 1))), -(v (s.k - ((i + 1) % s.k + 1)))} : Set V3) := by
+      rw [jlx_element2_neg, ← hi]
+    rw [hstep]
+    have hneg : Set.image (fun x : V3 => -x)
+        ({-(v (s.k - (i % s.k + 1))), -(v (s.k - ((i + 1) % s.k + 1)))} : Set V3)
+        = ({v (s.k - (i % s.k + 1)), v (s.k - ((i + 1) % s.k + 1))} : Set V3) := by
+      rw [← jlx_element2_neg (-(v (s.k - (i % s.k + 1))))
+        (-(v (s.k - ((i + 1) % s.k + 1))))]
+      simp
+    rw [hneg]
+    obtain ⟨m, hm⟩ := jlx_opp_edge_index hk hper i
+    rw [hm]
+    exact ⟨m, rfl⟩
+  have hgen := h3 (-v') (-w) (-u) hE hV
+  have hkey : Set.image (fun x : V3 => -x)
+      (affGe ({0} : Set V3) {v', w} ∩ affLt ({0} : Set V3) {u}) = ∅ := by
+    rw [jlx_inter_neg, ← jlx_affGe_neg {v', w}, ← jlx_affLt_neg {u},
+      ← jlx_element2_neg v' w, ← jlx_element1_sym u]
+    exact hgen
+  calc affGe ({0} : Set V3) {v', w} ∩ affLt ({0} : Set V3) {u}
+      = Set.image (fun x : V3 => -x)
+          (Set.image (fun x : V3 => -x)
+            (affGe ({0} : Set V3) {v', w} ∩ affLt ({0} : Set V3) {u})) :=
+        (jlx_refl_neg _).symm
+    _ = Set.image (fun x : V3 => -x) ∅ := by rw [hkey]
+    _ = ∅ := by simp
+
+-- ——— small opp facts (LA16 `SUC_OPP_ID_p16` / `A_B_J_SCS_OPP_p16`) ———
+
+/-- HOL `SUC_OPP_ID` (LA16:1281). -/
+theorem jlx_suc_opp_id {k i : ℕ} (hk : 1 < k) :
+    (k - (i % k + 1) + 1) % k = (k - i % k) % k := by
+  have hq : i % k < k := Nat.mod_lt _ (by omega)
+  rw [show k - (i % k + 1) + 1 = k - i % k by omega]
+
+/-- HOL `A_B_J_SCS_OPP` (LA16:1289): the `a`/`b`/`J` slots of `scsOppV39`. -/
+theorem jlx_a_b_j_opp (s : ScsV39) :
+    (∀ i j, (scsOppV39 s).a i j = s.a (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1))) ∧
+    (∀ i j, (scsOppV39 s).b i j = s.b (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1))) ∧
+    (∀ i j, (scsOppV39 s).J i j ↔ s.J (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1))) :=
+  ⟨fun _ _ => rfl, fun _ _ => rfl, fun _ _ => Iff.rfl⟩
+
+/-- HOL `DIAG_OPP` (LA16:1547, verbatim body). -/
+theorem jlx_diag_opp (k i j : ℕ) (hk : 3 < k) (h : scsDiag k i j) :
+    scsDiag k (k - (i % k + 1)) (k - (j % k + 1)) := by
+  obtain ⟨h1, h2, h3⟩ := h
+  have hik : i % k < k := Nat.mod_lt _ (by omega)
+  have hjk : j % k < k := Nat.mod_lt _ (by omega)
+  have mi : k - (i % k + 1) < k := by omega
+  have mj : k - (j % k + 1) < k := by omega
+  refine ⟨?_, ?_, ?_⟩
+  · intro hc
+    rw [Nat.mod_eq_of_lt mi, Nat.mod_eq_of_lt mj] at hc
+    omega
+  · -- ¬((i' + 1) % k = j' % k)
+    intro heq
+    rcases Nat.eq_zero_or_pos (i % k) with hq | hq
+    · have hx : k - (i % k + 1) + 1 = k := by rw [hq]; omega
+      rw [hx, Nat.mod_self] at heq
+      rw [Nat.mod_eq_of_lt mj] at heq
+      have hjk1 : j % k + 1 = k := by omega
+      have hj1 : (j + 1) % k = (j % k + 1) % k := (Nat.mod_add_mod j k 1).symm
+      rw [hj1, hjk1, Nat.mod_self] at h3
+      exact h3 (by rw [hq])
+    · have hL : (k - (i % k + 1) + 1) % k = k - i % k := by
+        rw [show k - (i % k + 1) + 1 = k - i % k by omega]
+        exact Nat.mod_eq_of_lt (by omega)
+      rw [hL, Nat.mod_eq_of_lt mj] at heq
+      have hjq : i % k = j % k + 1 := by omega
+      have hj1 : (j + 1) % k = j % k + 1 := by
+        rw [← Nat.mod_add_mod j k 1, Nat.mod_eq_of_lt (by omega)]
+      rw [hj1] at h3
+      exact h3 hjq
+  · -- ¬(i' % k = (j' + 1) % k)
+    intro heq
+    rw [Nat.mod_eq_of_lt mi,
+      show k - (j % k + 1) + 1 = k - j % k by omega] at heq
+    rcases Nat.eq_zero_or_pos (j % k) with hqj | hqj
+    · rw [hqj, Nat.sub_zero, Nat.mod_self] at heq
+      -- heq : k - (i % k + 1) = 0
+      have hik1 : i % k + 1 = k := by omega
+      have hip1 : (i + 1) % k = 0 := by
+        rw [← Nat.mod_add_mod i k 1, hik1, Nat.mod_self]
+      rw [hip1] at h2
+      exact h2 hqj.symm
+    · rw [Nat.mod_eq_of_lt (by omega : k - j % k < k)] at heq
+      -- heq : k - (i % k + 1) = k - j % k
+      have hjq : j % k = i % k + 1 := by omega
+      have hip1 : (i + 1) % k = i % k + 1 := by
+        rw [← Nat.mod_add_mod i k 1, Nat.mod_eq_of_lt (by omega : i % k + 1 < k)]
+      rw [hip1] at h2
+      exact h2 hjq.symm
+
+/-- HOL `BASIC_OPP` (LA16:1540 route): `scsBasicV39` transports to the
+opposite system. -/
+theorem jlx_basic_opp (s : ScsV39) (h1 : isScsV39 s) (h2 : scsBasicV39 s) :
+    scsBasicV39 (scsOppV39 s) := by
+  obtain ⟨hu, hJ⟩ := h2
+  obtain ⟨hlo, hhi, hstr, ham, hbm⟩ := hu
+  refine ⟨?_, ?_⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · funext i
+      simp [scsOppV39, peropp, hlo]
+    · funext i
+      simp [scsOppV39, peropp, hhi]
+    · funext i
+      simp [scsOppV39, peropp, hstr]
+    · funext i j
+      simp [scsOppV39, peropp2, ham]
+    · funext i j
+      simp [scsOppV39, peropp2, hbm]
+  · intro i j
+    show s.J (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1)) = False
+    exact hJ (s.k - (i % s.k + 1)) (s.k - (j % s.k + 1))
+
+
+
+/-- Residue fold A: the `(i'+1)`-slot of the opposite re-indexing lands on
+`i+1` (`i' = k - (r+1)`, `r = (i+2) % k`). -/
+private theorem jlx_fldA {k r : ℕ} (hk : 1 ≤ k) (hr : r < k) :
+    (k - ((k - r) % k + 1)) % k = (r + k - 1) % k := by
+  rcases Nat.eq_zero_or_pos r with h0 | h0
+  · subst h0
+    rw [Nat.sub_zero, Nat.mod_self]
+    have e1 : k - (0 + 1) = k - 1 := by omega
+    have e2 : (0 : ℕ) + k - 1 = k - 1 := by omega
+    rw [e1, e2]
+  · have hlt : k - r < k := by omega
+    rw [Nat.mod_eq_of_lt hlt]
+    have e1 : k - (k - r + 1) = r - 1 := by omega
+    rw [e1, Nat.mod_eq_of_lt (show r - 1 < k by omega)]
+    have e2 : r + k - 1 = r - 1 + k := by omega
+    rw [e2, Nat.add_mod_right, Nat.mod_eq_of_lt (show r - 1 < k by omega)]
+
+/-- Residue fold B: the `(i'+2)`-slot lands on `i`. -/
+private theorem jlx_fldB {k r : ℕ} (hk : 4 ≤ k) (hr : r < k) :
+    (k - ((k - r + 1) % k + 1)) % k = (r + k - 2) % k := by
+  rcases Nat.lt_or_ge r 1 with h1 | h1
+  · -- r = 0
+    have hr0 : r = 0 := by omega
+    rw [hr0, Nat.sub_zero]
+    have e1 : (k + 1) % k = 1 := by
+      rw [Nat.add_mod, Nat.mod_self, Nat.zero_add,
+        Nat.mod_eq_of_lt (show (1:ℕ) < k by omega),
+        Nat.mod_eq_of_lt (show (1:ℕ) < k by omega)]
+    rw [e1]
+    have e2 : k - (1 + 1) = k - 2 := by omega
+    have e3 : (0 : ℕ) + k - 2 = k - 2 := by omega
+    rw [e2, e3]
+  · rcases Nat.lt_or_ge r 2 with h2 | h2
+    · -- r = 1
+      have hr1 : r = 1 := by omega
+      rw [hr1]
+      have e1 : k - 1 + 1 = k := by omega
+      rw [e1, Nat.mod_self]
+      have e2 : k - (0 + 1) = k - 1 := by omega
+      have e3 : (1 : ℕ) + k - 2 = k - 1 := by omega
+      rw [e2, e3]
+    · have hlt : k - r + 1 < k := by omega
+      rw [Nat.mod_eq_of_lt hlt]
+      have e1 : k - (k - r + 1 + 1) = r - 2 := by omega
+      rw [e1, Nat.mod_eq_of_lt (show r - 2 < k by omega)]
+      have e2 : r + k - 2 = r - 2 + k := by omega
+      rw [e2, Nat.add_mod_right, Nat.mod_eq_of_lt (show r - 2 < k by omega)]
+
+/-- Residue fold C: the `i'`-slot lands on `i+2`. -/
+private theorem jlx_fldC {k r : ℕ} (hk : 1 ≤ k) (hr : r < k) :
+    (k - ((k - (r + 1)) % k + 1)) % k = r := by
+  rcases Nat.lt_or_ge (r + 1) k with hlt | hge
+  · have hlt2 : k - (r + 1) < k := by omega
+    rw [Nat.mod_eq_of_lt hlt2]
+    have e1 : k - (k - (r + 1) + 1) = r := by omega
+    rw [e1, Nat.mod_eq_of_lt hr]
+  · have heq : r + 1 = k := by omega
+    rw [heq, Nat.sub_self, Nat.zero_mod]
+    have e1 : k - (0 + 1) = k - 1 := by omega
+    rw [e1, Nat.mod_eq_of_lt (by omega)]
+    omega
+
+/-- Opposite-system backward propagation step (HOL CQAOQLR.hl:259-322 route):
+from edge `j+1 = 2` and the pin at `j`, conclude edge `j = 2`. Consumes
+`TFITSKC_p27` on `(scsOppV39 s, fun i => -(peropp v s.k i))` at the
+HOL index `i' = k - SUC((j+2) MOD k)`. -/
+private theorem jlx_bwd_step (hmnl : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (hk3 : 3 < s.k) (hs : isScsV39 s) (hMMs : v ∈ MMsV39 s)
+    (hgen : scsGeneric v) (hbasic : scsBasicV39 s)
+    (hlt : ∀ i, s.a i (i + 1) < s.b i (i + 1))
+    (hdiag : ∀ i j, scsDiag s.k i j →
+      s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < s.b i j)
+    (j : ℕ) (hpin : s.a j (j + 1) = 2 ∧ s.b j (j + 1) ≤ 2 * h0)
+    (hstep : dist (v (j + 1)) (v (j + 2)) = 2) :
+    dist (v j) (v (j + 1)) = 2 := by
+  have hsC := hs
+  obtain ⟨hd0, hk1, hk2, hplo, hphi, hstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym, hch,
+    hdiag0, hdiag2, hb3, hbc, hJmod, hJsq, hcard⟩ := hsC
+  have hk0 : s.k ≠ 0 := by omega
+  have hk1' : 1 < s.k := by omega
+  have hk4 : 4 ≤ s.k := by omega
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hMMs
+  have hper : Periodic v s.k := hBB.2.1
+  set r : ℕ := (j + 2) % s.k with hrdef
+  have hr : r < s.k := Nat.mod_lt _ (by omega)
+  set i' : ℕ := s.k - (r + 1) with hi'def
+  have ei'1 : i' + 1 = s.k - r := by rw [hi'def]; omega
+  have ei'2 : i' + 2 = s.k - r + 1 := by rw [hi'def]; omega
+  have ei'3 : i' + 3 = s.k - r + 2 := by rw [hi'def]; omega
+  -- MM / generic / basic of the opposite system
+  have hMMs' : MMsV39 (scsOppV39 s) (fun i => -(peropp v s.k i)) :=
+    MM_SCS_OPP_fb s v s.k rfl hs (by omega) hMMs
+  have hs' : isScsV39 (scsOppV39 s) := jlx_opp_isscs s hs
+  have hgen' : scsGeneric (fun i => -(peropp v s.k i)) :=
+    jlx_generic_opp s v hBB hs hgen
+  have hbasic' : scsBasicV39 (scsOppV39 s) := jlx_basic_opp s hs hbasic
+  have hk3' : 3 < (scsOppV39 s).k := hk3
+  -- diag trio for the opposite system
+  have hdiag' : ∀ p q, scsDiag s.k p q →
+      (scsOppV39 s).a p q ≤ cstab ∧
+        cstab < dist (-(peropp v s.k p)) (-(peropp v s.k q)) ∧
+          4 * h0 < (scsOppV39 s).b p q := by
+    intro p q hpq
+    have hd2 := jlx_diag_opp s.k p q hk3 hpq
+    have e1 := hdiag _ _ hd2
+    refine ⟨e1.1, ?_, e1.2.2⟩
+    have hm := e1.2.1
+    rw [← dist_neg_neg] at hm
+    exact hm
+  -- the a/b folds at (i'+1, i'+2): land on (j+1, j)
+  have fldA1 : (s.k - ((i' + 1) % s.k + 1)) % s.k = (j + 1) % s.k := by
+    rw [ei'1, jlx_fldA (by omega) hr, hrdef]
+    have e : ((j + 2) % s.k + (s.k - 1)) % s.k = (j + 2 + (s.k - 1)) % s.k :=
+      Nat.ModEq.add_right (s.k - 1) (Nat.mod_modEq (j + 2) s.k)
+    rw [show (j + 2) % s.k + s.k - 1 = (j + 2) % s.k + (s.k - 1) from by omega,
+      e, show j + 2 + (s.k - 1) = j + 1 + s.k from by omega, Nat.add_mod_right]
+  have fldB1 : (s.k - ((i' + 2) % s.k + 1)) % s.k = j % s.k := by
+    rw [ei'2, jlx_fldB hk4 hr, hrdef]
+    have e : ((j + 2) % s.k + (s.k - 2)) % s.k = (j + 2 + (s.k - 2)) % s.k :=
+      Nat.ModEq.add_right (s.k - 2) (Nat.mod_modEq (j + 2) s.k)
+    rw [show (j + 2) % s.k + s.k - 2 = (j + 2) % s.k + (s.k - 2) from by omega,
+      e, show j + 2 + (s.k - 2) = j + s.k from by omega, Nat.add_mod_right]
+  have fldC0 : (s.k - (i' % s.k + 1)) % s.k = (j + 2) % s.k := by
+    rw [hi'def, jlx_fldC (by omega) hr, ← hrdef]
+  have fldD0 : (s.k - ((i' + 3) % s.k + 1)) % s.k = (j + s.k - 1) % s.k := by
+    have bridge : (r + s.k - 3) % s.k = (j + s.k - 1) % s.k := by
+      have h2 : r % s.k = (j + 2) % s.k := by rw [hrdef, Nat.mod_mod]
+      have h3 := (Nat.ModEq.add_right (s.k - 3)
+        (show r ≡ j + 2 [MOD s.k] from h2) : r + (s.k - 3) ≡ j + 2 + (s.k - 3) [MOD s.k])
+      rw [show j + s.k - 1 = j + 2 + (s.k - 3) from by omega,
+        show r + s.k - 3 = r + (s.k - 3) from by omega]
+      exact h3
+    rw [← bridge]
+    by_cases h0 : r = 0
+    · rw [h0] at hr
+      rw [ei'3, h0]
+      have a2 : (s.k + 2) % s.k = 2 := by
+        rw [Nat.add_mod, Nat.mod_self, Nat.zero_add,
+          Nat.mod_eq_of_lt (show (2:ℕ) < s.k by omega),
+          Nat.mod_eq_of_lt (show (2:ℕ) < s.k by omega)]
+      rw [show s.k - 0 + 2 = s.k + 2 from by omega, a2]
+      have a3 : s.k - (2 + 1) = s.k - 3 := by omega
+      rw [a3, Nat.mod_eq_of_lt (by omega), show (0:ℕ) + s.k - 3 = s.k - 3 from by omega,
+        Nat.mod_eq_of_lt (by omega)]
+    · by_cases h1 : r = 1
+      · rw [h1] at hr
+        rw [ei'3, h1]
+        have a2 : (s.k + 1) % s.k = 1 := by
+          rw [Nat.add_mod, Nat.mod_self, Nat.zero_add,
+            Nat.mod_eq_of_lt (show (1:ℕ) < s.k by omega),
+            Nat.mod_eq_of_lt (show (1:ℕ) < s.k by omega)]
+        rw [show s.k - 1 + 2 = s.k + 1 from by omega, a2]
+        have a3 : s.k - (1 + 1) = s.k - 2 := by omega
+        rw [a3, Nat.mod_eq_of_lt (by omega), show (1:ℕ) + s.k - 3 = s.k - 2 from by omega,
+          Nat.mod_eq_of_lt (by omega)]
+      · by_cases h2 : r = 2
+        · rw [h2] at hr
+          rw [ei'3, h2]
+          have a2 : s.k - 2 + 2 = s.k := by omega
+          rw [a2, Nat.mod_self]
+          have a3 : s.k - (0 + 1) = s.k - 1 := by omega
+          rw [a3, Nat.mod_eq_of_lt (by omega), show (2:ℕ) + s.k - 3 = s.k - 1 from by omega,
+            Nat.mod_eq_of_lt (by omega)]
+        · have h3 : 3 ≤ r := by omega
+          rw [ei'3]
+          have hlt2 : s.k - r + 2 < s.k := by omega
+          rw [Nat.mod_eq_of_lt hlt2]
+          have a3 : s.k - (s.k - r + 2 + 1) = r - 3 := by omega
+          rw [a3, Nat.mod_eq_of_lt (show r - 3 < s.k by omega),
+            show r + s.k - 3 = r - 3 + s.k from by omega, Nat.add_mod_right,
+            Nat.mod_eq_of_lt (show r - 3 < s.k by omega)]
+  -- P7/P8: a'/b' at (i'+1, i'+2) = a/b at (j+1, j) = a/b at j (sym)
+  have foldAB : ∀ g : ℕ → ℕ → ℝ, Periodic2 g s.k → (∀ x y, g x y = g y x) →
+      g (s.k - ((i' + 1) % s.k + 1)) (s.k - ((i' + 2) % s.k + 1)) = g j (j + 1) := by
+    intro g hpg hsg
+    have e := (periodic2Mod1 hk0 hpg (s.k - ((i' + 1) % s.k + 1))
+      (s.k - ((i' + 2) % s.k + 1))).symm.trans
+      (periodic2Mod2 hk0 hpg ((s.k - ((i' + 1) % s.k + 1)) % s.k)
+        (s.k - ((i' + 2) % s.k + 1))).symm
+    rw [e, fldA1, fldB1,
+      periodic2Mod1 hk0 hpg (j + 1) (j % s.k), periodic2Mod2 hk0 hpg (j + 1) j,
+      hsg (j + 1) j]
+  have hP7 : (scsOppV39 s).a (i' + 1) (i' + 2) = 2 :=
+    (foldAB s.a hpa fun x y => (hsym x y).1).trans hpin.1
+  have hP8 : (scsOppV39 s).b (i' + 1) (i' + 2) ≤ 2 * h0 := by
+    have e := foldAB s.b hpb fun x y => (hsym x y).2.2.2.1
+    rw [show (scsOppV39 s).b (i' + 1) (i' + 2) = s.b j (j + 1) from e]
+    exact hpin.2
+  -- P9: dist (v' i') (v' (i'+1)) = 2 —— the known edge (j+1, j+2)
+  have foldV1 : v (s.k - ((i' + 1) % s.k + 1)) = v (j + 1) := by
+    have h1 := periodic_mod_p27 hper (s.k - ((i' + 1) % s.k + 1))
+    rw [fldA1] at h1
+    exact h1.trans (periodic_mod_p27 hper (j + 1)).symm
+  have foldV2 : v (s.k - (i' % s.k + 1)) = v (j + 2) := by
+    have h1 := periodic_mod_p27 hper (s.k - (i' % s.k + 1))
+    rw [fldC0] at h1
+    exact h1.trans (periodic_mod_p27 hper (j + 2)).symm
+  have hP9 : dist (-(peropp v s.k i')) (-(peropp v s.k (i' + 1))) = 2 := by
+    rw [dist_neg_neg, show peropp v s.k i' = v (s.k - (i' % s.k + 1)) from rfl,
+      show peropp v s.k (i' + 1) = v (s.k - ((i' + 1) % s.k + 1)) from rfl,
+      foldV2, foldV1, dist_comm]
+    exact hstep
+  -- P10: 2 < b' i' (i'+1) —— folds to 2 < b (j+1) (j+2)
+  have foldB2 : s.b (s.k - (i' % s.k + 1)) (s.k - ((i' + 1) % s.k + 1))
+      = s.b (j + 1) (j + 2) := by
+    have e := (periodic2Mod1 hk0 hpb (s.k - (i' % s.k + 1))
+      (s.k - ((i' + 1) % s.k + 1))).symm.trans
+      (periodic2Mod2 hk0 hpb ((s.k - (i' % s.k + 1)) % s.k)
+        (s.k - ((i' + 1) % s.k + 1))).symm
+    rw [e, fldC0, fldA1,
+      periodic2Mod1 hk0 hpb (j + 2) ((j + 1) % s.k), periodic2Mod2 hk0 hpb (j + 2) (j + 1),
+      (hsym (j + 2) (j + 1)).2.2.2.1]
+  have hP10 : 2 < (scsOppV39 s).b i' (i' + 1) := by
+    rw [show (scsOppV39 s).b i' (i' + 1)
+        = s.b (s.k - (i' % s.k + 1)) (s.k - ((i' + 1) % s.k + 1)) from rfl,
+      foldB2]
+    have h2 := SCS_A_2_p27 s hs (j + 1)
+    exact lt_of_le_of_lt h2 (hlt (j + 1))
+  -- P1: a' (i'+2) (i'+3) < b' (i'+2) (i'+3) —— folds to a/b at (j+k-1, j)
+  have foldA2 : (scsOppV39 s).a (i' + 2) (i' + 3) = s.a (j + s.k - 1) j := by
+    have e := (periodic2Mod1 hk0 hpa (s.k - ((i' + 2) % s.k + 1))
+      (s.k - ((i' + 3) % s.k + 1))).symm.trans
+      (periodic2Mod2 hk0 hpa ((s.k - ((i' + 2) % s.k + 1)) % s.k)
+        (s.k - ((i' + 3) % s.k + 1))).symm
+    rw [show (scsOppV39 s).a (i' + 2) (i' + 3)
+        = s.a (s.k - ((i' + 2) % s.k + 1)) (s.k - ((i' + 3) % s.k + 1)) from rfl,
+      e, fldB1, fldD0,
+      periodic2Mod1 hk0 hpa j ((j + s.k - 1) % s.k), periodic2Mod2 hk0 hpa j (j + s.k - 1),
+      (hsym j (j + s.k - 1)).1]
+  have foldB3 : (scsOppV39 s).b (i' + 2) (i' + 3) = s.b (j + s.k - 1) j := by
+    have e := (periodic2Mod1 hk0 hpb (s.k - ((i' + 2) % s.k + 1))
+      (s.k - ((i' + 3) % s.k + 1))).symm.trans
+      (periodic2Mod2 hk0 hpb ((s.k - ((i' + 2) % s.k + 1)) % s.k)
+        (s.k - ((i' + 3) % s.k + 1))).symm
+    rw [show (scsOppV39 s).b (i' + 2) (i' + 3)
+        = s.b (s.k - ((i' + 2) % s.k + 1)) (s.k - ((i' + 3) % s.k + 1)) from rfl,
+      e, fldB1, fldD0,
+      periodic2Mod1 hk0 hpb j ((j + s.k - 1) % s.k), periodic2Mod2 hk0 hpb j (j + s.k - 1),
+      (hsym j (j + s.k - 1)).2.2.2.1]
+  have hP1 : (scsOppV39 s).a (i' + 2) (i' + 3) < (scsOppV39 s).b (i' + 2) (i' + 3) := by
+    rw [foldA2, foldB3]
+    have h := hlt (j + s.k - 1)
+    have e1 : j + s.k - 1 + 1 = j + s.k := by omega
+    have e2 : s.a (j + s.k - 1) (j + s.k) = s.a (j + s.k - 1) j :=
+      (hpa (j + s.k - 1) j).2
+    have e3 : s.b (j + s.k - 1) (j + s.k) = s.b (j + s.k - 1) j :=
+      (hpb (j + s.k - 1) j).2
+    rwa [e1, e2, e3] at h
+  -- the TFITSKC step on the opposite system
+  have hres0 := TFITSKC_p27 hmnl (scsOppV39 s) (fun i => -(peropp v s.k i)) i'
+    hP1 hk3' hs' hMMs' hgen' hbasic' hP7 hP8 hP9 hP10 hdiag'
+  have hres : dist (-(peropp v s.k (i' + 1))) (-(peropp v s.k (i' + 2))) = 2 := hres0
+  rw [dist_neg_neg,
+    show peropp v s.k (i' + 1) = v (s.k - ((i' + 1) % s.k + 1)) from rfl,
+    show peropp v s.k (i' + 2) = v (s.k - ((i' + 2) % s.k + 1)) from rfl,
+    foldV1] at hres
+  have foldV3 : v (s.k - ((i' + 2) % s.k + 1)) = v j := by
+    have h1 := periodic_mod_p27 hper (s.k - ((i' + 2) % s.k + 1))
+    rw [fldB1] at h1
+    exact h1.trans (periodic_mod_p27 hper j).symm
+  rw [foldV3, dist_comm] at hres
+  exact hres
+
+/-! ### jlxfdmj-w4: modular-distance arithmetic (self-contained, kernel-checked) -/
+
+/-- Forward mod-distance spec: `(b + k - a) % k` is the unique `d < k` with
+`(a + d) % k = b` (for `a, b < k`, `1 ≤ k`). -/
+private theorem jlx_fwd_dist_spec {k a b : ℕ} (hk : 1 ≤ k) (ha : a < k) (hb : b < k) :
+    (a + (b + k - a) % k) % k = b := by
+  by_cases hab : a < b
+  · have h1 : b + k - a = (b - a) + k := by omega
+    have h2 : b - a < k := by omega
+    rw [h1, Nat.add_mod_right, Nat.mod_eq_of_lt h2]
+    have h3 : a + (b - a) = b := by omega
+    rw [h3, Nat.mod_eq_of_lt hb]
+  · by_cases heq : a = b
+    · subst b
+      have h1 : a + k - a = k := by omega
+      rw [h1, Nat.mod_self, Nat.add_zero, Nat.mod_eq_of_lt ha]
+    · have h2 : a - b < k := by omega
+      have h1 : b + k - a = k - (a - b) := by omega
+      have h3 : a + (k - (a - b)) = k + b := by omega
+      rw [h1, Nat.mod_eq_of_lt (by omega : k - (a - b) < k), h3, Nat.add_mod_left,
+        Nat.mod_eq_of_lt hb]
+
+/-- Uniqueness of the forward mod-distance. -/
+private theorem jlx_fwd_dist_unique {k a b l : ℕ} (hk : 1 ≤ k) (ha : a < k)
+    (_hb : b < k) (h : (a + l) % k = b) : l % k = (b + k - a) % k := by
+  have hr : l % k < k := Nat.mod_lt _ (by omega)
+  have h1 : (a + l % k) % k = b := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt ha] at h
+    exact h
+  by_cases hlt : a + l % k < k
+  · rw [Nat.mod_eq_of_lt hlt] at h1
+    have h2 : b + k - a = l % k + k := by omega
+    rw [h2, Nat.add_mod_right, Nat.mod_mod]
+  · have hge : k ≤ a + l % k := by omega
+    have h2 : a + l % k = (a + l % k - k) + k := by omega
+    rw [h2, Nat.add_mod_right, Nat.mod_eq_of_lt (by omega : a + l % k - k < k)] at h1
+    have h3 : b + k - a = l % k := by omega
+    rw [h3, Nat.mod_mod]
+
+/-- Backward mod-distance spec: `(a + k - b) % k` is the unique `m < k` with
+`(a + k - m) % k = b` (for `a, b < k`, `1 ≤ k`). -/
+private theorem jlx_bwd_dist_spec {k a b : ℕ} (_hk : 1 ≤ k) (ha : a < k) (hb : b < k) :
+    (a + k - (a + k - b) % k) % k = b := by
+  by_cases hab : a < b
+  · have h1 : a + k - b < k := by omega
+    rw [Nat.mod_eq_of_lt h1]
+    have h2 : a + k - (a + k - b) = b := by omega
+    rw [h2, Nat.mod_eq_of_lt hb]
+  · by_cases heq : a = b
+    · subst b
+      have h1 : a + k - a = k := by omega
+      rw [h1, Nat.mod_self, Nat.sub_zero, Nat.add_mod_right, Nat.mod_eq_of_lt ha]
+    · have h2 : a - b < k := by omega
+      have h1 : a + k - b = (a - b) + k := by omega
+      rw [h1, Nat.add_mod_right, Nat.mod_eq_of_lt h2]
+      have h3 : a + k - (a - b) = k + b := by omega
+      rw [h3, Nat.add_mod_left, Nat.mod_eq_of_lt hb]
+
+/-- Complement relation: backward distance is `k - forward distance`. -/
+private theorem jlx_bwd_of_fwd {k a b : ℕ} (hk : 1 ≤ k) (ha : a < k) (hb : b < k)
+    (hne : a ≠ b) : (a + k - b) % k = k - (b + k - a) % k := by
+  by_cases hab : a < b
+  · have h1 : a + k - b < k := by omega
+    rw [Nat.mod_eq_of_lt h1]
+    have h2 : b + k - a = (b - a) + k := by omega
+    have h3 : b - a < k := by omega
+    rw [h2, Nat.add_mod_right, Nat.mod_eq_of_lt h3]
+    omega
+  · have hbe : b < a := by omega
+    have h1 : b + k - a = k - (a - b) := by omega
+    have h1' : k - (a - b) < k := by omega
+    rw [h1, Nat.mod_eq_of_lt h1']
+    have h2 : a + k - b = (a - b) + k := by omega
+    have h3 : a - b < k := by omega
+    rw [h2, Nat.add_mod_right, Nat.mod_eq_of_lt h3]
+    omega
+
+/-- Uniqueness of the backward mod-distance (for `1 ≤ m ≤ k`). -/
+private theorem jlx_bwd_dist_unique {k a b m : ℕ} (hk : 1 ≤ k) (ha : a < k) (hb : b < k)
+    (hne : a ≠ b) (hm1 : 1 ≤ m) (hmk : m ≤ k) (h : (a + k - m) % k = b) :
+    m = (a + k - b) % k := by
+  have hmk' : k - m < k := by omega
+  have e : a + k - m = a + (k - m) := by omega
+  have h1 : (a + (k - m)) % k = b := by rw [← e]; exact h
+  have h2 : (k - m) % k = (b + k - a) % k := jlx_fwd_dist_unique hk ha hb h1
+  rw [Nat.mod_eq_of_lt hmk'] at h2
+  have h4 : (a + k - b) % k = m := by
+    rw [jlx_bwd_of_fwd hk ha hb hne]
+    rw [← h2]
+    omega
+  exact h4.symm
+
+
+
+
+
+
+/-- Main lemma, `3 < s.k` case: HOL `JLXFDMJ` (JLXFDMJ.hl:227-818) — the seed
+edge propagates to every edge whose residue is not the unique `scs_M` index. -/
+private theorem jlxfdmj_ge4 (hmnl : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
+      3 < s.k → isScsV39 s → v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+        dist (v i) (v (i + 1)) = 2 →
+        (∀ i j, scsDiag s.k i j → 4 * h0 < s.b i j) → (scsM s).ncard ≤ 1 →
+        (∀ i j, scsDiag s.k i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j)) →
+        (∀ i, s.a i (i + 1) < s.b i (i + 1)) →
+        s.a i (i + 1) = 2 → s.b i (i + 1) ≤ 2 * h0 →
+        ∀ j, j % s.k ∉ scsM s → dist (v j) (v (j + 1)) = 2 := by
+  intro s v i hk3 hs hMMs hgen hbasic hseed hb4 hM ha4 hlt ha0 hb0 j hj
+  have hsC := hs
+  obtain ⟨hd0, hk1, hk2, hplo, hphi, hstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym, hch,
+    hdiag0, hdiag2, hb3, hbc, hJmod, hJsq, hcard⟩ := hsC
+  have hk0 : s.k ≠ 0 := by omega
+  have hk1' : 1 < s.k := by omega
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hMMs
+  have hper : Periodic v s.k := hBB.2.1
+  have hadiag3 : ∀ p q, scsDiag s.k p q →
+      s.a p q ≤ cstab ∧ cstab < dist (v p) (v q) ∧ 4 * h0 < s.b p q :=
+    fun p q hd => ⟨(ha4 p q hd).1, (ha4 p q hd).2, hb4 p q hd⟩
+  -- the unified "bad residue" `x` with pins
+  obtain ⟨x, hMx, hpin, hxE⟩ : ∃ x : ℕ, (∀ y : ℕ, y ∈ scsM s → y = x) ∧
+      (∀ r : ℕ, r % s.k ≠ x → s.a r (r + 1) = 2 ∧ s.b r (r + 1) ≤ 2 * h0) ∧
+      (x = s.k ∨ x ∈ scsM s) := by
+    by_cases hE : (scsM s).Nonempty
+    · obtain ⟨x, hx⟩ := hE
+      have hsingle : scsM s = {x} := by
+        apply Set.Subset.antisymm
+        · intro y hy
+          exact Set.mem_singleton_iff.mpr
+            ((Set.ncard_le_one (FINITE_SCS_M_p27 s)).mp hM y hy x hx)
+        · intro y hy
+          rw [Set.mem_singleton_iff] at hy
+          rw [hy]
+          exact hx
+      refine ⟨x, ?_, ?_, Or.inr hx⟩
+      · intro y hy
+        have h1 : y ∈ ({x} : Set ℕ) := by rw [← hsingle]; exact hy
+        exact Set.mem_singleton_iff.mp h1
+      · intro r hrx
+        obtain ⟨hbl, hal⟩ := SCS_M_EQ_1_p27 s x hsingle hs r hrx
+        exact ⟨hal, hbl⟩
+    · have hM0 : scsM s = ∅ := Set.not_nonempty_iff_eq_empty.mp hE
+      refine ⟨s.k, ?_, ?_, Or.inl rfl⟩
+      · intro y hy
+        rw [hM0] at hy
+        exact ((Set.mem_empty_iff_false y).mp hy).elim
+      · intro r _
+        have hmem : ∀ t : ℕ, ¬ (2 * h0 < s.b (t % s.k) (t % s.k + 1) ∨
+            2 < s.a (t % s.k) (t % s.k + 1)) := by
+          intro t hcon
+          have h1 : t % s.k ∈ scsM s := by
+            rw [scsM]
+            exact ⟨Nat.mod_lt _ (by omega), hcon⟩
+          rw [hM0] at h1
+          exact h1
+        have hpin0 : ∀ t : ℕ, s.a t (t + 1) = 2 ∧ s.b t (t + 1) ≤ 2 * h0 := by
+          intro t
+          have hb : s.b (t % s.k) (t % s.k + 1) ≤ 2 * h0 :=
+            not_lt.mp (fun h => hmem t (Or.inl h))
+          have ha : s.a (t % s.k) (t % s.k + 1) ≤ 2 :=
+            not_lt.mp (fun h => hmem t (Or.inr h))
+          have ha' : 2 ≤ s.a (t % s.k) (t % s.k + 1) := SCS_A_2_p27 s hs (t % s.k)
+          have ha2 : s.a (t % s.k) (t % s.k + 1) = 2 := le_antisymm ha ha'
+          have e1 : s.a t (t + 1) = s.a (t % s.k) (t % s.k + 1) := by
+            calc s.a t (t + 1) = s.a (t % s.k) ((t + 1) % s.k) :=
+                periodic2_mod_p27 hpa t (t + 1)
+              _ = s.a (t % s.k) ((t % s.k + 1) % s.k) :=
+                congrArg (s.a (t % s.k)) (mod_add_c_p27 (c := 1) hk1').symm
+              _ = s.a (t % s.k) (t % s.k + 1) := by
+                rw [periodic2_mod_p27 hpa (t % s.k) (t % s.k + 1), Nat.mod_mod]
+          have e2 : s.b t (t + 1) = s.b (t % s.k) (t % s.k + 1) := by
+            calc s.b t (t + 1) = s.b (t % s.k) ((t + 1) % s.k) :=
+                periodic2_mod_p27 hpb t (t + 1)
+              _ = s.b (t % s.k) ((t % s.k + 1) % s.k) :=
+                congrArg (s.b (t % s.k)) (mod_add_c_p27 (c := 1) hk1').symm
+              _ = s.b (t % s.k) (t % s.k + 1) := by
+                rw [periodic2_mod_p27 hpb (t % s.k) (t % s.k + 1), Nat.mod_mod]
+          exact ⟨by rw [e1, ha2], by rw [e2]; exact hb⟩
+        exact hpin0 r
+  -- seed at the seed residue
+  have hi0' : i % s.k < s.k := Nat.mod_lt _ (by omega)
+  have hr0' : j % s.k < s.k := Nat.mod_lt _ (by omega)
+  have hseed0 : dist (v (i % s.k)) (v (i % s.k + 1)) = 2 := by
+    have e1 : v (i % s.k) = v i := (periodic_mod_p27 hper i).symm
+    have e2 : v (i % s.k + 1) = v (i + 1) := by
+      have w1 := periodic_mod_p27 hper (i % s.k + 1)
+      have w2 : (i % s.k + 1) % s.k = (i + 1) % s.k := mod_add_c_p27 (c := 1) hk1'
+      rw [w2] at w1
+      exact w1.trans (periodic_mod_p27 hper (i + 1)).symm
+    rw [← e1] at hseed
+    rw [← e2] at hseed
+    exact hseed
+  have hi_ne_x : i % s.k ≠ x := by
+    intro hcon
+    have hmem : i % s.k ∈ scsM s := by
+      rcases hxE with hxe | hxe
+      · rw [hxe] at hcon
+        exact absurd hcon (Nat.ne_of_lt hi0')
+      · rw [← hcon] at hxe
+        exact hxe
+    rw [scsM] at hmem
+    obtain ⟨-, hbad | hbad⟩ := hmem
+    · have e2i : s.b i (i + 1) = s.b (i % s.k) (i % s.k + 1) := by
+        calc s.b i (i + 1) = s.b (i % s.k) ((i + 1) % s.k) :=
+            periodic2_mod_p27 hpb i (i + 1)
+          _ = s.b (i % s.k) ((i % s.k + 1) % s.k) :=
+            congrArg (s.b (i % s.k)) (mod_add_c_p27 (c := 1) hk1').symm
+          _ = s.b (i % s.k) (i % s.k + 1) := by
+            rw [periodic2_mod_p27 hpb (i % s.k) (i % s.k + 1), Nat.mod_mod]
+      rw [← e2i] at hbad
+      exact not_lt.mpr hb0 hbad
+    · have e1i : s.a i (i + 1) = s.a (i % s.k) (i % s.k + 1) := by
+        calc s.a i (i + 1) = s.a (i % s.k) ((i + 1) % s.k) :=
+            periodic2_mod_p27 hpa i (i + 1)
+          _ = s.a (i % s.k) ((i % s.k + 1) % s.k) :=
+            congrArg (s.a (i % s.k)) (mod_add_c_p27 (c := 1) hk1').symm
+          _ = s.a (i % s.k) (i % s.k + 1) := by
+            rw [periodic2_mod_p27 hpa (i % s.k) (i % s.k + 1), Nat.mod_mod]
+      rw [← e1i, ha0] at hbad
+      exact lt_irrefl _ hbad
+  have hr_ne_x : j % s.k ≠ x := by
+    intro hcon
+    apply hj
+    rcases hxE with hxe | hxe
+    · rw [hxe] at hcon
+      exact absurd hcon (Nat.ne_of_lt hr0')
+    · rw [← hcon] at hxe
+      exact hxe
+  -- the two single-step propagations
+  have hfwd : ∀ y : ℕ, dist (v y) (v (y + 1)) = 2 → (y + 1) % s.k ≠ x →
+      dist (v (y + 1)) (v (y + 2)) = 2 := by
+    intro y hy hxy
+    have pin1 := hpin (y + 1) hxy
+    exact TFITSKC_p27 hmnl s v y (hlt (y + 2)) hk3 hs hMMs hgen hbasic pin1.1 pin1.2 hy
+      (lt_of_le_of_lt (SCS_A_2_p27 s hs y) (hlt y)) hadiag3
+  have hbwd : ∀ y : ℕ, dist (v (y + 1)) (v (y + 2)) = 2 → y % s.k ≠ x →
+      dist (v y) (v (y + 1)) = 2 := fun y hy hxy =>
+    jlx_bwd_step hmnl s v hk3 hs hMMs hgen hbasic hlt hadiag3 y (hpin y hxy) hy
+  -- residue bookkeeping
+  set i0 := i % s.k with hi0def
+  set r0 := j % s.k with hr0def
+  have hi0 : i0 < s.k := by rw [hi0def]; exact Nat.mod_lt _ (by omega)
+  have hr0 : r0 < s.k := by rw [hr0def]; exact Nat.mod_lt _ (by omega)
+  set df : ℕ := if x = s.k then s.k else (x + s.k - i0) % s.k with hdfdef
+  set dr : ℕ := (r0 + s.k - i0) % s.k with hdrdef
+  -- forward arc
+  have hF : ∀ m : ℕ, (∀ l : ℕ, 1 ≤ l → l ≤ m → (i0 + l) % s.k ≠ x) →
+      dist (v (i0 + m)) (v (i0 + m + 1)) = 2 := by
+    intro m
+    induction m with
+    | zero => intro _; exact hseed0
+    | succ n ih =>
+        intro hbound
+        have h1 : dist (v (i0 + n)) (v (i0 + n + 1)) = 2 :=
+          ih (fun l h1 h2 => hbound l h1 (by omega))
+        have hx1 : (i0 + n + 1) % s.k ≠ x := hbound (n + 1) (by omega) (by omega)
+        exact hfwd (i0 + n) h1 hx1
+  have hseedK : dist (v (i0 + s.k)) (v (i0 + s.k + 1)) = 2 := by
+    rw [hper i0, show i0 + s.k + 1 = i0 + 1 + s.k from by omega, hper (i0 + 1)]
+    exact hseed0
+  -- backward arc from `i0 + s.k`
+  have hB : ∀ m : ℕ, m ≤ s.k → (∀ l : ℕ, l < m → (i0 + s.k - 1 - l) % s.k ≠ x) →
+      dist (v (i0 + s.k - m)) (v (i0 + s.k - m + 1)) = 2 := by
+    intro m
+    induction m with
+    | zero => intro _ _; exact hseedK
+    | succ n ih =>
+        intro hnk hbound
+        have h1 : dist (v (i0 + s.k - n)) (v (i0 + s.k - n + 1)) = 2 :=
+          ih (by omega) (fun l hl => hbound l (by omega))
+        have hy1 : dist (v (i0 + s.k - (n + 1) + 1)) (v (i0 + s.k - (n + 1) + 2)) = 2 := by
+          have e2 : i0 + s.k - (n + 1) + 1 = i0 + s.k - n := by omega
+          have e3 : i0 + s.k - (n + 1) + 2 = i0 + s.k - n + 1 := by omega
+          rw [e2, e3]; exact h1
+        have hxy : (i0 + s.k - (n + 1)) % s.k ≠ x := by
+          have e4 : i0 + s.k - 1 - n = i0 + s.k - (n + 1) := by omega
+          rw [← e4]; exact hbound n (by omega)
+        exact hbwd (i0 + s.k - (n + 1)) hy1 hxy
+  -- transfer helpers
+  have ev_of : ∀ y : ℕ, y % s.k = r0 → (y + 1) % s.k = (j + 1) % s.k →
+      dist (v y) (v (y + 1)) = 2 → dist (v j) (v (j + 1)) = 2 := by
+    intro y hm1 hm2 hdist
+    have w1 := periodic_mod_p27 hper y
+    rw [hm1] at w1
+    have w2 := periodic_mod_p27 hper (y + 1)
+    rw [hm2] at w2
+    rw [← w1.trans (periodic_mod_p27 hper j).symm,
+      ← w2.trans (periodic_mod_p27 hper (j + 1)).symm]
+    exact hdist
+  -- case analysis on the bad residue
+  rcases hxE with hxe | hxe
+  · -- `x = s.k`: the forward arc is always clean
+    subst x
+    have harc : ∀ l : ℕ, 1 ≤ l → l ≤ dr → (i0 + l) % s.k ≠ s.k :=
+      fun l _ _ hcon => Nat.ne_of_lt (Nat.mod_lt _ (by omega)) hcon
+    have edr : (i0 + dr) % s.k = r0 := by
+      have hm : dr ≡ r0 + s.k - i0 [MOD s.k] := by rw [hdrdef]; exact Nat.mod_modEq _ _
+      have h2 : (i0 + dr) % s.k = (i0 + (r0 + s.k - i0)) % s.k := hm.add_left i0
+      have h4 : i0 + (r0 + s.k - i0) = r0 + s.k := by omega
+      rw [h2, h4, Nat.add_mod_right, Nat.mod_eq_of_lt hr0]
+    have edr1 : (i0 + dr + 1) % s.k = (j + 1) % s.k := by
+      rw [Nat.add_mod, edr, Nat.mod_eq_of_lt (show (1:ℕ) < s.k by omega),
+        hr0def, mod_add_c_p27 (c := 1) hk1']
+    exact ev_of (i0 + dr) edr edr1 (hF dr harc)
+  · -- `x ∈ scsM s` (hence `x < s.k`)
+    have hxk : x < s.k := by
+      rw [scsM] at hxe
+      exact hxe.1
+    have hdf : df = (x + s.k - i0) % s.k := by
+      rw [hdfdef]
+      exact if_neg (Nat.ne_of_lt hxk)
+    by_cases hlt : dr < df
+    · -- forward arc from the seed
+      have harc : ∀ l : ℕ, 1 ≤ l → l ≤ dr → (i0 + l) % s.k ≠ x := by
+        intro l h1 h2 hcon
+        have hlmod : l % s.k = df := by
+          have h := jlx_fwd_dist_unique (k := s.k) (a := i0) (b := x) (l := l)
+            (by omega) hi0 hxk hcon
+          rwa [← hdf] at h
+        have hml := Nat.mod_le l s.k
+        omega
+      have edr : (i0 + dr) % s.k = r0 := by
+        have hm : dr ≡ r0 + s.k - i0 [MOD s.k] := by rw [hdrdef]; exact Nat.mod_modEq _ _
+        have h2 : (i0 + dr) % s.k = (i0 + (r0 + s.k - i0)) % s.k := hm.add_left i0
+        have h4 : i0 + (r0 + s.k - i0) = r0 + s.k := by omega
+        rw [h2, h4, Nat.add_mod_right, Nat.mod_eq_of_lt hr0]
+      have edr1 : (i0 + dr + 1) % s.k = (j + 1) % s.k := by
+        rw [Nat.add_mod, edr, Nat.mod_eq_of_lt (show (1:ℕ) < s.k by omega),
+          hr0def, mod_add_c_p27 (c := 1) hk1']
+      exact ev_of (i0 + dr) edr edr1 (hF dr harc)
+    · -- backward arc from `i0 + s.k`
+      have hdf1 : 1 ≤ df := by
+        by_contra hcon
+        have hdf0 : df = 0 := by omega
+        have hspec := jlx_fwd_dist_spec (k := s.k) (a := i0) (b := x) (by omega) hi0 hxk
+        rw [← hdf] at hspec
+        rw [hdf0, Nat.add_zero, Nat.mod_eq_of_lt hi0] at hspec
+        exact hi_ne_x hspec
+      have hdr1 : 1 ≤ dr := by omega
+      have hi0r0 : i0 ≠ r0 := by
+        intro hc
+        have h1 : dr = 0 := by
+          rw [hdrdef, ← hc, Nat.add_sub_cancel_left, Nat.mod_self]
+        omega
+      set db : ℕ := (i0 + s.k - r0) % s.k with hdbdef
+      have hdbk : db ≤ s.k := by
+        rw [hdbdef]
+        exact (Nat.mod_lt _ (by omega)).le
+      have hdb2 : db = s.k - dr := by
+        rw [hdbdef, hdrdef]
+        exact jlx_bwd_of_fwd (k := s.k) (a := i0) (b := r0) (by omega) hi0 hr0 hi0r0
+      have edb : (i0 + s.k - db) % s.k = r0 := by
+        rw [hdbdef]
+        exact jlx_bwd_dist_spec (k := s.k) (a := i0) (b := r0) (by omega) hi0 hr0
+      have hBdb : dist (v (i0 + s.k - db)) (v (i0 + s.k - db + 1)) = 2 := by
+        apply hB db hdbk
+        intro l hlb hcon
+        have hm1 : 1 ≤ l + 1 := by omega
+        have hmk : l + 1 ≤ s.k := by omega
+        have hmm : (i0 + s.k - (l + 1)) % s.k = x := by
+          have e : i0 + s.k - 1 - l = i0 + s.k - (l + 1) := by omega
+          rw [e] at hcon
+          exact hcon
+        have hmu := jlx_bwd_dist_unique (k := s.k) (a := i0) (b := x) (m := l + 1)
+          (by omega) hi0 hxk hi_ne_x hm1 hmk hmm
+        have hxm : (i0 + s.k - x) % s.k = s.k - df := by
+          rw [hdf]
+          exact jlx_bwd_of_fwd (k := s.k) (a := i0) (b := x) (by omega) hi0 hxk hi_ne_x
+        have hmdf : l + 1 = s.k - df := by rw [hmu, hxm]
+        have hmb : l + 1 = db := by omega
+        rw [hmb] at hmm
+        rw [edb] at hmm
+        exact hr_ne_x hmm
+      have edb1 : (i0 + s.k - db + 1) % s.k = (j + 1) % s.k := by
+        rw [Nat.add_mod, edb, Nat.mod_eq_of_lt (show (1:ℕ) < s.k by omega),
+          hr0def, mod_add_c_p27 (c := 1) hk1']
+      exact ev_of (i0 + s.k - db) edb edb1 hBdb
+
 /-- HOL `JLXFDMJ_concl` (JLXFDMJ.hl:214). The `∀ j` premise uses the faithful
 `j % s.k ∉ scsM s` (HOL `~(j MOD k IN scs_M_v39 s)`). -/
 theorem JLXFDMJ_p27 :
