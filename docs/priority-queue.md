@@ -112,11 +112,14 @@
 > **V7 `6a3e4ea5`**（`ab4_assumption_reduction2_p23` + `_sym_p23` 双证 +353/−2，标准三；
 > 新增 private `ab4_assemble_row_p23` 参数化 V4 骨架）；
 > **V8 `1b8040d9`**（孪生 `BZQNDMN_p23` 真证 +607/−1，标准三；32 依赖件零 sorryAx；
-> 变形点 v(p+1) + 1834 六参数重排 + tau3 循环序 + scoped maxHeartbeats 6M 纯性能开关）。
-> 八笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→6）。
-> **在飞 V9 `vasjot-w9`**：quad master `JOTSWIX_p23`（HOL `JOTSWIX.hl:2204-2705`，502 行；
-> 结论 `dist(p,p+1)<cstab ∨ dist(p,p+3)<cstab`；`ab4_2` + `deform_azim_sum` + xrr 派生件前置已齐；
-> 删除面恰 1 sorry；WKZZEEH 的最后一腿）。
+> 变形点 v(p+1) + 1834 六参数重排 + tau3 循环序 + scoped maxHeartbeats 6M 纯性能开关）；
+> **V9 `7261f6e3`**（quad master `JOTSWIX_p23` 真证 +651/−1，标准三；30 依赖件零 sorryAx；
+> 反证 → dist=s.b=cstab 锁死 → g12=-|t| + ab4_2 → LEMMA_6843920790_p22 增区间 + 最小性反证）。
+> 九笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→5）。
+> **在飞 V10 `vaspwe1-w10`**：`LEMMA_PWE1_p23`（HOL `JOTSWIX.hl:2706-2993`，288 行；
+> 结论 `π/2 < dihV 0 (v(p+1)) (v(p+2)) (v p)`；`delta4_y_imp_obtuse_p22`（LA22:1944）+
+> `dih_y_mono_p22`（LA22:4405）+ `DIHV_EQ_DIH_Y_4PT_B`（LA33）+ registry 1348932091/5557288534 delta；
+> 删除面恰 1 sorry）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -292,6 +295,23 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（02:24，续1085）**：**V9 `vasjot-w9` 落库 `7261f6e3`（quad master `JOTSWIX_p23` 真证 +651/−1）——簇内 sorry 6→5；V10 `vaspwe1-w10` 发车（PWE 四重奏第一件）**。
+① **V9 交付**：HOL `JOTSWIX.hl:2204-2705`（502 行 quad master）——反证 `cstab ≤ 两边` → 由 `dist ≤ s.b ≤ cstab`
+锁死 `dist = s.b = cstab`（V6/V8 在严格内部，无此步）→ 变形核 `g12 = -|t|` 单向收缩 + `ab4_assumption_reduction2_p23`
+保 `BBs` → 2×`deform_azim_sum_p23` + `WNWSHJT_p14` → **`LEMMA_6843920790_p22`**（kimi 侧 `ab9a1e2f` 真证，
+标准三）给增区间、取 `t<0` 得严格下降 → `MMs_minimize_tau_fun_p21` 最小性反方向 → 矛盾收口；
+`xrr ≤ 15.53` 现场派生。备用自足变体（自带 362 行 mono kit）在 `b/`，未用。
+② **编排者闸（亲跑）**：worktree@`98d5c9db` apply RC=0；删除面恰 1 sorry；禁项 0/0/0/0；直编 **rc=0/error 0**
+（sorry-decls 6→5，210.8 s / 7.84 GB）；装池；探针目标件 **标准三**、`LEMMA_6843920790_p22` 标准三、
+其余 13 名 axioms 逐行同 HEAD（5 条仍 sorryAx：PWE1-4+LINDIH_11）；30 依赖件零 sorryAx；
+根面 md5 **`246e952c…` 逐字节同**。commit `7261f6e3`，已 push。
+③ **V10 `vaspwe1-w10`（在飞）**：`LEMMA_PWE1_p23`（HOL :2706-2993，288 行；结论 `π/2 < dihV 0 (v(p+1)) (v(p+2)) (v p)`）——
+`delta4_y_imp_obtuse_p22`（LA22:1944）+ `dih_y_mono_p22`（LA22:4405）+ `DIHV_EQ_DIH_Y_4PT_B`（LA33，必要时加 import）
++ registry `1348932091 delta`/`5557288534 delta`（`h "…" (by simp [...])` 取用）+ `g482w3_deltaY_pos`；
+先侦察探针再施工；删除面恰 1。
+④ 口径：V9 非锥内（锥内 62 不变）；簇内 sorry 5 余（PWE1-4 + LINDIH_11）。
+⑤ 下一条：续1086。
 
 - **2026-11-14（01:04，续1084）**：**V8 `vasbzq-w8` 落库 `1b8040d9`（孪生 `BZQNDMN_p23` 真证 +607/−1）——TUAPYYU 链两腿全通；V9 `vasjot-w9` 发车（quad master `JOTSWIX_p23`）**。
 ① **V8 交付**：HOL `JOTSWIX.hl:1679-2203`（525 行孪生）——变形点换 `v(p+1)`（`deform_simplex_edge_exists [id;const0;v p;v(p+1);v(p+2)]`）、
