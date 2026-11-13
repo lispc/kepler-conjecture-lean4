@@ -440,6 +440,16 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（22:55，续1077）**：**N4 双件 `xrr1553-w1` 交付落库 `58765579`（`xrr_le_1553{,_BB}_p29` 真证，LA29 +170/−6）——5M2 链依赖再清两件**。
+① 路线：annulus 下界 → OIQKKEP 核心（`p29xrr_two_le_four`）+ 直达 acs 形（`p29arcV_eq_acs`）⇒ 2-边角 ≤ π/3 → `p29keitdwb`（ARCV_INEQUALTY）⇒ arcV ≤ 2π/3 → cos 反单调收口 xrr ≤ 12 ≤ 15.53；BB 件 = 主件直应用。**两处实质偏离 HOL（均非陈述改动）**：不走 arclength 链（`cos_arccos` 只需非严格 0≤xrr≤16 ⇒ 非共线假设真未用）；OIQKKEP 直取 arccos(1/2)=π/3。零新增 import（LA22 kit 全未消费；BFS 实证 YebwjngKit/VasArcKit 闭包触 LA29 ⇒ KEITDWB/arcV 就地私有复制）。
+② 闸（亲跑）：apply--check@55d93005 PASS；删除面恰 2 sorry+4 注释；添加行禁词 0（2 命中=注释「axioms face」字样）；直编 RC=0/error 0（25.3 s）+ 双探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
+③ 雷区入 §7.1-21：`rg -rn` 的 `-r` 是 replace 旗标（会把命中替换成 `n`，输出 mangled）。意义：`SCS_5M2_IMP_SCS_5T1`/`HIJ_STEP_1` 链 row 11 依赖清空；在飞 0（本会话），用户 V6 继续。
+
+- **2026-11-13（22:50，续1076）**：**OCBICBY empty_4T2 卡点 `t4crux-w1` 交付落库 `93bf9f73`（`ineq_5691615370_asym` 真证，LA38 +220/−2）——wave2「hrot 需 crux 非线性引理」评估被车道勘误作废**。
+① **路线勘误（高价值情报）**：HOL terminal.hl:2797-2834 **不走非线性 crux**——hrot 纯几何对称 + hmax registry `5691615370` + WLOG 序，registry 自带四个额外严格序析取被排序态前提全杀；「crux 恒真（紧的 4+2√5>8.472）」只是数学事实、HOL 不用。Lean 侧弃 `REAL_WLOG_SQUARE2_LEMMA`（其 rot 是非几何置换打乱 slot），改几何 D4 群 7 条 delta_y 恒等式 + 显式嵌套 by_cases 8 支 17 叶排序树。
+② 闸（亲跑）：apply--check@55d93005 PASS（LA38 自车道基线零改动）；删除面恰 1 sorry+1 docstring；添加行禁词 0；直编 RC=0/error 0（11.2 s）+ 探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池（旧件 /tmp 备份）。
+③ 雷区两条：by_cases 只作用首个目标 ⇒ 多变量 WLOG 树必须显式嵌套；`le_or_lt` 本树不存在用 `le_total`+`not_le.mp`。**empty_4T2 本体（LA22 quad skeleton 150-350 行）ineq 侧已无阻塞**——下一车道可直攻；4T3/4T4/4T5 同理。在飞：xrr1553 闸跑中（本笔记落时已过）。
+
 - **2026-11-13（22:40，续1075）**：**N2 线 `n2def-w1` 交付落库 `3b863763`（`deform_planar_p21` 真证，LA21 +551/−11）——IUNBUIG 腿三落地；闸面修正一例（剥除车道对 `planar2F_p21` 私 def 的实参序误改）入 §7.1-25**。
 ① **件**：HOL CUXVZOZ.hl:1030 双阶段 487 行（stage1 planarF1 腿 + stage2 mkPlanar2 s=-1 腿 + 5 私件 `w2b_*`）；`deform_planar_exists_p21` 双重清债（探针恰标准三）；FILE MAP A/C 节刷新（随证随更）。删除面恰 1 sorry；in-file sorry 2→1（剩 `deform_planar_second_version_p21`）。
 ② **闸（编排者亲跑）**：apply--check@71b141f3 PASS（LA21 自车道基线未被触碰）；禁词净（唯一命中=文件头既有审计注记）；剥除后全文件直编 RC=0/error 0（88.8 s）+ 双探针恰 `[propext, Classical.choice, Quot.sound]`；根面 589 **md5 246e952c 逐字节同**（新/旧 olean 各跑一遍，输出逐字节一致；canonical 探针须在 `namespace Kepler` 内跑才产出 246e952c 口径——名字缩短序）；新 olean 已装池（旧件备份 /tmp/LocalAuto21.olean.predolph）。

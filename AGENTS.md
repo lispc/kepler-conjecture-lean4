@@ -226,6 +226,9 @@
    `*.olean` 已覆盖 ⇒ 自动跳过构建池）；确需兼容 grep 时必须 `-I`（跳二进制）+
    `--exclude-dir={.lake,.git,reference,_distfiles}`。车道的 Grep/Read 工具不受影响，
    但任何 shell 兜底检索都按本条执行；工单模板已同步改写。
+   **变体（2026-11-13 xrr1553-w1 实烧两次）**：`rg -rn "x"` 的 `-r` 是 **replace** 旗标
+   （会把命中文本全替换成 `n`，输出 mangled 且仍 RC=0）——`-n` 必须独立写
+   `rg -n "x"`，想叠加 replace 时想清楚 `-r<val>` 的 val 是什么。
 22. **subagent 中断潮三形态 + 僵尸锁正解（2026-11-13 当日 17 例实战定性，零成果丢失）**：
    三形态——(a) turn 无终讯截断（wire 停在 `step.begin`、全程零 error 记录）；
    (b) **假失败**：通知 failed/completed 但 agent **还活着继续干活**（tmxllipls-w1 实证：
