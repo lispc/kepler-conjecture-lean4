@@ -122,14 +122,15 @@ noncomputable def flatTermX_p19 (x : ℝ) : ℝ := flatTerm_p19 (Real.sqrt x)
 noncomputable def taudP19 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   flatTerm_p19 y1 + Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * muY_p19 y1 y2 y3
 
-/-- EXTERNAL-ANCHOR: HOL `taum_x` (sphere.hl:827) = `rhazim_x`-sum minus
-`(1+const1)*pi`. The `rhazim_x_div_sqrtdelta_posbranch` kit of nonlin_def.hl
-is unported; carried as a stub with the honest signature. NEEDS: tau_x kit. -/
-noncomputable def taumX_p19 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := fun _ _ _ _ _ _ => (0 : ℝ)
+/-- HOL `taum_x` (sphere.hl:827): **alias of `LocalAuto1.taumX_t11`** (the
+verbatim body, already in-tree), per DEF-FIX charter
+`docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def taumX_p19 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := taumX_t11
 
-/-- EXTERNAL-ANCHOR: HOL `tau_residual_x` (nonlin_def.hl:181), the sum of the
-three rotated `rhazim_x_div_sqrtdelta_posbranch`. Stub. NEEDS: tau_x kit. -/
-noncomputable def tauResidualX_p19 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := fun _ _ _ _ _ _ => (0 : ℝ)
+/-- HOL `tau_residual_x` (nonlin_def.hl:181): **alias of
+`LocalAuto1.tauResidualX_t11`** (verbatim body, already in-tree), per DEF-FIX
+charter `docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def tauResidualX_p19 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := tauResidualX_t11
 
 /-- HOL `delta_126_x` (sphere.hl:844). -/
 def delta126x_p19 (s3 s4 s5 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaX x1 x2 s3 s4 s5 x6

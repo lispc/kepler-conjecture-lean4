@@ -130,6 +130,7 @@ import Kepler.Text.SphereKit
 import Kepler.Text.TopologyFan
 import Kepler.Text.AzimBridge
 import Kepler.Text.LocalAuto5
+import Kepler.Text.IneqClosureDefs
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -164,37 +165,43 @@ noncomputable def solXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
 in the unported rhazim lane). -/
 noncomputable def rhazimP38 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
 
-/-- NEEDS: sphere.hl `enclosed` (9-arg enclosed-arc length; body lives in
-the unported enclosed lane). -/
-noncomputable def enclosedP38 (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) : ℝ := sorry
-
 /-- NEEDS: vol_defs lane `unit6` (6-arg unit-volume functional). -/
 noncomputable def unit6P38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
 
-/-- NEEDS: pent_hex lane `taud` (y-space taud; the `_p19` twin is not built
-in this checkout). -/
-noncomputable def taudP38 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
+/-- HOL `taud` (nonlin_def.hl:406; the `_p19` twin `taudP19` is built at
+LocalAuto19:122): **alias of `LocalAuto1.taud_t11`** (verbatim body), per
+DEF-FIX charter `docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def taudP38 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := taud_t11 y1 y2 y3 y4 y5 y6
 
-/-- NEEDS: nonlin_def.hl `taud_x` (x-space taud; body lives in the unported
-tau_x kit). -/
-noncomputable def taudXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
+/-- HOL `taud_x` (nonlin_def.hl:413): **alias of `LocalAuto1.taudX_t11`**
+(verbatim body, already in-tree), per DEF-FIX charter
+`docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def taudXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := taudX_t11 x1 x2 x3 x4 x5 x6
 
-/-- NEEDS: nonlin_def.hl `taum_x` (EXTERNAL-ANCHOR; cf. the sibling stubs
-`tauResidualX_p19`/`taumX_p19`, not built in this checkout). -/
-noncomputable def taumXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
+/-- HOL `taum_x` (sphere.hl:827): **alias of `LocalAuto1.taumX_t11`** (verbatim
+body, already in-tree), per DEF-FIX charter
+`docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def taumXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := taumX_t11 x1 x2 x3 x4 x5 x6
 
-/-- NEEDS: nonlin_def.hl `tau_residual_x` (EXTERNAL-ANCHOR). -/
-noncomputable def tauResidualXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
+/-- HOL `tau_residual_x` (nonlin_def.hl:181): **alias of
+`LocalAuto1.tauResidualX_t11`** (verbatim body), per DEF-FIX charter
+`docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def tauResidualXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := tauResidualX_t11 x1 x2 x3 x4 x5 x6
 
-/-- NEEDS: nonlin_def.hl `flat_term_x` (EXTERNAL-ANCHOR). -/
-noncomputable def flatTermXP38 (x : ℝ) : ℝ := sorry
+/-- HOL `flat_term_x` (sphere.hl:825): **alias of `LocalAuto1.flatTermX_t11`**
+(verbatim body), per DEF-FIX charter
+`docs/def-fix-charters/tauxkit-realify/`. -/
+noncomputable def flatTermXP38 (x : ℝ) : ℝ := flatTermX_t11 x
 
 /-- NEEDS: sphere.hl `eulerA_x` (the `_p19` twin is not built here). -/
 noncomputable def eulerAXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
 
-/-- NEEDS: sphere.hl `cayleyR`: curried in the 10th Cayley parameter. -/
+/-- HOL `cayleyR` (sphere.hl / leg/cayleyR_def.hl:32): **alias of
+`IneqClosureDefs.cayleyR` curried in the 10th Cayley parameter** (verbatim
+body, already in-tree), per DEF-FIX charter
+`docs/def-fix-charters/enclosed4-anchor/`. -/
 noncomputable def cayleyRP38 (x12 x13 x14 x15 x23 x24 x25 x34 x35 : ℝ) :
-    ℝ → ℝ := sorry
+    ℝ → ℝ := fun x45 => cayleyR x12 x13 x14 x15 x23 x24 x25 x34 x35 x45
 
 /-- NEEDS: sphere.hl `cayleytr` (Cayley trace functional). -/
 noncomputable def cayleytrP38 (x12 x13 x14 x15 x23 x24 x25 x34 x35 x : ℝ) :
@@ -233,6 +240,16 @@ noncomputable def abcOfQuadraticP38 (f : ℝ → ℝ) : ℝ × ℝ × ℝ :=
 noncomputable def muRP38 (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) : ℝ → ℝ :=
   cayleyRP38 (y6 * y6) (y5 * y5) (y1 * y1) (y7 * y7) (y4 * y4) (y2 * y2)
     (y8 * y8) (y3 * y3) (y9 * y9)
+
+/-- HOL `enclosed` (leg/enclosed_def.hl:22-24): sqrt of the +root of the
+quadratic interpolant of `muR`.  **DEF-FIX charter
+`docs/def-fix-charters/enclosed4-anchor/`** (declaration moved below
+`muRP38` to resolve the forward reference; name/signature unchanged). -/
+noncomputable def enclosedP38 (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) : ℝ :=
+  Real.sqrt (quadraticRootPlus
+    (abcOfQuadraticP38 (muRP38 y1 y2 y3 y4 y5 y6 y7 y8 y9)).1
+    (abcOfQuadraticP38 (muRP38 y1 y2 y3 y4 y5 y6 y7 y8 y9)).2.1
+    (abcOfQuadraticP38 (muRP38 y1 y2 y3 y4 y5 y6 y7 y8 y9)).2.2)
 
 /-- HOL `quad_cross_diag2_x` (nonlin_def.hl): `sqrt` of the `+` root of the
 quadratic interpolant of the cross Cayley — hence
