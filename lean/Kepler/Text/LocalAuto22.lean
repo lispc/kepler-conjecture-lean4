@@ -73,6 +73,14 @@ proved here are upstream-sorry-free except where marked.
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto14
+-- LANE t5body-w1 (2026-11-13): `empty_5T1_p22` consumes `VPWSHTO_PRIME_p15`
+-- (LA15, proved) to select the short-diagonal apex `j`, and
+-- `AZIM_DIHV_SAME_STRONG` (LA7) for the azim→dihV conversion.  Acyclic:
+-- LA15's closure is LA4 (+Statement) and LA7's closure is LA1/4/5/9/35/37
+-- (+Fan/AzimBridge/PackingAuto5), none of which reaches LA22; all are
+-- already below LA22 through LA14/LA23.
+import Kepler.Text.LocalAuto15
+import Kepler.Text.LocalAuto7
 -- LANE rrcw-weak-p26 (2026-11-06): `RRCWNS_WEAK_p22` is the HOL assembly
 -- `CIZMRRH` + `JKQEWGV2` + `JKQEWGV3` + `INTERIOR_ANGLE1_AZIM` + `SYNQIWN`.
 -- The trichotomy (`CIZMRRH`, LA3), the not-circular theorem (`JKQEWGV2_p23`,
@@ -2546,6 +2554,7 @@ theorem vv_split_azim_generic_p22 (vv : ℕ → V3) (k i j j' : ℕ)
   exact sum4_azim_fan (x := 0) (v := vv i) (u := vv (i + 1)) (w1 := vv (i + j))
     (w2 := vv (i + j')) hne0i hcol1 hcolj hcolj' hle
 
+
 /-- HOL `empty_6T1` (giant; the analytic core of the terminal emptiness). -/
 theorem empty_6T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
     (hB : BBsV39 scs6T1 vv) : 0 ≤ taustarV39 scs6T1 vv := by
@@ -3331,6 +3340,393 @@ theorem periodic_sum_shift_p22 (f : ℕ → ℝ) (j n : ℕ) (hper : Periodic f 
       rw [Nat.mod_eq_of_lt ha]; exact hmod.symm
     rw [← periodic_mod_eq_p23 hper a, ← periodic_mod_eq_p23 hper (j + (a + n - j % n) % n),
       haeq]
+
+/-- LANE t5body-w1 (2026-11-13): `setSum` over the pentagon window
+`{i | i < 5}` rendered as a `Finset.range 5` sum (the explicitation step of
+HOL `empty_5T1` OCBICBY.hl:3648-3652). -/
+private theorem empty5T1_setSum5 (g : ℕ → ℝ) :
+    setSum {i | i < 5} g = ∑ i ∈ Finset.range 5, g i := by
+  have hf : ({i | i < 5} : Set ℕ).Finite := (Set.finite_Iio 5).subset (fun _ h => h)
+  rw [setSum, dif_pos hf]
+  have h2 : hf.toFinset = Finset.range 5 := by
+    ext i
+    simp only [Set.Finite.mem_toFinset hf, Set.mem_setOf_eq, Finset.mem_range]
+  rw [h2]
+
+/-- LANE t5body-w1 (2026-11-13): the apex-selection step of HOL `empty_5T1`
+(OCBICBY.hl:3568-3603): some `j < 5` has both diagonals from `vv j` at most
+`1 + sqrt 5`.  HOL `VPWSHTO_PRIME` is `VPWSHTO_PRIME_p15` (LA15, proved);
+the packing/distinctness/edge hypotheses are discharged from `BBsV39 scs5T1`
++ `vv_inj_lemma_p22` exactly as in HOL. -/
+private theorem empty5T1_vpwshto_p22 (vv : ℕ → V3) (hB : BBsV39 scs5T1 vv) :
+    ∃ j : ℕ, j < 5 ∧ dist (vv j) (vv (j + 2)) ≤ 1 + Real.sqrt 5 ∧
+      dist (vv j) (vv (j + 3)) ≤ 1 + Real.sqrt 5 := by
+  have hsub0 : Set.range vv ⊆ ballAnnulus := hB.1
+  have hper5 : Periodic vv 5 := hB.2.1
+  have hann : ∀ i : ℕ, vv i ∈ ballAnnulus := fun i => hsub0 (Set.mem_range_self i)
+  have hedge : ∀ i : ℕ, dist (vv i) (vv (i + 1)) = 2 :=
+    fun i => scs_5T1_props_p22.2.2.2 vv i hB
+  have h2le : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → (2 : ℝ) ≤ dist (vv i) (vv j) := by
+    intro i j hi hj hij
+    have hl : csAdj 5 2 cstab i j ≤ dist (vv i) (vv j) := hB.2.2.1 i j |>.1
+    have hnm : ¬ i % 5 = j % 5 := fun hm => hij (by omega)
+    have hg : (2 : ℝ) ≤ csAdj 5 2 cstab i j :=
+      csAdj_ge2_p22 (by norm_num : (2 : ℝ) ≤ 2)
+        (by rw [cstab_eq_p22]; norm_num : (2 : ℝ) ≤ cstab) hnm
+    linarith
+  have hvvne : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → vv i ≠ vv j := by
+    intro i j hi hj hij h
+    exact hij (vv_inj_lemma_p22 scs5T1 vv 5 is_scs_5T1_p22 hB rfl i j ⟨hi, hj, h⟩)
+  have hp : Kepler.Packing ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) := by
+    intro u hu v hv hlt
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu hv
+    rcases hu with rfl | rfl | rfl | rfl | rfl <;>
+      rcases hv with rfl | rfl | rfl | rfl | rfl <;>
+      first
+        | rfl
+        | exact absurd hlt (not_lt.mpr (h2le _ _ (by norm_num) (by norm_num) (by norm_num)))
+  have hsub : ({vv 0, vv 1, vv 2, vv 3, vv 4} : Set V3) ⊆ ballAnnulus := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl | rfl | rfl <;> exact hann _
+  have hnorm40 : ‖vv 4 - vv 0‖ = 2 := by
+    have h := hedge 4
+    rw [show (4 : ℕ) + 1 = 0 + 5 from rfl, hper5 0] at h
+    exact h
+  have hvp := VPWSHTO_PRIME_p15 vv hsub hp
+    (hvvne 0 1 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 0 1 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 0 2 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 0 3 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 0 4 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 1 2 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 1 3 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 1 4 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 2 3 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 2 4 (by norm_num) (by norm_num) (by norm_num))
+    (hvvne 3 4 (by norm_num) (by norm_num) (by norm_num))
+    (hedge 0) (hedge 1) (hedge 2) (hedge 3) hnorm40
+  obtain ⟨j, hj, hd2, hd3⟩ := hvp
+  have hj5 : j < 5 := by
+    have h := hj.2
+    omega
+  refine ⟨j, hj5, ?_, ?_⟩
+  · have h1 : norm (vv j - vv ((j + 2) % 5)) = dist (vv j) (vv (j + 2)) := by
+      rw [dist_eq_norm, la22periodic_mod hper5]
+    rw [h1] at hd2
+    exact hd2
+  · have h1 : norm (vv j - vv ((j + 3) % 5)) = dist (vv j) (vv (j + 3)) := by
+      rw [dist_eq_norm, la22periodic_mod hper5]
+    rw [h1] at hd3
+    exact hd3
+
+/-- LANE t5body-w1 (2026-11-13): the geometric body of HOL `empty_5T1`
+(OCBICBY.hl:3476-3942), i.e. everything except its final
+`terminal_pent_taum2` application.  For the apex `j` with short diagonals
+(`empty5T1_vpwshto_p22`), the pent-tower numeric inequality (`hnum`, the
+conclusion of `terminal_pent_taum2_p22` at `j`) implies
+`0 ≤ taustarV39 scs5T1 vv`.  Consumes only the clean kit: `scs_5T1_props_p22`,
+`scs_5T1_generic_p22`, `vv_inj_lemma_p22`, `vv_split_azim_generic_p22`,
+`azim_in_fan_azim_p22`, `PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14`,
+`AZIM_DIHV_SAME_STRONG`, `tau_fun_azim`, `dsv_unadorned`,
+`periodic_sum_shift_p22`, `tau3_taum_40`, `taum_sym2`, `azim_nonneg` —
+see DELIVERY.md for the (separate, still open) numeric closure. -/
+private theorem empty5T1_pent_bridge_p22 (h : main_nonlinear_terminal_v11)
+    (vv : ℕ → V3) (hB : BBsV39 scs5T1 vv) (j : ℕ) (hj : j < 5)
+    (hdj2 : dist (vv j) (vv (j + 2)) ≤ 1 + Real.sqrt 5)
+    (hdj3 : dist (vv j) (vv (j + 3)) ≤ 1 + Real.sqrt 5)
+    (hnum : 0.616 < taum ‖vv (j + 1)‖ ‖vv j‖ ‖vv (j + 2)‖ (dist (vv j) (vv (j + 2))) 2 2
+      + taum ‖vv j‖ ‖vv (j + 2)‖ ‖vv (j + 3)‖ (dist (vv (j + 2)) (vv (j + 3)))
+          (dist (vv j) (vv (j + 3))) (dist (vv j) (vv (j + 2)))
+      + taum ‖vv (j + 4)‖ ‖vv j‖ ‖vv (j + 3)‖ (dist (vv j) (vv (j + 3))) 2 2) :
+    0 ≤ taustarV39 scs5T1 vv := by
+  classical
+  unfold scs5T1 at hB ⊢
+  by_contra h0
+  push_neg at h0
+  -- the scs kit
+  have hann : ∀ i : ℕ, vv i ∈ ballAnnulus := fun i => hB.1 (Set.mem_range_self i)
+  have hper5 : Periodic vv 5 := hB.2.1
+  have hdij : ∀ i i' : ℕ, csAdj 5 2 cstab i i' ≤ dist (vv i) (vv i') ∧
+      dist (vv i) (vv i') ≤ csAdj 5 2 6 i i' := hB.2.2.1
+  have hedge : ∀ i : ℕ, dist (vv i) (vv (i + 1)) = 2 :=
+    fun i => scs_5T1_props_p22.2.2.2 vv i hB
+  have hinj : ∀ i i' : ℕ, i < 5 ∧ i' < 5 ∧ vv i = vv i' → i = i' :=
+    vv_inj_lemma_p22 scs5T1 vv 5 is_scs_5T1_p22 hB rfl
+  have hgen := scs_5T1_generic_p22 h vv hB h0
+  have hcf : ConvexLocalFan (Set.range vv)
+      (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))) := by
+    rcases hB.2.2.2 with hk3 | hcf
+    · exact absurd hk3 (by norm_num : ¬ (5 : ℕ) ≤ 3)
+    · exact hcf
+  have hgen' : Generic (Set.range vv) (Set.range fun n : ℕ => {vv n, vv (n + 1)}) := hgen
+  have h3le5 : (3 : ℕ) ≤ 5 := by norm_num
+  -- diagonals at `cstab` (scsDiag via MOD_INJ1_ALT)
+  have hdiag20 : ∀ i : ℕ, scsDiag 5 i (i + 2) := by
+    intro i
+    refine ⟨MOD_INJ1_ALT (by norm_num : (5 : ℕ) ≠ 0) (by norm_num : (2 : ℕ) < 5)
+        (by norm_num : (2 : ℕ) ≠ 0) i,
+      MOD_INJ1_ALT (by norm_num : (5 : ℕ) ≠ 0) (by norm_num : (1 : ℕ) < 5)
+        (by norm_num : (1 : ℕ) ≠ 0) (i + 1),
+      MOD_INJ1_ALT (by norm_num : (5 : ℕ) ≠ 0) (by norm_num : (3 : ℕ) < 5)
+        (by norm_num : (3 : ℕ) ≠ 0) i⟩
+  have hdiag30 : ∀ i : ℕ, scsDiag 5 i (i + 3) := by
+    intro i
+    refine ⟨MOD_INJ1_ALT (by norm_num : (5 : ℕ) ≠ 0) (by norm_num : (3 : ℕ) < 5)
+        (by norm_num : (3 : ℕ) ≠ 0) i,
+      MOD_INJ1_ALT (by norm_num : (5 : ℕ) ≠ 0) (by norm_num : (2 : ℕ) < 5)
+        (by norm_num : (2 : ℕ) ≠ 0) (i + 1),
+      MOD_INJ1_ALT (by norm_num : (5 : ℕ) ≠ 0) (by norm_num : (4 : ℕ) < 5)
+        (by norm_num : (4 : ℕ) ≠ 0) i⟩
+  have hdiag2 : ∀ i : ℕ, cstab ≤ dist (vv i) (vv (i + 2)) :=
+    fun i => scs_5T1_props_p22.2.2.1 vv i (i + 2) hB (hdiag20 i)
+  have hdiag3 : ∀ i : ℕ, cstab ≤ dist (vv i) (vv (i + 3)) :=
+    fun i => scs_5T1_props_p22.2.2.1 vv i (i + 3) hB (hdiag30 i)
+  -- shifted-index distinctness + non-collinearity (HOL :3670-3693)
+  have hvvne : ∀ c d : ℕ, c < 5 → d < 5 → c ≠ d → vv (j + c) ≠ vv (j + d) := by
+    intro c d hc hd hcd he
+    have h1 : vv ((j + c) % 5) = vv ((j + d) % 5) := by
+      rw [la22periodic_mod hper5, la22periodic_mod hper5, he]
+    have h2 := hinj ((j + c) % 5) ((j + d) % 5)
+      ⟨Nat.mod_lt _ (by norm_num), Nat.mod_lt _ (by norm_num), h1⟩
+    omega
+  have hprop : ∀ c d : ℕ, c < 5 → d < 5 → c ≠ d →
+      ¬ Collinear3 0 (vv (j + c)) (vv (j + d)) := by
+    intro c d hc hd hcd
+    exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range vv)
+      (Set.range fun n : ℕ => {vv n, vv (n + 1)}) (Set.range fun n : ℕ => (vv n, vv (n + 1)))
+      (vv (j + c)) (vv (j + d)) hcf.1 (Set.mem_range_self _) (Set.mem_range_self _)
+      (hvvne c d hc hd hcd) hgen'
+  -- fan azims at most pi (convex_local_fan component + azim_in_fan_azim)
+  have hfanle : ∀ c : ℕ, c < 5 → azim 0 (vv (j + c)) (vv ((j + c) + 1)) (vv ((j + c) + 4)) ≤
+      Real.pi := by
+    intro c hc
+    have hmem : (vv (j + c), vv ((j + c) + 1)) ∈
+        (Set.range fun n : ℕ => (vv n, vv (n + 1))) := Set.mem_range_self _
+    have h1 := (hcf.2 (vv (j + c), vv ((j + c) + 1)) hmem).1
+    rw [azim_in_fan_azim_p22 vv _ 5 (j + c) hper5 h3le5 hinj rfl,
+      show (j + c) + (5 - 1) = (j + c) + 4 from rfl] at h1
+    exact h1
+  -- the three split equations (HOL :3619, :3631, :3635) and the pi bounds
+  have split_a := vv_split_azim_generic_p22 vv 5 j 3 4 hper5 h3le5
+    (by norm_num : (0 : ℕ) < 3) (by norm_num : (3 : ℕ) < 4) (by norm_num : (4 : ℕ) < 5)
+    hgen' hcf hinj
+  have split_a2 := vv_split_azim_generic_p22 vv 5 j 2 3 hper5 h3le5
+    (by norm_num : (0 : ℕ) < 2) (by norm_num : (2 : ℕ) < 3) (by norm_num : (3 : ℕ) < 5)
+    hgen' hcf hinj
+  have split_b := vv_split_azim_generic_p22 vv 5 (j + 2) 3 4 hper5 h3le5
+    (by norm_num : (0 : ℕ) < 3) (by norm_num : (3 : ℕ) < 4) (by norm_num : (4 : ℕ) < 5)
+    hgen' hcf hinj
+  have split_c := vv_split_azim_generic_p22 vv 5 (j + 3) 2 4 hper5 h3le5
+    (by norm_num : (0 : ℕ) < 2) (by norm_num : (2 : ℕ) < 4) (by norm_num : (4 : ℕ) < 5)
+    hgen' hcf hinj
+  have hA1le : azim 0 (vv j) (vv (j + 1)) (vv (j + 2)) ≤ Real.pi := by
+    have hf0 := hfanle 0 (by norm_num)
+    rw [show j + 0 = j from rfl, show (j + 0) + 1 = j + 1 from rfl,
+      show (j + 0) + 4 = j + 4 from rfl] at hf0
+    have e := split_a
+    rw [split_a2] at e
+    linarith [azim_nonneg 0 (vv j) (vv (j + 2)) (vv (j + 3)),
+      azim_nonneg 0 (vv j) (vv (j + 3)) (vv (j + 4))]
+  have hA2le : azim 0 (vv j) (vv (j + 2)) (vv (j + 3)) ≤ Real.pi := by
+    have hf0 := hfanle 0 (by norm_num)
+    rw [show j + 0 = j from rfl, show (j + 0) + 1 = j + 1 from rfl,
+      show (j + 0) + 4 = j + 4 from rfl] at hf0
+    have e := split_a
+    rw [split_a2] at e
+    linarith [azim_nonneg 0 (vv j) (vv (j + 1)) (vv (j + 2)),
+      azim_nonneg 0 (vv j) (vv (j + 3)) (vv (j + 4))]
+  have hA3le : azim 0 (vv j) (vv (j + 3)) (vv (j + 4)) ≤ Real.pi := by
+    have hf0 := hfanle 0 (by norm_num)
+    rw [show j + 0 = j from rfl, show (j + 0) + 1 = j + 1 from rfl,
+      show (j + 0) + 4 = j + 4 from rfl] at hf0
+    have e := split_a
+    rw [split_a2] at e
+    linarith [azim_nonneg 0 (vv j) (vv (j + 1)) (vv (j + 2)),
+      azim_nonneg 0 (vv j) (vv (j + 2)) (vv (j + 3))]
+  have hA10le : azim 0 (vv (j + 1)) (vv (j + 2)) (vv j) ≤ Real.pi := by
+    have hf1 := hfanle 1 (by norm_num)
+    rw [show (j + 1) + 1 = j + 2 from rfl,
+      show vv ((j + 1) + 4) = vv j by rw [show (j + 1) + 4 = j + 5 from rfl]; exact hper5 j]
+      at hf1
+    exact hf1
+  have hA5le : azim 0 (vv (j + 2)) (vv (j + 3)) (vv j) ≤ Real.pi := by
+    have hf2 := hfanle 2 (by norm_num)
+    rw [show (j + 2) + 1 = j + 3 from rfl,
+      show vv ((j + 2) + 4) = vv (j + 1)
+        by rw [show (j + 2) + 4 = (j + 1) + 5 from rfl]; exact hper5 (j + 1)] at hf2
+    have e := split_b
+    rw [show vv ((j + 2) + 1) = vv (j + 3) from rfl,
+      show vv ((j + 2) + 3) = vv j by rw [show (j + 2) + 3 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 2) + 4) = vv (j + 1)
+        by rw [show (j + 2) + 4 = (j + 1) + 5 from rfl]; exact hper5 (j + 1)] at e
+    linarith [azim_nonneg 0 (vv (j + 2)) (vv j) (vv (j + 1))]
+  have hA6le : azim 0 (vv (j + 2)) (vv j) (vv (j + 1)) ≤ Real.pi := by
+    have hf2 := hfanle 2 (by norm_num)
+    rw [show (j + 2) + 1 = j + 3 from rfl,
+      show vv ((j + 2) + 4) = vv (j + 1)
+        by rw [show (j + 2) + 4 = (j + 1) + 5 from rfl]; exact hper5 (j + 1)] at hf2
+    have e := split_b
+    rw [show vv ((j + 2) + 1) = vv (j + 3) from rfl,
+      show vv ((j + 2) + 3) = vv j by rw [show (j + 2) + 3 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 2) + 4) = vv (j + 1)
+        by rw [show (j + 2) + 4 = (j + 1) + 5 from rfl]; exact hper5 (j + 1)] at e
+    linarith [azim_nonneg 0 (vv (j + 2)) (vv (j + 3)) (vv j)]
+  have hA7le : azim 0 (vv (j + 3)) (vv (j + 4)) (vv j) ≤ Real.pi := by
+    have hf3 := hfanle 3 (by norm_num)
+    rw [show (j + 3) + 1 = j + 4 from rfl,
+      show vv ((j + 3) + 4) = vv (j + 2)
+        by rw [show (j + 3) + 4 = (j + 2) + 5 from rfl]; exact hper5 (j + 2)] at hf3
+    have e := split_c
+    rw [show vv ((j + 3) + 1) = vv (j + 4) from rfl,
+      show vv ((j + 3) + 2) = vv j by rw [show (j + 3) + 2 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 3) + 4) = vv (j + 2)
+        by rw [show (j + 3) + 4 = (j + 2) + 5 from rfl]; exact hper5 (j + 2)] at e
+    linarith [azim_nonneg 0 (vv (j + 3)) (vv j) (vv (j + 2))]
+  have hA8le : azim 0 (vv (j + 3)) (vv j) (vv (j + 2)) ≤ Real.pi := by
+    have hf3 := hfanle 3 (by norm_num)
+    rw [show (j + 3) + 1 = j + 4 from rfl,
+      show vv ((j + 3) + 4) = vv (j + 2)
+        by rw [show (j + 3) + 4 = (j + 2) + 5 from rfl]; exact hper5 (j + 2)] at hf3
+    have e := split_c
+    rw [show vv ((j + 3) + 1) = vv (j + 4) from rfl,
+      show vv ((j + 3) + 2) = vv j by rw [show (j + 3) + 2 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 3) + 4) = vv (j + 2)
+        by rw [show (j + 3) + 4 = (j + 2) + 5 from rfl]; exact hper5 (j + 2)] at e
+    linarith [azim_nonneg 0 (vv (j + 3)) (vv (j + 4)) (vv j)]
+  have hA9le : azim 0 (vv (j + 4)) (vv j) (vv (j + 3)) ≤ Real.pi := by
+    have hf4 := hfanle 4 (by norm_num)
+    rw [show vv ((j + 4) + 1) = vv j by rw [show (j + 4) + 1 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 4) + 4) = vv (j + 3)
+        by rw [show (j + 4) + 4 = (j + 3) + 5 from rfl]; exact hper5 (j + 3)] at hf4
+    exact hf4
+  -- azim -> dihV (HOL :3694-3700)
+  have cA1 : azim 0 (vv j) (vv (j + 1)) (vv (j + 2)) = dihV 0 (vv j) (vv (j + 1)) (vv (j + 2)) :=
+    AZIM_DIHV_SAME_STRONG (hprop 0 1 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 0 2 (by norm_num) (by norm_num) (by norm_num)) hA1le
+  have cA2 : azim 0 (vv j) (vv (j + 2)) (vv (j + 3)) = dihV 0 (vv j) (vv (j + 2)) (vv (j + 3)) :=
+    AZIM_DIHV_SAME_STRONG (hprop 0 2 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 0 3 (by norm_num) (by norm_num) (by norm_num)) hA2le
+  have cA3 : azim 0 (vv j) (vv (j + 3)) (vv (j + 4)) = dihV 0 (vv j) (vv (j + 3)) (vv (j + 4)) :=
+    AZIM_DIHV_SAME_STRONG (hprop 0 3 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 0 4 (by norm_num) (by norm_num) (by norm_num)) hA3le
+  have cA10 : azim 0 (vv (j + 1)) (vv (j + 2)) (vv j) =
+      dihV 0 (vv (j + 1)) (vv (j + 2)) (vv j) :=
+    AZIM_DIHV_SAME_STRONG (hprop 1 2 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 1 0 (by norm_num) (by norm_num) (by norm_num)) hA10le
+  have cA5 : azim 0 (vv (j + 2)) (vv (j + 3)) (vv j) =
+      dihV 0 (vv (j + 2)) (vv (j + 3)) (vv j) :=
+    AZIM_DIHV_SAME_STRONG (hprop 2 3 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 2 0 (by norm_num) (by norm_num) (by norm_num)) hA5le
+  have cA6 : azim 0 (vv (j + 2)) (vv j) (vv (j + 1)) =
+      dihV 0 (vv (j + 2)) (vv j) (vv (j + 1)) :=
+    AZIM_DIHV_SAME_STRONG (hprop 2 0 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 2 1 (by norm_num) (by norm_num) (by norm_num)) hA6le
+  have cA7 : azim 0 (vv (j + 3)) (vv (j + 4)) (vv j) =
+      dihV 0 (vv (j + 3)) (vv (j + 4)) (vv j) :=
+    AZIM_DIHV_SAME_STRONG (hprop 3 4 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 3 0 (by norm_num) (by norm_num) (by norm_num)) hA7le
+  have cA8 : azim 0 (vv (j + 3)) (vv j) (vv (j + 2)) =
+      dihV 0 (vv (j + 3)) (vv j) (vv (j + 2)) :=
+    AZIM_DIHV_SAME_STRONG (hprop 3 0 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 3 2 (by norm_num) (by norm_num) (by norm_num)) hA8le
+  have cA9 : azim 0 (vv (j + 4)) (vv j) (vv (j + 3)) =
+      dihV 0 (vv (j + 4)) (vv j) (vv (j + 3)) :=
+    AZIM_DIHV_SAME_STRONG (hprop 4 0 (by norm_num) (by norm_num) (by norm_num))
+      (hprop 4 3 (by norm_num) (by norm_num) (by norm_num)) hA9le
+  -- the taustar expansion (HOL :3492-3500, :3640-3662)
+  have hunfold_taustar : taustarV39
+      (mkUnadornedV39 5 0.616 (csAdj 5 2 cstab) (csAdj 5 2 6)) vv =
+    (∑ i ∈ Finset.range 5, rhoFun ‖vv (j + i)‖ *
+        azim 0 (vv (j + i)) (vv ((j + i) + 1)) (vv ((j + i) + 4))) -
+      (Real.pi + sol0) * 3 - (0.616 : ℝ) := by
+    have e_k : (mkUnadornedV39 5 0.616 (csAdj 5 2 cstab) (csAdj 5 2 6)).k = 5 := rfl
+    unfold taustarV39
+    have hfper : Periodic
+        (fun i => rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + (5 - 1)))) 5 := by
+      intro i
+      simp only [Nat.reduceSub]
+      show rhoFun ‖vv (i + 5)‖ * azim 0 (vv (i + 5)) (vv ((i + 5) + 1)) (vv ((i + 5) + 4)) =
+        rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + 4))
+      rw [hper5 i, show (i + 5) + 1 = (i + 1) + 5 from rfl, hper5 (i + 1),
+        show (i + 5) + 4 = (i + 4) + 5 from rfl, hper5 (i + 4)]
+    rw [e_k, if_neg (by norm_num : ¬ (5 : ℕ) ≤ 3), dsv_unadorned,
+      tau_fun_azim vv 5 hper5 h3le5 hinj, empty5T1_setSum5,
+      periodic_sum_shift_p22 _ j 5 hfper (by norm_num : (5 : ℕ) ≠ 0)]
+    simp only [Nat.reduceSub]
+    rw [show (((5 : ℕ) : ℝ) - 2) = 3 from by norm_num]
+  -- the linear identity fan-sum = tau3-sum + 3*(pi+sol0)
+  have key : taustarV39 (mkUnadornedV39 5 0.616 (csAdj 5 2 cstab) (csAdj 5 2 6)) vv =
+      tau3 (vv j) (vv (j + 1)) (vv (j + 2)) + tau3 (vv j) (vv (j + 2)) (vv (j + 3)) +
+        tau3 (vv j) (vv (j + 3)) (vv (j + 4)) - (0.616 : ℝ) := by
+    rw [hunfold_taustar,
+      Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
+      Finset.sum_range_succ, Finset.sum_range_succ]
+    simp only [add_zero, Finset.sum_range_zero, zero_add]
+    rw [split_a, split_a2, split_b, split_c]
+    simp only [cA1, cA2, cA3, cA10, cA5, cA6, cA7, cA8, cA9, rho_rho_fun,
+      show vv ((j + 1) + 1) = vv (j + 2) from rfl,
+      show vv ((j + 1) + 4) = vv j by rw [show (j + 1) + 4 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 2) + 1) = vv (j + 3) from rfl,
+      show vv ((j + 2) + 3) = vv j by rw [show (j + 2) + 3 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 2) + 4) = vv (j + 1)
+        by rw [show (j + 2) + 4 = (j + 1) + 5 from rfl]; exact hper5 (j + 1),
+      show vv ((j + 3) + 1) = vv (j + 4) from rfl,
+      show vv ((j + 3) + 2) = vv j by rw [show (j + 3) + 2 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 3) + 4) = vv (j + 2)
+        by rw [show (j + 3) + 4 = (j + 2) + 5 from rfl]; exact hper5 (j + 2),
+      show vv ((j + 4) + 1) = vv j by rw [show (j + 4) + 1 = j + 5 from rfl]; exact hper5 j,
+      show vv ((j + 4) + 4) = vv (j + 3)
+        by rw [show (j + 4) + 4 = (j + 3) + 5 from rfl]; exact hper5 (j + 3)]
+    unfold tau3
+    ring
+  -- tau3 -> taum (HOL :3707-3721) with the edge/diagonal facts
+  have hlt : (1 : ℝ) + Real.sqrt 5 < 3.237 := by
+    have h1 : Real.sqrt 5 < 2.237 := by
+      have h5 : Real.sqrt 5 ^ 2 = 5 := Real.sq_sqrt (by norm_num)
+      nlinarith [Real.sqrt_nonneg 5, h5, sq_nonneg (Real.sqrt 5 - 2.237)]
+    linarith
+  have hdj2lt : dist (vv j) (vv (j + 2)) < 4 := by linarith
+  have hdj3lt : dist (vv j) (vv (j + 3)) < 4 := by linarith
+  have hdj2ge : (2 : ℝ) ≤ dist (vv j) (vv (j + 2)) := by
+    have hh := hdiag2 j
+    rw [cstab_eq_p22] at hh
+    linarith
+  have hdj3ge : (2 : ℝ) ≤ dist (vv j) (vv (j + 3)) := by
+    have hh := hdiag3 j
+    rw [cstab_eq_p22] at hh
+    linarith
+  have hedget1 : dist (vv j) (vv (j + 1)) = 2 := hedge j
+  have hedget2 : dist (vv (j + 1)) (vv (j + 2)) = 2 := hedge (j + 1)
+  have hedget3 : dist (vv (j + 2)) (vv (j + 3)) = 2 := hedge (j + 2)
+  have hedget4 : dist (vv (j + 3)) (vv (j + 4)) = 2 := hedge (j + 3)
+  have hedge4 : dist (vv j) (vv (j + 4)) = 2 := by
+    have h := hedge (j + 4)
+    rw [show (j + 4) + 1 = j + 5 from rfl, hper5 j] at h
+    rw [dist_comm]
+    exact h
+  have ht3_1 : tau3 (vv j) (vv (j + 1)) (vv (j + 2)) =
+      taum ‖vv (j + 1)‖ ‖vv j‖ ‖vv (j + 2)‖ (dist (vv j) (vv (j + 2))) 2 2 := by
+    rw [tau3_taum_40 (vv j) (vv (j + 1)) (vv (j + 2)) (hann j) (hann (j + 1)) (hann (j + 2))
+        hedget1.ge hdj2ge hedget2.ge (by rw [hedget1]; norm_num) hdj2lt
+        (by rw [hedget2]; norm_num), hedget2, hedget1]
+    exact (taum_sym2 _ _ _ _ _ _).1
+  have ht3_2 : tau3 (vv j) (vv (j + 2)) (vv (j + 3)) =
+      taum ‖vv j‖ ‖vv (j + 2)‖ ‖vv (j + 3)‖ (dist (vv (j + 2)) (vv (j + 3)))
+        (dist (vv j) (vv (j + 3))) (dist (vv j) (vv (j + 2))) := by
+    rw [tau3_taum_40 (vv j) (vv (j + 2)) (vv (j + 3)) (hann j) (hann (j + 2)) (hann (j + 3))
+        hdj2ge hdj3ge hedget3.ge hdj2lt hdj3lt (by rw [hedget3]; norm_num), hedget3]
+  have ht3_3 : tau3 (vv j) (vv (j + 3)) (vv (j + 4)) =
+      taum ‖vv (j + 4)‖ ‖vv j‖ ‖vv (j + 3)‖ (dist (vv j) (vv (j + 3))) 2 2 := by
+    rw [tau3_taum_40 (vv j) (vv (j + 3)) (vv (j + 4)) (hann j) (hann (j + 3)) (hann (j + 4))
+        hdj3ge hedge4.ge hedget4.ge hdj3lt (by rw [hedge4]; norm_num)
+        (by rw [hedget4]; norm_num), hedget4, hedge4]
+    exact ((taum_sym2 _ _ _ _ _ _).2.trans (taum_sym2 _ _ _ _ _ _).1)
+  have hres : (0 : ℝ) ≤ taustarV39
+      (mkUnadornedV39 5 0.616 (csAdj 5 2 cstab) (csAdj 5 2 6)) vv := by
+    rw [key, ht3_1, ht3_2, ht3_3]
+    linarith
+  exact (not_lt_of_ge hres) h0
 
 /-- HOL `LEMMA_7175074394` (numeric; `c110186` records
 `atn (sqrt 0.110186) < 0.3205` in HOL). -/
