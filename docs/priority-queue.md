@@ -310,6 +310,11 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（20:15，续1054）**：**penthex-w1 交付处理——「假失败」误判 ERRATA + 四件真证落库 `0c7da7de`（+82/−4，探针 4/4 标准三、根面逐字节同）**。
+① **ERRATA（编排者自纠）**：续1051/1052 判 w1「中断#19 截断零工件」**错误**——w1 无头跑完全程（19:33→19:55），DELIVERY/patch/probe 全落盘；用户从 UI 发现后指令处理。教训（入 §7.1-22 案例）：**短输出≠死亡**，快照目录有 DELIVERY+patch 即视为存活交付，先读快照再判。w2 因此属误派（已死于中断#20），w3 的「验收遗产」任务已被本笔落库吸收（其剩余独有价值 = flat_term2_135_x_eval + 复核 BLOCKED 链）。
+② **塔况大进**：LA19 塔基已净 8 件（主线程 3 + w1 四件 + ge_flat 原有）；**234 断点收敛至 ②/④**：② OWZLKVY4 = BLOCKED（缺 tau_x kit：`taud_x_taud` 无孪生、`taumX_p19`/`tauResidualX_p19` 是 EXTERNAL-ANCHOR 假桩使 `tau_x_tau_residual_x_general_p19` 陈述为假——需 kit 移植或 SF 重述）；④ minimizer_hex = 两导数 sorry（SECOND_DERIVATIVE_TEST_p19:741 est 60-100 行 / deriv_form_taud_D2_p19:617 est 150-250 行）+ ②。⑤ 234 本体 = ②④一通后 ~60-80 行机械装配，且 126/135 连坐自动转净。
+③ 下一步候选（等用户指令，现不派车）：导数对（Mathlib MVT 可证、D3 有模板）→ ②④⑤ 链；tau_x kit 移植（SF 级，收益最大）。在飞仍 2（penthex-w3 / t5body-w1），收线后按续1053 停发。
+
 - **2026-11-13（20:05，续1053）**：**用户指令：penthex-w3 与 t5body-w1 收线后不再启动新 subagent，等新指令**。此间编排侧只做：两车道交付的完整闸（亲测探针）+ 落库 + 账本；不派车、不续车（中断接管亦须经用户点头）。
 
 - **2026-11-13（20:00，续1052）**：**中断潮第 20 例（penthex-w2 开场 76s）→ 僵尸锁第 11 例 → fresh w3（agent-48）**。w1 遗产两件仍在 w1 快照安全，w3 工单第一步 = 验收它们（直编+装池+探针恰标准三）再续 ③-⑦。在飞 2：penthex-w3 / t5body-w1。
