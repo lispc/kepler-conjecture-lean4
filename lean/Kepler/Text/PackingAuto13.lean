@@ -334,6 +334,790 @@ theorem FUN_AFFINE_KLEMMA (a b c d : V3) (h1 : affDim {a, b, c} = 2)
     AffineSubspace.eq_of_direction_eq_of_nonempty_of_le hdir ⟨b, hb⟩ hle
   exact h2 (heq ▸ hd)
 
+/-! ## URRPHBZ2 support kit: the real-encoding eventually-radial lemmas
+
+HOL `eventually_radial`/`radial` (sphere.hl) is encoded in this repo at
+`Kepler.Geom.Volume` (`EventuallyRadial`/`radialNorm`). PackingAuto12's
+same-named kit (its `eventuallyRadial_p12`) is a private reconstruction on
+a differently-oriented predicate, so it cannot be consumed here; the four
+lemmas the URRPHBZ2 body cites are therefore re-derived below in the real
+encoding (statements faithful to marchal2.hl:291/306/697/1161). -/
+
+/-- A continuous `dist` from `a` attains its minimum on the convex hull of a
+nonempty finite set (HOL `DISTANCE_ATTAINS_INF` applied to the face hull,
+marchal2.hl:697 — the closest face point need not be a vertex). -/
+private theorem p13u_dist_attains (a : V3) {s : Set V3} (hfin : s.Finite)
+    (hne : s.Nonempty) : ∃ x ∈ convexHull ℝ s, ∀ y ∈ convexHull ℝ s,
+      dist a x ≤ dist a y := by
+  have hneh : (convexHull ℝ s).Nonempty := by
+    obtain ⟨z, hz⟩ := hne
+    exact ⟨z, subset_convexHull ℝ s hz⟩
+  obtain ⟨x, hxs, hxmin⟩ := hfin.isCompact_convexHull ℝ |>.exists_isMinOn hneh
+    (Continuous.continuousOn (Continuous.dist continuous_const continuous_id))
+  exact ⟨x, hxs, fun y hy => hxmin hy⟩
+
+/-- HOL `EVENTUALLY_RADIAL_EMPTY` (marchal2.hl:291), real encoding. -/
+private theorem p13u_erEmpty (x : V3) : EventuallyRadial x (∅ : Set V3) :=
+  ⟨1, one_pos, Set.inter_subset_right,
+    fun u hu => absurd hu.1 (Set.notMem_empty _)⟩
+
+/-- HOL `EVENTUALLY_RADIAL_NOT_IN_CLOSED_SET` (marchal2.hl:306), real
+encoding: off a closed set, the whole punctured ball escapes it. -/
+private theorem p13u_erNotInClosed (v : V3) {S : Set V3} (hS : v ∉ S)
+    (hc : IsClosed S) : EventuallyRadial v S := by
+  obtain ⟨e, he, hsub⟩ := Metric.isOpen_iff.1 hc.isOpen_compl v (by simpa using hS)
+  refine ⟨e, he, Set.inter_subset_right, fun u hu => absurd hu.1 (hsub hu.2)⟩
+
+/-- HOL `EVENTUALLY_RADIAL_INTER` (marchal2.hl:1161), real encoding: the
+smaller of the two witness radii witnesses the intersection. -/
+private theorem p13u_erInter (x : V3) {C C' : Set V3}
+    (h : EventuallyRadial x C) (h' : EventuallyRadial x C') :
+    EventuallyRadial x (C ∩ C') := by
+  obtain ⟨r, hr, -, hrad⟩ := h
+  obtain ⟨r', hr', -, hrad'⟩ := h'
+  refine ⟨min r r', lt_min hr hr', Set.inter_subset_right, fun u hu t ht htn => ?_⟩
+  have hub : ‖u‖ < min r r' := by
+    have h2 := hu.2
+    rwa [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left] at h2
+  have hubr : ‖u‖ < r := lt_of_lt_of_le hub (min_le_left r r')
+  have hubr' : ‖u‖ < r' := lt_of_lt_of_le hub (min_le_right r r')
+  have hCb : x + u ∈ C ∩ Metric.ball x r :=
+    ⟨hu.1.1, by rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left]; exact hubr⟩
+  have hC'b : x + u ∈ C' ∩ Metric.ball x r' :=
+    ⟨hu.1.2, by rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left]; exact hubr'⟩
+  have h1 := hrad u hCb t ht (lt_of_lt_of_le htn (min_le_left r r'))
+  have h2 := hrad' u hC'b t ht (lt_of_lt_of_le htn (min_le_right r r'))
+  exact ⟨⟨h1.1, h2.1⟩, by
+    rwa [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul,
+      Real.norm_eq_abs, abs_of_pos ht]⟩
+
+/-- HOL `EVENTUALLY_RADIAL_CONVEX_HULL_4_sub1` (marchal2.hl:697), real
+encoding: at a vertex `a` off the face `{b,c,d}`, the tetrahedron is
+star-shaped within the ball of radius `dist a x`, where `x` is the closest
+point of the face hull (HOL `DISTANCE_ATTAINS_INF`). -/
+private theorem p13u_erHull4 (a b c d : V3)
+    (ha : a ∉ convexHull ℝ ({b, c, d} : Set V3)) :
+    EventuallyRadial a (convexHull ℝ ({a, b, c, d} : Set V3)) := by
+  have hfin : ({b, c, d} : Set V3).Finite :=
+    Set.Finite.insert b (Set.Finite.insert c (Set.finite_singleton d))
+  obtain ⟨x, hxs, hxmin⟩ := p13u_dist_attains a hfin ⟨b, Set.mem_insert b _⟩
+  have hxne : dist a x ≠ 0 := by
+    intro h0
+    apply ha
+    rw [dist_eq_zero.1 h0]
+    exact hxs
+  have hxpos : 0 < dist a x := lt_of_le_of_ne dist_nonneg (Ne.symm hxne)
+  refine ⟨dist a x, hxpos, Set.inter_subset_right, fun u hu t ht htn => ?_⟩
+  rcases eq_or_ne u 0 with hu0 | hu0
+  · rw [hu0, smul_zero, add_zero]
+    exact ⟨subset_convexHull ℝ _ (by simp),
+      by rwa [Metric.mem_ball, dist_self]⟩
+  · have hmem := hu.1
+    rw [CONVEX_HULL_4, Set.mem_setOf_eq] at hmem
+    obtain ⟨u', v, w, z, hvp, hwp, hzp, hzq, hsum, hdeq⟩ := hmem
+    have hvp' : v + w + z = 1 - u' := by linarith
+    have h1mp : 0 < 1 - u' := by
+      by_contra hle
+      push_neg at hle
+      have hz1 : v = 0 := by linarith
+      have hz2 : w = 0 := by linarith
+      have hz3 : z = 0 := by linarith
+      have hu'1 : u' = 1 := by linarith
+      apply hu0
+      have hdeq2 := hdeq
+      rw [hz1, hz2, hz3, hu'1] at hdeq2
+      simp at hdeq2
+      exact hdeq2
+    set y := (1 - u')⁻¹ • (v • b + w • c + z • d) with hy_def
+    have hb3 : b ∈ convexHull ℝ ({b, c, d} : Set V3) :=
+      subset_convexHull ℝ _ (Set.mem_insert b _)
+    have hc3 : c ∈ convexHull ℝ ({b, c, d} : Set V3) :=
+      subset_convexHull ℝ _ (Set.mem_insert_of_mem b (Set.mem_insert c _))
+    have hd3 : d ∈ convexHull ℝ ({b, c, d} : Set V3) :=
+      subset_convexHull ℝ _ (Set.mem_insert_of_mem b
+        (Set.mem_insert_of_mem c (Set.mem_singleton_iff.2 rfl)))
+    have hy : y ∈ convexHull ℝ ({b, c, d} : Set V3) := by
+      rw [hy_def]
+      have hconv : Convex ℝ (convexHull ℝ ({b, c, d} : Set V3)) :=
+        convex_convexHull _ _
+      have hwm : (1 - u')⁻¹ * v + (1 - u')⁻¹ * w + (1 - u')⁻¹ * z = 1 := by
+        have e : (1 - u')⁻¹ * v + (1 - u')⁻¹ * w + (1 - u')⁻¹ * z
+            = (v + w + z) * (1 - u')⁻¹ := by ring
+        rw [e, hvp']
+        exact mul_inv_cancel₀ h1mp.ne'
+      have hs := hconv.sum_mem (t := Finset.univ)
+        (w := fun i : Fin 3 => (1 - u')⁻¹ * ![v, w, z] i)
+        (z := ![b, c, d])
+        (fun i _ => by
+          fin_cases i
+          · exact mul_nonneg (inv_nonneg.2 h1mp.le) hwp
+          · exact mul_nonneg (inv_nonneg.2 h1mp.le) hzp
+          · exact mul_nonneg (inv_nonneg.2 h1mp.le) hzq)
+        (by
+          rw [Fin.sum_univ_three]
+          simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+          exact hwm)
+        (fun i _ => by
+          fin_cases i
+          · exact hb3
+          · exact hc3
+          · exact hd3)
+      rw [Fin.sum_univ_three] at hs
+      simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.head_cons, Matrix.tail_cons] at hs
+      rw [← smul_smul, ← smul_smul, ← smul_smul, ← smul_add, ← smul_add] at hs
+      exact hs
+    have hrelu : (1 - u') • ((1 - u')⁻¹ • (v • b + w • c + z • d))
+        = v • b + w • c + z • d := by
+      rw [smul_smul, mul_inv_cancel₀ h1mp.ne', one_smul]
+    have hrel : a + u = u' • a + (1 - u') • y := by
+      rw [hy_def, hrelu]
+      simpa only [add_assoc] using hdeq
+    have hu_y : u = (1 - u') • (y - a) := by
+      have e1 : u = (1 - u') • y - (1 - u') • a := by
+        calc u = (a + u) - a := by abel
+          _ = (u' • a + (1 - u') • y) - a := by rw [hrel]
+          _ = (1 - u') • y - (1 - u') • a := by module
+      rw [e1, ← smul_sub]
+    have hunorm : ‖u‖ = (1 - u') * dist a y := by
+      rw [hu_y, norm_smul, Real.norm_eq_abs, abs_of_pos h1mp, dist_eq_norm,
+        norm_sub_rev]
+    have hdist_y : dist a x ≤ dist a y := hxmin y hy
+    have h2 : t * (1 - u') * dist a y < dist a y := by
+      have e3 : t * (1 - u') * dist a y = t * ‖u‖ := by rw [hunorm]; ring
+      rw [e3]
+      exact lt_of_lt_of_le htn hdist_y
+    have hdpos : 0 < dist a y := lt_of_lt_of_le hxpos hdist_y
+    have husk : t * (1 - u') < 1 := by
+      have h3 : t * (1 - u') < dist a y / dist a y := (lt_div_iff₀ hdpos).2 h2
+      rwa [div_self hdpos.ne'] at h3
+    refine ⟨?_, ?_⟩
+    · have e4 : (t * (1 - u')) • (y - a) = t • u := by
+        rw [← smul_smul, hu_y]
+      have hseg : a + t • u ∈ segment ℝ a y := by
+        rw [segment_eq_image_lineMap]
+        refine ⟨t * (1 - u'), ⟨⟨le_of_lt (mul_pos ht h1mp), le_of_lt husk⟩, ?_⟩⟩
+        show (t * (1 - u')) • (y - a) + a = a + t • u
+        rw [← e4, smul_sub]
+        abel
+      have hpair : a + t • u ∈ convexHull ℝ ({a, y} : Set V3) := by
+        rw [convexHull_pair]
+        exact hseg
+      have hsub : ({b, c, d} : Set V3) ⊆ ({a, b, c, d} : Set V3) := by
+        intro w hw
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+        rcases hw with rfl | rfl | rfl
+        · exact Or.inr (Or.inl rfl)
+        · exact Or.inr (Or.inr (Or.inl rfl))
+        · exact Or.inr (Or.inr (Or.inr rfl))
+      have hayy : y ∈ convexHull ℝ ({a, b, c, d} : Set V3) :=
+        convexHull_mono hsub hy
+      have haa : a ∈ convexHull ℝ ({a, b, c, d} : Set V3) :=
+        subset_convexHull ℝ _ (by simp)
+      exact (convex_convexHull ℝ _).segment_subset haa hayy hseg
+    · rwa [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul,
+        Real.norm_eq_abs, abs_of_pos ht]
+
+/-- HOL `URRPHBZ2` k=1 helper: the closed ball `cball x √2` is eventually
+radial at its center (witness radius 1, since 1 < √2; URRPHBZ2.hl:313-331). -/
+private theorem p13u_cballEr (x : V3) :
+    EventuallyRadial x (Metric.closedBall x (Real.sqrt 2)) := by
+  have h1 : (1 : ℝ) < Real.sqrt 2 := (Real.lt_sqrt zero_le_one).mpr (by norm_num)
+  refine ⟨1, one_pos, Set.inter_subset_right, fun u hu t ht htn => ?_⟩
+  refine ⟨?_, ?_⟩
+  · rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left, norm_smul,
+      Real.norm_eq_abs, abs_of_pos ht]
+    calc t * ‖u‖ ≤ 1 := htn.le
+      _ ≤ Real.sqrt 2 := h1.le
+  · rwa [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul,
+      Real.norm_eq_abs, abs_of_pos ht]
+
+/-- HOL `URRPHBZ2` k=1 helper: the sub-level set of the `rcone` defining
+functional is eventually radial at its apex (URRPHBZ2.hl:336-359) — both
+sides of `(z - x) ⬝ᵥ (y - x) ≤ dist z x * dist y x * a` scale by `t ≥ 0`. -/
+private theorem p13u_funcLe (x y : V3) (a : ℝ) :
+    EventuallyRadial x {z : V3 | (z - x) ⬝ᵥ (y - x) ≤ dist z x * dist y x * a} := by
+  refine ⟨1, one_pos, Set.inter_subset_right, fun u hu t ht htn => ?_⟩
+  refine ⟨?_, ?_⟩
+  · show (x + t • u - x) ⬝ᵥ (y - x) ≤ dist (x + t • u) x * dist y x * a
+    have h1 : (x + t • u - x) ⬝ᵥ (y - x) = t * ((x + u - x) ⬝ᵥ (y - x)) := by
+      rw [add_sub_cancel_left, add_sub_cancel_left, ← inner_eq_dot,
+        real_inner_smul_left, inner_eq_dot]
+    have h2 : dist (x + t • u) x = t * dist (x + u) x := by
+      rw [dist_eq_norm, dist_eq_norm, add_sub_cancel_left, add_sub_cancel_left,
+        norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    rw [h1, h2]
+    have h4 := mul_le_mul_of_nonneg_left hu.1 ht.le
+    calc t * ((x + u - x) ⬝ᵥ (y - x))
+        ≤ t * (dist (x + u) x * dist y x * a) := h4
+      _ = t * dist (x + u) x * dist y x * a := by ring
+  · rwa [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul,
+      Real.norm_eq_abs, abs_of_pos ht]
+
+/-- Voronoi-list membership gives `voronoiClosed` at every list point (HOL
+rewrites `voronoi_list` via `VORONOI_LIST`/`VORONOI_SET` and finishes with
+SET_TAC). -/
+private theorem p13u_voronoiList_mem_closed {V : Set V3} {ul : List V3} {x y : V3}
+    (hx : x ∈ voronoiList V ul) (hy : y ∈ setOfList ul) :
+    x ∈ voronoiClosed V y := by
+  have h1 : x ∈ voronoiSet V (setOfList ul) := hx
+  rw [voronoiSet, Set.mem_sInter] at h1
+  exact h1 (voronoiClosed V y) ⟨y, hy, rfl⟩
+
+/-- `affDim {a, b, c} ≤ 2` (HOL `AFF_DIM_LE_CARD` + `Geomdetail.CARD3`): the
+vector span of three points is generated by the two differences `b - a`,
+`c - a` (the nine-case argument is the FUN_AFFINE_KLEMMA pattern). -/
+private theorem p13u_affDimTripleLe (a b c : V3) : affDim {a, b, c} ≤ 2 := by
+  have hgen : vectorSpan ℝ {a, b, c} ≤
+      Submodule.span ℝ ({b - a, c - a} : Set V3) := by
+    rw [vectorSpan_def]
+    refine Submodule.span_le.2 ?_
+    intro z hz
+    obtain ⟨x, hx, y, hy, rfl⟩ := Set.mem_vsub.1 hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx hy
+    rcases hx with hxe | hxe | hxe <;> rcases hy with hye | hye | hye
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨0, 0,
+        show (0:ℝ) • (b - a) + (0:ℝ) • (c - a) = (a - a : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨-1, 0,
+        show (-1:ℝ) • (b - a) + (0:ℝ) • (c - a) = (a - b : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨0, -1,
+        show (0:ℝ) • (b - a) + (-1:ℝ) • (c - a) = (a - c : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨1, 0,
+        show (1:ℝ) • (b - a) + (0:ℝ) • (c - a) = (b - a : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨0, 0,
+        show (0:ℝ) • (b - a) + (0:ℝ) • (c - a) = (b - b : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨1, -1,
+        show (1:ℝ) • (b - a) + (-1:ℝ) • (c - a) = (b - c : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨0, 1,
+        show (0:ℝ) • (b - a) + (1:ℝ) • (c - a) = (c - a : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨-1, 1,
+        show (-1:ℝ) • (b - a) + (1:ℝ) • (c - a) = (c - b : V3) by module⟩
+    · rw [hxe, hye]
+      exact Submodule.mem_span_pair.2 ⟨0, 0,
+        show (0:ℝ) • (b - a) + (0:ℝ) • (c - a) = (c - c : V3) by module⟩
+  haveI := Fintype.ofFinite (↥({b - a, c - a} : Set V3))
+  have hgenrk := Submodule.finrank_mono hgen
+  have hcard' : (Module.finrank ℝ (Submodule.span ℝ
+      ({b - a, c - a} : Set V3)) : ℤ) ≤ 2 := by
+    have hset : (({b - a, c - a} : Finset V3) : Set V3)
+        = ({b - a, c - a} : Set V3) := by
+      simp [Finset.coe_insert, Finset.coe_singleton]
+    have h1 : (Module.finrank ℝ (Submodule.span ℝ
+        (({b - a, c - a} : Finset V3) : Set V3)) : ℕ) ≤
+        ({b - a, c - a} : Finset V3).card :=
+      finrank_span_finset_le_card _
+    rw [hset] at h1
+    have h2 : ({b - a, c - a} : Finset V3).card ≤ 2 := by
+      have hI := Finset.card_insert_le (b - a) ({c - a} : Finset V3)
+      simp only [Finset.card_singleton] at hI
+      omega
+    omega
+  rw [affDim, if_neg (Nonempty.ne_empty
+    (⟨a, Set.mem_insert a ({b, c} : Set V3)⟩ :
+      ({a, b, c} : Set V3).Nonempty))]
+  omega
+
+/-- Vertex case for k ≥ 4 (HOL URRPHBZ2.hl:419-550): at a vertex of a
+3-dimensional 4-point set, the tetrahedron is eventually radial — the vertex
+is off the opposite face hull because otherwise the 4-set's span would equal
+the 3-set's, contradicting the dimensions (the FUN_AFFINE_KLEMMA pattern). -/
+private theorem p13u_erHull4_vertex (a b c d : V3)
+    (h3 : affDim {a, b, c, d} = 3) :
+    EventuallyRadial a (convexHull ℝ {a, b, c, d}) := by
+  apply p13u_erHull4 a b c d
+  intro hmem
+  have hsub : ({a, b, c, d} : Set V3) ⊆
+      (affineSpan ℝ {b, c, d} : Set V3) := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with hxa | hxb | hxc | hxd
+    · rw [hxa]; exact convexHull_subset_affineSpan {b, c, d} hmem
+    · rw [hxb]; exact subset_affineSpan ℝ _ (Set.mem_insert b _)
+    · rw [hxc]; exact subset_affineSpan ℝ _ (Set.mem_insert_of_mem b (Set.mem_insert c _))
+    · rw [hxd]; exact subset_affineSpan ℝ _ (Set.mem_insert_of_mem b
+        (Set.mem_insert_of_mem c (Set.mem_singleton_iff.2 rfl)))
+  have hle : affineSpan ℝ {a, b, c, d} ≤ affineSpan ℝ {b, c, d} :=
+    affineSpan_le.2 hsub
+  have hdirle : (affineSpan ℝ {a, b, c, d}).direction ≤
+      (affineSpan ℝ {b, c, d}).direction := AffineSubspace.direction_le hle
+  rw [direction_affineSpan, direction_affineSpan] at hdirle
+  have hmono : vectorSpan ℝ {b, c, d} ≤ vectorSpan ℝ {a, b, c, d} :=
+    vectorSpan_mono ℝ (by
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+      rcases hx with rfl | rfl | rfl
+      · exact Or.inr (Or.inl rfl)
+      · exact Or.inr (Or.inr (Or.inl rfl))
+      · exact Or.inr (Or.inr (Or.inr rfl)))
+  have hvs : vectorSpan ℝ {a, b, c, d} = vectorSpan ℝ {b, c, d} :=
+    Submodule.eq_of_le_of_finrank_le hdirle (by
+      exact_mod_cast Submodule.finrank_mono hmono)
+  have hfin2 : (Module.finrank ℝ (vectorSpan ℝ {b, c, d}) : ℤ) ≤ 2 := by
+    have h2 := p13u_affDimTripleLe b c d
+    rw [affDim, if_neg (Nonempty.ne_empty
+      (⟨b, Set.mem_insert b ({c, d} : Set V3)⟩ :
+        ({b, c, d} : Set V3).Nonempty))] at h2
+    exact h2
+  have hfin3 : (Module.finrank ℝ (vectorSpan ℝ {a, b, c, d}) : ℤ) ≤ 2 := by
+    rw [hvs]; exact hfin2
+  have hd3 : affDim ({a, b, c, d} : Set V3) ≤ 2 := by
+    rw [affDim, if_neg (Nonempty.ne_empty
+      (⟨a, Set.mem_insert a ({b, c, d} : Set V3)⟩ :
+        ({a, b, c, d} : Set V3).Nonempty))]
+    exact hfin3
+  omega
+
+/-- HOL `URRPHBZ2` case k = 0 (URRPHBZ2.hl:229-251): the only packing point
+of the Rogers sliver would be `HD ul`, which lies in the removed ball. -/
+private theorem p13u_k0Case (V : Set V3) (u0 u1 u2 u3 v : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (hv : v ∈ V) (hvin : v ∈ mcell 0 V [u0, u1, u2, u3]) :
+    EventuallyRadial v (mcell 0 V [u0, u1, u2, u3]) := by
+  have hme := (MCELL_EXPLICIT 0 V [u0, u1, u2, u3]).1
+  rw [hme, mcell0] at hvin
+  have hveq : v = u0 := by
+    have h := ROGERS_INTER_V_LEMMA V [u0, u1, u2, u3] v hs hp hb hv hvin.1
+    exact h.trans rfl
+  rw [hveq]
+  have hn : u0 ∉ mcell 0 V [u0, u1, u2, u3] := by
+    rw [hme, mcell0]
+    intro h
+    apply h.2
+    rw [Metric.mem_ball, show hdV [u0, u1, u2, u3] = u0 from rfl, dist_self]
+    exact Real.sqrt_pos.mpr two_pos
+  exact p13u_erNotInClosed u0 hn (CLOSED_MCELL V [u0, u1, u2, u3] hs hp hb 0)
+
+/-- HOL `URRPHBZ2` case k = 1 (URRPHBZ2.hl:253-360): the cell is
+`(rogers ∩ cball) \ rcone_gt`, rewritten as a triple intersection (rogers —
+`p13u_erHull4`; cball — radius 1; the sub-level functional set —
+`p13u_funcLe`), combined by `p13u_erInter`. -/
+private theorem p13u_k1Case (V : Set V3) (u0 u1 u2 u3 v : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (hv : v ∈ V) (hvin : v ∈ mcell 1 V [u0, u1, u2, u3]) :
+    EventuallyRadial v (mcell 1 V [u0, u1, u2, u3]) := by
+  have hme := (MCELL_EXPLICIT 1 V [u0, u1, u2, u3]).2.1
+  rw [hme, mcell1] at hvin
+  by_cases h1 : Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+  · rw [if_pos h1] at hvin
+    have hveq : v = u0 := by
+      have h := ROGERS_INTER_V_LEMMA V [u0, u1, u2, u3] v hs hp hb hv hvin.1.1
+      exact h.trans rfl
+    rw [hveq]
+    rw [hme, mcell1, if_pos h1,
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2,
+      show (hdV ([u0, u1, u2, u3].tail) : V3) = u1 from rfl,
+      show (hdV [u0, u1, u2, u3] : V3) = u0 from rfl]
+    have hset : ((rogers V [u0, u1, u2, u3] ∩
+          Metric.closedBall u0 (Real.sqrt 2)) \
+        rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2)) =
+        (rogers V [u0, u1, u2, u3] ∩ Metric.closedBall u0 (Real.sqrt 2)) ∩
+        {x : V3 | (x - u0) ⬝ᵥ (u1 - u0) ≤
+          dist x u0 * dist u1 u0 * (hl [u0, u1] / Real.sqrt 2)} := by
+      ext x
+      simp only [Set.mem_diff, Set.mem_inter_iff, Set.mem_setOf_eq, rconeGt,
+        not_lt]
+    rw [hset, Set.inter_assoc]
+    have hr : rogers V [u0, u1, u2, u3] =
+        convexHull ℝ {u0, omegaListN V [u0, u1, u2, u3] 1,
+          omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} := by
+      have h := ROGERS_EXPLICIT V [u0, u1, u2, u3] hs hp hb
+      rw [show (hdV [u0, u1, u2, u3] : V3) = u0 from rfl] at h
+      exact h
+    have hu0 : u0 ∉ convexHull ℝ {omegaListN V [u0, u1, u2, u3] 1,
+        omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} := by
+      have h := U0_NOT_IN_CONVEX_HULL_FROM_ROGERS V [u0, u1, u2, u3] hs hp hb
+      rwa [show (hdV [u0, u1, u2, u3] : V3) = u0 from rfl] at h
+    rw [hr]
+    exact p13u_erInter u0
+      (p13u_erHull4 u0 (omegaListN V [u0, u1, u2, u3] 1)
+        (omegaListN V [u0, u1, u2, u3] 2) (omegaListN V [u0, u1, u2, u3] 3) hu0)
+      (p13u_erInter u0 (p13u_cballEr u0)
+        (p13u_funcLe u0 u1 (hl [u0, u1] / Real.sqrt 2)))
+  · rw [if_neg h1] at hvin
+    exact absurd hvin (Set.notMem_empty v)
+
+/-- HOL `URRPHBZ2` case k ≥ 4 (URRPHBZ2.hl:362-559): the cell is the
+tetrahedron hull; its only packing points are the vertices
+(`SIMPLEX_FURTHEST_LT_2` + Voronoi-list membership), and each vertex case is
+`p13u_erHull4_vertex`. -/
+private theorem p13u_k4Case (V : Set V3) (u0 u1 u2 u3 v : V3) (k : ℕ)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (hv : v ∈ V) (hk : 4 ≤ k) (hvin : v ∈ mcell k V [u0, u1, u2, u3]) :
+    EventuallyRadial v (mcell k V [u0, u1, u2, u3]) := by
+  rw [(MCELL_EXPLICIT k V [u0, u1, u2, u3]).2.2.2.2 hk, mcell4] at hvin ⊢
+  by_cases hlt : hl [u0, u1, u2, u3] < Real.sqrt 2
+  · rw [if_pos hlt] at hvin ⊢
+    have hS : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+      ext x; simp [setOfList]
+    rw [hS] at hvin ⊢
+    have h3 : affDim ({u0, u1, u2, u3} : Set V3) = 3 := by
+      have h := MHFTTZN1 V [u0, u1, u2, u3] 3 hp hb
+      rw [hS] at h
+      exact h
+    have hvS : v ∈ ({u0, u1, u2, u3} : Set V3) := by
+      by_contra hvS
+      obtain ⟨y, hyS, hylt⟩ :=
+        SIMPLEX_FURTHEST_LT_2 (omegaList V [u0, u1, u2, u3]) _
+          (Set.Finite.insert u0 (Set.Finite.insert u1
+            (Set.Finite.insert u2 (Set.finite_singleton u3)))) hvin hvS
+      have hs3mem : omegaList V [u0, u1, u2, u3] ∈
+          voronoiList V [u0, u1, u2, u3] :=
+        OMEGA_LIST_IN_VORONOI_LIST V [u0, u1, u2, u3] 3 hb
+      have hs3y := p13u_voronoiList_mem_closed hs3mem
+        (show y ∈ setOfList [u0, u1, u2, u3] by rw [hS]; exact hyS)
+      have hle : dist (omegaList V [u0, u1, u2, u3]) y ≤
+          dist (omegaList V [u0, u1, u2, u3]) v := hs3y v hv
+      have hge : ‖y - omegaList V [u0, u1, u2, u3]‖ ≤
+          ‖v - omegaList V [u0, u1, u2, u3]‖ := by
+        rw [dist_eq_norm, dist_eq_norm] at hle
+        rwa [norm_sub_rev (omegaList V [u0, u1, u2, u3]) y,
+          norm_sub_rev (omegaList V [u0, u1, u2, u3]) v] at hle
+      exact not_lt_of_ge hge hylt
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hvS
+    rcases hvS with h0 | h1 | h2 | h3eq
+    · rw [h0]
+      exact p13u_erHull4_vertex u0 u1 u2 u3 h3
+    · have hs1 : ({u0, u1, u2, u3} : Set V3) = {u1, u0, u2, u3} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [h1, hs1]
+      exact p13u_erHull4_vertex u1 u0 u2 u3 (by rw [← hs1]; exact h3)
+    · have hs2 : ({u0, u1, u2, u3} : Set V3) = {u2, u0, u1, u3} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [h2, hs2]
+      exact p13u_erHull4_vertex u2 u0 u1 u3 (by rw [← hs2]; exact h3)
+    · have hs3 : ({u0, u1, u2, u3} : Set V3) = {u3, u0, u1, u2} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [h3eq, hs3]
+      exact p13u_erHull4_vertex u3 u0 u1 u2 (by rw [← hs3]; exact h3)
+  · rw [if_neg hlt]
+    exact p13u_erEmpty v
+
+/-- `s2 = omegaListN .. 2` is the circumcenter of the triangle (copy of the
+later `p13t_omega2_cc`, stated here because the k = 3 case precedes it). -/
+private theorem p13u_omega2_cc (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
+    (hbar2 : barV V 2 [u0,u1,u2]) (h2lt : hl [u0,u1,u2] < Real.sqrt 2) :
+    omegaListN V [u0,u1,u2,u3] 2 = circumcenter (setOfList [u0,u1,u2]) := by
+  rw [OMEGA_LIST_TRUNCATE_2 V u0 u1 u2 u3]
+  exact XNHPWAB1 V [u0,u1,u2] 2 hp hbar2 h2lt
+
+/-- Distance from `u0` to `omegaListN .. 2` is the triangle circumradius
+(copy of the later `p13t_omega2_dist`). -/
+private theorem p13u_omega2_dist (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
+    (hbar2 : barV V 2 [u0,u1,u2]) (h2lt : hl [u0,u1,u2] < Real.sqrt 2) :
+    dist u0 (omegaListN V [u0,u1,u2,u3] 2) = hl [u0,u1,u2] := by
+  rw [p13u_omega2_cc V u0 u1 u2 u3 hp hbar2 h2lt]
+  have h := HL_EQ_DIST0 V 2 [u0,u1,u2] hp hbar2
+  rw [show hdV [u0,u1,u2] = u0 from rfl] at h
+  calc dist u0 (circumcenter (setOfList [u0,u1,u2]))
+      = dist (circumcenter (setOfList [u0,u1,u2])) u0 := dist_comm ..
+    _ = hl [u0,u1,u2] := h.symm
+
+/-- HOL `URRPHBZ2` case k = 3 (URRPHBZ2.hl:561-735): the cell is the
+tetrahedron `hull {u0,u1,u2, mxi}`; `v ∈ {u0,u1,u2}` by LEPJBDJ, and the
+apex `mxi` lies off the face hull — otherwise `hl (trunc 2) = dist u0 (mxi) =
+√2` contradicts the branch condition (`MHFTTZN4` with `u = v = mxi`). -/
+private theorem p13u_k3Case (V : Set V3) (u0 u1 u2 u3 v : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (hv : v ∈ V) (hvin : v ∈ mcell 3 V [u0, u1, u2, u3]) :
+    EventuallyRadial v (mcell 3 V [u0, u1, u2, u3]) := by
+  have ht2 : truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+  have hset3 : setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) := by
+    ext x; simp [setOfList]
+  have hcap3 := LEPJBDJ V [u0, u1, u2, u3] 3 hs hp hb (by omega) (by omega)
+    (Set.nonempty_iff_ne_empty.mp ⟨v, hvin⟩)
+  rw [show (3:ℕ) - 1 = 2 from rfl, ht2] at hcap3
+  have hv3 : v ∈ setOfList [u0, u1, u2] := by
+    rw [← hcap3]; exact Set.mem_inter hv hvin
+  have hbar2 : barV V 2 [u0, u1, u2] := by
+    have h := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hb (by omega)
+    rwa [ht2] at h
+  have h2dim : affDim ({u0, u1, u2} : Set V3) = 2 := by
+    have h := MHFTTZN1 V [u0, u1, u2] 2 hp hbar2
+    rwa [hset3] at h
+  rw [hset3] at hv3
+  by_cases hcond : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+  · rw [(MCELL_EXPLICIT 3 V [u0, u1, u2, u3]).2.2.2.1, mcell3, if_pos hcond, ht2]
+    have hunion : (setOfList [u0, u1, u2] ∪ {mxi V [u0, u1, u2, u3]}) =
+        ({u0, u1, u2, mxi V [u0, u1, u2, u3]} : Set V3) := by
+      ext x
+      simp only [setOfList, Set.mem_union, Set.mem_setOf_eq, Set.mem_insert_iff,
+        Set.mem_singleton_iff, List.mem_cons, List.mem_singleton, List.not_mem_nil,
+        or_false, false_or]
+      tauto
+    rw [hunion]
+    have h2lt : hl [u0, u1, u2] < Real.sqrt 2 := by
+      have h := hcond.1
+      rwa [ht2] at h
+    have hs2cc : omegaListN V [u0, u1, u2, u3] 2
+        = circumcenter (setOfList [u0, u1, u2]) :=
+      p13u_omega2_cc V u0 u1 u2 u3 hp hbar2 h2lt
+    have hs2vor : omegaListN V [u0, u1, u2, u3] 2 ∈ voronoiList V [u0, u1, u2] := by
+      have h := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 2 2 hp hs hb
+        (by omega) (by omega)
+      rwa [ht2] at h
+    have hs3vor : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiList V [u0, u1, u2] := by
+      have h := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 2 3 hp hs hb
+        (by omega) (by omega)
+      rwa [ht2] at h
+    obtain ⟨s, hseg, hdist, hmeq⟩ := MXI_EXPLICIT V [u0, u1, u2, u3] u0 u1 u2 u3
+      hs hp hb rfl hcond.1 hcond.2
+    have hsV : s ∈ voronoiList V [u0, u1, u2] := by
+      have hsub : ({omegaListN V [u0, u1, u2, u3] 2,
+            omegaListN V [u0, u1, u2, u3] 3} : Set V3) ⊆ voronoiList V [u0, u1, u2] := by
+        intro x hx
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+        rcases hx with rfl | rfl
+        · exact hs2vor
+        · exact hs3vor
+      have h1 : convexHull ℝ ({omegaListN V [u0, u1, u2, u3] 2,
+            omegaListN V [u0, u1, u2, u3] 3} : Set V3) ⊆
+          convexHull ℝ (voronoiList V [u0, u1, u2]) := convexHull_mono hsub
+      rw [(CONVEX_VORONOI_LIST V [u0, u1, u2]).convexHull_eq] at h1
+      exact h1 (by rw [convexHull_pair]; exact hseg)
+    have hmnot : mxi V [u0, u1, u2, u3] ∉
+        (affineSpan ℝ ({u0, u1, u2} : Set V3) : Set V3) := by
+      intro hmem
+      rw [← hset3] at hmem
+      have hsp : mxi V [u0, u1, u2, u3] ∈
+          (affineSpan ℝ (voronoiList V [u0, u1, u2]) : Set V3) := by
+        rw [← hmeq]; exact subset_affineSpan ℝ _ hsV
+      have hperp := MHFTTZN4 V [u0, u1, u2] 2 (mxi V [u0, u1, u2, u3])
+        (mxi V [u0, u1, u2, u3]) hp hbar2 hsp hmem
+      have hmcc : mxi V [u0, u1, u2, u3] = circumcenter (setOfList [u0, u1, u2]) := by
+        have hz : inner ℝ
+            (mxi V [u0, u1, u2, u3] - circumcenter (setOfList [u0, u1, u2]))
+            (mxi V [u0, u1, u2, u3] - circumcenter (setOfList [u0, u1, u2])) = 0 := by
+          rw [inner_eq_dot]; exact hperp
+        exact sub_eq_zero.mp (inner_self_eq_zero.mp hz)
+      have h1 : dist u0 (mxi V [u0, u1, u2, u3]) = hl [u0, u1, u2] := by
+        calc dist u0 (mxi V [u0, u1, u2, u3])
+            = dist u0 (omegaListN V [u0, u1, u2, u3] 2) := by rw [hmcc, hs2cc]
+          _ = hl [u0, u1, u2] := p13u_omega2_dist V u0 u1 u2 u3 hp hbar2 h2lt
+      have hdge : dist u0 (mxi V [u0, u1, u2, u3]) = Real.sqrt 2 := by
+        rw [hmeq] at hdist
+        exact hdist
+      linarith
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv3
+    rcases hv3 with h0 | h1 | h2
+    · rw [h0]
+      exact p13u_erHull4 u0 u1 u2 (mxi V [u0, u1, u2, u3])
+        (FUN_AFFINE_KLEMMA u0 u1 u2 (mxi V [u0, u1, u2, u3]) h2dim hmnot)
+    · have hs1 : ({u0, u1, u2, mxi V [u0, u1, u2, u3]} : Set V3)
+          = {u1, u0, u2, mxi V [u0, u1, u2, u3]} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      have e1 : ({u1, u0, u2} : Set V3) = {u0, u1, u2} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [h1, hs1]
+      exact p13u_erHull4 u1 u0 u2 (mxi V [u0, u1, u2, u3])
+        (FUN_AFFINE_KLEMMA u1 u0 u2 (mxi V [u0, u1, u2, u3])
+          (by rw [e1]; exact h2dim) (by rw [e1]; exact hmnot))
+    · have hs2 : ({u0, u1, u2, mxi V [u0, u1, u2, u3]} : Set V3)
+          = {u2, u0, u1, mxi V [u0, u1, u2, u3]} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      have e2 : ({u2, u0, u1} : Set V3) = {u0, u1, u2} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [h2, hs2]
+      exact p13u_erHull4 u2 u0 u1 (mxi V [u0, u1, u2, u3])
+        (FUN_AFFINE_KLEMMA u2 u0 u1 (mxi V [u0, u1, u2, u3])
+          (by rw [e2]; exact h2dim) (by rw [e2]; exact hmnot))
+  · rw [(MCELL_EXPLICIT 3 V [u0, u1, u2, u3]).2.2.2.1, mcell3, if_neg hcond] at hvin
+    exact absurd hvin (Set.notMem_empty v)
+
+/-- `hl [u, v] = dist u v / 2` (HOL `HL_EQ_DIST0` + `CIRCUMCENTER_2`; a copy
+of the later `p13_hl_pair`, stated here because the k = 2 case precedes it). -/
+private theorem p13u_hl_pair (u v : V3) : hl [u, v] = dist u v / 2 := by
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hcc : circumcenter ({u, v} : Set V3) = midpoint ℝ u v := CIRCUMCENTER_2 u v
+  have hexi : ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w := by
+    refine ⟨dist (midpoint ℝ u v) u, ?_⟩
+    rw [hcc]
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw'
+    · rfl
+    · rcases Set.mem_singleton_iff.mp hw' with rfl
+      simp
+  have key : radV ({u, v} : Set V3) = dist (circumcenter ({u, v} : Set V3)) u :=
+    (Classical.epsilon_spec (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w) hexi) u (Set.mem_insert u {v})
+  have hhl : hl [u, v] = dist (circumcenter ({u, v} : Set V3)) u := by
+    show radV (setOfList [u, v]) = _
+    rw [hset, key]
+  rw [hhl, hcc]
+  simp
+  ring
+
+/-- HOL `URRPHBZ2` case k = 2 (URRPHBZ2.hl:738-965): the cell is
+`(rconeGe u0 u1 a ∩ rconeGe u1 u0 a) ∩ affGe {u0,u1} {mxi, s3}` with
+`a = hl [u0,u1]/√2 ∈ (0,1)`; `v ∈ {u0,u1}` by LEPJBDJ; the cone/wedge pieces
+are eventually radial once `Disjoint {u0,u1} {mxi, s3}` (both points lie in
+the Voronoi list of `[u0,u1]`, hence off `{u0,u1}` by the distance
+contradiction) is established. -/
+private theorem p13u_k2Case (V : Set V3) (u0 u1 u2 u3 v : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 [u0, u1, u2, u3])
+    (hv : v ∈ V) (hvin : v ∈ mcell 2 V [u0, u1, u2, u3]) :
+    EventuallyRadial v (mcell 2 V [u0, u1, u2, u3]) := by
+  have ht1 : truncateSimplex 1 [u0, u1, u2, u3] = [u0, u1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
+  have ht2 : truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+  have hset2 : setOfList [u0, u1] = ({u0, u1} : Set V3) := by
+    ext x; simp [setOfList]
+  have hcap2 := LEPJBDJ V [u0, u1, u2, u3] 2 hs hp hb (by omega) (by omega)
+    (Set.nonempty_iff_ne_empty.mp ⟨v, hvin⟩)
+  rw [show (2:ℕ) - 1 = 1 from rfl, ht1] at hcap2
+  have hv2 : v ∈ setOfList [u0, u1] := by
+    rw [← hcap2]; exact Set.mem_inter hv hvin
+  rw [hset2] at hv2
+  by_cases hcond : hl (truncateSimplex 1 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+  · have hS4 : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+      ext x; simp [setOfList]
+    have hu01 : u0 ≠ u1 := by
+      intro he
+      have h3 : affDim ({u0, u1, u2, u3} : Set V3) = 3 := by
+        have h := MHFTTZN1 V [u0, u1, u2, u3] 3 hp hb
+        rwa [hS4] at h
+      have heq : ({u0, u1, u2, u3} : Set V3) = ({u0, u2, u3} : Set V3) := by
+        rw [he]
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      have hle := p13u_affDimTripleLe u0 u2 u3
+      rw [heq] at h3
+      omega
+    have hhl0 : 0 < hl [u0, u1] := by
+      rw [p13u_hl_pair]
+      have h : 0 < dist u0 u1 := dist_pos.mpr hu01
+      linarith
+    have ha0 : 0 < hl [u0, u1] / Real.sqrt 2 :=
+      div_pos hhl0 (Real.sqrt_pos.mpr two_pos)
+    have ha1 : hl [u0, u1] / Real.sqrt 2 < 1 := by
+      have h : hl [u0, u1] < Real.sqrt 2 := by
+        have h' := hcond.1
+        rwa [ht1] at h'
+      exact (div_lt_one (Real.sqrt_pos.mpr two_pos)).2 h
+    have hs2vor1 : omegaListN V [u0, u1, u2, u3] 2 ∈ voronoiList V [u0, u1] := by
+      have h := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 1 2 hp hs hb
+        (by omega) (by omega)
+      rwa [ht1] at h
+    have hs3vor1 : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiList V [u0, u1] := by
+      have h := OMEGA_LIST_N_IN_VORONOI_LIST_GEN V [u0, u1, u2, u3] 3 1 3 hp hs hb
+        (by omega) (by omega)
+      rwa [ht1] at h
+    have hmV : mxi V [u0, u1, u2, u3] ∈ voronoiList V [u0, u1] := by
+      by_cases h2lt : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2
+      · obtain ⟨s, hseg, -, hmeq⟩ := MXI_EXPLICIT V [u0, u1, u2, u3] u0 u1 u2 u3
+          hs hp hb rfl h2lt hcond.2
+        rw [← hmeq]
+        have hsub : ({omegaListN V [u0, u1, u2, u3] 2,
+              omegaListN V [u0, u1, u2, u3] 3} : Set V3) ⊆ voronoiList V [u0, u1] := by
+          intro x hx
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+          rcases hx with rfl | rfl
+          · exact hs2vor1
+          · exact hs3vor1
+        have h1 : convexHull ℝ ({omegaListN V [u0, u1, u2, u3] 2,
+              omegaListN V [u0, u1, u2, u3] 3} : Set V3) ⊆
+            convexHull ℝ (voronoiList V [u0, u1]) := convexHull_mono hsub
+        rw [(CONVEX_VORONOI_LIST V [u0, u1]).convexHull_eq] at h1
+        exact h1 (by rw [convexHull_pair]; exact hseg)
+      · rw [mxi, if_pos (not_lt.1 h2lt)]
+        exact hs2vor1
+    have hu0V : u0 ∈ V :=
+      BARV_IMP_u0_IN_V V [u0, u1, u2, u3] u0 u1 u2 u3 hs hp hb rfl
+    have hu1V : u1 ∈ V := (hb.2 [u0, u1] ⟨⟨[u2, u3], rfl⟩, by simp⟩).2.1
+      (by simp [setOfList])
+    have hmc1 : mxi V [u0, u1, u2, u3] ∈ voronoiClosed V u1 :=
+      p13u_voronoiList_mem_closed hmV (by simp [setOfList])
+    have hmc0 : mxi V [u0, u1, u2, u3] ∈ voronoiClosed V u0 :=
+      p13u_voronoiList_mem_closed hmV (by simp [setOfList])
+    have hs3c1 : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiClosed V u1 :=
+      p13u_voronoiList_mem_closed hs3vor1 (by simp [setOfList])
+    have hs3c0 : omegaListN V [u0, u1, u2, u3] 3 ∈ voronoiClosed V u0 :=
+      p13u_voronoiList_mem_closed hs3vor1 (by simp [setOfList])
+    have hmnot : mxi V [u0, u1, u2, u3] ∉ ({u0, u1} : Set V3) := by
+      intro hm
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+      rcases hm with h | h
+      · have h1 := hmc1 u0 hu0V
+        rw [h, dist_self] at h1
+        have h2 : 0 < dist u0 u1 := dist_pos.mpr hu01
+        linarith
+      · have h1 := hmc0 u1 hu1V
+        rw [h, dist_self] at h1
+        have h2 : 0 < dist u1 u0 := dist_pos.mpr hu01.symm
+        linarith
+    have hs3not : omegaListN V [u0, u1, u2, u3] 3 ∉ ({u0, u1} : Set V3) := by
+      intro hm
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm
+      rcases hm with h | h
+      · have h1 := hs3c1 u0 hu0V
+        rw [h, dist_self] at h1
+        have h2 : 0 < dist u0 u1 := dist_pos.mpr hu01
+        linarith
+      · have h1 := hs3c0 u1 hu1V
+        rw [h, dist_self] at h1
+        have h2 : 0 < dist u1 u0 := dist_pos.mpr hu01.symm
+        linarith
+    have hdis : Disjoint ({u0, u1} : Set V3)
+        ({mxi V [u0, u1, u2, u3], omegaListN V [u0, u1, u2, u3] 3} : Set V3) := by
+      refine Set.disjoint_left.mpr ?_
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with hx0 | hx1
+      · intro hbad
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hbad
+        rcases hbad with h | h
+        · exact hmnot (by rw [← h, hx0]; simp)
+        · exact hs3not (by rw [← h, hx0]; simp)
+      · intro hbad
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hbad
+        rcases hbad with h | h
+        · exact hmnot (by rw [← h, hx1]; simp)
+        · exact hs3not (by rw [← h, hx1]; simp)
+    rw [(MCELL_EXPLICIT 2 V [u0, u1, u2, u3]).2.2.1, mcell2, if_pos hcond, ht1]
+    show EventuallyRadial v
+      ((rconeGe u0 u1 (hl [u0, u1] / Real.sqrt 2) ∩
+        rconeGe u1 u0 (hl [u0, u1] / Real.sqrt 2)) ∩
+        affGe {u0, u1} {mxi V [u0, u1, u2, u3], omegaListN V [u0, u1, u2, u3] 3})
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv2
+    rcases hv2 with h0 | h1
+    · rw [h0]
+      exact p13u_erInter u0
+        (p13u_erInter u0
+          (EVENTUALLY_RADIAL_RCONE_GE_ABC_A (hl [u0, u1] / Real.sqrt 2) u0 u1)
+          (EVENTUALLY_RADIAL_RCONE_GE_ABC_B (hl [u0, u1] / Real.sqrt 2) u1 u0
+            hu01.symm ha0 ha1))
+        (EVENTUALLY_RADIAL_AFF_GE u0 u1 (mxi V [u0, u1, u2, u3])
+          (omegaListN V [u0, u1, u2, u3] 3) hdis)
+    · rw [h1]
+      have hset01 : ({u0, u1} : Set V3) = {u1, u0} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset01]
+      have hdis' : Disjoint ({u1, u0} : Set V3)
+          ({mxi V [u0, u1, u2, u3], omegaListN V [u0, u1, u2, u3] 3} : Set V3) := by
+        rwa [hset01] at hdis
+      exact p13u_erInter u1
+        (p13u_erInter u1
+          (EVENTUALLY_RADIAL_RCONE_GE_ABC_B (hl [u0, u1] / Real.sqrt 2) u0 u1
+            hu01 ha0 ha1)
+          (EVENTUALLY_RADIAL_RCONE_GE_ABC_A (hl [u0, u1] / Real.sqrt 2) u1 u0))
+        (EVENTUALLY_RADIAL_AFF_GE u1 u0 (mxi V [u0, u1, u2, u3])
+          (omegaListN V [u0, u1, u2, u3] 3) hdis')
+  · rw [(MCELL_EXPLICIT 2 V [u0, u1, u2, u3]).2.2.1, mcell2, if_neg hcond] at hvin
+    exact absurd hvin (Set.notMem_empty v)
+
 /-- GIANT — HOL `URRPHBZ2` (URRPHBZ2.hl:215-972; concl
 `pack_concl.hl:176-178`): Marchal cells are eventually radial at packing
 points.
@@ -361,7 +1145,18 @@ empty cells by NEEDS `EVENTUALLY_RADIAL_EMPTY`. -/
 theorem URRPHBZ2 (V : Set V3) (ul : List V3) (k : ℕ) (v : V3)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) (hv : v ∈ V) :
     EventuallyRadial v (mcell k V ul) := by
-  sorry
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  subst hul
+  by_cases hout : v ∈ mcell k V [u0, u1, u2, u3]
+  swap
+  · exact p13u_erNotInClosed v hout (CLOSED_MCELL V [u0, u1, u2, u3] hs hp hb k)
+  rcases (show k = 0 ∨ k = 1 ∨ k = 2 ∨ k = 3 ∨ 4 ≤ k by omega) with
+    rfl | rfl | rfl | rfl | hk4
+  · exact p13u_k0Case V u0 u1 u2 u3 v hs hp hb hv hout
+  · exact p13u_k1Case V u0 u1 u2 u3 v hs hp hb hv hout
+  · exact p13u_k2Case V u0 u1 u2 u3 v hs hp hb hv hout
+  · exact p13u_k3Case V u0 u1 u2 u3 v hs hp hb hv hout
+  · exact p13u_k4Case V u0 u1 u2 u3 v k hs hp hb hv hk4 hout
 
 /-! ## SLTSTLO.hl -/
 
