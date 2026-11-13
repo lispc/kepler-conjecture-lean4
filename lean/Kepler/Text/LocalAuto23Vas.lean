@@ -3495,6 +3495,12 @@ theorem LINDIH_11_p23 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ
       exact lt_trans (hiff.mp hsmall) vas12_atan_sqrt_386_lt
     · exact absurd hdneg hneg
 
+-- PROVED 2026-11-14 (lane `vaspwe3-w13`): same two-branch skeleton as
+-- `PWE1`/`PWE2` with PWE3's own hypothesis mix — long case by the registry
+-- `2073661826` (threshold `3.55`, `y6` lower bound `2.52` from `hd2`) at the
+-- `(p+1)` vertex, short case by `LINDIH_11` (at `(p+3)`, `y4 = 2` from `hd1`)
+-- + the registry pair `5550839403 delta`/`5550839403` at `(p+1)` via
+-- `dih_y_mono`.
 /-- HOL `LEMMA_PWE3` (JOTSWIX.hl:3370). NEEDS: same kit as
 `LEMMA_PWE1_p23`. -/
 theorem LEMMA_PWE3_p23 (h : main_nonlinear_terminal_v11) (s : ScsV39)
@@ -3511,7 +3517,304 @@ theorem LEMMA_PWE3_p23 (h : main_nonlinear_terminal_v11) (s : ScsV39)
     (hd1 : dist (v (p + 2)) (v (p + 3)) = 2)
     (hd2 : 2 * h0 ≤ dist (v (p + 1)) (v (p + 2))) :
     Real.pi / 2 < dihV 0 (v (p + 1)) (v p) (v (p + 2)) := by
-  sorry
+  have h207 := h "2073661826" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h555d := h "5550839403 delta" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h555 := h "5550839403" (by simp [mainNonlinearTerminalV11Ids_t11])
+  -- ═══ A. substrate from `MMs_v39` ═══
+  have hs' : isScsV39 s := hs
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpbP, -, hsym, -, -, hdiag, -, hbc, -, -, -⟩ := hs
+  have hk4pos : 0 < (4 : ℕ) := by norm_num
+  have hBBs : BBsV39 s v := by
+    have h1 := hMM
+    simp only [MMsV39, Set.mem_setOf_eq, BBprime2V39, BBprimeV39,
+      Set.mem_setOf_eq] at h1
+    exact h1.1.1.1
+  have hBBs' : BBsV39 s v := hBBs
+  obtain ⟨hann, hpervS, hbnd, hconv0⟩ := hBBs
+  have hperv : Periodic v 4 := hk ▸ hpervS
+  have hmod : ∀ i : ℕ, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hperv i
+  have hinj : ∀ i j : ℕ, i < 4 → j < 4 → v i = v j → i = j :=
+    BBs_inj_p21 s v 4 hs' hk hBBs'
+  have hconv : ConvexLocalFan (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3))
+      (Set.range fun i => (v i, v (i + 1))) := by
+    rcases hconv0 with hle | hcl
+    · omega
+    · exact hcl
+  have hgen : Generic (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3)) := hg
+  have hann' : ∀ i : ℕ, 2 ≤ ‖v i‖ ∧ ‖v i‖ ≤ 2 * h0 := by
+    intro i
+    have h := hann (Set.mem_range_self i)
+    simp only [ballAnnulus, Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right, not_lt] at h
+    exact ⟨h.2, h.1⟩
+  have hpos : ∀ i : ℕ, 0 < azim 0 (v i) (v (i + 1)) (v (i + 3)) := by
+    intro i
+    have h1 := LOCAL_FAN_AZIM_POS_p22 s v i hconv hs' hBBs'
+    rw [hk] at h1
+    simpa using h1
+  have hnc : ∀ i j : ℕ, i % 4 ≠ j % 4 → ¬ Collinear ℝ ({0, v i, v j} : Set V3) := by
+    intro i j hij
+    have hne : v i ≠ v j := by
+      intro he
+      exact hij (hinj (i % 4) (j % 4) (Nat.mod_lt _ hk4pos) (Nat.mod_lt _ hk4pos)
+        (by rw [hmod i, hmod j]; exact he))
+    exact PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 _ _ _ _ _ hconv.1 (Set.mem_range_self i)
+      (Set.mem_range_self j) hne hgen
+  have hlb : ∀ i j : ℕ, i % 4 ≠ j % 4 → 2 ≤ dist (v i) (v j) := by
+    intro i j hij
+    have h1 : s.a (i % 4) (j % 4) ≤ dist (v (i % 4)) (v (j % 4)) :=
+      (hbnd (i % 4) (j % 4)).1
+    have h2 : 2 ≤ s.a (i % 4) (j % 4) :=
+      hdiag _ _ ⟨by rw [hk]; exact Nat.mod_lt _ hk4pos,
+        by rw [hk]; exact Nat.mod_lt _ hk4pos, hij⟩
+    rw [hmod i, hmod j] at h1
+    linarith
+  -- ═══ B. constants and the edge upper bounds ═══
+  have h2h0 : 2 * h0 = 2.52 := by unfold h0; norm_num
+  have hcstab : cstab = 3.01 := rfl
+  have hb01 : s.b p (p + 1) = 2 * h0 := by
+    rcases hab p with ⟨-, h1⟩ | ⟨h1, -⟩
+    · exact h1
+    · exfalso
+      rw [ha01] at h1
+      unfold h0 at h1
+      norm_num at h1
+  have hBred : ∀ i j : ℕ, s.b i j = s.b (i % 4) (j % 4) :=
+    fun i j => periodic2_MOD_p21 (by norm_num) (hk ▸ hpbP)
+  have hAred : ∀ i j : ℕ, s.a i j = s.a (i % 4) (j % 4) :=
+    fun i j => periodic2_MOD_p21 (by norm_num) (hk ▸ hpa)
+  -- PWE3's `a (p+3) p = 2*h0` forces the `(p+3),(p+4)` edge to have `b = cstab`
+  have hb31c : s.b (p + 3) p = cstab := by
+    have hb : s.b (p + 3) ((p + 3) + 1) = s.b (p + 3) p := by
+      rw [hBred (p + 3) ((p + 3) + 1), hBred (p + 3) p,
+        show ((p + 3) + 1) % 4 = p % 4 by omega]
+    have ha : s.a (p + 3) ((p + 3) + 1) = s.a (p + 3) p := by
+      rw [hAred (p + 3) ((p + 3) + 1), hAred (p + 3) p,
+        show ((p + 3) + 1) % 4 = p % 4 by omega]
+    rcases hab (p + 3) with ⟨h1, -⟩ | ⟨-, h1⟩
+    · exfalso
+      rw [ha, ha30] at h1
+      unfold h0 at h1
+      norm_num at h1
+    · rwa [hb] at h1
+  have hd_pp1_le : dist (v p) (v (p + 1)) ≤ 2 * h0 := by
+    have h1 := (hbnd p (p + 1)).2
+    rwa [hb01] at h1
+  have hd_p3p_le : dist (v p) (v (p + 3)) ≤ cstab := by
+    have h1 := (hbnd (p + 3) p).2
+    rw [hb31c, dist_comm] at h1
+    exact h1
+  -- the mirror edge `(p+1),(p+2)` is a *consecutive* edge, hence `≤ cstab`
+  have hd12_le : dist (v (p + 1)) (v (p + 2)) ≤ cstab := by
+    have h1 := (hbnd (p + 1) (p + 2)).2
+    have h2 := hbc (p + 1) (by omega : 3 < s.k)
+    exact le_trans h1 h2
+  -- ═══ C. the non-coplanar quads ═══
+  have hncol_p1 : ¬ Coplanar ({0, v (p + 1), v (p + 2), v p} : Set V3) := by
+    intro hc
+    have hpos1 : 0 < azim 0 (v (p + 1)) (v (p + 2)) (v p) := by
+      have h1 := hpos (p + 1)
+      rwa [show (p + 1) + (4 - 1) = p + 4 by omega, hperv p] at h1
+    rcases (AZIM_COND_FOR_COPLANAR (0 : V3) (v (p + 1)) (v (p + 2)) (v p)).mpr hc
+      with h0' | hpi
+    · linarith
+    · refine hns1 ?_
+      unfold scsIsStr
+      rw [hk, show (p + 1) + (4 - 1) = p + 4 by omega, hperv p]
+      exact hpi
+  have hncol_p3 : ¬ Coplanar ({0, v (p + 3), v p, v (p + 2)} : Set V3) := by
+    intro hc
+    have hpos3 : 0 < azim 0 (v (p + 3)) (v p) (v (p + 2)) := by
+      have h1 := hpos (p + 3)
+      rwa [show (p + 3) + 1 = p + 4 by omega, hperv p,
+        show (p + 3) + (4 - 1) = (p + 2) + 4 by omega, hperv (p + 2)] at h1
+    rcases (AZIM_COND_FOR_COPLANAR (0 : V3) (v (p + 3)) (v p) (v (p + 2))).mpr hc
+      with h0' | hpi
+    · linarith
+    · refine hns3 ?_
+      unfold scsIsStr
+      rw [hk, show (p + 3) + 1 = p + 4 by omega, hperv p,
+        show (p + 3) + (4 - 1) = (p + 2) + 4 by omega, hperv (p + 2)]
+      exact hpi
+  have hncopA : ¬ Coplanar ({0, v p, v (p + 1), v (p + 2)} : Set V3) := by
+    intro hc
+    exact hncol_p1 (by
+      have hset : ({0, v p, v (p + 1), v (p + 2)} : Set V3) = {0, v (p + 1), v (p + 2), v p} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at hc)
+  have hncopB : ¬ Coplanar ({0, v p, v (p + 3), v (p + 2)} : Set V3) := by
+    intro hc
+    exact hncol_p3 (by
+      have hset : ({0, v p, v (p + 3), v (p + 2)} : Set V3) = {0, v (p + 3), v p, v (p + 2)} := by
+        ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [hset] at hc)
+  -- ═══ D. the `(p,p+2)` diagonal is long ═══
+  by_cases hlong : (3.55 : ℝ) ≤ dist (v p) (v (p + 2))
+  · -- ═══ D1. long diagonal: registry `2073661826` at the (p+1) vertex ═══
+    have hdelta4neg : delta4Y (‖v (p + 1)‖) (‖v (p + 2)‖) (‖v p‖)
+        (dist (v (p + 2)) (v p)) (dist (v (p + 1)) (v p))
+        (dist (v (p + 1)) (v (p + 2))) < 0 := by
+      have h1 : (2 : ℝ) ≤ ‖v (p + 1)‖ ∧ ‖v (p + 1)‖ ≤ 2.52 := by
+        have h := hann' (p + 1); rw [← h2h0]; exact h
+      have h2 : (2 : ℝ) ≤ ‖v (p + 2)‖ ∧ ‖v (p + 2)‖ ≤ 2.52 := by
+        have h := hann' (p + 2); rw [← h2h0]; exact h
+      have h3 : (2 : ℝ) ≤ ‖v p‖ ∧ ‖v p‖ ≤ 2.52 := by
+        refine ⟨?_, ?_⟩
+        · rw [hn]
+        · rw [hn]; linarith [h2h0]
+      have h4 : (3.55 : ℝ) ≤ dist (v (p + 2)) (v p) ∧
+          dist (v (p + 2)) (v p) ≤ 4 * h0 := by
+        refine ⟨by rw [dist_comm]; exact hlong, ?_⟩
+        have ht := dist_triangle (v (p + 2)) (0 : V3) (v p)
+        rw [dist_zero_right, dist_zero_left] at ht
+        linarith [(hann' (p + 2)).2, (hann' p).2]
+      have h5 : (2 : ℝ) ≤ dist (v (p + 1)) (v p) ∧
+          dist (v (p + 1)) (v p) ≤ 2.52 := by
+        refine ⟨?_, ?_⟩
+        · rw [dist_comm]; exact hlb p (p + 1) (by omega)
+        · rw [dist_comm, ← h2h0]; exact hd_pp1_le
+      have h6 : (2.52 : ℝ) ≤ dist (v (p + 1)) (v (p + 2)) ∧
+          dist (v (p + 1)) (v (p + 2)) ≤ 3.01 := by
+        refine ⟨?_, ?_⟩
+        · rw [← h2h0]; exact hd2
+        · rw [← hcstab]; exact hd12_le
+      exact h207 _ _ _ _ _ _ h1.1 h1.2 h2.1 h2.2 h3.1 h3.2 h4.1 h4.2 h5.1 h5.2 h6.1 h6.2
+    have hdeltapos : 0 < deltaY (‖v (p + 1)‖) (‖v (p + 2)‖) (‖v p‖)
+        (dist (v (p + 2)) (v p)) (dist (v (p + 1)) (v p))
+        (dist (v (p + 1)) (v (p + 2))) := by
+      simpa only [dist_zero_left] using
+        g482w3_deltaY_pos (u0 := (0 : V3)) (u1 := v (p + 1)) (u2 := v (p + 2))
+          (u3 := v p) hncol_p1
+    have hdih : Real.pi / 2 < dihY (‖v (p + 1)‖) (‖v (p + 2)‖) (‖v p‖)
+        (dist (v (p + 2)) (v p)) (dist (v (p + 1)) (v p))
+        (dist (v (p + 1)) (v (p + 2))) :=
+      vas10_obtuse_of_delta4 _ _ _ _ _ _ (by linarith [(hann' (p + 1)).1])
+        hdeltapos hdelta4neg
+    rw [DIHV_EQ_DIH_Y_4PT_B (0 : V3) (v (p + 1)) (v p) (v (p + 2))
+      (hnc (p + 1) p (by omega)) (hnc (p + 1) (p + 2) (by omega))]
+    rw [dist_zero_left, dist_zero_left, dist_zero_left]
+    rw [vas10_dihY_swap23 (‖v (p + 1)‖) (‖v p‖) (‖v (p + 2)‖)
+      (dist (v p) (v (p + 2))) (dist (v (p + 1)) (v (p + 2)))
+      (dist (v (p + 1)) (v p))]
+    rw [dist_comm (v p) (v (p + 2))]
+    exact hdih
+  · -- ═══ D2. short diagonal: `LINDIH_11` + the `5550839403` pair ═══
+    have hsd : dist (v p) (v (p + 2)) < 3.55 := not_le.mp hlong
+    have hspace : (2 : ℝ) ≤ ‖v p‖ ∧ ‖v p‖ ≤ 2 := by
+      rw [hn]; norm_num
+    have hspace12 : (2 : ℝ) ≤ ‖v (p + 1)‖ ∧ ‖v (p + 1)‖ ≤ 2.52 := by
+      have h1 := hann' (p + 1); rw [← h2h0]; exact h1
+    have hspace2 : (2 : ℝ) ≤ ‖v (p + 2)‖ ∧ ‖v (p + 2)‖ ≤ 2.52 := by
+      have h1 := hann' (p + 2); rw [← h2h0]; exact h1
+    have hspace3 : (2 : ℝ) ≤ ‖v (p + 3)‖ ∧ ‖v (p + 3)‖ ≤ 2.52 := by
+      have h1 := hann' (p + 3); rw [← h2h0]; exact h1
+    have hspace4' : (3.01 : ℝ) ≤ cstab ∧ cstab ≤ 3.01 := by
+      rw [hcstab]; norm_num
+    have hspace5 : (3.01 : ℝ) ≤ dist (v p) (v (p + 2)) ∧
+        dist (v p) (v (p + 2)) ≤ 3.55 := by
+      refine ⟨?_, le_of_lt hsd⟩
+      have h1 := (hdg p (p + 2) (by unfold scsDiag; omega)).2.1
+      rw [hcstab] at h1
+      linarith
+    have hspace6 : (2 : ℝ) ≤ dist (v p) (v (p + 1)) ∧
+        dist (v p) (v (p + 1)) ≤ 2 * h0 :=
+      ⟨hlb p (p + 1) (by omega), hd_pp1_le⟩
+    have hspace6' : (2 * h0 : ℝ) ≤ dist (v p) (v (p + 3)) ∧
+        dist (v p) (v (p + 3)) ≤ 3.01 := by
+      refine ⟨?_, ?_⟩
+      · have h1 := (hbnd (p + 3) p).1
+        rw [ha30] at h1
+        rw [dist_comm]
+        exact h1
+      · rw [← hcstab]; exact hd_p3p_le
+    -- the `(p+1)` vertex box `5550839403` (`y4 = cstab`)
+    have hdeltaC : 0 < deltaY (‖v p‖) (‖v (p + 1)‖) (‖v (p + 2)‖) cstab
+        (dist (v p) (v (p + 2))) (dist (v p) (v (p + 1))) :=
+      h555d _ _ _ _ _ _ hspace.1 hspace.2 hspace12.1 hspace12.2 hspace2.1 hspace2.2
+        hspace4'.1 hspace4'.2 hspace5.1 hspace5.2 hspace6.1 hspace6.2
+    have hdihC : dihY (‖v p‖) (‖v (p + 1)‖) (‖v (p + 2)‖) cstab
+        (dist (v p) (v (p + 2))) (dist (v p) (v (p + 1))) < 2.0 :=
+      h555 _ _ _ _ _ _ hspace.1 hspace.2 hspace12.1 hspace12.2 hspace2.1 hspace2.2
+        hspace4'.1 hspace4'.2 hspace5.1 hspace5.2 hspace6.1 hspace6.2
+    have hApos : 0 < deltaY (‖v p‖) (‖v (p + 1)‖) (‖v (p + 2)‖)
+        (dist (v (p + 1)) (v (p + 2))) (dist (v p) (v (p + 2)))
+        (dist (v p) (v (p + 1))) := by
+      simpa only [dist_zero_left] using
+        g482w3_deltaY_pos (u0 := (0 : V3)) (u1 := v p) (u2 := v (p + 1))
+          (u3 := v (p + 2)) hncopA
+    have hA_bound : dihY (‖v p‖) (‖v (p + 1)‖) (‖v (p + 2)‖)
+        (dist (v (p + 1)) (v (p + 2))) (dist (v p) (v (p + 2)))
+        (dist (v p) (v (p + 1))) < 2.0 := by
+      have hmono := dih_y_mono_p22 (‖v p‖) (‖v (p + 1)‖) (‖v (p + 2)‖)
+        (dist (v (p + 1)) (v (p + 2))) (dist (v p) (v (p + 2)))
+        (dist (v p) (v (p + 1))) cstab
+        hd12_le (by rw [hn]; norm_num)
+        (by linarith [hlb (p + 1) (p + 2) (by omega : (p + 1) % 4 ≠ (p + 2) % 4)])
+        hApos (le_of_lt hdeltaC)
+      linarith
+    -- `LINDIH_11` at the `(p+3)` vertex (`y4 = 2` from `hd1`)
+    have hBpos : 0 < deltaY (‖v p‖) (‖v (p + 3)‖) (‖v (p + 2)‖)
+        (dist (v (p + 3)) (v (p + 2))) (dist (v p) (v (p + 2)))
+        (dist (v p) (v (p + 3))) := by
+      simpa only [dist_zero_left] using
+        g482w3_deltaY_pos (u0 := (0 : V3)) (u1 := v p) (u2 := v (p + 3))
+          (u3 := v (p + 2)) hncopB
+    have hL := LINDIH_11_p23 h (‖v p‖) (‖v (p + 3)‖) (‖v (p + 2)‖)
+      (dist (v (p + 3)) (v (p + 2))) (dist (v p) (v (p + 2)))
+      (dist (v p) (v (p + 3))) hn hspace3 hspace2
+      (by rw [dist_comm]; exact hd1) hspace5 hspace6'
+    have hLlt : dihY (‖v p‖) (‖v (p + 3)‖) (‖v (p + 2)‖)
+        (dist (v (p + 3)) (v (p + 2))) (dist (v p) (v (p + 2)))
+        (dist (v p) (v (p + 3))) < 1.1 := by
+      rcases hL with h | h
+      · exact h
+      · linarith [hBpos]
+    -- the azimuth split at `v p` and the two `azim = dihV` conversions
+    have hs1' : azim 0 (v p) (v (p + 1)) (v (p + 3)) = Real.pi := by
+      have h1 := hs1
+      unfold scsIsStr at h1
+      rwa [hk] at h1
+    have hsplit := vv_split_azim_generic_p22 v 4 p 2 3 hperv (by norm_num) (by norm_num)
+      (by norm_num) (by norm_num) hgen hconv
+      (fun a b hab' => hinj a b hab'.1 hab'.2.1 hab'.2.2)
+    have hAle : azim 0 (v p) (v (p + 1)) (v (p + 2)) ≤ Real.pi := by
+      have hnn := azim_nonneg (0 : V3) (v p) (v (p + 2)) (v (p + 3))
+      linarith
+    have hBle : azim 0 (v p) (v (p + 2)) (v (p + 3)) ≤ Real.pi := by
+      have hnn := azim_nonneg (0 : V3) (v p) (v (p + 1)) (v (p + 2))
+      linarith
+    have hDihA := AZIM_DIHV_SAME_STRONG (v := (0 : V3)) (w := v p)
+      (v1 := v (p + 1)) (v2 := v (p + 2))
+      (hnc p (p + 1) (by omega)) (hnc p (p + 2) (by omega)) hAle
+    have hDihB := AZIM_DIHV_SAME_STRONG (v := (0 : V3)) (w := v p)
+      (v1 := v (p + 2)) (v2 := v (p + 3))
+      (hnc p (p + 2) (by omega)) (hnc p (p + 3) (by omega)) hBle
+    have hsum : Real.pi = dihY (‖v p‖) (‖v (p + 1)‖) (‖v (p + 2)‖)
+        (dist (v (p + 1)) (v (p + 2))) (dist (v p) (v (p + 2)))
+        (dist (v p) (v (p + 1)))
+        + dihY (‖v p‖) (‖v (p + 2)‖) (‖v (p + 3)‖)
+          (dist (v (p + 2)) (v (p + 3))) (dist (v p) (v (p + 3)))
+          (dist (v p) (v (p + 2))) := by
+      have h1 : Real.pi = azim 0 (v p) (v (p + 1)) (v (p + 2))
+          + azim 0 (v p) (v (p + 2)) (v (p + 3)) := by
+        rw [← hsplit]; exact hs1'.symm
+      rw [hDihA, hDihB] at h1
+      have e1 := DIHV_EQ_DIH_Y_4PT_B (0 : V3) (v p) (v (p + 1)) (v (p + 2))
+        (hnc p (p + 1) (by omega)) (hnc p (p + 2) (by omega))
+      have e2 := DIHV_EQ_DIH_Y_4PT_B (0 : V3) (v p) (v (p + 2)) (v (p + 3))
+        (hnc p (p + 2) (by omega)) (hnc p (p + 3) (by omega))
+      rw [e1, e2] at h1
+      simpa only [dist_zero_left] using h1
+    have hB'' : dihY (‖v p‖) (‖v (p + 2)‖) (‖v (p + 3)‖)
+        (dist (v (p + 2)) (v (p + 3))) (dist (v p) (v (p + 3)))
+        (dist (v p) (v (p + 2))) < 1.1 := by
+      have h1 := vas10_dihY_swap23 (‖v p‖) (‖v (p + 2)‖) (‖v (p + 3)‖)
+        (dist (v (p + 2)) (v (p + 3))) (dist (v p) (v (p + 3)))
+        (dist (v p) (v (p + 2)))
+      rw [h1, dist_comm (v (p + 2)) (v (p + 3))]
+      exact hLlt
+    exfalso
+    linarith [Real.pi_gt_d2]
 
 /-- HOL `LEMMA_PWE4` (JOTSWIX.hl:3648). NEEDS: same kit as
 `LEMMA_PWE1_p23`. -/
