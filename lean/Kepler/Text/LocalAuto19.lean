@@ -1184,7 +1184,17 @@ theorem flat_term2_135_x_eval_p19 (h : mainNonlinearTerminalV11_p18)
     (bz : 2 ≤ z) (bz' : z ≤ 2 * h0) (b1 : 2 ≤ y1) (b1' : y1 ≤ 2 * h0)
     (b3 : 2 ≤ y3) (b3' : y3 ≤ 2 * h0) (b5 : 3.01 ≤ y5) (b5' : y5 ≤ 3.915) :
     yOfX (flatTerm2_135x_p19 d 4 4) y1 y2 y3 y4 y5 y6 = flatTerm_p19 z := by
-  sorry
+  have h2h0 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hzle : z ≤ 2.52 := by rw [← h2h0]; exact bz'
+  have hy1le : y1 ≤ 2.52 := by rw [← h2h0]; exact b1'
+  have hy3le : y3 ≤ 2.52 := by rw [← h2h0]; exact b3'
+  have hl3 := edge2_flatD_x1_delta_lemma3_p19 h d z y1 y3 y5 2 2
+    hd hd0 hd20 bz hzle b1 hy1le b3 hy3le b5 b5' rfl rfl
+  have hb := hl3 ⟨by linarith, by linarith⟩ ⟨b1, hy1le⟩ ⟨by linarith, by linarith⟩
+    ⟨by linarith, by linarith⟩ ⟨le_refl 2, le_refl 2⟩ ⟨le_refl 2, le_refl 2⟩
+  rw [show (2:ℝ) * 2 = 4 from by norm_num] at hb
+  simp only [yOfX, flatTerm2_135x_p19]
+  rw [hb, Real.sqrt_mul_self (by linarith : (0:ℝ) ≤ z)]
 
 /-- HOL `delta_126_x_2h0_le_d` (pent_hex.hl:1517). NEEDS-DB. -/
 theorem delta_126_x_2h0_le_d_p19 (h : mainNonlinearTerminalV11_p18)
@@ -1220,7 +1230,23 @@ theorem delta_135_x_2h0_le_d_p19 (h : mainNonlinearTerminalV11_p18)
     (hd0 : 0 ≤ d) (hd20 : d ≤ 20)
     (hd : deltaY z1 y1 y3 y5 2 2 = d) :
     yOfX (delta135x_p19 (4 * h0 * h0) 4 4) y1 y2 y3 y4 y5 y6 ≤ d := by
-  sorry
+  have h4 : (4:ℝ) * h0 * h0 = (2 * h0) * (2 * h0) := by ring
+  have hd0' : 0 ≤ deltaY z1 y1 y3 y5 2 2 := by rw [hd]; exact hd0
+  have hd20' : deltaY z1 y1 y3 y5 2 2 ≤ 20 := by rw [hd]; exact hd20
+  have hmono := delta_mono_p19 h (2 * h0) z1 y1 y3 y5 2 2 bz bz' (le_refl _)
+    b1 b1' b3 b3' b5 b5' (le_refl _) (le_refl _) (le_refl _) (le_refl _) hd0' hd20'
+  have hdy : deltaY (2 * h0) y1 y3 y5 2 2
+      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y3 * y3) (y5 * y5) 4 4 := by
+    unfold deltaY
+    rw [show (2:ℝ) * 2 = 4 from by norm_num]
+  have hperm : deltaX (y1 * y1) ((2 * h0) * (2 * h0)) (y3 * y3) 4 (y5 * y5) 4
+      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y3 * y3) (y5 * y5) 4 4 := by
+    unfold deltaX
+    ring
+  rw [hd] at hmono
+  simp only [yOfX, delta135x_p19]
+  rw [h4, hperm, ← hdy]
+  exact hmono
 
 /-- HOL `lemma_5546286427` (pent_hex.hl:1575). NEEDS-DB: database inequality
 "5546286427". -/
