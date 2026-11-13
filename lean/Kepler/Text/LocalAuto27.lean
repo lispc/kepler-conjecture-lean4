@@ -326,24 +326,6 @@ theorem SCS_DIAG_2_p27 (k i : ℕ) : 3 < k → scsDiag k i (i + 2) := by
     have hm : (i % k + 3) % k = (i + 3) % k := mod_add_c_p27 (i := i) (c := 3) hk
     exact hn (heq.trans hm.symm)
 
-/-- HOL `TFITSKCv1_concl` (TFITSKC.hl:127). -/
-theorem TFITSKCv1_p27 :
-    main_nonlinear_terminal_v11 →
-      ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
-        (∀ i', ¬ s.J (i + 2) i') →
-          s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) → 3 < s.k → isScsV39 s →
-            v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
-              s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
-                dist (v i) (v (i + 1)) = 2 →
-                  dist (v i) (v (i + 1)) < s.b i (i + 1) →
-                    (∀ i j, scsDiag s.k i j →
-                      s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < s.b i j) →
-                      dist (v (i + 1)) (v (i + 2)) = 2 := by
-  sorry
-    -- DISCHARGES: NEEDS the diag->strict-inequality nonlinearity
-    -- (`CHANGE_A_SCS_MOD` folding + the a,b near-diagonal linear program missing
-    -- from the module's port) feeding off `main_nonlinear_terminal_v11`.
-
 /-- HOL `TFITSKC_concl` (TFITSKC.hl:636). Note the registry twin
 `TFITSKC_concl` (LocalAuto1) strengthens `s.b (i+1)(i+2) ≤ 2*h0` to `=`; this
 statement follows the source (`≤`). -/
@@ -992,6 +974,444 @@ private theorem jcyfmrp_flat_residues_coplanar (s : ScsV39) (v : ℕ → V3)
         (hmod_ne_gen r2 r1 t hr2 hr1 hgt h1 h2).1⟩)
     · rw [Nat.mod_eq_of_lt (by omega : t < s.k)]; omega
     · rw [Nat.mod_eq_of_lt (by omega : t < s.k)]; omega
+
+/-- TFITSKCv1 proof-wave kit (2026-11-12, lane tfitskcv1-w1): the
+mod-`k` distinctness from a diagonal, the generic-fan flat-node geometry
+(`PROPERTIES_GENERIC` + `GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE` +
+`AFF_GE_TO_AFF_GT2_GE1` + `FAN_IMP_NOT_IN_AFF_GE`, HOL TFITSKC.hl:200-264),
+the `CIZMRRH`-lunar fork killed by the JCYFMRP coplanarity engine +
+`FEKTYIY_p27` (HOL handles it with the `ODXLSTCv2`/`NUXCOEAv2`/`CJBDXXN`
+w2-machinery; the coplanarity route is the same mathematical content with
+fewer cases), and the two `CUXVZOZ_p21` closers.  Declared after
+`jcyfmrp_flat_residues_coplanar` (the lunar fork consumes it), hence
+`TFITSKCv1_p27` itself is proved at this point of the file. -/
+private theorem tfitskcv1_ne_of_diag (s : ScsV39) (v : ℕ → V3) (hs : isScsV39 s)
+    (hBB : BBsV39 s v) {a b : ℕ} (hd : scsDiag s.k a b) : v a ≠ v b := by
+  have hk0 : 0 < s.k := by have := hs.2.1; omega
+  have hinj := VV_INJ_p35 s s.k v rfl hs hBB
+  intro he
+  have h2 : v (a % s.k) = v (b % s.k) := by
+    rw [← periodic_mod_p27 hBB.2.1 a, ← periodic_mod_p27 hBB.2.1 b]
+    exact he
+  exact hinj (a % s.k) (b % s.k) ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, hd.1⟩ h2
+
+/-- TFITSKCv1 proof-wave kit: at a generic-fan node `v l` whose interior
+angle is flat (`azim 0 (v l) (v (l+1)) (v (l + k - 1)) = pi`), the two
+neighbour vertices are not collinear with the origin and `v l` lies in the
+open affine wedge of them.  Shared by the `NUXCOEAv2_p28` / `IMJXPHRv2_p28`
+applications at `l := i+1` and `l := i+2` (HOL TFITSKC.hl:200-264 and
+:483-524 respectively, modulo the periodicity fold `v (l + k - 1) = v (l-1)`). -/
+private theorem tfitskcv1_geo (s : ScsV39) (v : ℕ → V3) (k : ℕ)
+    (hk : s.k = k) (hk3 : 3 < k) (hs : isScsV39 s) (hBB : BBsV39 s v)
+    (hg2 : generic_p2 (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3)))
+    (hlf2 : localFan_p2 (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3))
+      (Set.range fun i => (v i, v (i + 1))))
+    (l : ℕ)
+    (hπ : azim 0 (v l) (v (l + 1)) (v (l + (s.k - 1))) = Real.pi)
+    (hne1 : v (l + 1) ≠ v (l + (s.k - 1)))
+    (hne2 : v l ≠ v (l + 1)) (hne3 : v l ≠ v (l + (s.k - 1))) :
+    ¬ Collinear ℝ ({0, v (l + 1), v (l + (s.k - 1))} : Set V3) ∧
+      v l ∈ affGt {0} ({v (l + 1), v (l + (s.k - 1))} : Set V3) := by
+  have hlf2c := hlf2
+  obtain ⟨-, -, -, -, -, hfan2, -, -⟩ := hlf2c
+  have hlV : v l ∈ Set.range v := ⟨l, rfl⟩
+  have hl1 : v (l + 1) ∈ Set.range v := ⟨l + 1, rfl⟩
+  have hlm : v (l + (s.k - 1)) ∈ Set.range v := ⟨l + (s.k - 1), rfl⟩
+  have hnc1 : ¬ Collinear ℝ ({0, v (l + 1), v (l + (s.k - 1))} : Set V3) :=
+    PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg2 (v (l + 1)) hl1
+      (v (l + (s.k - 1))) hlm hne1.symm
+  have h1 : ¬ Collinear3 (0 : V3) (v l) (v (l + (s.k - 1))) := by
+    have h := PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg2 (v l) hlV
+      (v (l + (s.k - 1))) hlm hne3.symm
+    simpa only [Collinear3] using h
+  have h2 : ¬ Collinear3 (0 : V3) (v l) (v (l + 1)) := by
+    have h := PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg2 (v l) hlV
+      (v (l + 1)) hl1 hne2.symm
+    simpa only [Collinear3] using h
+  have hdis : affGe ({0} : Set V3) ({v l, v (l + 1)} : Set V3) ∩
+      affLt ({0} : Set V3) ({v (l + (s.k - 1))} : Set V3) = ∅ :=
+    hg2 (v l) (v (l + 1)) (v (l + (s.k - 1)))
+      (Set.mem_range.mpr ⟨l, rfl⟩) hlm
+  have hst : v l ∈ affGe ({0} : Set V3) ({v (l + (s.k - 1)), v (l + 1)} : Set V3) :=
+    GENERIC_LOCAL_FAN_STRAIGHT_AFF_GE (u := v (l + (s.k - 1))) (v := v l) (w := v (l + 1))
+      h1 h2 hπ hdis
+  have hne0a : (0 : V3) ≠ v l := fun h0 => hfan2.2.2.2.1 (h0 ▸ hlV)
+  have hne0b : (0 : V3) ≠ v (l + 1) := fun h0 => hfan2.2.2.2.1 (h0 ▸ hl1)
+  have hne0c : (0 : V3) ≠ v (l + (s.k - 1)) := fun h0 => hfan2.2.2.2.1 (h0 ▸ hlm)
+  have hst2 := AFF_GE_TO_AFF_GT2_GE1 (x := (0 : V3)) (u := v (l + (s.k - 1))) (v := v (l + 1))
+    (Ne.symm hne0c) (Ne.symm hne0b)
+  rw [hst2] at hst
+  refine ⟨hnc1, ?_⟩
+  rcases (Set.mem_union _ _ _).mp hst with h | h
+  · rcases (Set.mem_union _ _ _).mp h with h | h
+    · rwa [Set.pair_comm] at h
+    · exact absurd h (FAN_IMP_NOT_IN_AFF_GE hfan2
+        (by simp only [Set.insert_subset_iff, Set.singleton_subset_iff]; exact ⟨hlV, hlm⟩)
+        hne3)
+  · exact absurd h (FAN_IMP_NOT_IN_AFF_GE hfan2
+      (by simp only [Set.insert_subset_iff, Set.singleton_subset_iff]; exact ⟨hlV, hl1⟩)
+      hne2)
+
+/-- TFITSKCv1 proof-wave kit: the `CIZMRRH` lunar fork is impossible —
+`HKIRPEP_ALT_p37` makes every non-apex vertex flat, so all residues but the
+two apex residues are flat and `jcyfmrp_flat_residues_coplanar` +
+`FEKTYIY_p27` give the contradiction (the JCYFMRP-p27 lunar pattern). -/
+private theorem tfitskcv1_lunar_false (s : ScsV39) (v : ℕ → V3)
+    (hs : isScsV39 s) (hMMs : v ∈ MMsV39 s) (hk3 : 3 < s.k) (hBB : BBsV39 s v)
+    (hper : Periodic v s.k)
+    (hgen0 : Generic (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3)))
+    (hclf : ConvexLocalFan (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3))
+      (Set.range fun i => (v i, v (i + 1))))
+    (hid : ∀ j, interiorAngle1 0 (Set.range fun i => (v i, v (i + 1))) (v j)
+      = azim 0 (v j) (v (j + 1)) (v (j + (s.k - 1))))
+    (hlun3 : (∃ a b, lunar_p3 (a, b) (Set.range v)
+        (Set.range fun i => ({v i, v (i + 1)} : Set V3))) ∧
+      ¬(generic_p3 (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3)) ∨
+        circular_p3 (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3)))) :
+    False := by
+  obtain ⟨v', w', hl3⟩ := hlun3.1
+  have hlun : Lunar v' w' (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3)) := by
+    simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hl3
+  have hflatI := (HKIRPEP_ALT_p37 hclf hlun).1
+  obtain ⟨j, hjv'⟩ := hlun.2.1 (show v' ∈ ({v', w'} : Set V3) by simp)
+  obtain ⟨j2, hjw'⟩ := hlun.2.1 (show w' ∈ ({v', w'} : Set V3) by simp)
+  subst hjv'; subst hjw'
+  have hk0 : 0 < s.k := by omega
+  have hinj : ∀ x y, x < s.k → y < s.k → x ≠ y → v x ≠ v y :=
+    fun x y hx hy hxy => VV_INJ_p35 s s.k v rfl hs hBB x y ⟨hx, hy, hxy⟩
+  have hmodv : ∀ a b : ℕ, v a = v b → a % s.k = b % s.k := by
+    intro a b hab
+    by_contra hab'
+    exact hinj (a % s.k) (b % s.k) (Nat.mod_lt _ hk0) (Nat.mod_lt _ hk0) hab'
+      (by rw [← periodic_mod_p27 hper a, ← periodic_mod_p27 hper b]; exact hab)
+  have hne2 : j % s.k ≠ j2 % s.k := by
+    intro h
+    apply hlun.2.2.1
+    rw [periodic_mod_p27 hper j, periodic_mod_p27 hper j2, h]
+  have hflatt2 : ∀ t, t % s.k ≠ j % s.k → t % s.k ≠ j2 % s.k →
+      azim 0 (v t) (v (t + 1)) (v (t + (s.k - 1))) = Real.pi := by
+    intro t ht1 ht2
+    have hmem : v t ∈ Set.range v \ {v j, v j2} := by
+      refine ⟨⟨t, rfl⟩, ?_⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      exact ⟨fun hc => absurd (hmodv t j hc) ht1,
+        fun hc => absurd (hmodv t j2 hc) ht2⟩
+    have hI := hflatI _ hmem
+    rw [hid t] at hI
+    exact hI
+  have hcop2 := jcyfmrp_flat_residues_coplanar s v hs hMMs hk3 hBB hper hgen0
+    (j % s.k) (j2 % s.k) (Nat.mod_lt _ hk0) (Nat.mod_lt _ hk0) hne2 hflatt2
+  exact absurd hcop2 (FEKTYIY_p27 s v hs hMMs hk3)
+
+/-- TFITSKCv1 proof-wave kit: the `CUXVZOZ_p21` closer at `p1 := i + 1`
+with all the shared side conditions discharged from the hypotheses of
+`TFITSKCv1_p27` (HOL TFITSKC.hl:331-364, obligation discharge at :338-374).
+Only `hang` / `hcase` vary between the two consumers. -/
+private theorem tfitskcv1_cuxvzoz (s : ScsV39) (v : ℕ → V3) (i : ℕ)
+    (hmnl : main_nonlinear_terminal_v11) (FF : Set (V3 × V3))
+    (hFF : FF = Set.range fun j => (v j, v (j + 1)))
+    (hs : isScsV39 s) (hk3 : 3 < s.k) (hMMs : v ∈ MMsV39 s)
+    (hbasic : scsBasicV39 s) (hgen : scsGeneric v) (hBB : BBsV39 s v)
+    (ha12 : s.a (i + 1) (i + 2) = 2) (hb12 : s.b (i + 1) (i + 2) ≤ 2 * h0)
+    (hd01 : dist (v i) (v (i + 1)) = 2)
+    (hadiag : ∀ i2 j2, scsDiag s.k i2 j2 →
+      s.a i2 j2 ≤ cstab ∧ cstab < dist (v i2) (v j2) ∧ 4 * h0 < s.b i2 j2)
+    (hper : Periodic v s.k)
+    (hang : interiorAngle1 0 FF (v (i + 1)) < Real.pi)
+    (hcase : Real.pi / 2 < interiorAngle1 0 FF (v (i + 1)) ∨
+      interiorAngle1 0 FF (v (i + 2)) < Real.pi) :
+    dist (v (i + 1)) (v (i + 2)) = 2 := by
+  have hc3 : (3 : ℝ) ≤ cstab := by unfold cstab; norm_num
+  have hdg : scsDiag s.k i (i + 2) := SCS_DIAG_2_p27 s.k i hk3
+  have hdd := hadiag i (i + 2) hdg
+  have e0 : i + 1 + (s.k - 1) = i + s.k := by omega
+  have e1 : v (i + 1 + (s.k - 1)) = v i := by rw [e0]; exact hper i
+  have e2 : i + 1 + 1 = i + 2 := rfl
+  have hd : 3 ≤ dist (v (i + 1 + (s.k - 1))) (v (i + 1 + 1)) := by
+    rw [e1, e2]; linarith
+  have ha : ∀ i2 j2, scsDiag s.k i2 j2 →
+      psort s.k (i2, j2) ≠ psort s.k (i + 1 + (s.k - 1), i + 1 + 1) →
+      s.a i2 j2 < dist (v i2) (v j2) := fun i2 j2 hd2 _ =>
+    lt_of_le_of_lt (hadiag i2 j2 hd2).1 (hadiag i2 j2 hd2).2.1
+  have hb : ∀ i2 j2, scsDiag s.k i2 j2 → 4 * h0 < s.b i2 j2 := fun i2 j2 hd2 =>
+    (hadiag i2 j2 hd2).2.2
+  have h2 : (2 : ℝ) ≤ dist (v (i + 1 + (s.k - 1))) (v (i + 1)) := by
+    rw [e1, hd01]
+  have hdc : dist (v (i + 1 + (s.k - 1))) (v (i + 1)) ≤ cstab := by
+    rw [e1, hd01]; unfold cstab; norm_num
+  have hres := CUXVZOZ_p21 hmnl s FF s.k (i + 1) v hFF hs rfl hk3 hMMs hbasic hgen
+    hd ha hb hang hcase ha12 hb12 h2 hdc
+  rw [e2] at hres
+  exact hres
+
+/-- HOL `TFITSKCv1_concl` (TFITSKC.hl:127). -/
+theorem TFITSKCv1_p27 :
+    main_nonlinear_terminal_v11 →
+      ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
+        (∀ i', ¬ s.J (i + 2) i') →
+          s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) → 3 < s.k → isScsV39 s →
+            v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+              s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
+                dist (v i) (v (i + 1)) = 2 →
+                  dist (v i) (v (i + 1)) < s.b i (i + 1) →
+                    (∀ i j, scsDiag s.k i j →
+                      s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < s.b i j) →
+                      dist (v (i + 1)) (v (i + 2)) = 2 := by
+  intro hmnl s v i hJ2 hab23 hk3 hs hMMs hgen hbasic ha12 hb12 hd01 hdb0 hadiag
+  classical
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hMMs
+  have hta : taustarV39 s v < 0 := by
+    have h1 := hMMs
+    simp only [MMsV39, Set.mem_setOf_eq] at h1
+    have h2 := h1.1
+    simp only [BBprime2V39, Set.mem_setOf_eq] at h2
+    have h3 := h2.1
+    simp only [BBprimeV39, Set.mem_setOf_eq] at h3
+    exact h3.2.2
+  have hBBc := hBB
+  obtain ⟨-, hper, -, h4⟩ := hBBc
+  have hsc := hs
+  obtain ⟨hd0, hk1, hk2, hplo, hphi, hstr, -, hpa, hpam, hpbm, hpb, hpJ, hsym, hch,
+    hdiag0, hdiag, hb3, hbc, hJmod, hJsq, hcard⟩ := hsc
+  have hk0 : 0 < s.k := by omega
+  have h1k : 1 < s.k := by omega
+  set V : Set V3 := Set.range v with hVdef
+  set E : Set (Set V3) := Set.range (fun j => ({v j, v (j + 1)} : Set V3)) with hEdef
+  set FF : Set (V3 × V3) := Set.range (fun j => (v j, v (j + 1))) with hFFdef
+  have hk3' : ¬ s.k ≤ 3 := by omega
+  have hclf : ConvexLocalFan V E FF := by
+    rcases h4 with h3le | hcf
+    · exact absurd h3le hk3'
+    · simpa only [hVdef, hEdef, hFFdef] using hcf
+  have hlf : LocalFan V E FF := hclf.1
+  have hlf3 : localFan_p3 V E FF := localFanEquiv_p35.mp hlf
+  have hlf2 : localFan_p2 V E FF := localFan_p2.of_localFan_p3 hlf3
+  have hconv2 : convexLocalFan_p2 V E FF := w15_clf2 hclf
+  have hrho2 : ∀ j, rhoNode1_p2 FF (v j) = v (j + 1) := fun j =>
+    DETER_RHO_NODE hlf2 (v := v j) (w := v (j + 1))
+      (show (v j, v (j + 1)) ∈ FF from Set.mem_range.mpr ⟨j, rfl⟩)
+  have hrho : ∀ j, rhoNode1 FF (v j) = v (j + 1) := by
+    intro j
+    have hrp : rhoNode1_p2 FF (v j) = v (j + 1) := hrho2 j
+    simpa only [rhoNode1, rhoNode1_p2] using hrp
+  have hivs : ∀ j, ivsRhoNode1 FF (v j) = v (j + (s.k - 1)) := by
+    intro j
+    have hmem : (v (j + (s.k - 1)), v j) ∈ FF := by
+      refine Set.mem_range.mpr ⟨j + (s.k - 1), ?_⟩
+      have hper1 : v (j + (s.k - 1) + 1) = v j := by
+        rw [show j + (s.k - 1) + 1 = j + s.k by omega]
+        exact hper j
+      rw [hper1]
+    have hip : ivsRhoNode1_p2 FF (v j) = v (j + (s.k - 1)) :=
+      PRE_IVS_RHO_NODE1_DETE hlf2 hmem
+    simpa only [ivsRhoNode1, ivsRhoNode1_p2] using hip
+  have hid : ∀ j, interiorAngle1 0 FF (v j)
+      = azim 0 (v j) (v (j + 1)) (v (j + (s.k - 1))) := fun j => by
+    simp only [interiorAngle1, hrho j, hivs j]
+  have hgen0 : Generic (Set.range v)
+      (Set.range fun j => ({v j, v (j + 1)} : Set V3)) := hgen
+  have hinj : ∀ x y, x < s.k → y < s.k → x ≠ y → v x ≠ v y :=
+    fun x y hx hy hxy => VV_INJ_p35 s s.k v rfl hs hBB x y ⟨hx, hy, hxy⟩
+  have hmodv : ∀ a b : ℕ, v a = v b → a % s.k = b % s.k := by
+    intro a b hab
+    by_contra hab'
+    exact hinj (a % s.k) (b % s.k) (Nat.mod_lt _ hk0) (Nat.mod_lt _ hk0) hab'
+      (by rw [← periodic_mod_p27 hper a, ← periodic_mod_p27 hper b]; exact hab)
+  have hcirc : ¬ Circular V E := by
+    have hq := JKQEWGV2_p23 s v hs hk3 hBB hta
+    simpa only [hVdef, hEdef, Set.image_univ] using hq
+  have hai : s.a i (i + 1) = 2 := DIST_EQ_2_IMP_A_EQ_2_p27 s v i hs hBB hd01
+  have hJ1 : ∀ x, ¬ s.J (i + 1) x := J_EMPY_CASES_A_EQ_2_V1_p27 s i hai ha12 hs
+  have h2le : (2 : ℝ) ≤ dist (v (i + 1)) (v (i + 2)) :=
+    le_trans (SCS_A_2_p27 s hs (i + 1)) ((hBB.2.2.1 (i + 1) (i + 2)).1)
+  by_cases hd2case : dist (v (i + 1)) (v (i + 2)) = 2
+  · exact hd2case
+  · have h12 : 2 < dist (v (i + 1)) (v (i + 2)) :=
+      lt_of_le_of_ne h2le (Ne.symm hd2case)
+    have hbann : v (i + 2) ∈ ballAnnulus := WL_IN_BALL_ANNULUS_p28 s v (i + 2) hBB
+    rw [ballAnnulus, Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_eq_norm, sub_zero] at hbann
+    obtain ⟨hup, hlo⟩ := hbann
+    have hnl : 2 ≤ ‖v (i + 2)‖ := le_of_not_gt hlo
+    have haz1 : azim 0 (v (i + 1)) (v (i + 2)) (v i) ≤ Real.pi := by
+      have h := IN_V_IMP_AZIM_LESS_PI hconv2 (v (i + 1)) (Set.mem_range.mpr ⟨i + 1, rfl⟩)
+        (v i) (Set.mem_range.mpr ⟨i, rfl⟩)
+      rwa [hrho2 (i + 1), show i + 1 + 1 = i + 2 from rfl] at h
+    rcases le_iff_eq_or_lt.mp haz1 with heq1 | hlt1
+    · -- Branch `azim (w1) = pi`: the `NUXCOEAv2_p28` route (HOL :269-321).
+      rcases CIZMRRH hlf3 with hgen3 | hcirc3 | hlun3
+      · -- generic fan: `NUXCOEAv2` at `l := i+1`, `j := i`.
+        have hg2 : generic_p2 V E := hgen3.1
+        have hlunar1 : ∀ (V2 : Set V3) (E2 : Set (Set V3)) (v1 : V3),
+            V2 = Set.range v →
+              E2 = Set.range (fun j => ({v j, v (j + 1)} : Set V3)) →
+                ¬ Lunar v1 (v (i + 1)) V2 E2 := by
+          intro V2 E2 v1 hV2 hE2 hl
+          apply hgen3.2
+          refine Or.inr ⟨v1, v (i + 1), ?_⟩
+          have hl' : Lunar v1 (v (i + 1)) V E := by rwa [hV2, hE2] at hl
+          simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hl'
+        have hneA : v (i + 2) ≠ v (i + 1 + (s.k - 1)) := by
+          rw [show i + 1 + (s.k - 1) = i + s.k from by omega, hper i]
+          exact (tfitskcv1_ne_of_diag s v hs hBB (SCS_DIAG_2_p27 s.k i hk3)).symm
+        have hneB : v (i + 1) ≠ v (i + 2) := by
+          intro he
+          have hmod : (i + 1) % s.k = (i + 2) % s.k := hmodv (i + 1) (i + 2) he
+          exact succ_mod_ne_p27 h1k hmod
+        have hneC : v (i + 1) ≠ v (i + 1 + (s.k - 1)) := by
+          rw [show i + 1 + (s.k - 1) = i + s.k from by omega, hper i]
+          intro he
+          have hmod : (i + 1) % s.k = i % s.k := hmodv (i + 1) i he
+          exact succ_mod_ne_p27 h1k hmod.symm
+        have haz1f : azim 0 (v (i + 1)) (v (i + 1 + 1)) (v (i + 1 + (s.k - 1)))
+            = Real.pi := by
+          rw [show i + 1 + (s.k - 1) = i + s.k from by omega, hper i,
+            show i + 1 + 1 = i + 2 from rfl]
+          exact heq1
+        obtain ⟨hnc1, haff1⟩ :=
+          tfitskcv1_geo s v s.k rfl hk3 hs hBB hg2 hlf2 (i + 1) haz1f hneA hneB hneC
+        have haj1 : s.a i (i + 1) = dist (v i) (v (i + 1)) := by
+          rw [hd01]
+          exact hai
+        have hP1 := NUXCOEAv2_p28 s s.k v (i + 1) i rfl hk3 hs hMMs haz1f hnc1 haff1
+          (Or.inr rfl) haj1 hdb0
+          (fun m hd => (hadiag (i + 1) m hd).2.2)
+          (fun m hd => SCS_DIAG_A_LE_DIST_p27 s v hadiag (i + 1) m hd)
+          hJ1 hlunar1
+        have hd2' : dist (v (i + 1)) (v (i + 2)) = 2 := by
+          have h1 := hP1.1
+          rw [show i + 1 + 1 = i + 2 from rfl] at h1
+          rw [← h1]
+          exact ha12
+        exact hd2'
+      · exact absurd (by simpa only [circular_p3, Circular] using hcirc3.1) hcirc
+      · exact (tfitskcv1_lunar_false s v hs hMMs hk3 hBB hper hgen0 hclf hid hlun3).elim
+    · -- Branch `azim (w1) < pi`.
+      have hang1 : interiorAngle1 0 FF (v (i + 1)) < Real.pi := by
+        rw [hid (i + 1), show i + 1 + 1 = i + 2 from rfl,
+          show i + 1 + (s.k - 1) = i + s.k from by omega, hper i]
+        exact hlt1
+      rcases eq_or_lt_of_le hnl with heqn | hgtn
+      · -- `norm (v (i+2)) = 2`: `SYNQIWN` feeds `CUXVZOZ`'s left case.
+        have h2h0 : (2 : ℝ) ≤ 2 * h0 := by unfold h0; norm_num
+        have hsyn : Real.pi / 2 < azim 0 (v (i + 1)) (v (i + 2)) (v i) := by
+          have hsp := SYNQIWN_p22 hmnl s v (i + 1) s.k hs hBB rfl hk3
+            (Or.inl ⟨by rw [show i + 1 + 1 = i + 2 from rfl]; exact heqn.symm,
+              by rw [show i + 1 + s.k - 1 = i + s.k from by omega, hper i, dist_comm,
+                hd01]⟩)
+            (le_trans (hBB.2.2.1 (i + 1) (i + 2)).2 hb12)
+            (by
+              rw [show i + 1 + s.k - 1 = i + s.k from by omega, hper i, dist_comm, hd01]
+              exact h2h0)
+            (by
+              rw [show i + 1 + 1 = i + 2 from rfl,
+                show i + 1 + s.k - 1 = i + s.k from by omega, hper i, dist_comm]
+              exact le_of_lt (hadiag i (i + 2) (SCS_DIAG_2_p27 s.k i hk3)).2.1)
+          rwa [show i + 1 + 1 = i + 2 from rfl,
+            show i + 1 + s.k - 1 = i + s.k from by omega, hper i] at hsp
+        have hsynw : Real.pi / 2 < interiorAngle1 0 FF (v (i + 1)) := by
+          rw [hid (i + 1), show i + 1 + 1 = i + 2 from rfl,
+            show i + 1 + (s.k - 1) = i + s.k from by omega, hper i]
+          exact hsyn
+        exact tfitskcv1_cuxvzoz s v i hmnl FF hFFdef hs hk3 hMMs hbasic hgen hBB
+          ha12 hb12 hd01 hadiag hper hang1 (Or.inl hsynw)
+      · -- `2 < norm (v (i+2))`: split on `azim (w2)`.
+        have hgtn' : ‖v (i + 2)‖ ≠ 2 := ne_of_gt hgtn
+        have haz2 : azim 0 (v (i + 2)) (v (i + 3)) (v (i + 1)) ≤ Real.pi := by
+          have h := IN_V_IMP_AZIM_LESS_PI hconv2 (v (i + 2)) (Set.mem_range.mpr ⟨i + 2, rfl⟩)
+            (v (i + 1)) (Set.mem_range.mpr ⟨i + 1, rfl⟩)
+          rwa [hrho2 (i + 2), show i + 2 + 1 = i + 3 from rfl] at h
+        rcases le_iff_eq_or_lt.mp haz2 with heq2 | hlt2
+        · -- Branch `azim (w2) = pi`: `NUXCOEAv2_p28` / `IMJXPHRv2_p28` at
+          -- `l := i+2` (HOL :527-546, VASYYAU-style pin dichotomy).
+          rcases CIZMRRH hlf3 with hgen3 | hcirc3 | hlun3
+          · have hg2 : generic_p2 V E := hgen3.1
+            have hlunar2 : ∀ (V2 : Set V3) (E2 : Set (Set V3)) (v1 : V3),
+                V2 = Set.range v →
+                  E2 = Set.range (fun j => ({v j, v (j + 1)} : Set V3)) →
+                    ¬ Lunar v1 (v (i + 2)) V2 E2 := by
+              intro V2 E2 v1 hV2 hE2 hl
+              apply hgen3.2
+              refine Or.inr ⟨v1, v (i + 2), ?_⟩
+              have hl' : Lunar v1 (v (i + 2)) V E := by rwa [hV2, hE2] at hl
+              simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hl'
+            have hneA2 : v (i + 3) ≠ v (i + 2 + (s.k - 1)) := by
+              rw [show i + 2 + (s.k - 1) = i + 1 + s.k from by omega, hper (i + 1)]
+              exact (tfitskcv1_ne_of_diag s v hs hBB (SCS_DIAG_2_p27 s.k (i + 1) hk3)).symm
+            have hneB2 : v (i + 2) ≠ v (i + 3) := by
+              intro he
+              have hmod : (i + 2) % s.k = (i + 3) % s.k := hmodv (i + 2) (i + 3) he
+              exact succ_mod_ne_p27 h1k hmod
+            have hneC2 : v (i + 2) ≠ v (i + 2 + (s.k - 1)) := by
+              rw [show i + 2 + (s.k - 1) = i + 1 + s.k from by omega, hper (i + 1)]
+              intro he
+              have hmod : (i + 2) % s.k = (i + 1) % s.k := hmodv (i + 2) (i + 1) he
+              exact (succ_mod_ne_p27 h1k (i := i + 1)).symm hmod
+            have haz2f : azim 0 (v (i + 2)) (v (i + 2 + 1)) (v (i + 2 + (s.k - 1)))
+                = Real.pi := by
+              rw [show i + 2 + (s.k - 1) = i + 1 + s.k from by omega, hper (i + 1),
+                show i + 2 + 1 = i + 3 from rfl]
+              exact heq2
+            obtain ⟨hnc2, haff2⟩ :=
+              tfitskcv1_geo s v s.k rfl hk3 hs hBB hg2 hlf2 (i + 2) haz2f hneA2 hneB2 hneC2
+            have hfold : s.a (i + 2) (i + 1 + s.k) = s.a (i + 2) (i + 1) := by
+              rw [periodic2_mod_p27 hpa (i + 2) (i + 1 + s.k),
+                periodic2_mod_p27 hpa (i + 2) (i + 1), Nat.add_mod_right]
+            have h23le : s.a (i + 2) (i + 3) ≤ dist (v (i + 2)) (v (i + 3)) :=
+              (hBB.2.2.1 (i + 2) (i + 3)).1
+            rcases eq_or_lt_of_le h23le with ha23 | ha23
+            · -- the `(i+2, i+3)` edge is pinned: `NUXCOEAv2` at `j := i+3`.
+              have haj2 : s.a (i + 3) (i + 2) = dist (v (i + 3)) (v (i + 2)) := by
+                rw [(hsym (i + 3) (i + 2)).1, dist_comm]
+                exact ha23
+              have hbj2 : dist (v (i + 3)) (v (i + 2)) < s.b (i + 3) (i + 2) := by
+                rw [← haj2, (hsym (i + 3) (i + 2)).1, ← (hsym (i + 2) (i + 3)).2.2.2.1]
+                exact hab23
+              have hP2 := NUXCOEAv2_p28 s s.k v (i + 2) (i + 3) rfl hk3 hs hMMs haz2f
+                hnc2 haff2 (Or.inl rfl) haj2 hbj2
+                (fun m hd => (hadiag (i + 2) m hd).2.2)
+                (fun m hd => SCS_DIAG_A_LE_DIST_p27 s v hadiag (i + 2) m hd)
+                hJ2 hlunar2
+              have hQ2 := hP2.2
+              rw [show i + 2 + (s.k - 1) = i + 1 + s.k from by omega, hper (i + 1)] at hQ2
+              rw [hfold, (hsym (i + 2) (i + 1)).1] at hQ2
+              have hdq : dist (v (i + 2)) (v (i + 1)) = 2 := by
+                rw [← hQ2]
+                exact ha12
+              rw [← hdq]
+              exact dist_comm _ _
+            · -- the `(i+2, i+3)` edge is slack: `IMJXPHRv2` (`norm != 2`).
+              have hP3 := IMJXPHRv2_p28 s s.k v (i + 2) rfl hs hMMs haz2f hk3 hnc2 haff2
+                (fun m hd => (hadiag (i + 2) m hd).2.2)
+                hgtn'
+                (fun m hd => SCS_DIAG_A_LE_DIST_p27 s v hadiag (i + 2) m hd)
+                hJ2 hlunar2
+              have hQ3 := hP3.2
+              rw [show i + 2 + (s.k - 1) = i + 1 + s.k from by omega, hper (i + 1)] at hQ3
+              rw [hfold, (hsym (i + 2) (i + 1)).1] at hQ3
+              have hdq3 : dist (v (i + 2)) (v (i + 1)) = 2 := by
+                rw [← hQ3]
+                exact ha12
+              rw [← hdq3]
+              exact dist_comm _ _
+          · exact absurd (by simpa only [circular_p3, Circular] using hcirc3.1) hcirc
+          · exact (tfitskcv1_lunar_false s v hs hMMs hk3 hBB hper hgen0 hclf hid hlun3).elim
+        · -- Branch `azim (w2) < pi`: `CUXVZOZ`'s right case (HOL :550-564 via
+          -- the mirrored `CJBDXXN`, which `tfitskcv1_cuxvzoz` subsumes).
+          have hang2 : interiorAngle1 0 FF (v (i + 2)) < Real.pi := by
+            rw [hid (i + 2), show i + 2 + 1 = i + 3 from rfl,
+              show i + 2 + (s.k - 1) = i + 1 + s.k from by omega, hper (i + 1)]
+            exact hlt2
+          exact tfitskcv1_cuxvzoz s v i hmnl FF hFFdef hs hk3 hMMs hbasic hgen hBB
+            ha12 hb12 hd01 hadiag hper hang1 (Or.inr hang2)
+  -- DISCHARGES (2026-11-12, lane tfitskcv1-w1): HOL TFITSKC.hl:144-631 via
+  -- the dagcut/g482-unlocked closers — `NUXCOEAv2_p28` (flat node `i+1`),
+  -- `CUXVZOZ_p21` (azim `< pi` at `i+1`, two hcase feeds), and
+  -- `IMJXPHRv2_p28`/`NUXCOEAv2_p28` at the flat node `i+2` under the
+  -- `norm (v (i+2)) = 2 / > 2` split; the `CIZMRRH` circular fork is killed
+  -- by `JKQEWGV2_p23` and the lunar fork by the JCYFMRP coplanarity engine
+  -- (`HKIRPEP_ALT_p37` + `jcyfmrp_flat_residues_coplanar` + `FEKTYIY_p27`).
+  -- Zero new sorries; axioms face = standard three.
 
 /-- HOL `JCYFMRP_concl` (JCYFMRP.hl:240). -/
 theorem JCYFMRP_p27 :
