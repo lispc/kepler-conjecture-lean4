@@ -10,17 +10,19 @@ obtuse-monotonicity kit, and the terminal chain `general_482_deformation`,
 `CUXVZOZ`, `CJBDXXN` (all under the `main_nonlinear_terminal_v11` seal).
 
 FILE MAP (all 62 HOL theorems, source order; `_p21` suffix throughout)
-  Section A (simplex completion kit): `PQCSXWG1_SYM_p21` (sorry), `homog_2x2_p21`
+  Section A (simplex completion kit): `PQCSXWG1_SYM_p21` (proved),
+    `homog_2x2_p21`
     (proved), `simplex_unique_p21` (proved), `re_eqvl_pos_pos_p21` (proved),
     `mk_simplex_uniq_p21` (proved).
   Section B (ε/continuity small-print): `continuous_nbd_pos_p21`,
     `epsilon_pair_p21`, `epsilon_triple_p21`, `epsilon_quad_p21` (all proved).
   Section C (deformation existence): `deform_simplex_decrease_edge23_p21`
-    (sorry giant), `deform_simplex_edge_exists_p21` (from the decrease thm),
-    `deform_simplex_684_pent_p21` (sorry giant), `deform_684_pent_exists_p21`,
-    `mk_planar_unique_p21` (sorry), `mk_planar2_continuous_p21` (sorry),
-    `collinear_expand_p21` (sorry), `deform_planar_p21` (sorry giant),
-    `deform_planar_exists_p21`, `deform_planar_second_version_p21` (sorry
+    (proved), `deform_simplex_edge_exists_p21` (from the decrease thm),
+    `deform_simplex_684_pent_p21` (proved), `deform_684_pent_exists_p21`,
+    `mk_planar_unique_p21` (proved), `mk_planar2_continuous_p21` (proved),
+    `collinear_expand_p21` (proved), `deform_planar_p21` (proved
+    2026-11-13, lane n2def-w1), `deform_planar_exists_p21` (from it),
+    `deform_planar_second_version_p21` (sorry
     giant), `deform_planar_exists_second_version_p21`,
     `deformation_restrict_p21` (proved).
   Section D (periodic/mod kit): `SKOLEM_PERIODIC_p21`,
@@ -1768,6 +1770,69 @@ private noncomputable def planar2F_p21 (v0 v1 v2 v3 : V3) (g12 g02 g23 : ℝ →
         ((dist v1 v2 + g12 t) ^ 2) ((dist v0 v2 + g02 t) ^ 2) (-1)
     else w
 
+/-- `cross3 0 v = 0` (component computation). -/
+private theorem w2b_cross3_zero_left (v : V3) : cross3 0 v = 0 := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct]
+
+/-- `cross3` is skew-symmetric (component computation). -/
+private theorem w2b_cross3_neg (x y : V3) : cross3 x y = -cross3 y x := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct] <;> ring
+
+/-- `cross3` is linear in the second argument (component computation). -/
+private theorem w2b_cross3_smul_right (a : V3) (t : ℝ) (b : V3) :
+    cross3 a (t • b) = t • cross3 a b := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct, WithLp.ofLp_smul]
+
+/-- `cross3` is additive in the second argument (component computation). -/
+private theorem w2b_cross3_add_right (a b c : V3) :
+    cross3 a (b + c) = cross3 a b + cross3 a c := by
+  ext i
+  fin_cases i <;> simp [cross3, crossProduct, WithLp.ofLp_add] <;> ring
+
+/-- Helper: the Gram determinant `ups_x` of an origin-apex pair is positive
+off collinearity (HOL `Collect_geom2.NOT_COL_EQ_UPS_X_POS` consumption
+shape; twin of the import-lane-private `LocalAuto17.lean:184` /
+`LocalAuto38.lean:1378` kit, re-mirrored here). -/
+private theorem w2b_upsX_pos {u v : V3} (hnc : ¬ Collinear ℝ ({0, u, v} : Set V3))
+    (x1 x2 x6 : ℝ) (hx1 : ‖u‖ ^ 2 = x1) (hx2 : ‖v‖ ^ 2 = x2)
+    (hx6 : ‖u - v‖ ^ 2 = x6) : 0 < upsX x1 x2 x6 := by
+  have hne : cross3 u v ≠ 0 := by
+    have hLI := g482_pair_li_fin (0 : V3) u v hnc
+    have hcr := (crossProduct_ne_zero_iff_linearIndependent (F := ℝ)
+      (v := ((u - (0 : V3) : V3) : Fin 3 → ℝ))
+      (w := ((v - (0 : V3) : V3) : Fin 3 → ℝ))).mpr hLI
+    intro hz
+    apply hcr
+    have hz' := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hz
+    simpa [cross3] using hz'
+  have hsq : ‖cross3 u v‖ ^ 2 =
+      (u ⬝ᵥ u) * (v ⬝ᵥ v) - (u ⬝ᵥ v) * (v ⬝ᵥ u) := by
+    rw [show ‖cross3 u v‖ ^ 2 = inner ℝ (cross3 u v) (cross3 u v) from
+      (real_inner_self_eq_norm_sq _).symm, inner_eq_dot,
+      show ((cross3 u v : V3) : Fin 3 → ℝ) =
+        crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ) from coe_toLp _,
+      cross_dot_cross]
+  have h6 : ‖u - v‖ ^ 2 = ‖u‖ ^ 2 - 2 * (u ⬝ᵥ v) + ‖v‖ ^ 2 := by
+    rw [norm_sub_sq_real, inner_eq_dot]
+  have hd6 : x6 = x1 + x2 - 2 * (u ⬝ᵥ v) := by
+    rw [← hx6, h6, hx1, hx2]; ring
+  have hups : upsX x1 x2 x6 =
+      4 * ((u ⬝ᵥ u) * (v ⬝ᵥ v) - (u ⬝ᵥ v) * (v ⬝ᵥ u)) := by
+    rw [hd6]
+    have h11 : u ⬝ᵥ u = x1 := (norm_sq_eq_dot u).symm.trans hx1
+    have h22 : v ⬝ᵥ v = x2 := (norm_sq_eq_dot v).symm.trans hx2
+    unfold upsX
+    rw [h11, h22, dotProduct_comm (v : Fin 3 → ℝ) (u : Fin 3 → ℝ)]
+    ring
+  have hpos : 0 < (u ⬝ᵥ u) * (v ⬝ᵥ v) - (u ⬝ᵥ v) * (v ⬝ᵥ u) := by
+    have h3 : 0 < ‖cross3 u v‖ ^ 2 := pow_pos (norm_pos_iff.mpr hne) 2
+    rw [hsq] at h3
+    exact h3
+  rw [hups]; linarith
+
 /-- HOL `deform_planar` (CUXVZOZ.hl:1030): the planar two-vertex
 deformation (edge-12 version). -/
 theorem deform_planar_p21 (V : Set V3) (g01 g02 g23 : ℝ → ℝ) (v0 v1 v2 v3 : V3) (e : ℝ)
@@ -1788,11 +1853,486 @@ theorem deform_planar_p21 (V : Set V3) (g01 g02 g23 : ℝ → ℝ) (v0 v1 v2 v3 
         dist (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v2 t) v0 = dist v2 v0 + g02 t ∧
         dist (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v2 t) v3 = dist v2 v3 + g23 t ∧
         ‖planarF_p21 v0 v1 v2 v3 g01 g02 g23 v2 t‖ = ‖v2‖) := by
-  -- DISCHARGES: HOL `deform_planar` (340 lines): the 684 decrease stacked
-  -- with the `mk_planar2` coplanar decrease (skip4 slot), continuity and
-  -- non-coplanarity management. NEEDS: same kit as the edge23 giant plus
-  -- `mk_planar_unique`.
-  sorry
+  obtain ⟨h0v0, h0v2, h0v3, hv0v2, hv0v3, hv2v3⟩ :=
+    w2b_ncop_ne_all (x := (0 : V3)) (y := v0) (z := v2) (w := v3) h1
+  -- `v1` is off the origin and off `v0` (else the cross-product dot vanishes)
+  have h1v1 : v1 ≠ 0 := by
+    intro h
+    rw [h, w2b_cross3_zero_left] at hc2
+    simp at hc2
+  have h1v0 : v1 ≠ v0 := by
+    intro h
+    rw [h, g482_cross_self] at hc2
+    simp at hc2
+  -- the two `let`-bound maps unfold definitionally
+  have hval1 : ∀ (w : V3) (t : ℝ), planarF1_p21 v0 v2 v3 g02 g23 w t =
+      if w = v2 then mkSimplex1 0 v3 v0 (‖v3‖ ^ 2) (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+        ((dist v0 v2 + g02 t) ^ 2) ((dist v3 v2 + g23 t) ^ 2) (dist v0 v3 ^ 2)
+      else w := fun w t => rfl
+  have hval : ∀ (w : V3) (t : ℝ), planarF_p21 v0 v1 v2 v3 g01 g02 g23 w t =
+      if w = v2 then planarF1_p21 v0 v2 v3 g02 g23 v2 t
+      else if w = v1 then
+        mkPlanar2 0 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+          (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+          ((dist v0 v1 + g01 t) ^ 2) ((dist v0 v2 + g02 t) ^ 2) (-1)
+      else w := fun w t => rfl
+  -- non-collinearity of the two stage triangles
+  have hncol02 : ¬ Collinear ℝ ({0, v0, v2} : Set V3) := fun hcol =>
+    h1 (w2b_collinear_coplanar (z := (0 : V3)) (w := v0) (w1 := v2) (w2 := v3)
+      hcol)
+  have hncol01 : ¬ Collinear ℝ ({0, v0, v1} : Set V3) := by
+    intro hcol
+    have hcol' : Collinear3 (0 : V3) v1 v0 := by
+      show Collinear ℝ ({0, v1, v0} : Set V3)
+      rwa [show ({0, v1, v0} : Set V3) = ({0, v0, v1} : Set V3) from by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := v1) (w1 := v0)
+      h1v1).mp hcol'
+    have hz : cross3 v1 v0 = 0 := by
+      have hc' : v0 = c • v1 := by simpa using hc
+      rw [hc', w2b_cross3_smul_right, g482_cross_self, smul_zero]
+    rw [hz] at hc2
+    simp at hc2
+  -- set permutations of the non-coplanarity hypothesis for stage 1
+  have hnc_s1 : ¬ Coplanar ({0, v3, v0, v2} : Set V3) := by
+    intro hc
+    apply h1
+    rwa [show ({0, v3, v0, v2} : Set V3) = ({0, v0, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hnc_d1 : ¬ Coplanar ({0, v0, v3, v2} : Set V3) := by
+    intro hc
+    apply h1
+    rwa [show ({0, v0, v3, v2} : Set V3) = ({0, v0, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+  have hncol023 : ¬ Collinear ℝ ({0, v0, v3} : Set V3) := by
+    intro hcol
+    apply h1
+    have hcop := w2b_collinear_coplanar (z := (0 : V3)) (w := v0) (w1 := v3)
+      (w2 := v2) hcol
+    rwa [show ({0, v0, v3, v2} : Set V3) = ({0, v0, v2, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hcop
+  have hncol023' : ¬ Collinear ℝ ({0, v3, v0} : Set V3) := by
+    have h := hncol023
+    rwa [show ({0, v0, v3} : Set V3) = ({0, v3, v0} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  -- `g`s are continuous at `0`
+  have hg23_0 : ContinuousAt g23 0 := h23.continuousAt (Ioo_mem_nhds (by linarith) he)
+  have hg01_0 : ContinuousAt g01 0 := h01.continuousAt (Ioo_mem_nhds (by linarith) he)
+  have hg02_0 : ContinuousAt g02 0 := h02.continuousAt (Ioo_mem_nhds (by linarith) he)
+  -- stage-1 `deltaX` positivity at `0` and on a neighbourhood
+  have hd0_1 : 0 < deltaX (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+      ((dist v3 v2 + g23 0) ^ 2) ((dist v0 v2 + g02 0) ^ 2) (dist v0 v3 ^ 2) := by
+    rw [h23z, h02z, add_zero, add_zero]
+    have hraw := w2b_deltaX_pos_of_ncop (v0 := v3) (v1 := v2) (v2 := v0) hnc_d1
+    rw [show ‖v0‖ ^ 2 = dist v0 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v3‖ ^ 2 = dist v3 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show ‖v2‖ ^ 2 = dist v2 0 ^ 2 from by rw [dist_eq_norm, sub_zero],
+        show dist v0 v3 ^ 2 = dist v3 v0 ^ 2 from by rw [dist_comm v0 v3]]
+    exact hraw
+  have hdcont1 : ContinuousAt (fun t => deltaX (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+      ((dist v3 v2 + g23 t) ^ 2) ((dist v0 v2 + g02 t) ^ 2) (dist v0 v3 ^ 2)) 0 := by
+    have h4 : ContinuousAt (fun t : ℝ => (dist v3 v2 + g23 t) ^ 2) 0 :=
+      (continuousAt_const.add hg23_0).pow 2
+    have h5 : ContinuousAt (fun t : ℝ => (dist v0 v2 + g02 t) ^ 2) 0 :=
+      (continuousAt_const.add hg02_0).pow 2
+    simp only [deltaX]
+    fun_prop
+  obtain ⟨e1, he1, hδ1⟩ := continuous_nbd_pos_p21 hdcont1 hd0_1
+  -- positivity of the three moving edge lengths near `0`
+  have hposa0 : 0 < dist v0 v1 + g01 0 := by
+    rw [h01z, add_zero]; exact dist_pos.mpr (fun h => h1v0 h.symm)
+  have hposb0 : 0 < dist v0 v2 + g02 0 := by
+    rw [h02z, add_zero]; exact dist_pos.mpr hv0v2
+  have hposc0 : 0 < dist v3 v2 + g23 0 := by
+    rw [h23z, add_zero]; exact dist_pos.mpr (fun h => hv2v3 h.symm)
+  obtain ⟨ea, hea, hpa⟩ :=
+    continuous_nbd_pos_p21 (continuousAt_const.add hg01_0) hposa0
+  obtain ⟨eb, heb, hpb⟩ :=
+    continuous_nbd_pos_p21 (continuousAt_const.add hg02_0) hposb0
+  obtain ⟨ec, hec, hpc⟩ :=
+    continuous_nbd_pos_p21 (continuousAt_const.add hg23_0) hposc0
+  obtain ⟨e2, he2, h2a, h2b, h2c⟩ := epsilon_triple_p21 ea eb ec hea heb hec
+  -- `f1` fixes `v2` at `t = 0`
+  have hf1_0 : planarF1_p21 v0 v2 v3 g02 g23 v2 0 = v2 := by
+    rw [hval1 v2 0, if_pos rfl, h02z, h23z, add_zero, add_zero]
+    rw [show ‖v3‖ ^ 2 = dist 0 v3 ^ 2 from by
+          rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v0‖ ^ 2 = dist 0 v0 ^ 2 from by
+          rw [dist_eq_norm, zero_sub, norm_neg],
+        show ‖v2‖ ^ 2 = dist 0 v2 ^ 2 from by
+          rw [dist_eq_norm, zero_sub, norm_neg],
+        show dist v0 v3 ^ 2 = dist v3 v0 ^ 2 from by rw [dist_comm v0 v3]]
+    exact mk_simplex_uniq_p21 0 v3 v0 v2 hnc_s1 (by
+      rw [sub_zero, sub_zero, sub_zero, w2b_triple_cyclic v3 v0 v2]
+      exact hc1)
+  -- working radius for stage 1: `e` (g continuity) ∧ `e1` (`deltaX`) ∧ `e2` (edge signs)
+  set E : ℝ := min e (min e1 e2) with hEdef
+  have hEpos : 0 < E := lt_min he (lt_min he1 he2)
+  have hEe : E ≤ e := min_le_left e (min e1 e2)
+  have hEe1 : E ≤ e1 := le_trans (min_le_right e (min e1 e2)) (min_le_left e1 e2)
+  have hEe2 : E ≤ e2 := le_trans (min_le_right e (min e1 e2)) (min_le_right e1 e2)
+  -- continuity of the stage-1 moving vertex on `Ioo (-E) E`
+  have hcont1_at : ∀ r ∈ Ioo (-E) E,
+      ContinuousAt (fun t => planarF1_p21 v0 v2 v3 g02 g23 v2 t) r := by
+    intro r hr
+    obtain ⟨hr1, hr2⟩ := hr
+    have habs : |r| < e1 := by
+      rw [abs_lt]; constructor <;> linarith
+    have hre : r ∈ Ioo (-e) e := ⟨by linarith, by linarith⟩
+    have hgr2 : ContinuousAt g02 r := h02.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hgr3 : ContinuousAt g23 r := h23.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hff : (fun t => planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+        = fun t => mkSimplex1_p11 0 v3 v0 (‖v3‖ ^ 2) (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+            ((dist v0 v2 + g02 t) ^ 2) ((dist v3 v2 + g23 t) ^ 2)
+            (dist v0 v3 ^ 2) := by
+      funext t
+      rw [hval1 v2 t, if_pos rfl]
+      rfl
+    rw [hff]
+    refine PQCSXWG2_ATREAL_p11 (v0 := fun _ => (0 : V3)) (v1 := fun _ => v3)
+        (v2 := fun _ => v0)
+        (x1 := fun _ => ‖v3‖ ^ 2) (x2 := fun _ => ‖v0‖ ^ 2)
+        (x3 := fun _ => ‖v2‖ ^ 2) (x4 := fun t => (dist v0 v2 + g02 t) ^ 2)
+        (x5 := fun t => (dist v3 v2 + g23 t) ^ 2) (x6 := fun _ => dist v0 v3 ^ 2)
+        (a := r) hncol023' ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    · show ‖v3‖ ^ 2 = dist v3 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+      rw [dist_eq_norm, sub_zero]
+    · show dist v0 v3 ^ 2 = dist v3 v0 ^ 2
+      rw [dist_comm v0 v3]
+    · -- `deltaX` at `r` (positional `x4`/`x5` order)
+      rw [w2b_deltaX_sym (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+        ((dist v3 v2 + g23 r) ^ 2) ((dist v0 v2 + g02 r) ^ 2) (dist v0 v3 ^ 2)]
+      exact hδ1 r (by simpa using habs)
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact continuousAt_const
+    · exact (continuousAt_const.add hgr2).pow 2
+    · exact (continuousAt_const.add hgr3).pow 2
+    · exact continuousAt_const
+  -- stage-1 pointwise facts (on `|t| < E`)
+  have hstage1 : ∀ t, |t| < E →
+      ‖planarF1_p21 v0 v2 v3 g02 g23 v2 t‖ = ‖v2‖ ∧
+      dist (planarF1_p21 v0 v2 v3 g02 g23 v2 t) v0 = dist v2 v0 + g02 t ∧
+      dist (planarF1_p21 v0 v2 v3 g02 g23 v2 t) v3 = dist v2 v3 + g23 t := by
+    intro t htE
+    have ht1 : |t| < e1 := lt_of_lt_of_le htE hEe1
+    have ht2 : |t| < e2 := lt_of_lt_of_le htE hEe2
+    have hposa : 0 < dist v0 v2 + g02 t := hpb t (by simpa using h2b t ht2)
+    have hposc : 0 < dist v3 v2 + g23 t := hpc t (by simpa using h2c t ht2)
+    have hΔ : 0 < deltaX (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2)
+        ((dist v3 v2 + g23 t) ^ 2) ((dist v0 v2 + g02 t) ^ 2) (dist v0 v3 ^ 2) :=
+      hδ1 t (by simpa using ht1)
+    have hv3 : planarF1_p21 v0 v2 v3 g02 g23 v2 t
+        = mkSimplex1 0 v3 v0 (‖v3‖ ^ 2) (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+            ((dist v0 v2 + g02 t) ^ 2) ((dist v3 v2 + g23 t) ^ 2) (dist v0 v3 ^ 2) := by
+      rw [hval1 v2 t, if_pos rfl]
+    obtain ⟨hA, hB, hC, -⟩ := PQCSXWG1_SYM_p21 0 v0 v3
+      (planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+      (‖v0‖ ^ 2) (‖v3‖ ^ 2) (‖v2‖ ^ 2) ((dist v3 v2 + g23 t) ^ 2)
+      ((dist v0 v2 + g02 t) ^ 2) (dist v0 v3 ^ 2)
+      (pow_pos (norm_pos_iff.mpr h0v0.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v3.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v2.symm) 2) (pow_pos hposc 2) (pow_pos hposa 2)
+      (pow_pos (dist_pos.mpr hv0v3) 2)
+      hncol023
+      (by show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      (by show ‖v3‖ ^ 2 = dist v3 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      rfl
+      hΔ hv3
+    refine ⟨?_, ?_, ?_⟩
+    · have hsq : ‖planarF1_p21 v0 v2 v3 g02 g23 v2 t‖ ^ 2 = ‖v2‖ ^ 2 := by
+        rw [hA, dist_eq_norm, sub_zero]
+      exact w2b_sq_eq_of_nonneg hsq (norm_nonneg _) (norm_nonneg _)
+    · have hsq : dist (planarF1_p21 v0 v2 v3 g02 g23 v2 t) v0 ^ 2
+          = (dist v2 v0 + g02 t) ^ 2 := by
+        rw [← hB, dist_comm v0 v2]
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg
+        (le_of_lt (by rwa [dist_comm v2 v0]))
+    · have hsq : dist (planarF1_p21 v0 v2 v3 g02 g23 v2 t) v3 ^ 2
+          = (dist v2 v3 + g23 t) ^ 2 := by
+        rw [← hC, dist_comm v2 v3]
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg
+        (le_of_lt (by rwa [dist_comm v2 v3]))
+  -- `ups_x` positivity at `0` for the two stage-2 triangles, and nearby
+  have hups1_0 : 0 < upsX (‖v0‖ ^ 2) (‖v1‖ ^ 2) ((dist v0 v1 + g01 0) ^ 2) := by
+    rw [h01z, add_zero]
+    exact w2b_upsX_pos hncol01 _ _ _ rfl rfl (by rw [dist_eq_norm])
+  have hups2_0 : 0 < upsX (‖v0‖ ^ 2) (‖v2‖ ^ 2) ((dist v0 v2 + g02 0) ^ 2) := by
+    rw [h02z, add_zero]
+    exact w2b_upsX_pos hncol02 _ _ _ rfl rfl (by rw [dist_eq_norm])
+  have hups1_cont : ContinuousAt (fun t => upsX (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+      ((dist v0 v1 + g01 t) ^ 2)) 0 := by
+    simp only [upsX]
+    fun_prop
+  have hups2_cont : ContinuousAt (fun t => upsX (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+      ((dist v0 v2 + g02 t) ^ 2)) 0 := by
+    simp only [upsX]
+    fun_prop
+  obtain ⟨e3a, he3a, h3a⟩ := continuous_nbd_pos_p21 hups1_cont hups1_0
+  obtain ⟨e3b, he3b, h3b⟩ := continuous_nbd_pos_p21 hups2_cont hups2_0
+  obtain ⟨e3, he3, h3a', h3b'⟩ := epsilon_pair_p21 e3a e3b he3a he3b
+  have h3a'' : ∀ t, |t| < e3a → 0 < upsX (‖v0‖ ^ 2) (‖v1‖ ^ 2)
+      ((dist v0 v1 + g01 t) ^ 2) := fun t ht => h3a t (by simpa using ht)
+  have h3b'' : ∀ t, |t| < e3b → 0 < upsX (‖v0‖ ^ 2) (‖v2‖ ^ 2)
+      ((dist v0 v2 + g02 t) ^ 2) := fun t ht => h3b t (by simpa using ht)
+  -- non-coplanarity of `{0, v0, f1 v2 t, v3}` persists near `0`
+  obtain ⟨e4, he4, hnc4⟩ :=
+    NONPLANAR_OPEN_p14 (v1 := fun _ => (0 : V3)) (v2 := fun _ => v0)
+      (v3 := fun _ => v3) (v4 := fun t => planarF1_p21 v0 v2 v3 g02 g23 v2 t) 0
+      (by simpa [hf1_0] using hnc_d1)
+      continuousAt_const continuousAt_const continuousAt_const
+      (hcont1_at 0 ⟨by linarith, hEpos⟩)
+  have hnc4' : ∀ t, |t| < e4 →
+      ¬ Coplanar ({0, v0, v3, planarF1_p21 v0 v2 v3 g02 g23 v2 t} : Set V3) :=
+    fun t ht => hnc4 t (by simpa using ht)
+  have hncol2 : ∀ t, |t| < e4 →
+      ¬ Collinear ℝ ({0, v0, planarF1_p21 v0 v2 v3 g02 g23 v2 t} : Set V3) := by
+    intro t ht hcol
+    apply hnc4' t ht
+    rw [show ({0, v0, v3, planarF1_p21 v0 v2 v3 g02 g23 v2 t} : Set V3) =
+        ({0, v0, planarF1_p21 v0 v2 v3 g02 g23 v2 t, v3} : Set V3) from by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact w2b_collinear_coplanar (z := (0 : V3)) (w := v0)
+      (w1 := planarF1_p21 v0 v2 v3 g02 g23 v2 t) (w2 := v3) hcol
+  -- final radius
+  set E2 : ℝ := min E (min e3 e4) with hE2def
+  have hE2pos : 0 < E2 := lt_min hEpos (lt_min he3 he4)
+  have hE2E : E2 ≤ E := min_le_left E (min e3 e4)
+  have hE2e3 : E2 ≤ e3 := le_trans (min_le_right E (min e3 e4)) (min_le_left e3 e4)
+  have hE2e4 : E2 ≤ e4 := le_trans (min_le_right E (min e3 e4)) (min_le_right e3 e4)
+  -- continuity of the stage-2 moving vertex on `Ioo (-E2) E2`
+  have hcont2_at : ∀ r ∈ Ioo (-E2) E2,
+      ContinuousAt (fun t => planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t) r := by
+    intro r hr
+    obtain ⟨hr1, hr2⟩ := hr
+    have habs2 : |r| < E2 := by rw [abs_lt]; exact ⟨hr1, hr2⟩
+    have habsE : |r| < E := lt_of_lt_of_le habs2 hE2E
+    have habs3 : |r| < e3 := lt_of_lt_of_le habs2 hE2e3
+    have hre : r ∈ Ioo (-e) e := ⟨by linarith, by linarith⟩
+    have hgr1 : ContinuousAt g01 r := h01.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hgr2 : ContinuousAt g02 r := h02.continuousAt (Ioo_mem_nhds hre.1 hre.2)
+    have hff2 : (fun t => planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t)
+        = fun t => mkPlanar2 0 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+            (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+            ((dist v0 v1 + g01 t) ^ 2) ((dist v0 v2 + g02 t) ^ 2) (-1) := by
+      funext t
+      rw [hval v1 t, if_neg hne, if_pos rfl]
+    rw [hff2]
+    refine mk_planar2_continuous_p21 (v0 := fun _ => (0 : V3)) (v1 := fun _ => v0)
+        (v2 := fun t => planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+        (x1 := fun _ => ‖v0‖ ^ 2) (x2 := fun _ => ‖v2‖ ^ 2)
+        (x3 := fun _ => ‖v1‖ ^ 2)
+        (x5 := fun t => (dist v0 v1 + g01 t) ^ 2)
+        (x6 := fun t => (dist v0 v2 + g02 t) ^ 2) (a := r) (s := -1)
+      ?_ ?_ ?_ continuousAt_const continuousAt_const ?_ continuousAt_const
+      continuousAt_const continuousAt_const ?_ ?_
+    · exact pow_pos (norm_pos_iff.mpr h0v0.symm) 2
+    · exact h3b'' r (h3b' r habs3)
+    · exact h3a'' r (h3a' r habs3)
+    · exact hcont1_at r ⟨by linarith, by linarith⟩
+    · exact (continuousAt_const.add hgr1).pow 2
+    · exact (continuousAt_const.add hgr2).pow 2
+  -- `f v1 0 = v1` via `mk_planar_unique` (both completions share the plane
+  -- `{0, v0, v2}`, two distances, and the cross-product ray)
+  have hf_0 : planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0 = v1 := by
+    have hv1_0 : planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0
+        = mkPlanar2 0 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 0)
+            (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+            ((dist v0 v1 + g01 0) ^ 2) ((dist v0 v2 + g02 0) ^ 2) (-1) := by
+      rw [hval v1 0, if_neg hne, if_pos rfl]
+    have hx1_0 : ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2 := by rw [dist_eq_norm, sub_zero]
+    have hx2_0 : ‖v2‖ ^ 2 = dist (planarF1_p21 v0 v2 v3 g02 g23 v2 0) (0 : V3) ^ 2 := by
+      rw [hf1_0, dist_eq_norm, sub_zero]
+    have hx6_0 : (dist v0 v2 + g02 0) ^ 2
+        = dist v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 0) ^ 2 := by
+      rw [hf1_0, h02z, add_zero]
+    have hncol02' : ¬ Collinear ℝ
+        ({0, v0, planarF1_p21 v0 v2 v3 g02 g23 v2 0} : Set V3) := by
+      rwa [hf1_0]
+    obtain ⟨hcop0, hnx3_0, hnx5_0, hray0⟩ := EYYPQDW_p17 0 v0
+      (planarF1_p21 v0 v2 v3 g02 g23 v2 0)
+      (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0)
+      (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2) ((dist v0 v1 + g01 0) ^ 2)
+      ((dist v0 v2 + g02 0) ^ 2) (-1)
+      (pow_pos (norm_pos_iff.mpr h0v0.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v2.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h1v1) 2)
+      (by rw [h01z, add_zero]; exact pow_pos (dist_pos.mpr (fun h => h1v0 h.symm)) 2)
+      (by rw [h02z, add_zero]; exact pow_pos (dist_pos.mpr hv0v2) 2)
+      hncol02' hx1_0 hx2_0 hx6_0 hups1_0 (Or.inr rfl) hv1_0
+    have hn_0 : ‖planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0‖ = ‖v1‖ := by
+      have hsq : ‖planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0‖ ^ 2 = ‖v1‖ ^ 2 := by
+        rw [hnx3_0, dist_eq_norm, sub_zero]
+      exact w2b_sq_eq_of_nonneg hsq (norm_nonneg _) (norm_nonneg _)
+    have hd_0 : dist v0 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0) = dist v0 v1 := by
+      have hsq : dist v0 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0) ^ 2
+          = dist v0 v1 ^ 2 := by
+        rw [dist_comm v0 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0), ← hnx5_0,
+          h01z, add_zero]
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg dist_nonneg
+    have d0 : dist (0 : V3) (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0)
+        = dist 0 v1 := by
+      rw [dist_eq_norm, zero_sub, norm_neg, dist_eq_norm, zero_sub, norm_neg, hn_0]
+    have cp0 : Coplanar
+        ({0, v0, v2, planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0} : Set V3) := by
+      have h := hcop0
+      rwa [hf1_0] at h
+    have cp0' : Coplanar ({0, v0, v2, v1} : Set V3) := by
+      rwa [show ({0, v0, v2, v1} : Set V3) = ({0, v0, v1, v2} : Set V3) from by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    -- the cross-product ray witness: `t' / t2` off the `EYYPQDW` ray and
+    -- the `collinear_expand` expansion of `v2`
+    obtain ⟨t', ht'pos, ht'eq0⟩ := hray0
+    have ht'eq : t' • cross3 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0) v0
+        = (-1 : ℝ) • cross3 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 0) := by
+      simpa only [sub_zero] using ht'eq0
+    obtain ⟨t1, t2, hexp_eq⟩ := collinear_expand_p21 v0 v1 v2 hncol01 h2
+    have hcross2 : cross3 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 0)
+        = t2 • cross3 v0 v1 := by
+      rw [hf1_0, hexp_eq, w2b_cross3_add_right, w2b_cross3_smul_right,
+        w2b_cross3_smul_right, g482_cross_self, smul_zero, zero_add]
+    have hcross2' : cross3 v2 v0 = t2 • cross3 v1 v0 := by
+      rw [hexp_eq, g482_cross_add_smul, g482_cross_self, smul_zero, zero_add]
+    have hncol01' : ¬ Collinear ℝ ({0, v1, v0} : Set V3) := by
+      have h := hncol01
+      rwa [show ({0, v0, v1} : Set V3) = ({0, v1, v0} : Set V3) from by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+    have hcrne : cross3 v1 v0 ≠ 0 := by
+      have hLI := g482_pair_li_fin (0 : V3) v1 v0 hncol01'
+      have hcr := (crossProduct_ne_zero_iff_linearIndependent (F := ℝ)
+        (v := ((v1 - (0 : V3) : V3) : Fin 3 → ℝ))
+        (w := ((v0 - (0 : V3) : V3) : Fin 3 → ℝ))).mpr hLI
+      intro hz
+      apply hcr
+      have hz' := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hz
+      simpa [cross3] using hz'
+    have hcrpos : 0 < cross3 v1 v0 ⬝ᵥ cross3 v1 v0 := by
+      rw [← norm_sq_eq_dot]; exact pow_pos (norm_pos_iff.mpr hcrne) 2
+    have ht2pos : 0 < t2 := by
+      have hcr2eq : cross3 v1 v0 ⬝ᵥ cross3 v2 v0
+          = t2 * (cross3 v1 v0 ⬝ᵥ cross3 v1 v0) := by
+        rw [hcross2']
+        simp only [← inner_eq_dot]
+        rw [real_inner_smul_right]
+      rw [hcr2eq] at hc2
+      exact (pos_iff_pos_of_mul_pos hc2).mpr hcrpos
+    have ht'eq'' : t' • cross3 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0) v0
+        = t2 • cross3 v1 v0 := by
+      have e1 : (-1 : ℝ) • cross3 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 0)
+          = t2 • cross3 v1 v0 := by
+        rw [hcross2, neg_one_smul, ← smul_neg, w2b_cross3_neg, neg_neg]
+      rw [ht'eq, e1]
+    have hcr : ∃ t : ℝ, 0 < t ∧
+        t • cross3 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0 - 0) (v0 - 0)
+          = cross3 (v1 - 0) (v0 - 0) := by
+      refine ⟨t' / t2, div_pos ht'pos ht2pos, ?_⟩
+      have hmain : (t' / t2) • cross3 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0) v0
+          = cross3 v1 v0 := by
+        rw [div_eq_inv_mul, ← smul_smul, ht'eq'', smul_smul,
+          inv_mul_cancel₀ (ne_of_gt ht2pos), one_smul]
+      simpa only [sub_zero] using hmain
+    exact mk_planar_unique_p21 0 v0 v2 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 0)
+      v1 hncol02 d0 hd_0 cp0 cp0' hcr
+  refine ⟨E2, hE2pos, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_, ?_⟩
+    · constructor <;> linarith
+    · intro v _ r hr
+      by_cases hv1' : v = v1
+      · rw [hv1']
+        exact hcont2_at r hr
+      · by_cases hv2' : v = v2
+        · rw [hv2']
+          have hconst : planarF_p21 v0 v1 v2 v3 g01 g02 g23 v2
+              = fun t => planarF1_p21 v0 v2 v3 g02 g23 v2 t := by
+            funext t
+            rw [hval v2 t, if_pos rfl]
+          rw [hconst]
+          obtain ⟨hr1, hr2⟩ := hr
+          exact hcont1_at r ⟨by linarith, by linarith⟩
+        · have hconst : planarF_p21 v0 v1 v2 v3 g01 g02 g23 v = fun _ => v := by
+            funext t
+            rw [hval v t, if_neg hv2', if_neg hv1']
+          rw [hconst]
+          exact continuousAt_const
+    · intro v _
+      by_cases hv1' : v = v1
+      · rw [hv1']
+        exact hf_0
+      · by_cases hv2' : v = v2
+        · rw [hv2', hval v2 0, if_pos rfl, hf1_0]
+        · rw [hval v 0, if_neg hv2', if_neg hv1']
+  · intro v t hvv
+    rw [hval v t, if_neg hvv.2, if_neg hvv.1]
+  · intro t ht
+    have htE : |t| < E := lt_of_lt_of_le ht hE2E
+    have ht3 : |t| < e3 := lt_of_lt_of_le ht hE2e3
+    have ht4 : |t| < e4 := lt_of_lt_of_le ht hE2e4
+    obtain ⟨hnorm2, hd20, hd23⟩ := hstage1 t htE
+    have hf2eq : planarF_p21 v0 v1 v2 v3 g01 g02 g23 v2 t
+        = planarF1_p21 v0 v2 v3 g02 g23 v2 t := by rw [hval v2 t, if_pos rfl]
+    have hposa : 0 < dist v0 v1 + g01 t :=
+      hpa t (by simpa using h2a t (lt_of_lt_of_le htE hEe2))
+    have hposb : 0 < dist v0 v2 + g02 t :=
+      hpb t (by simpa using h2b t (lt_of_lt_of_le htE hEe2))
+    have hf1v : planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t
+        = mkPlanar2 0 v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+            (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2)
+            ((dist v0 v1 + g01 t) ^ 2) ((dist v0 v2 + g02 t) ^ 2) (-1) := by
+      rw [hval v1 t, if_neg hne, if_pos rfl]
+    obtain ⟨hcop, hnx3, hnx5, -⟩ := EYYPQDW_p17 0 v0
+      (planarF1_p21 v0 v2 v3 g02 g23 v2 t)
+      (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t)
+      (‖v0‖ ^ 2) (‖v2‖ ^ 2) (‖v1‖ ^ 2) ((dist v0 v1 + g01 t) ^ 2)
+      ((dist v0 v2 + g02 t) ^ 2) (-1)
+      (pow_pos (norm_pos_iff.mpr h0v0.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h0v2.symm) 2)
+      (pow_pos (norm_pos_iff.mpr h1v1) 2) (pow_pos hposa 2) (pow_pos hposb 2)
+      (hncol2 t ht4)
+      (by show ‖v0‖ ^ 2 = dist v0 (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero])
+      (by show ‖v2‖ ^ 2 = dist (planarF1_p21 v0 v2 v3 g02 g23 v2 t) (0 : V3) ^ 2
+          rw [dist_eq_norm, sub_zero, ← hnorm2])
+      (by show (dist v0 v2 + g02 t) ^ 2
+            = dist v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 t) ^ 2
+          rw [dist_comm v0 (planarF1_p21 v0 v2 v3 g02 g23 v2 t), hd20,
+            dist_comm v0 v2])
+      (h3a'' t (h3a' t ht3)) (Or.inr rfl) hf1v
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+    · rw [show ({0, v0, planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t,
+            planarF_p21 v0 v1 v2 v3 g01 g02 g23 v2 t} : Set V3) =
+          ({0, v0, planarF1_p21 v0 v2 v3 g02 g23 v2 t,
+            planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t} : Set V3) from by
+        rw [hf2eq]; ext p
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact hcop
+    · have hsq : dist v0 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t) ^ 2
+          = (dist v0 v1 + g01 t) ^ 2 := by
+        rw [dist_comm v0 (planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t)]
+        exact hnx5.symm
+      exact w2b_sq_eq_of_nonneg hsq dist_nonneg (le_of_lt hposa)
+    · have hsq : ‖planarF_p21 v0 v1 v2 v3 g01 g02 g23 v1 t‖ ^ 2 = ‖v1‖ ^ 2 := by
+        rw [hnx3, dist_eq_norm, sub_zero]
+      exact w2b_sq_eq_of_nonneg hsq (norm_nonneg _) (norm_nonneg _)
+    · rw [hf2eq]; exact hd20
+    · rw [hf2eq]; exact hd23
+    · rw [hf2eq]; exact hnorm2
+  -- PROVED 2026-11-13 (lane n2def-w1): HOL `deform_planar` (CUXVZOZ.hl:1030)
+  -- ported.  Stage 1 (the `f1`/`v2` move) reads `PQCSXWG1_SYM` on
+  -- `(0, v0, v3)` with the `g02`-`g23`-dependent `deltaX` kept positive by
+  -- `continuous_nbd_pos`, and `PQCSXWG2_ATREAL` for continuity.  Stage 2
+  -- (the `f`/`v1` move onto the moved triangle) reads `EYYPQDW` at `s = -1`
+  -- (`mkPlanar2` coplanarity, two distances, and the cross ray);
+  -- `NONPLANAR_OPEN` propagates `¬coplanar {0,v0,f1 v2 t,v3}` near `0` and
+  -- `mk_planar2_continuous` with two `ups_x` Gram neighbourhoods carries
+  -- the continuity.  `mk_planar_unique` pins `f v1 0 = v1` via
+  -- `collinear_expand`.  `#print axioms` = the standard three.
 
 /-- HOL `deform_planar_exists` (CUXVZOZ.hl:1374): existential-witness form
 of the preceding theorem. -/
