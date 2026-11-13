@@ -310,6 +310,12 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（19:55，续1051）**：**penthex-w1 中断#19（14 min，假终讯）→ 编排者从 /tmp 抢救两件成品（flat_term2_126_x_eval / delta_126_x_2h0_le_d，均消费已净塔基件）→ fresh 接管 penthex-w2（agent-46，先验收遗产再续 ③-⑦）+ 按用户上问推荐发 t5body-w1（agent-47，empty_5T1_p22 本体，卡点已于今晚拔除）**。
+① 中断潮今晚第 19 例（w1 断在全塔探针起草前）；ps 预检确认真死（新规执行）；w1 的两件成品已落盘 w1 快照并随 w2 工单移交验收（探针必须恰标准三，带债则重修/回退）。
+② 当前在飞 2：penthex-w2（LA19 塔基）/ t5body-w1（LA22 5T1 本体）——文件面零冲突，lean ≤3 合规。
+③ t5body-w1 硬前置：先查 5T1 收尾的 pent/hex 塔件债面（装债陷阱），脏则记 BLOCKED 节；`sol_local_azim_p22`/`deform_planar_exists_p21` 严禁消费。
+④ 主线程今晚合计：N1 双件 + 塔基三连 + 两车道工单与抢救；等交付走完整闸。
+
 - **2026-11-13（19:35，续1050）**：**penthex-w1 车道发车（agent-45，用户批 ~1h）——pent_hex 塔基剩余支柱清偿**。
 ① 工单：① lemma_5546286427_p19（registry 5546286427 热身）→ ② OWZLKVY4_p19（:447）→ ③ taud_mu_clauses_p19（用已净 taud_ge_flat_term_p19）→ ④ taud_minimizer_terminal_hex_cases_p19（:1262）→ ⑤ 大奖 terminal_hex_234_reduction_p19（仅当①-④全净；HOL :2981-3079）。模板 = 主线程三连（83f026e4/255e44a8）+ SCOUT.md。
 ② 硬闸重申：每件探针必须恰标准三才算清；单件 3 轮卡死止损转下件；主仓零改动、1 lean、里程碑落盘。
