@@ -134,13 +134,15 @@ FILE MAP
     `B_LE_CSTAB_5M2_A_LT_B_p29`, `CARD_SCS_M_5M2_p29`,
     `SCS_M_5M2_p29` (DISCHARGED; the LocalAuto20 twin was itself
     still `sorry` at fill time, so discharged here directly),
-    `JCYFMRP_V2_p29`, `JCYFMRP_V3_p29` (sorry; NEEDS the
-    `JCYFMRP` conclusion machinery, `sorry` in LocalAuto1/27),
+    `JCYFMRP_V2_p29` (DISCHARGED 2026-11-12, lane jv23-w1),
+    `JCYFMRP_V3_p29` (DISCHARGED 2026-11-13, lane tfitskc-w1:
+    `JCYFMRP_p27` tight edge + `JCYFMRP_V2_p29`),
     `ARC_222_p29` (DISCHARGED via PackingAuto18 `arclength2`),
-    `xrr_le_1553_p29`, `xrr_le_1553_BB_p29` (sorry; NEEDS the
-    `xrr` monotone-envelope kit), `J_SCS_5M2_0_p29` (proved),
-    `SCS_5M2_IMP_SCS_5T1_p29`, `HIJ_STEP_1_p29`, `HIJQAHA_p29`
-    (sorry; NEEDS `main_nonlinear_terminal_v11` consumers).
+    `xrr_le_1553_p29`, `xrr_le_1553_BB_p29` (DISCHARGED
+    2026-11-13, lane xrr1553-w1), `J_SCS_5M2_0_p29` (proved),
+    `SCS_5M2_IMP_SCS_5T1_p29` (DISCHARGED 2026-11-14, lane
+    scs5m2asm-w1; see the fill-wave note below), `HIJ_STEP_1_p29`,
+    `HIJQAHA_p29` (DISCHARGED 2026-10-28, lane la29-hijqaha-w1).
 
   Fill-wave 2026-10-28 (lane la29-hijqaha-w1): +imports LocalAuto24,
   LocalAuto26, LocalAuto28 (BFS-checked acyclic w.r.t. this file).
@@ -185,12 +187,32 @@ FILE MAP
   (HL HIJQAHA.hl:3299 route verbatim). `SCS_5M3_SLICE_03_p29` moved
   above `SCS_5M3_03_ARROW_3T1_4M7_p29` for declaration order (its
   old position held no forward references). No import changes
-  (LA27/LA35 already in the cone via LocalAuto26). Remaining 5
-  sorries: `SCS_5M2_IMP_SCS_5T1_p29`, `JCYFMRP_V2_p29`,
-  `JCYFMRP_V3_p29`, `xrr_le_1553_p29`, `xrr_le_1553_BB_p29`.
+  (LA27/LA35 already in the cone via LocalAuto26).
+
+  Fill-wave 2026-11-14 (lane scs5m2asm-w1): the LAST sorry of the
+  file, `SCS_5M2_IMP_SCS_5T1_p29`, is discharged — the file is now
+  in-file-sorry-free. Adds `import Kepler.Text.LocalAuto18`
+  (acyclic both directions, BFS-checked: LA18's 110-file closure
+  excludes LA29, LA29's 111-file closure excluded LA18). The
+  assembly is the HOL HIJQAHA.hl:3579-3945 route restructured:
+  genericity by `RRCWNSJ_p26`, one tight edge by `JCYFMRP_V3_p29`
+  plus the `JLXFDMJ_ge4_p27` transfer (`scsM scs5M2 = {0}`), a
+  three-way azimuth split proving `dist (v 0) (v 1) = 2` (the two
+  `azim = pi` branches by `NUXCOEAv2_p28` at `(l, j) = (0, 4)` and
+  `(1, 2)` with `coplanar_aff_gt_simple_p18`,
+  `AZIM_COND_FOR_COPLANAR`, `convex_local_fan_azim_le_pi` and the
+  `PROPERTIES_GENERIC_p29` pair instantiations; the `azim < pi`
+  branch by `IUNBUIG_p18` with its `hdist` from JLXFDMJ and its
+  `hxrr` bounds from `xrr_le_1553_BB_p29` at `3` and `1`), mod-5
+  extension to all edges, the `BBsV39 scs5T1 v` case split over
+  `csAdj` (annulus diameter bound for the diag upper side), and
+  the `XWNHLMD_MM_p26` transport. Theorem axioms face = standard
+  three; `HIJ_STEP_1_p29`/`HIJQAHA_p29` (its consumers) turn
+  standard three as well.
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto20
 import Kepler.Text.LocalAuto24
 import Kepler.Text.LocalAuto26
@@ -3905,15 +3927,286 @@ theorem PROPERTIES_GENERIC_p29 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × 
     exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg2 w h3 u1 hu1
       (Ne.symm huu1)
 
-/-- HOL `SCS_5M2_IMP_SCS_5T1` (HIJQAHA.hl:3579). -/
+/-- HOL `SCS_5M2_IMP_SCS_5T1` (HIJQAHA.hl:3579). DISCHARGED
+(2026-11-14, lane scs5m2asm-w1): the HOL terminal-nonlinear assembly. The
+`scs_5M2` realisation with all diag distances `> cstab` realises `scs_5T1`:
+genericity via `RRCWNSJ_p26`, one tight edge by `JCYFMRP_V3_p29` and the
+`JLXFDMJ_ge4_p27` transfer (`scsM scs5M2 = {0}`); a three-way azimuth split
+at vertices 0 and 1 proves `dist (v 0) (v 1) = 2` — the `azim = pi` branches
+close by `NUXCOEAv2_p28` at `(l, j) = (0, 4)` and `(1, 2)` (the
+`coplanar_aff_gt_simple_p18` aff-membership, the `PROPERTIES_GENERIC_p29`
+non-collinearities, and the not-lunar facts from genericity), the
+`azim < pi` branch by `IUNBUIG_p18` (its `hdist` slot is the JLXFDMJ
+transfer, its `hxrr` slots the two `xrr_le_1553_BB_p29` bounds at `3` and
+`1` with non-collinearity from `PROPERTIES_GENERIC_p29`); mod-5 periodicity
+extends the edge equation to all `j`; the edge equation plus the annulus
+bound give `BBsV39 scs5T1 v` (`csAdj` case split), and `XWNHLMD_MM_p26`
+transports the witness to `MMsV39 scs5T1 ≠ ∅` (its `taustar < 0` subgoal is
+`TAUSTAR_LE_0_XWNHLMD` over the same BBs data). -/
 theorem SCS_5M2_IMP_SCS_5T1_p29 : main_nonlinear_terminal_v11 →
     ∀ v : ℕ → V3, v ∈ MMsV39 scs5M2 →
       (∀ i j, scsDiag 5 i j → cstab < dist (v i) (v j)) →
       MMsV39 scs5T1 ≠ ∅ := by
-  sorry
-  -- DISCHARGES: HL terminal-nonlinear inequality machinery: the
-  -- `scs_5M2` realisation with all diag distances `> cstab` realises
-  -- `scs_5T1` with negative taustar.
+  intro hmnt v hvM hall
+  -- the shared datum (HOL ABBREV_TAC V/E/FF) and the system facts
+  set V := Set.range v with hVdef
+  set E := Set.range (fun i : ℕ => ({v i, v (i + 1)} : Set V3)) with hEdef
+  set FF := Set.range (fun i : ℕ => (v i, v (i + 1))) with hFFdef
+  have hscs2 : isScsV39 scs5M2 := SCS_5M2_IS_SCS
+  have hbasic2 : scsBasicV39 scs5M2 := SCS_5M2_BASIC
+  have hscs1 : isScsV39 scs5T1 := SCS_5T1_IS_SCS_p29
+  have hbasic1 : scsBasicV39 scs5T1 := SCS_5T1_BASIC_p29
+  have hBB : BBsV39 scs5M2 v := MMS_IMP_BBS_p28 scs5M2 v hvM
+  have hper : Periodic v 5 := hBB.2.1
+  have hann : ∀ i : ℕ, v i ∈ ballAnnulus := fun i => hBB.1 (Set.mem_range.mpr ⟨i, rfl⟩)
+  have hvin : ∀ i : ℕ, v i ∈ V := fun i => Set.mem_range.mpr ⟨i, rfl⟩
+  have hvv := BB_VV_FUN_EQ_p26 scs5M2 v hscs2 hBB
+  have hvv5 : ∀ a b : ℕ, v a = v b ↔ a % 5 = b % 5 := hvv
+  have hv5 : v 5 = v 0 := hper 0
+  have hv6 : v 6 = v 1 := hper 1
+  have hclf : ConvexLocalFan V E FF := by
+    rcases hBB.2.2.2 with h3 | hcf
+    · exact absurd h3 (by rw [K_SCS_5M2]; norm_num)
+    · exact hcf
+  have hlf : LocalFan V E FF := hclf.1
+  obtain ⟨h0b4, h0a2⟩ := h0_LT_B_SCS_5M2_p29
+  obtain ⟨hbc, ha2⟩ := B_LE_CSTAB_5M2_p29
+  have hbgt : ∀ i : ℕ, 2 < scs5M2.b i (i + 1) := B_LE_CSTAB_5M2_A_LT_B_p29
+  -- genericity (HOL RRCWNSJ instantiation at scs_5M2)
+  have hgenV : Generic V E := RRCWNSJ_p26 hmnt scs5M2 v hscs2 hbasic2 hvM
+    (by rw [K_SCS_5M2]; norm_num) h0b4 (fun i j hd => ⟨h0a2 i j hd, hall i j hd⟩) hbc
+  -- the four `PROPERTIES_GENERIC` pair instantiations (HOL Nkezbfc_local)
+  have pg14 := PROPERTIES_GENERIC_p29 V E FF (v 1) (v 4) hlf (hvin 1) (hvin 4) hgenV
+  have pg20 := PROPERTIES_GENERIC_p29 V E FF (v 2) (v 0) hlf (hvin 2) (hvin 0) hgenV
+  have pg03 := PROPERTIES_GENERIC_p29 V E FF (v 0) (v 3) hlf (hvin 0) (hvin 3) hgenV
+  have pg13 := PROPERTIES_GENERIC_p29 V E FF (v 1) (v 3) hlf (hvin 1) (hvin 3) hgenV
+  have hne03 : v 0 ≠ v 3 := fun h => by have hm := (hvv5 0 3).mp h; norm_num at hm
+  have hne13 : v 1 ≠ v 3 := fun h => by have hm := (hvv5 1 3).mp h; norm_num at hm
+  have hne20 : v 2 ≠ v 0 := fun h => by have hm := (hvv5 2 0).mp h; norm_num at hm
+  have hne10 : v 1 ≠ v 4 := fun h => by have hm := (hvv5 1 4).mp h; norm_num at hm
+  -- non-collinearity of the neighbours (HOL collinear SUBGOAL_THENs)
+  have hcol4 : ∀ j : ℕ, v j ≠ v 4 → ¬Collinear3 0 (v 4) (v j) :=
+    fun j hj => pg14 (v 4) (v j) (Or.inr rfl) (hvin j) (Ne.symm hj)
+  have hcol1 : ∀ j : ℕ, v j ≠ v 1 → ¬Collinear3 0 (v 1) (v j) :=
+    fun j hj => pg14 (v 1) (v j) (Or.inl rfl) (hvin j) (Ne.symm hj)
+  have hcol0 : ∀ j : ℕ, v j ≠ v 0 → ¬Collinear3 0 (v 0) (v j) :=
+    fun j hj => pg20 (v 0) (v j) (Or.inr rfl) (hvin j) (Ne.symm hj)
+  -- funlist table cells used by the NUXCOEAv2 edge pins
+  have ha20 : scs5M2.a 2 1 = 2 := by
+    simp [scs5M2, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have ha40 : scs5M2.a 4 0 = 2 := by
+    simp [scs5M2, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have ha15 : scs5M2.a 1 5 = 2 := by
+    simp [scs5M2, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have hb21 : scs5M2.b 2 1 = 2 * h0 := by
+    simp [scs5M2, mkUnadornedV39, funlistV39, psort, assocdV39]
+  have hb40 : scs5M2.b 4 0 = 2 * h0 := by
+    simp [scs5M2, mkUnadornedV39, funlistV39, psort, assocdV39]
+  -- one tight edge, then the JLXFDMJ transfer: all edges with j % 5 ≠ 0
+  have hdiagJ : ∀ i j, scsDiag 5 i j → scs5M2.a i j ≤ cstab ∧
+      cstab < dist (v i) (v j) ∧ 4 * h0 < scs5M2.b i j :=
+    fun i j hd => ⟨h0a2 i j hd, hall i j hd, h0b4 i j hd⟩
+  have hdiagJ2 : ∀ i j, scsDiag 5 i j → scs5M2.a i j ≤ cstab ∧
+      cstab < dist (v i) (v j) :=
+    fun i j hd => ⟨h0a2 i j hd, hall i j hd⟩
+  have hadge : ∀ i, scs5M2.a i (i + 1) < scs5M2.b i (i + 1) :=
+    fun i => by rw [ha2 i]; exact hbgt i
+  obtain ⟨i1, hbi1, -, hdi1⟩ := JCYFMRP_V3_p29 hmnt scs5M2 v (by rw [K_SCS_5M2]; norm_num)
+    hscs2 hvM hgenV hbasic2 CARD_SCS_M_5M2_p29 hdiagJ hadge ha2
+  have hdistJ5 : ∀ j : ℕ, j % 5 ≠ 0 → dist (v j) (v (j + 1)) = 2 :=
+    fun j hj => JLXFDMJ_ge4_p27 hmnt scs5M2 v i1 (by rw [K_SCS_5M2]; norm_num)
+      hscs2 hvM hgenV hbasic2 hdi1 h0b4 CARD_SCS_M_5M2_p29 hdiagJ2 hadge (ha2 i1) hbi1 j
+      (by rw [K_SCS_5M2, SCS_M_5M2_p29, Set.mem_singleton_iff]; exact hj)
+  -- the rho/ivs identifications (HOL BB_RHO_NODE_IVS)
+  have hBB0 := BB_RHO_NODE_IVS_p26 scs5M2 5 v (v 0) V E FF 0 rfl rfl hVdef.symm hEdef.symm
+    hFFdef.symm hscs2 (by norm_num) hBB
+  have hBB1 := BB_RHO_NODE_IVS_p26 scs5M2 5 v (v 1) V E FF 1 rfl rfl hVdef.symm hEdef.symm
+    hFFdef.symm hscs2 (by norm_num) hBB
+  have hinjV : ∀ i j : ℕ, i < 5 ∧ j < 5 ∧ v i = v j → i = j := by
+    intro i j ⟨hi, hj, heq⟩
+    have hmod := (hvv5 i j).mp heq
+    rw [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at hmod
+    exact hmod
+  -- az ≤ pi at the two pinned vertices (model-level az ≤ pi route)
+  have haz0le : azim 0 (v 0) (v 1) (v 4) ≤ Real.pi :=
+    convex_local_fan_azim_le_pi v 5 0 hper (by norm_num) hinjV hclf hBB.1
+  have haz1le : azim 0 (v 1) (v 2) (v 5) ≤ Real.pi :=
+    convex_local_fan_azim_le_pi v 5 1 hper (by norm_num) hinjV hclf hBB.1
+  -- the xrr bounds for IUNBUIG (HOL xrr_le_1553_BB at 3 and 1)
+  have hcolx1 : ¬ Collinear ℝ ({0, v 3, v 5} : Set V3) := by
+    rw [hv5, show ({0, v 3, v 0} : Set V3) = {0, v 0, v 3} from by
+      rw [Set.pair_comm (v 3) (v 0)]]
+    exact pg03 (v 0) (v 3) (Or.inl rfl) (hvin 3) hne03
+  have hcolx2 : ¬ Collinear ℝ ({0, v 1, v 3} : Set V3) :=
+    pg13 (v 1) (v 3) (Or.inl rfl) (hvin 3) hne13
+  have hxrr1 : xrr ‖v 0‖ ‖v 3‖ (dist (v 0) (v 3)) ≤ 15.53 := by
+    have h0 := xrr_le_1553_BB_p29 scs5M2 v 3 hBB (hdistJ5 3 (by norm_num))
+      (hdistJ5 4 (by norm_num)) hcolx1
+    rw [hv5] at h0
+    rw [dist_eq_norm (v 0) (v 3)]
+    have hd : ‖v 3 - v 0‖ = ‖v 0 - v 3‖ := by
+      rw [← neg_sub]; exact norm_neg _
+    have hs : xrr ‖v 3‖ ‖v 0‖ ‖v 3 - v 0‖ = xrr ‖v 0‖ ‖v 3‖ ‖v 0 - v 3‖ := by
+      rw [hd]; simp only [xrr]; ring
+    exact hs ▸ h0
+  have hxrr2 : xrr ‖v 1‖ ‖v 3‖ (dist (v 1) (v 3)) ≤ 15.53 :=
+    xrr_le_1553_BB_p29 scs5M2 v 1 hBB (hdistJ5 1 (by norm_num)) (hdistJ5 2 (by norm_num)) hcolx2
+  -- not-lunar facts for NUXCOEAv2 (HOL CIZMRRH + genericity route)
+  have hlunar0 : ∀ (V' : Set V3) (E' : Set (Set V3)) (v1 : V3),
+      V' = Set.range v →
+        E' = Set.range (fun i : ℕ => ({v i, v (i + 1)} : Set V3)) →
+          ¬ Lunar v1 (v 0) V' E' := by
+    intro V' E' v1 hV' hE' hL
+    obtain ⟨-, hsub, hne, hcol⟩ := hL
+    have hv1 : v1 ∈ V := by
+      have hv1' : v1 ∈ V' := hsub (Set.mem_insert v1 {v 0})
+      rw [hV'] at hv1'
+      exact hv1'
+    obtain ⟨j, hj⟩ := hv1
+    subst hj
+    by_cases hcase : j % 5 = 0
+    · exact absurd ((hvv5 j 0).mpr hcase) hne
+    · have hc : ¬ Collinear ℝ ({0, v 0, v j} : Set V3) :=
+        hcol0 j (fun h => hcase ((hvv5 j 0).mp h))
+      have e : ({0, v j, v 0} : Set V3) = {0, v 0, v j} := by
+        rw [Set.pair_comm (v j) (v 0)]
+      exact hc (e ▸ hcol)
+  have hlunar1 : ∀ (V' : Set V3) (E' : Set (Set V3)) (v1 : V3),
+      V' = Set.range v →
+        E' = Set.range (fun i : ℕ => ({v i, v (i + 1)} : Set V3)) →
+          ¬ Lunar v1 (v 1) V' E' := by
+    intro V' E' v1 hV' hE' hL
+    obtain ⟨-, hsub, hne, hcol⟩ := hL
+    have hv1 : v1 ∈ V := by
+      have hv1' : v1 ∈ V' := hsub (Set.mem_insert v1 {v 1})
+      rw [hV'] at hv1'
+      exact hv1'
+    obtain ⟨j, hj⟩ := hv1
+    subst hj
+    by_cases hcase : j % 5 = 1
+    · exact absurd ((hvv5 j 1).mpr hcase) hne
+    · have hc : ¬ Collinear ℝ ({0, v 1, v j} : Set V3) :=
+        hcol1 j (fun h => hcase ((hvv5 j 1).mp h))
+      have e : ({0, v j, v 1} : Set V3) = {0, v 1, v j} := by
+        rw [Set.pair_comm (v j) (v 1)]
+      exact hc (e ▸ hcol)
+  -- the three-way azimuth split (HOL elements 2-16) pinning dist (v 0, v 1)
+  have hdist01 : dist (v 0) (v 1) = 2 := by
+    rcases eq_or_lt_of_le haz0le with haz0eq | haz0lt
+    · -- azim 0 (v 0) (v 1) (v 4) = pi: NUXCOEAv2 at (l, j) = (0, 4)
+      have hcp4 : Coplanar ({0, v 4, v 5, v 6} : Set V3) := by
+        rw [hv5, hv6]
+        have e : ({0, v 4, v 0, v 1} : Set V3) = {0, v 0, v 1, v 4} := by
+          ext z
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto
+        rw [e]
+        exact (AZIM_COND_FOR_COPLANAR 0 (v 0) (v 1) (v 4)).mp (Or.inr haz0eq)
+      have haff0 : v 0 ∈ affGt ({0} : Set V3) {v 1, v 4} := by
+        have h := coplanar_aff_gt_simple_p18 scs5M2 5 v 4 hscs2 rfl (by norm_num) hvM
+          hbasic2 hcol4 hcp4
+        rw [hv5, hv6, Set.pair_comm (v 4) (v 1)] at h
+        exact h
+      have hnc0 : ¬ Collinear ℝ ({0, v 1, v 4} : Set V3) := by
+        rw [show ({0, v 1, v 4} : Set V3) = {0, v 4, v 1} from by
+          rw [Set.pair_comm (v 1) (v 4)]]
+        exact hcol4 1 hne10
+      have hd40 : dist (v 4) (v 0) = 2 := by
+        rw [← hv5]
+        exact hdistJ5 4 (by norm_num)
+      have hn0 := NUXCOEAv2_p28 scs5M2 5 v 0 4 rfl (by norm_num) hscs2 hvM haz0eq hnc0 haff0
+        (Or.inr rfl) (by rw [ha40]; exact hd40.symm)
+        (by rw [hb40, hd40]; exact two_lt_two_h0_p20)
+        (fun i hd => h0b4 0 i hd) (fun i hd => (h0a2 0 i hd).trans_lt (hall 0 i hd))
+        (fun i => J_SCS_5M2_0_p29 i 0) hlunar0
+      exact ((ha2 0).symm.trans hn0.1).symm
+    · rcases eq_or_lt_of_le haz1le with haz1eq | haz1lt
+      · -- azim 0 (v 1) (v 2) (v 5) = pi: NUXCOEAv2 at (l, j) = (1, 2)
+        have haz1eq0 : azim 0 (v 1) (v 2) (v 0) = Real.pi := by
+          rw [← hv5]
+          exact haz1eq
+        have hcp0 : Coplanar ({0, v 0, v 1, v 2} : Set V3) := by
+          have e : ({0, v 0, v 1, v 2} : Set V3) = {0, v 1, v 2, v 0} := by
+            ext z
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+            tauto
+          rw [e]
+          exact (AZIM_COND_FOR_COPLANAR 0 (v 1) (v 2) (v 0)).mp (Or.inr haz1eq0)
+        have haff1 : v 1 ∈ affGt ({0} : Set V3) {v 2, v 5} := by
+          have h := coplanar_aff_gt_simple_p18 scs5M2 5 v 0 hscs2 rfl (by norm_num) hvM
+            hbasic2 hcol0 hcp0
+          rw [Set.pair_comm (v 0) (v 2), ← hv5] at h
+          exact h
+        have hnc1 : ¬ Collinear ℝ ({0, v 2, v 0} : Set V3) :=
+          pg20 (v 2) (v 0) (Or.inl rfl) (hvin 0) hne20
+        rw [← hv5] at hnc1
+        have hd21 : dist (v 2) (v 1) = 2 := by
+          rw [dist_comm]
+          exact hdistJ5 1 (by norm_num)
+        have hn1 := NUXCOEAv2_p28 scs5M2 5 v 1 2 rfl (by norm_num) hscs2 hvM haz1eq hnc1 haff1
+          (Or.inl rfl) (by rw [ha20]; exact hd21.symm)
+          (by rw [hb21, hd21]; exact two_lt_two_h0_p20)
+          (fun i hd => h0b4 1 i hd) (fun i hd => (h0a2 1 i hd).trans_lt (hall 1 i hd))
+          (fun i => J_SCS_5M2_0_p29 i 1) hlunar1
+        have hd15 : dist (v 1) (v 5) = 2 := (ha15.symm.trans hn1.2).symm
+        rw [hv5, dist_comm (v 1) (v 0)] at hd15
+        exact hd15
+      · -- both azim < pi: IUNBUIG_p18 fills the last edge
+        have hia0 : interiorAngle1 0 FF (v 0) < Real.pi := by
+          show azim 0 (v 0) (rhoNode1 FF (v 0)) (ivsRhoNode1 FF (v 0)) < Real.pi
+          rw [hBB0.1, hBB0.2]
+          exact haz0lt
+        have hia1 : interiorAngle1 0 FF (v 1) < Real.pi := by
+          show azim 0 (v 1) (rhoNode1 FF (v 1)) (ivsRhoNode1 FF (v 1)) < Real.pi
+          rw [hBB1.1, hBB1.2]
+          exact haz1lt
+        exact IUNBUIG_p18 hmnt scs5M2 FF v hFFdef.symm hscs2 rfl hvM hbasic2 hgenV hdiagJ
+          (ha2 0) (hbc 0) hia0 hia1 hdistJ5 hxrr1 hxrr2
+  -- mod-5 extension: every edge is 2 (HOL SUBGOAL_THEN !j. dist = 2)
+  have halledges : ∀ j : ℕ, dist (v j) (v (j + 1)) = 2 := by
+    intro j
+    by_cases hcase : j % 5 = 0
+    · have e1 : v j = v 0 := (hvv5 j 0).mpr hcase
+      have e2 : v (j + 1) = v 1 := (hvv5 (j + 1) 1).mpr (by rw [Nat.add_mod, hcase])
+      rw [e1, e2]
+      exact hdist01
+    · exact hdistJ5 j hcase
+  -- the BBs bounds of scs5T1 (HOL elements 20-23: edges 2, diags ≤ 6
+  -- from the annulus diameter bound)
+  have hvBB1 : BBsV39 scs5T1 v := by
+    refine ⟨hBB.1, hBB.2.1, ?_, ?_⟩
+    · intro i j
+      show csAdj 5 2 cstab i j ≤ dist (v i) (v j) ∧
+        dist (v i) (v j) ≤ csAdj 5 2 6 i j
+      unfold csAdj
+      split_ifs with h1 h2
+      · refine ⟨dist_nonneg, ?_⟩
+        have e : v i = v j := (hvv5 i j).mpr h1
+        rw [e, dist_self]
+      · rcases h2 with h2l | h2r
+        · have e : v j = v (i + 1) := (hvv5 j (i + 1)).mpr h2l
+          rw [e, halledges i]
+          exact ⟨le_rfl, le_rfl⟩
+        · have e : v i = v (j + 1) := (hvv5 i (j + 1)).mpr h2r.symm
+          rw [e, dist_comm (v (j + 1)) (v j), halledges j]
+          exact ⟨le_rfl, le_rfl⟩
+      · refine ⟨le_of_lt (hall i j ⟨h1, fun h => h2 (Or.inl h.symm), fun h => h2 (Or.inr h.symm)⟩), ?_⟩
+        have hub : ∀ m : ℕ, ‖v m‖ ≤ 2 * h0 := by
+          intro m
+          have hin : v m ∈ Metric.closedBall 0 (2 * h0) := (hann m).1
+          simpa [dist_zero_right] using Metric.mem_closedBall.mp hin
+        have h1d : dist (v i) (v j) ≤ ‖v i‖ + ‖v j‖ := by
+          rw [dist_eq_norm]
+          exact norm_sub_le _ _
+        have h2d : ‖v i‖ + ‖v j‖ ≤ 4 * h0 := by
+          have h := add_le_add (hub i) (hub j)
+          have e : (2 * h0 + 2 * h0 : ℝ) = 4 * h0 := by ring
+          rwa [e] at h
+        have h3d : (4 * h0 : ℝ) ≤ 6 := by norm_num [h0]
+        exact h1d.trans (h2d.trans h3d)
+    · exact Or.inr hclf
+  -- the transport: the same v realises scs5T1 with negative taustar
+  exact XWNHLMD_MM_p26 scs5M2 scs5T1 v hscs2 hscs1 hbasic2 hbasic1 rfl hvM hvBB1 le_rfl
 
 /-- A witness in the source of an arrow projects to a witness in the target
 (the content half of `scs_arrow_v39`). -/
