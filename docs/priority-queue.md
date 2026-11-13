@@ -125,12 +125,12 @@
 > **V13 `b87f947a`**（`LEMMA_PWE3_p23` 真证 +304/−1，标准三；registry 2073661826 +
 > 5550839403 delta/full + `vas10_obtuse_of_delta4` + `LINDIH_11_p23` 复用 + 私有 `hb31c`）；
 > **V14 `8a9e801a`**（`LEMMA_PWE4_p23` 真证 +308/−1，标准三；PWE3 的 (p+3) 镜像；
-> **VASYYAU 簇闭环：`LocalAuto23Vas.lean` 14 条声明全部零 sorryAx，编译 sorry-decls=0、14/14 探针标准三**）。
-> 十四笔均非锥内资产（锥内 SORRIED 仍 62/61；簇内 sorry 12→0）。
-> **在飞 V15 `vaswkz-w15`**：新建 `VasMasterKit.lean`，首个 master kit **`WKZZEEH_kit`**
-> （HOL `VASYYAU.hl:720-911`，191 行；与 LA1 `WKZZEEH_concl` 陈述逐字同形；输入 = `JOTSWIX_p23`（V14 簇）
-> + `ASSWPOW_p25`（LA25:2050）+ `B_LE_2h0_2_SCS_M_4_p25` + `BB_VV_FUN_EQ`/`xrr_sym`；
-> 新文件零 sorry）。
+> **VASYYAU 簇闭环：`LocalAuto23Vas.lean` 14 条声明全部零 sorryAx，编译 sorry-decls=0、14/14 探针标准三**）；
+> **V15 `08b1bec4`**（`VasMasterKit.lean` 新文件 183 行，首个 master kit **`WKZZEEH_kit`** 标准三；
+> 与 LA1 `WKZZEEH_concl` 陈述逐字同形；JOTSWIX_p23 + ASSWPOW_p25 + B_LE_pair + xrr_sym 组装）。
+> 十五笔均非锥内资产（锥内 SORRIED 61；簇内 sorry 12→0；master kit 1 个已落）。
+> **在飞 V16 `vastua-w16`**：`TUAPYYU_kit`（VasMasterKit 第二租户；与 LA1 `TUAPYYU_concl` 陈述逐字同形；
+> 输入 `NEHXMWH_p23`（V6）+ `BZQNDMN_p23`（V8）+ `VasTuaKit.TUAPYYU1_vaskit`；HOL `VASYYAU.hl:524-646`）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -306,6 +306,22 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（05:14，续1092）**：**V15 `vaswkz-w15` 落库 `08b1bec4`（`VasMasterKit.lean` 183 行，`WKZZEEH_kit` 标准三）——首个 master kit；V16 `vastua-w16` 发车（`TUAPYYU_kit`）**。
+① **V15 交付**：`VasMasterKit.lean`（new file 183 行）——`WKZZEEH_kit` 与 LA1 `WKZZEEH_concl` 归一改名后
+`diff` 零差异（含 h 前提/量词序/全部 premises）；证明按 HOL `VASYYAU.hl:720-911`：`GSXRFWM_p33` 供
+`scsGeneric`，三条 `¬scsIsStr` + `IN_V_IMP_AZIM_LESS_PI`/`BB_RHO_NODE_IVS_p26` 组装 `hang`；
+both-`cstab` 反证支由 `periodic2_suc_mod_eq_p25` + BBs b-界推出 `{p%4,(p+3)%4} ⊆ scsM`，经
+`B_LE_2h0_2_SCS_M_4_pair_p25` 喂 `ASSWPOW_p25`（p+1）得 `xrr ≤ 15.53`，`JOTSWIX_p23` 给出严格 `<cstab` 矛盾。
+**未消费 LA25 的 sorry 再导出 `WKZZEEH_p25`**。
+② **编排者闸（亲跑）**：worktree@`2c26545d` apply RC=0；新文件禁项 0/0/0/0；直编 **rc=0/error 0**（零 warning）；
+装池；探针 `WKZZEEH_kit` **标准三**、消费件（`JOTSWIX_p23`/`ASSWPOW_p25`/`B_LE_2h0_2_SCS_M_4_pair_p25`/`xrr_sym_p22`）
+全标准三；根面 md5 **`246e952c…` 逐字节同**。commit `08b1bec4`，已 push。
+③ **V16 `vastua-w16`（在飞）**：`TUAPYYU_kit`（VasMasterKit 追加；与 LA1 `TUAPYYU_concl` 陈述逐字同形）——
+输入 `NEHXMWH_p23`（V6）+ `BZQNDMN_p23`（V8）+ `VasTuaKit.TUAPYYU1_vaskit`（已标准三）；
+LA25 三个 `*_concl_p25` def 的类型槽以 def 体为准；HOL `VASYYAU.hl:524-646`（装配仅 6 行）。
+④ 口径：V15 非锥内（锥内 61 不变）；master kit 进度 **1/4**（WKZZEEH ✓；TUAPYYU 在飞；PWEIWBZ/VASYYAU 后续）。
+⑤ 下一条：续1093。
 
 - **2026-11-14（04:59，续1091）**：**🏁 V14 `vaspwe4-w14` 落库 `8a9e801a`（`LEMMA_PWE4_p23` 真证 +308/−1）——VASYYAU 簇闭环（14/14 声明零 sorryAx）；V15 `vaswkz-w15` 发车（首个 master kit `WKZZEEH_kit`）**。
 ① **V14 交付**：HOL `JOTSWIX.hl:3648-3922`（PWE3 的 (p+3) 镜像）——长对角 registry `2073661826` 移到 `(p+3)`
