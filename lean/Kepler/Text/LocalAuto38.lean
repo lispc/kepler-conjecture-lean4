@@ -393,14 +393,24 @@ theorem DIH_Y_LT_RHAZIM :
   sorry -- DISCHARGES: rhazimP38 body (external anchor)
   -- BLOCKED: rhazimP38 stub (sphere.hl rhazim body unported).
 
-/-- HOL `taum_taum_x` (terminal.hl:169): `taum` is `y_of_x taum_x`. -/
+/-- HOL `taum_taum_x` (terminal.hl:169): `taum` is `y_of_x taum_x`
+(`taum_123` 形 + `sqrtxx`; the DEF-FIX alias `taumXP38` unfolds to the
+`_t11` kit, LocalAuto38:184). -/
 theorem taum_taum_x :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, 0 ≤ y1 → 0 ≤ y2 → 0 ≤ y3 → 0 ≤ y4 → 0 ≤ y5 →
       0 ≤ y6 →
       taum y1 y2 y3 y4 y5 y6 = yOfX taumXP38 y1 y2 y3 y4 y5 y6 := by
-  intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _
-  sorry -- DISCHARGES: taum_x body (external anchor taumXP38 = stub)
-  -- BLOCKED: taumXP38 stub (nonlin_def.hl taum_x body unported).
+  intro y1 y2 y3 y4 y5 y6 h1 h2 h3 h4 h5 h6
+  have e1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self h1
+  have e2 : Real.sqrt (y2 * y2) = y2 := Real.sqrt_mul_self h2
+  have e3 : Real.sqrt (y3 * y3) = y3 := Real.sqrt_mul_self h3
+  have e4 : Real.sqrt (y4 * y4) = y4 := Real.sqrt_mul_self h4
+  have e5 : Real.sqrt (y5 * y5) = y5 := Real.sqrt_mul_self h5
+  have e6 : Real.sqrt (y6 * y6) = y6 := Real.sqrt_mul_self h6
+  unfold taum solY lnazim yOfX taumXP38 taumX_t11 rhazim2_t11 rotate3_t11
+    node2Y_t11 rhazim_t11 rhoICD_t11
+  rw [e1, e2, e3, e4, e5, e6]
+  ring
 
 /-! ## Section B: the scs record kit (terminal.hl:184-309) -/
 
@@ -3783,10 +3793,31 @@ theorem quad_4680581274_y (h : main_nonlinear_terminal_v11) :
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `taum_x_sym` (terminal.hl:3752): the x1/x2/x3-slot symmetry of
-`taum_x`; the external-anchor stub body blocks `rfl`. -/
+`taum_x` (route = `dih_y_sym`, via the in-file helper `dihY_swap23_p38`;
+the DEF-FIX alias `taumXP38` unfolds to the `_t11` kit). -/
 theorem taum_x_sym (x1 x2 x3 x4 x5 x6 : ℝ) :
     taumXP38 x1 x3 x2 x4 x6 x5 = taumXP38 x1 x2 x3 x4 x5 x6 := by
-  sorry -- DISCHARGES: taum_x body (external anchor)
+  unfold taumXP38 taumX_t11 rhazim2_t11 rotate3_t11 node2Y_t11 rhazim_t11
+  have hs1 : dihY (Real.sqrt x1) (Real.sqrt x3) (Real.sqrt x2)
+      (Real.sqrt x4) (Real.sqrt x6) (Real.sqrt x5) =
+    dihY (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4)
+      (Real.sqrt x5) (Real.sqrt x6) :=
+    (dihY_swap23_p38 (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
+      (Real.sqrt x4) (Real.sqrt x5) (Real.sqrt x6)).symm
+  have hs2 : dihY (Real.sqrt x3) (Real.sqrt x2) (Real.sqrt x1)
+      (Real.sqrt x6) (Real.sqrt x5) (Real.sqrt x4) =
+    dihY (Real.sqrt x3) (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x6)
+      (Real.sqrt x4) (Real.sqrt x5) :=
+    (dihY_swap23_p38 (Real.sqrt x3) (Real.sqrt x1) (Real.sqrt x2)
+      (Real.sqrt x6) (Real.sqrt x4) (Real.sqrt x5)).symm
+  have hs3 : dihY (Real.sqrt x2) (Real.sqrt x1) (Real.sqrt x3)
+      (Real.sqrt x5) (Real.sqrt x4) (Real.sqrt x6) =
+    dihY (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x1) (Real.sqrt x5)
+      (Real.sqrt x6) (Real.sqrt x4) :=
+    (dihY_swap23_p38 (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x1)
+      (Real.sqrt x5) (Real.sqrt x6) (Real.sqrt x4)).symm
+  rw [hs1, hs2, hs3]
+  ring
 
 /-- HOL `taud_x_taum_x` (terminal.hl:3764). -/
 theorem taud_x_taum_x (h : main_nonlinear_terminal_v11) :
