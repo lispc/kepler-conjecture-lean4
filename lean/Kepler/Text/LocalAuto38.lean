@@ -128,6 +128,8 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
 import Kepler.Text.SphereKit
 import Kepler.Text.TopologyFan
+import Kepler.Text.AzimBridge
+import Kepler.Text.LocalAuto5
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -2697,14 +2699,83 @@ theorem enclosed4_lemma (v0 v1 v2 v3 : V3) :
   sorry -- DISCHARGES: chi_msb sign dichotomy (the enclosing-arc dichotomy)
   -- BLOCKED: enclosedP38 stub + the chi_msb branch identity (unported).
 
-/-- HOL `IN_V_IMP_AZIM_LESS_PI_ALT` (terminal.hl:1768). -/
+/-- Helper (private, 2026-11-14): `azim_in_fan` (LA1, `sigmaFan` body) =
+`azim_in_fan_p2` (LA2, `EE`+`azim_cycle` body) on fan darts — verbatim
+route of LA14's W7 bridge (f): `EE_elim` identifies the guard sets,
+`AZIM_CYCLE_EQ_SIGMA_FAN_ALT` identifies the successor. -/
+private theorem azimInFan_eq_azimInFan_p2_p38 {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) {d : V3 × V3} (hd : d ∈ Fan.dart1OfFan V E) :
+    azimInFan d E = azimInFan_p2 d E := by
+  have hw : d.2 ∈ Fan.setOfEdge d.1 V E := by
+    rw [← Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan]
+    exact hd
+  have hso : Fan.setOfEdge d.1 Set.univ E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    simp [Fan.setOfEdge, EE_p2]
+  have hsf : Fan.sigmaFan 0 Set.univ E d.1 d.2 = Fan.sigmaFan 0 V E d.1 d.2 := by
+    unfold Fan.sigmaFan
+    rw [hso]
+  unfold azimInFan azimInFan_p2
+  by_cases hnc : 1 < (ee d.1 E).ncard
+  · rw [if_pos hnc, if_pos (show 1 < (EE_p2 d.1 E).ncard from hnc), hsf,
+      EE_elim hfan d.1]
+    exact congrArg (azim 0 d.1 d.2) (AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hw).symm
+  · rw [if_neg hnc, if_neg (show ¬(1 < (EE_p2 d.1 E).ncard) from hnc)]
+
+/-- Helper (private, 2026-11-14): matching `wedge_in_fan_ge` bridge (LA14's
+W7 bridge (g), same route). -/
+private theorem wedgeInFanGe_eq_wedgeInFanGe_p2_p38 {V : Set V3}
+    {E : Set (Set V3)} (hfan : Fan.FAN 0 V E) {d : V3 × V3}
+    (hd : d ∈ Fan.dart1OfFan V E) :
+    wedgeInFanGe d E = wedgeInFanGe_p2 d E := by
+  have hw : d.2 ∈ Fan.setOfEdge d.1 V E := by
+    rw [← Fan.properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan]
+    exact hd
+  have hso : Fan.setOfEdge d.1 Set.univ E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    simp [Fan.setOfEdge, EE_p2]
+  have hsf : Fan.sigmaFan 0 Set.univ E d.1 d.2 = Fan.sigmaFan 0 V E d.1 d.2 := by
+    unfold Fan.sigmaFan
+    rw [hso]
+  have hee : ee d.1 E = Fan.setOfEdge d.1 V E := by
+    rw [← EE_elim hfan d.1]
+    rfl
+  unfold wedgeInFanGe wedgeInFanGe_p2
+  rw [hee, EE_elim hfan d.1, hsf, AZIM_CYCLE_EQ_SIGMA_FAN_ALT hfan hw]
+  rfl
+
+/-- HOL `IN_V_IMP_AZIM_LESS_PI_ALT` (terminal.hl:1768). DISCHARGED
+2026-11-14: the LA5 route of `Local_lemmas.IN_V_IMP_AZIM_LESS_PI` behind the
+`localFanEquiv_p35` bridge — `(v, rho v)` is a dart (`LOCAL_FAN_RHO_NODE_PROS2`),
+the convex wedge condition puts `w` in the `wedgeGe` sector at that dart
+(`DETERMINE_WEDGE_IN_FAN` via the `_p38` wedge bridge), the sector bound
+reads off `azimInFan` (`LOFA_DETERMINE_AZIM_IN_FA` via the `_p38`
+azimInFan bridge), and the convex conjunct bounds it by `pi`. -/
 theorem IN_V_IMP_AZIM_LESS_PI_ALT (V : Set V3) (E : Set (Set V3))
     (FF : Set (V3 × V3)) (v : V3) (hcf : ConvexLocalFan V E FF) (hv : v ∈ V)
     (w : V3) (hw : w ∈ V) :
     azim 0 v (rhoNode1 FF v) w ≤ Real.pi := by
-  sorry -- DISCHARGES: fan azim < pi
-  -- BLOCKED: PRIOR_TO chain (LOCAL_FAN_RHO_NODE_PROS2 hole).
-    -- hole)
+  have hlf : LocalFan V E FF := hcf.1
+  have hlf2 : localFan_p2 V E FF :=
+    localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp hlf)
+  obtain ⟨hfan, -, -, -, -, hsub, -⟩ := localFan_data hlf
+  have hdart : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS2 hlf2).2 v hv
+  have hd1 : (v, rhoNode1_p2 FF v) ∈ Fan.dart1OfFan V E := hsub hdart
+  have hwedge : w ∈ wedgeInFanGe (v, rhoNode1_p2 FF v) E := (hcf.2 _ hdart).2 hw
+  rw [wedgeInFanGe_eq_wedgeInFanGe_p2_p38 hfan hd1,
+    DETERMINE_WEDGE_IN_FAN hlf2 hdart] at hwedge
+  have hle1 : azim 0 v (rhoNode1_p2 FF v) w ≤
+      azim 0 v (rhoNode1_p2 FF v) (azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v)) :=
+    (WEDGE_GE_AZIM_LE w 0 v (rhoNode1_p2 FF v)
+      (azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v))).mp hwedge
+  have hmid : azim 0 v (rhoNode1_p2 FF v)
+      (azimCycle_p2 (EE_p2 v E) 0 v (rhoNode1_p2 FF v)) =
+      azimInFan (v, rhoNode1_p2 FF v) E := by
+    rw [azimInFan_eq_azimInFan_p2_p38 hfan hd1]
+    exact (LOFA_DETERMINE_AZIM_IN_FA hlf2 hdart).symm
+  have hle3 : azimInFan (v, rhoNode1_p2 FF v) E ≤ Real.pi := (hcf.2 _ hdart).1
+  rw [hmid] at hle1
+  exact le_trans hle1 hle3
 
 /-- HOL `vv_enclosed4` (terminal.hl:1777). -/
 theorem vv_enclosed4 (vv : ℕ → V3) (i : ℕ)
