@@ -106,9 +106,13 @@
 > `VasArcKit.lean`（消费 `arclength_xrr_p22`；`norm(v p)` 分裂后两分支，≤450 行）。
 > 依据：LA23↛LA21/22 DAG 死锁（SCOUT R3），2b 解析尾不受锁；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
-> **关键侦察（编排者实测）**：LA22 对 LA23 的依赖面仅 4 个声明
-> （`JKQEWGV2_p23`/`JKQEWGV3_p23`/`periodic_mod_eq_p23`/`range_periodic_image_p23`）——最小 DAG 切面候选
-> （切 `LA22→LA23` 后 LA23 可直接 import LA22/LA21；需 DEF-FIX 章程，待用户批）。
+> **DAG 死锁最小解（编排者侦察，DEF-FIX **草案**，未执行）**：LA22 对 LA23 的直接引用面仅 4 名
+> （`JKQEWGV2_p23`/`JKQEWGV3_p23`/`periodic_mod_eq_p23`/`range_periodic_image_p23`）**但**前两件
+> 在 LA23 内有 ~30 条私有 helper 闭包 ⇒ 反向切 `LA22→LA23` 不便宜。**更小解 = 下移 LA23 的
+> VASYYAU/JOTSWIX 簇**：LA23:427-646 连续块 14 条声明（12 条仍 sorry）全树**零代码引用**
+> （只余注释），逐字节搬进新汇点模块 `LocalAuto23Vas`（import LA1/LA21/LA23）——陈述逐字节、
+> sorry 零增减、无环；搬后簇的证明车道可直接吃 LA21/22 azim kit，R3 解除。
+> 章程草案：`docs/def-fix-charters/vas-cluster-move/README.md`（待用户批 → V3 执行）。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -280,6 +284,13 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（21:55，续1062）**：**R3 DAG 死锁最小解立成 DEF-FIX 章程草案：LA23 VASYYAU 簇下移（只提案，未执行）**。
+① **机器证据**：`LocalAuto23.lean:427-646` 连续块 = 14 条声明（`MOD_4_CASES_p23`/`ab4_assumption_reduction{,_2,_sym}_p23`/`PERIODIC_INJ_MOD_p23`/`deform_azim_sum_p23`/`NEHXMWH_p23`/`BZQNDMN_p23`/`JOTSWIX_p23`/`LEMMA_PWE{1,2,3,4}_p23`/`LINDIH_11_p23`；12 条 sorry）——`rg` 全树源面**零代码引用**（只余 LA23 头注释 + LA25:2238/2249 注释）。
+② **方案**：整块逐字节搬进新汇点模块 `lean/Kepler/Text/LocalAuto23Vas.lean`（import `LocalAuto1`/`LocalAuto21`/`LocalAuto23` + Mathlib），donor 删块；陈述逐字节、sorry 零增减、零 axiom/native_decide、无现有消费者、新增边全指向上游 ⇒ 静态无环。搬后簇的证明车道可直接吃 LA21/22 的 azim/deform kit（`INTERIOR_ANGLE1_AZIM_p22` = V1 新证），R3 解除，且**不需要** D1/D2 的 kit 上移。
+③ **ERRATA（对续1061③）**：「反向切 `LA22→LA23`（4 个声明）」不便宜——`JKQEWGV2/3_p23` 在 LA23 内有 ~30 条私有 helper 闭包（`w2sg_*`/`w5sg3_*`/`JKQEWGV2_CASE_*`），搬运面远大于簇下移。续1061③ 的「最小切面候选」判词作废，以本条为准。
+④ 章程：`docs/def-fix-charters/vas-cluster-move/README.md`（含搬运清单/不变量/落地 shadow 验证计划/回滚）。**待用户批 → V3 执行**；未批前 R3 维持原状，V2 不受影响。
+⑤ 下一条：续1063。
+
 - **2026-11-13（21:35，续1061）**：**VASYYAU V2 `vasgate-w2` 发车——2b 尾段 kit（消费 V1 的 arclength_xrr）**。
 ① 目标：新文件 `lean/Kepler/Text/VasArcKit.lean`，把 HOL `VASYYAU.hl:2594-2844`（`norm(v p)` 分裂后 2b-i/2b-ii 两分支）移植成公共引理；前提 = `VASYYAU_concl`（LA1:5303）全部前提 + 2b 入口（`2 < s.a p (p+1)`、`s.a (p+3) p = 2`、norm 情形），早期分支已推得事实（BBprime/JKQEWGV2/CIZMRRH/AZIM_COND_FOR_COPLANAR/coplanar_aff_gt_simple/CONDTION_A_LT_B）做成显式前提并列表「生产者」。≤450 行，标准三。
 ② 依赖已核：`arclength_xrr_p22`/`xrr_{decreasing,increasing,bounds_2,sym}_p22`（V1 `f8adecea`）、`ARCV_ADD_AFF_GE_p18`、`coplanar_aff_gt_simple_p18`、`IMJXPHRv2_p28`/`WL_IN_BALL_ANNULUS_p28`/`NUXCOEAv2_p28`、`PackingAuto25.DIST_IMP_UPS_X_POS`、`YebwjngKit.KEITDWB_kit`、`h0_CSTAB_LT_4_p25`；arcVarc 桥（PackingAuto22:15601 私有逐字复证）/ACS_MONO 桥（Mathlib `Real.arccos_lt|le_arccos`）/`AFF_GT_SUBSET_AFF_GE` 就地件均在 kit 内解决。
@@ -293,6 +304,7 @@
 ④ 下一条：续1061。
 
 
+- **2026-11-13（20:35，续1057）**：**本会话接手 VASYYAU 闸族（用户令：kimi code 负责别事，本会话专责 VASYYAU，恒 1 lane）——V1 `vasgate-w1` 发车**。
 ① 范围：LA1 三 master（`VASYYAU_concl` / `TUAPYYU_concl` / `WKZZEEH_concl`，+`PWEIWBZ_concl`）→ K6/K7/K8（`NWDGKXH_p32` / `YOBIMPP_p32` / `MIQMCSN_p32`）。目标 = 把 VASYYAU 闸族从 4 条 Text 债推到可收口。
 ② **机器重基（HEAD `b53cfc86`，探针实测）**：三 master + LA23 簇（`ab4`/`deform_azim_sum`/`LEMMA_PWE1-4`/`LINDIH_11`/`JOTSWIX`/`NEHXMWH`/`BZQNDMN`）+ LA25 五转发行**全部仍 sorryAx**；`INTERIOR_ANGLE1_AZIM_p22`/`arclength_xrr_p22`/`xrr_decreasing_p22` 仍 sorry。W0 钥匙（YEBWJNG/CQAOQLR/KEITDWB）已落 `58517f80`，`ARCV_ADD_AFF_GE_p18` 已落 `23c16896`，`EGHNAVX1_ALT_p22`/`vv_split_azim_generic_p22` 已落 `ffc849da`——SCOUT（HEAD `40c30857`）部分判词过时。
 ③ **V1 `vasgate-w1`（在飞）**：LA22 解析小件簇——`INTERIOR_ANGLE1_AZIM_p22`（主目标，~44 HOL 行；V1 已侦察到 `LOCAL_FAN_AZIM_POS_p22` 同款 `DETER_RHO_NODE` 路线）+ `xrr_decreasing_p22`（已发现文件内 `la22aux_xrr_decreasing` 同陈述，可一行转发）+ `arclength_xrr_p22`（待验 atn2/acs 桥）；≤450 行；附 `RECON.md`（更新战役图 / LA23↛LA21/22 DAG 死锁 / 最小 DEF-FIX 提案 / 下一波推荐）。
