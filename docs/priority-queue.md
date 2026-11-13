@@ -310,6 +310,12 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（19:25，续1049）**：**pent_hex 塔清偿三连：`83f026e4`（edge2_flatD_x1_delta_lemma3_p19）+ `255e44a8`（delta_2_nn_p19 + delta_mono_p19）——主线程亲作，全部探针标准三、根面逐字节同**。
+① **套路定型（可复用）**：LA19 的 NEEDS-DB 簇 = registry `h "3078028960"` 提取（deltaX1<0 ∨ deltaY>20，后者被 d≤20 假设排除）+ `delta_diff_p19` Cayley 分解 + nlinarith 收尾。三件各 12-22 行，一轮编译过。
+② **塔况更新**：234-reduction 塔的脏基座从 5 子引理清掉 3（lemma3/delta_2_nn/delta_mono 转净）；仍脏：OWZLKVY4_p19 / taud_minimizer_terminal_hex_cases_p19 / taud_mu_clauses_p19 / 234 本体 + 簇内 flat_term2_*_eval ×2 / delta_*_2h0_le_d ×2 / lemma_5546286427_p19。
+③ **下一步候选**（同套路可清）：`lemma_5546286427_p19`（registry "5546286427"，HOL :1575 短证）、flat_term2_*_eval 对（需 flatTerm 定义展开）；大件仍是 234 本体（HOL :2981-3079 真解析证明，est 150-250 行）。
+④ 主线程单干模式今日总产出：N1 双件（ffc849da）+ 塔基三件（83f026e4/255e44a8）+ 全路线侦察入档。
+
 - **2026-11-13（18:35，续1048）**：**N1 编排者亲作落库 `ffc849da`（LA22 双件真证 +import LA14，+66）——主线程单干模式（用户令：本轮零 subagent）首战**。
 ① **内容**：`EGHNAVX1_ALT_p22`（HOL terminal.hl:1536 = LA14 EGHNAVX 第 3 合取支，Nat.card/ncard 换算一行）+ `vv_split_azim_generic_p22`（HOL terminal.hl:1552 仅 46 行的 HOL 证明，Lean 展开 ~55 行：周期 range 基数 `range_periodic_image_p23`+InjOn、非共线 triples 经 `PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14`、`MOD_INJ1_ALT` 单射、`sum4_azim_fan` 收口）。**全树 kit 齐备使预估 600–800 行实为 66 行**（ocbicby-w3 配方的 ④5T1 本体才是大头，属后续波）。
 ② **闸**：直编 RC=0（r3，前两轮 8 个战术错全清）、装池（旧 olean 备份 /tmp）、双探针 = 标准三零 sorryAx、根面 md5 逐字节同。cone-neutral 资产（LA38 侧孪生 sorry 原样——LA14 对 LA38 不可达，这正是 LA22 侧立 _p22 孪生的原因）。
