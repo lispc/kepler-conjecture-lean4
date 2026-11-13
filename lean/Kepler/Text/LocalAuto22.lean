@@ -72,6 +72,7 @@ proved here are upstream-sorry-free except where marked.
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto14
 -- LANE rrcw-weak-p26 (2026-11-06): `RRCWNS_WEAK_p22` is the HOL assembly
 -- `CIZMRRH` + `JKQEWGV2` + `JKQEWGV3` + `INTERIOR_ANGLE1_AZIM` + `SYNQIWN`.
 -- The trichotomy (`CIZMRRH`, LA3), the not-circular theorem (`JKQEWGV2_p23`,
@@ -2479,6 +2480,71 @@ theorem scs_5T1_generic_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
     · rw [hk1, hd4]; linarith [h0_eq_p22]
     · exact Or.inr (scs_5T1_props_p22.2.2.2 vv i hB)
     · rw [hk1]; exact Or.inr hd4
+
+/-- HOL `EGHNAVX1_ALT` (terminal.hl:1536): monotone azim sequence around a fan
+vertex — LA22 twin (the LA38-side twin stays sorry: LA14 is unreachable from
+LA38). -/
+theorem EGHNAVX1_ALT_p22 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (bta : ℕ → ℝ) (v0 : V3) (ww : ℕ → V3) (k : ℕ)
+    (hcf : ConvexLocalFan V E FF) (hv0 : v0 ∈ V) (hcard : Nat.card V = k)
+    (hnc : ∀ v, v ∈ V ∧ v ≠ v0 → ¬ Collinear ℝ ({0, v0, v} : Set V3))
+    (hiter : ∀ i : ℕ, (rhoNode1 FF)^[i] v0 = ww i)
+    (hbta : ∀ i : ℕ, azim 0 v0 (ww 1) (ww i) = bta i)
+    (i j : ℕ) (hij : i < j ∧ j < k) :
+    bta i ≤ bta j :=
+  (EGHNAVX (h := hcf) (hv0 := hv0) (hk := by rw [Set.ncard_def]; exact hcard)
+      (hcol := fun v hv hv0' => hnc v ⟨hv, hv0'⟩) (hiter := hiter) (hbta := hbta)).2.2.1
+    i j hij.1 hij.2
+
+/-- HOL `vv_split_azim_generic` (terminal.hl:1552): generic azim splitting —
+LA22 twin (consumes `EGHNAVX1_ALT_p22` + `sum4_azim_fan`; the LA38-side twin
+stays sorry). -/
+theorem vv_split_azim_generic_p22 (vv : ℕ → V3) (k i j j' : ℕ)
+    (hper : Periodic vv k) (hk : 3 ≤ k) (hj : 0 < j) (hjj : j < j') (hj'k : j' < k)
+    (hgen : Generic (Set.range vv) (Set.range fun n => {vv n, vv (n + 1)}))
+    (hcf : ConvexLocalFan (Set.range vv) (Set.range fun n => {vv n, vv (n + 1)})
+      (Set.range fun n => (vv n, vv (n + 1))))
+    (hinj : ∀ a b : ℕ, a < k ∧ b < k ∧ vv a = vv b → a = b) :
+    azim 0 (vv i) (vv (i + 1)) (vv (i + j')) =
+      azim 0 (vv i) (vv (i + 1)) (vv (i + j)) +
+        azim 0 (vv i) (vv (i + j)) (vv (i + j')) := by
+  have hk0 : 0 < k := by omega
+  have hvm : ∀ n : ℕ, vv n ∈ (Set.range vv : Set V3) := fun n => Set.mem_range_self n
+  have hinj' : Set.InjOn vv (Set.Iio k) := fun a ha b hb hab =>
+    hinj a b ⟨Set.mem_Iio.mp ha, Set.mem_Iio.mp hb, hab⟩
+  have hcard : (Set.range vv : Set V3).ncard = k := by
+    rw [range_periodic_image_p23 vv k hk0 hper, hinj'.ncard_image,
+      Set.ncard_eq_toFinset_card', Set.toFinset_Iio, Nat.Iio_eq_range, Finset.card_range]
+  have hnc : ∀ v, v ∈ (Set.range vv : Set V3) ∧ v ≠ vv i →
+      ¬ Collinear ℝ ({0, vv i, v} : Set V3) :=
+    fun v ⟨hv, hvi⟩ =>
+      PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range vv)
+        (Set.range fun n => {vv n, vv (n + 1)}) (Set.range fun n => (vv n, vv (n + 1)))
+        (vv i) v hcf.1 (hvm i) hv hvi.symm hgen
+  have hiter : ∀ n : ℕ,
+      (rhoNode1 (Set.range fun n => (vv n, vv (n + 1))))^[n] (vv i) = vv (i + n) :=
+    fun n => ITER_vv_rho_node1 vv k n hper hk hinj i
+  have hmono := EGHNAVX1_ALT_p22 (Set.range vv) (Set.range fun n => {vv n, vv (n + 1)})
+    (Set.range fun n => (vv n, vv (n + 1)))
+    (fun n => azim 0 (vv i) (vv (i + 1)) (vv (i + n))) (vv i)
+    (fun n => vv (i + n)) k hcf (hvm i) hcard hnc hiter (fun n => rfl)
+  have hle := hmono j j' ⟨hjj, hj'k⟩
+  have hne : ∀ c : ℕ, 0 < c → c < k → vv (i + c) ≠ vv i := by
+    intro c hc0 hck he
+    have h1 : vv ((i + c) % k) = vv (i % k) := by
+      rw [la22periodic_mod hper, la22periodic_mod hper, he]
+    have h2 := hinj _ _ ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, h1⟩
+    exact MOD_INJ1_ALT (k := c) (n := k) (show k ≠ 0 by omega) hck (by omega : c ≠ 0) i h2.symm
+  have hcol1 : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    hnc _ ⟨hvm _, hne 1 (by omega) (by omega)⟩
+  have hcolj : ¬ Collinear3 0 (vv i) (vv (i + j)) :=
+    hnc _ ⟨hvm _, hne j hj (by omega)⟩
+  have hcolj' : ¬ Collinear3 0 (vv i) (vv (i + j')) :=
+    hnc _ ⟨hvm _, hne j' (by omega) hj'k⟩
+  obtain ⟨hfan, -⟩ := hcf.1
+  have hne0i : vv i ≠ 0 := fun he => hfan.2.2.2.1 (he ▸ hvm i)
+  exact sum4_azim_fan (x := 0) (v := vv i) (u := vv (i + 1)) (w1 := vv (i + j))
+    (w2 := vv (i + j')) hne0i hcol1 hcolj hcolj' hle
 
 /-- HOL `empty_6T1` (giant; the analytic core of the terminal emptiness). -/
 theorem empty_6T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
