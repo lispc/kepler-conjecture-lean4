@@ -3624,10 +3624,10 @@ private theorem jcyfmrp_v2_not_mem_p29 (s : ScsV39) (v : ℕ → V3) (i : ℕ)
 
 /-- HOL `JCYFMRP_V2` (HIJQAHA.hl:3420).  Case split on `i % s.k ∈ scsM s`
 (faithful to the HOL `SET_RULE` dichotomy).  The `∉` branch is discharged by
-`jcyfmrp_v2_not_mem_p29` above.  The `∈` branch still NEEDS `TFITSKC_p27`
-(the tight-edge-successor route: `SCS_M_EQ_1_p27` at `SUC i`, then `TFITSKC`
-on the fixed edge `i` — exactly the HOL ∈-branch); it is the active boundary
-of lane TFITSKCv1-w1, so the `sorry` is retained there. -/
+`jcyfmrp_v2_not_mem_p29` above.  The `∈` branch is the HOL singleton route
+(HIJQAHA.hl:3427-3461): `scsM s = {i % s.k}` off `(scsM s).ncard ≤ 1`,
+`SCS_M_EQ_1_p27` at `i + 1` gives the two tight-edge bounds there, and
+`TFITSKC_p27` on the fixed edge `i` closes the matching distance. -/
 theorem JCYFMRP_V2_p29 : main_nonlinear_terminal_v11 →
     ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), 3 < s.k → isScsV39 s →
       v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
@@ -3637,11 +3637,30 @@ theorem JCYFMRP_V2_p29 : main_nonlinear_terminal_v11 →
       (∀ i, s.a i (i + 1) < s.b i (i + 1)) →
       ∃ i1, s.b i1 (i1 + 1) ≤ 2 * h0 ∧ s.a i1 (i1 + 1) = 2 ∧
         dist (v i1) (v (i1 + 1)) = 2 := by
-  intro _hmnl s v i hk3 hs _hMMs _hgen _hbasic hdist _hM _hdiag _hadge
+  intro hmnl s v i hk3 hs hMMs hgen hbasic hdist hM hdiag hadge
   classical
   by_cases hi : i % s.k ∈ scsM s
-  · sorry
+  · have hfin : (scsM s).Finite := FINITE_SCS_M_p27 s
+    have huniq : ∀ y ∈ scsM s, ∀ z ∈ scsM s, y = z :=
+      (Set.ncard_le_one hfin).mp hM
+    have hMs : scsM s = {i % s.k} := Set.eq_singleton_iff_unique_mem.mpr
+      ⟨hi, fun y hy => huniq y hy (i % s.k) hi⟩
+    have hne : ¬ ((i + 1) % s.k = i % s.k) :=
+      (succ_mod_ne_p27 (k := s.k) (i := i) (by omega)).symm
+    obtain ⟨hb12, ha12⟩ := SCS_M_EQ_1_p27 s (i % s.k) hMs hs (i + 1) hne
+    have ha23 : s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) := hadge (i + 2)
+    have h2a : (2 : ℝ) ≤ s.a i (i + 1) := SCS_A_2_p27 s hs i
+    have hb0gt : (2 : ℝ) < s.b i (i + 1) := lt_of_le_of_lt h2a (hadge i)
+    have hdist2 := TFITSKC_p27 hmnl s v i ha23 hk3 hs hMMs hgen hbasic
+      ha12 hb12 hdist hb0gt hdiag
+    exact ⟨i + 1, hb12, ha12, hdist2⟩
   · exact jcyfmrp_v2_not_mem_p29 s v i hk3 hs hdist hi
+  -- DISCHARGES (2026-11-13, lane tfitskc-w1): the `∈` fork of
+  -- HIJQAHA.hl:3427-3461 — singleton from `FINITE_SCS_M_p27` +
+  -- `Set.ncard_le_one` + `Set.eq_singleton_iff_unique_mem`; bounds at `i + 1`
+  -- off `SCS_M_EQ_1_p27` (LA27); `TFITSKC_p27` (LA27, lane tfitskc-w1
+  -- patch-1) closes `dist (v (i+1)) (v (i+2)) = 2`; witness `i + 1`.
+  -- No new sorry; theorem axioms face = standard three.
 
 /-- HOL `JCYFMRP_V3` (HIJQAHA.hl:3487). -/
 theorem JCYFMRP_V3_p29 : main_nonlinear_terminal_v11 →
@@ -3654,9 +3673,16 @@ theorem JCYFMRP_V3_p29 : main_nonlinear_terminal_v11 →
       (∀ i, s.a i (i + 1) = 2) →
       ∃ i1, s.b i1 (i1 + 1) ≤ 2 * h0 ∧ s.a i1 (i1 + 1) = 2 ∧
         dist (v i1) (v (i1 + 1)) = 2 := by
-  sorry
-  -- DISCHARGES: HL `MP` on the JCYFMRP conclusion with the uniform
-  -- `a(i,i+1) = 2` row.
+  intro hmnl s v hk3 hs hMMs hgen hbasic hM hdiag hadge ha2
+  obtain ⟨i, hi⟩ := JCYFMRP_p27 hmnl s v hk3 hs hMMs hgen hbasic
+    (fun i2 j2 hd2 => (hdiag i2 j2 hd2).2.2) hM ha2
+    (fun i2 j2 hd2 => ⟨(hdiag i2 j2 hd2).1, (hdiag i2 j2 hd2).2.1⟩)
+  exact JCYFMRP_V2_p29 hmnl s v i hk3 hs hMMs hgen hbasic hi hM hdiag hadge
+  -- DISCHARGES (2026-11-13, lane tfitskc-w1): HOL HIJQAHA.hl:3498-3507 — the
+  -- HOL `MP` on the `JCYFMRP` conclusion with the uniform `a (i,i+1) = 2`
+  -- row: `JCYFMRP_p27` (LA27, proved) supplies the tight edge `i`, then
+  -- `JCYFMRP_V2_p29` at that same `i` discharges the goal directly.  No new
+  -- sorry; theorem axioms face = standard three.
 
 /-- HOL `ARC_222` (HIJQAHA.hl:3512). DISCHARGED: the `arclength2` route —
 PackingAuto18's proved `arclength2` (importable, shape-matching) at `h = 1`
