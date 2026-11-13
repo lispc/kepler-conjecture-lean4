@@ -1189,18 +1189,392 @@ theorem MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : �
   · intro x y
     exact hmm.2.2.2.2.2 x y
 
+/-! ## Section G′: the two `is_scs_v39` restriction facts (inline in the
+master `UAGHHBM` bash at UAGHHBM.hl:2540 and 3202)
+
+In HOL these are discharged inline by
+`REWRITE_TAC[is_scs_v39;scs_v39_explicit;override]` + `RESA_TAC`; they are
+not named lemmas.  Restated here as private helpers: all 21 `isScsV39`
+conjuncts for `restrictionCs1V39` / `restrictionCs2V39`, under the
+hypotheses available in the corresponding `subdiv_v39` branches (`s.am i j
+≤ c` in both cs1 branches, `c ≤ s.bm i j` in both cs2 branches, together
+with the master's `hij`/`hJ`/`h1`/`h2`/`hedge`). -/
+
+/-- HOL `Terminal.psort_sym` (used inline at UAGHHBM.hl:2575): `psort` is
+symmetric in its argument pair. -/
+private theorem psort_symm_p30 (k i j : ℕ) : psort k (i, j) = psort k (j, i) := by
+  simp only [psort]
+  by_cases h : i % k ≤ j % k
+  · by_cases h2 : j % k ≤ i % k
+    · rw [Nat.le_antisymm h h2]
+    · simp [h, h2]
+  · have h2 : j % k ≤ i % k := Nat.le_of_lt (by omega)
+    simp [h, h2]
+
+/-- Overriding a symmetric family at one `psort` cell preserves symmetry
+(inline subgoal of the `is_scs_v39` bash). -/
+private theorem override_symm_p30 {f : ℕ → ℕ → ℝ} (hsym : ∀ x y, f x y = f y x)
+    (k : ℕ) (u : ℕ × ℕ) (d : ℝ) (x y : ℕ) :
+    override f k u d x y = override f k u d y x := by
+  unfold override
+  by_cases h : psort k u = psort k (x, y)
+  · rw [if_pos h, if_pos (by rw [← psort_symm_p30 k x y]; exact h)]
+  · rw [if_neg h, if_neg (by rw [← psort_symm_p30 k x y]; exact h), hsym x y]
+
+/-- Overriding a `Periodic2` family at one `psort` cell preserves
+`Periodic2` (closure of HOL `PERIODIC_PSORT`, inline at UAGHHBM.hl:2550
+and 2566). -/
+private theorem periodic2_override_p30 {f : ℕ → ℕ → ℝ} {k : ℕ} (hper : Periodic2 f k)
+    (hk : k ≠ 0) (u : ℕ × ℕ) (d : ℝ) : Periodic2 (override f k u d) k := by
+  intro x y
+  constructor
+  · by_cases h : psort k u = psort k (x, y)
+    · have h2 : psort k u = psort k (x + k, y) := by
+        rw [(PERIODIC_PSORT_p30 hk x y).1]; exact h
+      show (if psort k u = psort k (x + k, y) then d else f (x + k) y) =
+        (if psort k u = psort k (x, y) then d else f x y)
+      rw [if_pos h2, if_pos h]
+    · have h2 : ¬psort k u = psort k (x + k, y) := by
+        rwa [(PERIODIC_PSORT_p30 hk x y).1]
+      show (if psort k u = psort k (x + k, y) then d else f (x + k) y) =
+        (if psort k u = psort k (x, y) then d else f x y)
+      rw [if_neg h2, if_neg h]
+      exact (hper x y).1
+  · by_cases h : psort k u = psort k (x, y)
+    · have h2 : psort k u = psort k (x, y + k) := by
+        rw [(PERIODIC_PSORT_p30 hk x y).2]; exact h
+      show (if psort k u = psort k (x, y + k) then d else f x (y + k)) =
+        (if psort k u = psort k (x, y) then d else f x y)
+      rw [if_pos h2, if_pos h]
+    · have h2 : ¬psort k u = psort k (x, y + k) := by
+        rwa [(PERIODIC_PSORT_p30 hk x y).2]
+      show (if psort k u = psort k (x, y + k) then d else f x (y + k)) =
+        (if psort k u = psort k (x, y) then d else f x y)
+      rw [if_neg h2, if_neg h]
+      exact (hper x y).2
+
+/-- psort-equal cells are indistinguishable for `s.am` (companion of
+`a_psort_p30`/`b_psort_p30` for the bash's `am`/`bm` conjuncts). -/
+private theorem am_psort_p30 (s : ScsV39) (hs : isScsV39 s) {i j x y : ℕ}
+    (h : psort s.k (i, j) = psort s.k (x, y)) : s.am i j = s.am x y := by
+  obtain ⟨_, _, _, _, _, _, _, _, hpam, _, _, _, hsym, _, _, _, _, _, _, _, _⟩ := hs
+  exact comp_psort_p30 hpam (fun i j => (hsym i j).2.1) h
+
+/-- psort-equal cells are indistinguishable for `s.bm`. -/
+private theorem bm_psort_p30 (s : ScsV39) (hs : isScsV39 s) {i j x y : ℕ}
+    (h : psort s.k (i, j) = psort s.k (x, y)) : s.bm i j = s.bm x y := by
+  obtain ⟨_, _, _, _, _, _, _, _, _, hpbm, _, _, hsym, _, _, _, _, _, _, _, _⟩ := hs
+  exact comp_psort_p30 hpbm (fun i j => (hsym i j).2.2.1) h
+
+/-- A `psort`-equality transports `s.J` between the two pairs (used for the
+`J i j ⇒ … = cstab` conjunct, whose override branch is killed by
+`¬(s.J i j)`). -/
+private theorem J_eq_of_psort_p30 {s : ScsV39} (hs : isScsV39 s) {i j x y : ℕ}
+    (h : psort s.k (i, j) = psort s.k (x, y)) : s.J i j = s.J x y := by
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, hpJ, hsym, _, _, _, _, _, _, _, _⟩ := hs
+  rw [periodic2_mod_p30 hpJ i j, periodic2_mod_p30 hpJ x y]
+  rcases CASE_PSORT_p30 h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · rw [h1, h2]
+  · rw [h1, h2, (hsym (y % s.k) (x % s.k)).2.2.2.2]
+
+/-- A diagonal-successor pair `psort`-equal to `(i, j)` makes `(i, j)` an
+edge pair (inline analysis behind the ncard conjunct of the bash). -/
+private theorem psort_diag_succ_p30 {k : ℕ} {i j x : ℕ}
+    (h : psort k (i, j) = psort k (x, x + 1)) :
+    j % k = (i + 1) % k ∨ (j + 1) % k = i % k := by
+  have e : ∀ a b : ℕ, a % k = b % k → (a + 1) % k = (b + 1) % k :=
+    fun a b hab => by rw [Nat.add_mod a 1 k, Nat.add_mod b 1 k, hab]
+  rcases CASE_PSORT_p30 h with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · exact Or.inl (by rw [h2, e i x h1])
+  · exact Or.inr (by rw [h1, e j x h2])
+
+/-- Inline `is_scs_v39 (restriction_cs1_v39 s i j c)` subgoal of the master
+`UAGHHBM` bash (UAGHHBM.hl:2888): the cs1 restriction overrides the upper
+bounds `bm`/`b`; `s.am i j ≤ c` (`ham`, available in both cs1 subdiv
+branches) covers the `am ≤ bm'` chain, while `h2` and `hJ` discharge the
+bound and `J`-value conjuncts at the single overridden `psort` cell. -/
+private theorem isScs_restrictionCs1V39_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
+    (hs : isScsV39 s) (hJ : ¬s.J i j) (ham : s.am i j ≤ c) (h2 : c ≤ s.b i j) :
+    isScsV39 (restrictionCs1V39 s i j c) := by
+  obtain ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, hpbm, hpb, hpJ, hsym,
+      hch, hdiag0, hdiag, hb3, hbc, hJedge, hJval, hcard⟩ := hs
+  have hs : isScsV39 s :=
+    ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, hpbm, hpb, hpJ, hsym, hch,
+      hdiag0, hdiag, hb3, hbc, hJedge, hJval, hcard⟩
+  have hk0 : s.k ≠ 0 := by omega
+  unfold isScsV39
+  refine ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, ?_,
+    periodic2_override_p30 hpb hk0 (i, j) c, hpJ, ?_, ?_, hdiag0, hdiag, ?_, ?_,
+    hJedge, ?_, ?_⟩
+  · show Periodic2 (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) s.k
+    by_cases hlt : c < s.bm i j
+    · rw [if_pos hlt]
+      exact periodic2_override_p30 hpbm hk0 (i, j) c
+    · rw [if_neg hlt]
+      exact hpbm
+  · intro x y
+    refine ⟨(hsym x y).1, (hsym x y).2.1, ?_, ?_, (hsym x y).2.2.2.2⟩
+    · by_cases hlt : c < s.bm i j
+      · show (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) x y =
+          (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) y x
+        rw [if_pos hlt]
+        exact override_symm_p30 (fun x y => (hsym x y).2.2.1) s.k (i, j) c x y
+      · show (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) x y =
+          (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) y x
+        rw [if_neg hlt]
+        exact (hsym x y).2.2.1
+    · exact override_symm_p30 (fun x y => (hsym x y).2.2.2.1) s.k (i, j) c x y
+  · intro x y
+    refine ⟨(hch x y).1, ?_, ?_⟩
+    · by_cases hlt : c < s.bm i j
+      · show s.am x y ≤
+          (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) x y
+        rw [if_pos hlt]
+        show s.am x y ≤
+          (if psort s.k (i, j) = psort s.k (x, y) then c else s.bm x y)
+        by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+        · rw [if_pos hp]
+          calc s.am x y = s.am i j := (am_psort_p30 s hs hp).symm
+            _ ≤ c := ham
+        · rw [if_neg hp]
+          exact (hch x y).2.1
+      · show s.am x y ≤
+          (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) x y
+        rw [if_neg hlt]
+        exact (hch x y).2.1
+    · by_cases hlt : c < s.bm i j
+      · show (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) x y ≤
+          override s.b s.k (i, j) c x y
+        rw [if_pos hlt]
+        show (if psort s.k (i, j) = psort s.k (x, y) then c else s.bm x y) ≤
+          (if psort s.k (i, j) = psort s.k (x, y) then c else s.b x y)
+        by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+        · rw [if_pos hp, if_pos hp]
+        · rw [if_neg hp, if_neg hp]
+          exact (hch x y).2.2
+      · show (if c < s.bm i j then override s.bm s.k (i, j) c else s.bm) x y ≤
+          override s.b s.k (i, j) c x y
+        rw [if_neg hlt]
+        show s.bm x y ≤
+          (if psort s.k (i, j) = psort s.k (x, y) then c else s.b x y)
+        by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+        · rw [if_pos hp]
+          calc s.bm x y = s.bm i j := (bm_psort_p30 s hs hp).symm
+            _ ≤ c := le_of_not_gt hlt
+        · rw [if_neg hp]
+          exact (hch x y).2.2
+  · intro x hx3
+    show (if psort s.k (i, j) = psort s.k (x, x + 1) then c
+        else s.b x (x + 1)) < 4
+    by_cases hp : psort s.k (i, j) = psort s.k (x, x + 1)
+    · rw [if_pos hp]
+      calc c ≤ s.b i j := h2
+        _ = s.b x (x + 1) := b_psort_p30 s hs hp
+        _ < 4 := hb3 x hx3
+    · rw [if_neg hp]
+      exact hb3 x hx3
+  · intro x hx3
+    show (if psort s.k (i, j) = psort s.k (x, x + 1) then c
+        else s.b x (x + 1)) ≤ cstab
+    by_cases hp : psort s.k (i, j) = psort s.k (x, x + 1)
+    · rw [if_pos hp]
+      calc c ≤ s.b i j := h2
+        _ = s.b x (x + 1) := b_psort_p30 s hs hp
+        _ ≤ cstab := hbc x hx3
+    · rw [if_neg hp]
+      exact hbc x hx3
+  · intro x y hxyJ
+    by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+    · have hJi : s.J i j := by
+        rw [J_eq_of_psort_p30 hs hp]; exact hxyJ
+      exact (hJ hJi).elim
+    · have hb := hJval x y hxyJ
+      refine ⟨hb.1, ?_⟩
+      show (override s.b s.k (i, j) c) x y = cstab
+      unfold override
+      rw [if_neg hp]
+      exact hb.2
+  · have hsub : {x | x < s.k ∧
+        (2 * h0 < override s.b s.k (i, j) c x (x + 1) ∨
+          2 < s.a x (x + 1))} ⊆
+      {x | x < s.k ∧ (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))} := by
+      rintro x ⟨hxk, hx⟩
+      refine ⟨hxk, ?_⟩
+      rcases hx with h | h
+      · left
+        by_cases hp : psort s.k (i, j) = psort s.k (x, x + 1)
+        · unfold override at h
+          rw [if_pos hp] at h
+          exact lt_of_lt_of_le h (h2.trans (le_of_eq (b_psort_p30 s hs hp)))
+        · unfold override at h
+          rw [if_neg hp] at h
+          exact h
+      · exact Or.inr h
+    have hfin : {x | x < s.k ∧
+        (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))}.Finite :=
+      Set.Finite.subset (Set.finite_lt_nat s.k) (fun x hx => hx.1)
+    have hle := Set.ncard_le_ncard hsub hfin
+    show {x | x < s.k ∧
+        (2 * h0 < override s.b s.k (i, j) c x (x + 1) ∨
+          2 < s.a x (x + 1))}.ncard + s.k ≤ 6
+    omega
+
+/-- Inline `is_scs_v39 (restriction_cs2_v39 s i j c)` subgoal of the master
+`UAGHHBM` bash (UAGHHBM.hl:2540 and 3202): the cs2 restriction overrides the
+lower bounds `a`/`am`; `c ≤ s.bm i j` (`hbm`, available in both cs2 subdiv
+branches) covers the `am' ≤ bm` chain, `hij`/`h1` give the `2 ≤ c`
+off-diagonal bound, `hJ` kills the override branch of the `J`-value
+conjunct, and `hedge` discharges the ncard comparison at the unique
+overridden `psort` cell. -/
+private theorem isScs_restrictionCs2V39_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
+    (hs : isScsV39 s) (hij : i % s.k ≠ j % s.k) (hJ : ¬s.J i j) (h1 : s.a i j ≤ c)
+    (hbm : c ≤ s.bm i j)
+    (hedge : (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k) →
+      2 < s.a i j ∨ 2 * h0 < s.b i j) :
+    isScsV39 (restrictionCs2V39 s i j c) := by
+  obtain ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, hpbm, hpb, hpJ, hsym,
+      hch, hdiag0, hdiag, hb3, hbc, hJedge, hJval, hcard⟩ := hs
+  have hs : isScsV39 s :=
+    ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, hpa, hpam, hpbm, hpb, hpJ, hsym, hch,
+      hdiag0, hdiag, hb3, hbc, hJedge, hJval, hcard⟩
+  have hk0 : s.k ≠ 0 := by omega
+  unfold isScsV39
+  refine ⟨hd, hk1, hk2, hlo, hhi, hstr1, hstr2, periodic2_override_p30 hpa hk0
+    (i, j) c, ?_, hpbm, hpb, hpJ, ?_, ?_, ?_, ?_, hb3, hbc, hJedge, ?_, ?_⟩
+  · show Periodic2 (if s.am i j < c then override s.am s.k (i, j) c else s.am) s.k
+    by_cases hlt : s.am i j < c
+    · rw [if_pos hlt]
+      exact periodic2_override_p30 hpam hk0 (i, j) c
+    · rw [if_neg hlt]
+      exact hpam
+  · intro x y
+    refine ⟨override_symm_p30 (fun x y => (hsym x y).1) s.k (i, j) c x y, ?_,
+      (hsym x y).2.2.1, (hsym x y).2.2.2.1, (hsym x y).2.2.2.2⟩
+    by_cases hlt : s.am i j < c
+    · show (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y =
+        (if s.am i j < c then override s.am s.k (i, j) c else s.am) y x
+      rw [if_pos hlt]
+      exact override_symm_p30 (fun x y => (hsym x y).2.1) s.k (i, j) c x y
+    · show (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y =
+        (if s.am i j < c then override s.am s.k (i, j) c else s.am) y x
+      rw [if_neg hlt]
+      exact (hsym x y).2.1
+  · intro x y
+    refine ⟨?_, ?_, (hch x y).2.2⟩
+    · by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+      · by_cases hlt : s.am i j < c
+        · show override s.a s.k (i, j) c x y ≤
+            (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y
+          rw [if_pos hlt]
+          show (if psort s.k (i, j) = psort s.k (x, y) then c else s.a x y) ≤
+            (if psort s.k (i, j) = psort s.k (x, y) then c else s.am x y)
+          rw [if_pos hp, if_pos hp]
+        · show override s.a s.k (i, j) c x y ≤
+            (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y
+          rw [if_neg hlt]
+          show (if psort s.k (i, j) = psort s.k (x, y) then c else s.a x y) ≤
+            s.am x y
+          rw [if_pos hp]
+          calc c ≤ s.am i j := le_of_not_gt hlt
+            _ = s.am x y := am_psort_p30 s hs hp
+      · show (if psort s.k (i, j) = psort s.k (x, y) then c else s.a x y) ≤
+          (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y
+        rw [if_neg hp]
+        by_cases hlt : s.am i j < c
+        · rw [if_pos hlt]
+          show s.a x y ≤
+            (if psort s.k (i, j) = psort s.k (x, y) then c else s.am x y)
+          rw [if_neg hp]
+          exact (hch x y).1
+        · rw [if_neg hlt]
+          exact (hch x y).1
+    · by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+      · by_cases hlt : s.am i j < c
+        · show (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y ≤
+            s.bm x y
+          rw [if_pos hlt]
+          show (if psort s.k (i, j) = psort s.k (x, y) then c else s.am x y) ≤
+            s.bm x y
+          rw [if_pos hp]
+          calc c ≤ s.bm i j := hbm
+            _ = s.bm x y := bm_psort_p30 s hs hp
+        · show (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y ≤
+            s.bm x y
+          rw [if_neg hlt]
+          calc s.am x y = s.am i j := (am_psort_p30 s hs hp).symm
+            _ ≤ s.bm i j := (hch i j).2.1
+            _ = s.bm x y := bm_psort_p30 s hs hp
+      · show (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y ≤
+          s.bm x y
+        by_cases hlt : s.am i j < c
+        · rw [if_pos hlt]
+          show (if psort s.k (i, j) = psort s.k (x, y) then c else s.am x y) ≤
+            s.bm x y
+          rw [if_neg hp]
+          exact (hch x y).2.1
+        · rw [if_neg hlt]
+          exact (hch x y).2.1
+  · intro x
+    by_cases hp : psort s.k (i, j) = psort s.k (x, x)
+    · rcases CASE_PSORT_p30 hp with ⟨h1, h2⟩ | ⟨h1, h2⟩ <;>
+        exact (hij (by rw [h1, ← h2])).elim
+    · show (if psort s.k (i, j) = psort s.k (x, x) then c else s.a x x) = 0
+      rw [if_neg hp]
+      exact hdiag0 x
+  · intro x y hxy
+    show 2 ≤ (if psort s.k (i, j) = psort s.k (x, y) then c else s.a x y)
+    by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+    · rw [if_pos hp]
+      exact C_LE_2_IS_SCS_p30 s i j c hs hij h1
+    · rw [if_neg hp]
+      exact hdiag x y hxy
+  · intro x y hxyJ
+    by_cases hp : psort s.k (i, j) = psort s.k (x, y)
+    · have hJi : s.J i j := by
+        rw [J_eq_of_psort_p30 hs hp]; exact hxyJ
+      exact (hJ hJi).elim
+    · have hb := hJval x y hxyJ
+      refine ⟨?_, hb.2⟩
+      show (override s.a s.k (i, j) c) x y = Real.sqrt 8
+      unfold override
+      rw [if_neg hp]
+      exact hb.1
+  · have hsub : {x | x < s.k ∧
+        (2 * h0 < s.b x (x + 1) ∨
+          2 < override s.a s.k (i, j) c x (x + 1))} ⊆
+      {x | x < s.k ∧ (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))} := by
+      rintro x ⟨hxk, hx⟩
+      refine ⟨hxk, ?_⟩
+      rcases hx with h | h
+      · exact Or.inl h
+      · by_cases hp : psort s.k (i, j) = psort s.k (x, x + 1)
+        · unfold override at h
+          rw [if_pos hp] at h
+          rcases hedge (psort_diag_succ_p30 hp) with h2a | h2b
+          · exact Or.inr (by rwa [a_psort_p30 s hs hp] at h2a)
+          · exact Or.inl (by rwa [b_psort_p30 s hs hp] at h2b)
+        · unfold override at h
+          rw [if_neg hp] at h
+          exact Or.inr h
+    have hfin : {x | x < s.k ∧
+        (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))}.Finite :=
+      Set.Finite.subset (Set.finite_lt_nat s.k) (fun x hx => hx.1)
+    have hle := Set.ncard_le_ncard hsub hfin
+    show {x | x < s.k ∧
+        (2 * h0 < s.b x (x + 1) ∨
+          2 < override s.a s.k (i, j) c x (x + 1))}.ncard + s.k ≤ 6
+    omega
+
 /-! ## Section H: the master subdivision arrow (UAGHHBM.hl:2501-4095) -/
 
 /-- HOL `UAGHHBM` (UAGHHBM.hl:2501): the forking conclusion
 `scs_arrow_v39 {s} (set_of_list (subdiv_v39 s i j c))`.
 NEEDS: the full fork analysis over `subdivV39`'s four cases (HOL
-UAGHHBM.hl:2501-4095): `is_scs_v39` of the two restrictions (the
-`psort`/`override` rewrite of all 21 conjuncts — in HOL a single
-`RESA_TAC` bash of ~1600 lines) plus the edge-regime bookkeeping of
-Sections D-G (the Section G `c = am` chain is now discharged above; the
-remaining inputs are `isScsV39 (restrictionCs1V39 s i j c)` /
-`isScsV39 (restrictionCs2V39 s i j c)`, not present in any importable
-lane). -/
+UAGHHBM.hl:2501-4095): case splits on `c ≤ s.a i j`, `c ≤ s.am i j`,
+`c < s.bm i j`, `c < s.b i j` with the transfer arguments per branch
+(the two inline `is_scs_v39` restriction facts are now discharged above
+as `isScs_restrictionCs1V39_p30` / `isScs_restrictionCs2V39_p30`), plus
+the edge-regime bookkeeping of Sections D-G. -/
 theorem UAGHHBM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ) (hs : isScsV39 s)
     (hij : i % s.k ≠ j % s.k) (hJ : ¬s.J i j) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j)
