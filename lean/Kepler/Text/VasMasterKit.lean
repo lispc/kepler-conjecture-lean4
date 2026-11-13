@@ -1351,4 +1351,111 @@ private theorem pweiwbz_C_a12 (h : main_nonlinear_terminal_v11) (s : ScsV39)
         exact absurd (he.trans P.b34) h34
     exact pweiwbz_C_a12eq2 h s v p his hb hk hv hdiag hval ha01 hstr1 hn1 ha30 ha12 hd34
 
+/-- HOL `PWEIWBZ` (VASYYAU.hl:1126-2348), `str (p+1)` branch, `a(p+3)p ≠ 2` and
+`a(p+1)(p+2) ≠ &2` (VASYYAU.hl:2199-2345).  Both labels of the `TUAPYYU @ p+3`
+split (`dist(v(p+3),v(p+4)) = 2*h0` = `a34` and `= cstab` = `b34`, the latter
+being `dist(v p,v(p+3)) = cstab` by periodicity, i.e. HOL's "CASES 0 3= cstab")
+share the same prefix and are absorbed by one `rcases`:
+
+* `A_NOT_EQ2_IMP_B @ p+1` (`:2202`) gives `a(p+1)(p+2) = 2*h0`;
+* `PRO_ADD_NOT_IN_SCS_M @ p+1` (`:2203`) and the C-prep `mem3`
+  (`PRO_ADD_NOT_IN_SCS_M @ p+3`) put both residues in `scsM`, so
+  `B_LE_2h0_2_SCS_M_4_1 @ p` (`:2204`) gives `b(p+2)(p+3) ≤ 2*h0`,
+  `B_LE_2h0_IMP_B @ p+2` (`:2205`) gives `a(p+2)(p+3) = 2`, and
+  `YEBWJNG @ p+2` (`:2206`) pins `dist(v(p+2),v(p+3)) = 2`;
+* `TUAPYYU @ p+3` (`:2210`) localises `dist(v(p+3),v(p+4))` to
+  `{a34 = 2*h0, b34 = cstab}`; in both labels `2*h0 ≤ dist(v(p+4),v(p+3))`;
+* `LEMMA_PWE4 @ p+1` (`:2216`, `ha30 = s.a (p+4) (p+1) = 2` by `a`-symmetry
+  of the C-prep `a14 = s.a (p+1) (p+4) = 2`) supplies the `dihV` bound at `v p`
+  that is `CUXVZOZ @ p`'s `hcase` first disjunct, and `CUXVZOZ @ p` (`:2228`)
+  lands on `dist(v p,v(p+1)) = 2`. -/
+private theorem pweiwbz_C_a12ne2 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s) (hb : scsBasicV39 s) (hk : s.k = 4)
+    (hv : v ∈ MMsV39 s)
+    (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j)
+    (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+    (ha01 : s.a p (p + 1) = 2) (hstr1 : scsIsStr s v (p + 1))
+    (hn1 : norm (v (p + 1)) = 2) (ha30 : s.a (p + 3) p ≠ 2)
+    (ha12ne : s.a (p + 1) (p + 2) ≠ 2) :
+    dist (v p) (v (p + 1)) = 2 := by
+  let FF : Set (V3 × V3) := Set.range fun i => (v i, v (i + 1))
+  have hFF : Set.range (fun i => (v i, v (i + 1))) = FF := rfl
+  let P := pweiwbz_Cprep2 h s v p his hb hk hv hdiag hval ha01 hstr1 ha30
+  have his' : isScsV39 s := his
+  have hsym : ∀ i j : ℕ, s.a i j = s.a j i := by
+    obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, hsym, -, -, -, -, -, -, -, -⟩ := his
+    exact fun i j => (hsym i j).1
+  have hia : ∀ j : ℕ, azim 0 (v j) (v (j + 1)) (v (j + 3)) = interiorAngle1 0 FF (v j) := by
+    intro j
+    simpa only [hFF] using P.ia j
+  -- ═══ A. `a(p+1)(p+2) ≠ 2` is `2*h0`; the `(p+2,p+3)` row is `2`
+  -- (HOL :2202-2208) ═══
+  obtain ⟨ha12, hb12⟩ := A_NOT_EQ2_IMP_B_p25 s (p + 1) hval ha12ne
+  have hmem1 : (p + 1) % 4 ∈ scsM s :=
+    PRO_ADD_NOT_IN_SCS_M_p25 s (p + 1) 4 his' hk ha12
+  have hsub : {((p + 1) % 4), ((p + 3) % 4)} ⊆ scsM s := by
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with hx | hx
+    · rw [hx]; exact hmem1
+    · rw [Set.mem_singleton_iff] at hx
+      rw [hx]; exact P.mem3
+  have hb23le : s.b (p + 2) (p + 3) ≤ 2 * h0 :=
+    B_LE_2h0_2_SCS_M_4_1_p25 s his' hk hsub
+  obtain ⟨ha23, hb23⟩ := B_LE_2h0_IMP_B_p25 s (p + 2) hval hb23le
+  have hY2 : dist (v (p + 2)) (v (p + 3)) = 2 :=
+    YEBWJNG_kit h s v (p + 2) his' hb hk hv hdiag hval P.ns2 P.ns3 ha23
+  -- ═══ B. `TUAPYYU @ p+3`: both value labels give `2*h0 ≤ dist(v(p+4),v(p+3))`
+  -- (HOL :2210-2214; the `b34 = cstab` label is HOL's "CASES 0 3= cstab") ═══
+  have hTU := TUAPYYU_kit h s v (p + 3) his' hb hk hv hdiag hval P.ns3 P.ns4
+  have hd2 : 2 * h0 ≤ dist (v (p + 4)) (v (p + 3)) := by
+    rcases hTU with he | he
+    · rw [show (p + 3) + 1 = p + 4 by omega] at he
+      rw [dist_comm (v (p + 4)) (v (p + 3)), he, P.a34]
+    · rw [show (p + 3) + 1 = p + 4 by omega] at he
+      rw [dist_comm (v (p + 4)) (v (p + 3)), he, P.b34]
+      norm_num [h0, cstab]
+  -- ═══ C. the `(p+4,p+1)` edge is `2` (`a`-symmetry of the C-prep `a14`,
+  -- HOL :2216 `CHANGE_A_SCS_MOD` + `MOD_SUC_MOD`) ═══
+  have ha30' : s.a (p + 4) (p + 1) = 2 := (hsym (p + 4) (p + 1)).trans P.a14
+  -- ═══ D. `LEMMA_PWE4 @ p+1`: the `dihV` bound at `v p` (HOL :2216-2226) ═══
+  have hPWE := LEMMA_PWE4_p23 h s v (p + 1) his hb hk hv hdiag hval P.gen
+    (by simpa only [show (p + 1) + 1 = p + 2 by omega] using P.ns2)
+    (by simpa only [show (p + 1) + 3 = p + 4 by omega] using P.ns4)
+    hstr1 hn1
+    (by simpa only [show (p + 1) + 3 = p + 4 by omega] using ha30')
+    (by simpa only [show (p + 1) + 1 = p + 2 by omega] using ha12)
+    (by
+      rw [show (p + 1) + 2 = p + 3 by omega, show (p + 1) + 1 = p + 2 by omega,
+        dist_comm (v (p + 3)) (v (p + 2))]
+      exact hY2)
+    (by simpa only [show (p + 1) + 3 = p + 4 by omega,
+      show (p + 1) + 2 = p + 3 by omega] using hd2)
+  have hPWE' : Real.pi / 2 < dihV 0 (v p) (v (p + 1)) (v (p + 3)) := by
+    simpa only [show (p + 1) + 3 = p + 4 by omega, show (p + 1) + 2 = p + 3 by omega,
+      P.per p] using hPWE
+  -- ═══ E. the `hcase` of `CUXVZOZ @ p` (HOL :2264-2278) ═══
+  have hcase1 : Real.pi / 2 < interiorAngle1 0 FF (v p) ∨
+      interiorAngle1 0 FF (v (p + 1)) < Real.pi := Or.inl (by
+    rw [← hia p, P.az1]
+    exact hPWE')
+  have hang : interiorAngle1 0 FF (v p) < Real.pi := by
+    simpa only [hFF] using P.iaLt p P.ns0
+  -- ═══ F. the diagonal data of `CUXVZOZ @ p` ═══
+  have hd : 3 ≤ dist (v (p + (4 - 1))) (v (p + 1)) := by
+    rw [dist_comm]
+    exact P.diag3 (p + 1) (p + 3) P.diagP1P3
+  have h2 : 2 ≤ dist (v (p + 3)) (v p) := by
+    have hle := (P.bbs.2.2.1 (p + 3) p).1
+    rw [P.a30] at hle
+    linarith [show (2 : ℝ) ≤ 2 * h0 by norm_num [h0]]
+  have hdc : dist (v (p + 3)) (v p) ≤ cstab := by
+    have hle := (P.bbs.2.2.1 (p + 3) p).2
+    rw [P.b30] at hle
+    exact hle
+  -- ═══ G. `CUXVZOZ @ p` lands on the goal (HOL :2228-2241) ═══
+  exact CUXVZOZ_p21 h s FF 4 p v hFF.symm his hk.symm (by norm_num) hv hb P.gen hd
+    (fun i j hdij _ => P.diagLt i j hdij) P.diagB hang hcase1 ha01 (le_of_eq P.b01) h2 hdc
+
 end Kepler.Text
