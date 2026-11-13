@@ -17,18 +17,18 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AH @`59208114`（2026-11-13，URRPHBZ2 真证——Text 11→10）**
-> cone `K_REACH 2,097,746` / **SORRIED 65** / **`K_AXIOM 585`** / MODULES 5,241 /
-> UNIVERSE 2,110,685 / COVERAGE **99.3870%**；口径 II 36,046 / 65 / 585 / 47,428。
-> `docs/e2e-reachability-map.tsv` 已按基线 AH 重写（5,910 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AI @`f5f96b8b`（2026-11-13，四车道批次：6I1 / LA33 / LA18 / OCBICBY-kit）**
+> cone `K_REACH 2,098,014` / **SORRIED 62** / **`K_AXIOM 585`** / MODULES 5,241 /
+> UNIVERSE 2,110,736 / COVERAGE **99.3973%**；口径 II 36,314 / 62 / 585 / 47,479。
+> `docs/e2e-reachability-map.tsv` 已按基线 AI 重写（5,907 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 65 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 10（`--- SORRIED ---` 段实测）。
-> 较基线 AG：SORRIED 66→65（清单 diff：closed 恰 `{URRPHBZ2}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +107（本体证明体入锥）、UNIVERSE +288、MODULES 0。
-> 同批 cone-neutral 资产（不改变锥面）：`c8172dd0` LA27 公共 `JLXFDMJ_ge4_p27`
-> （HOL `3 < s.k` 前提，免 SF wrapper）、`58517f80` vasw0-w1 恢复（YebwjngKit + CQAOQLR_p16 +
-> WGDHPPI/YEBWJNG discharge）、`8231788d` k4cprep-w3（LA18 +135/−31，3 sorry）。
+> （与基线 AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 62 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 7（`--- SORRIED ---` 段实测）。
+> 较基线 AH：SORRIED 65→62（清单 diff：closed 恰
+> `{SCS_4I1_IMP_SCS_4I2_p33, SCS_4I2_IMP_SCS_4T1_p33, SCS_6I1_BERAK_BY_CSTAB}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +268、UNIVERSE +51、MODULES 0。
+> 同批非锥内资产：`23c16896` LA18 三件（azim_dih_y/planar_deform_dist/ARCV_ADD_AFF_GE）、
+> `f5f96b8b` LA22 `empty_4T4`/`empty_4T5`（OCBICBY 14 前提 10 已证）。
 > 中间档：`04ab3cac` DAG 切面四刀（cone-neutral 解锁件）、`3cb72c17` TM 18 文件（300 叶证书）；
 > 各节见 map。
 >
@@ -42,7 +42,7 @@
 
 | 里程碑 | 定义 | 现状（**当前基线 Z @`75ed6d07`；历史数字见 map 各基线节**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AH（2026-11-13 @`59208114`）：SORRIED 65 / K_REACH 2,097,746 / AXIOM 585 / MODULES 5,241 / UNIVERSE 2,110,685 / COVERAGE 99.3870%；口径 II 36,046 / 65 / 585 / 47,428。历史基线 T–AH、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AI（2026-11-13 @`f5f96b8b`）：SORRIED 62 / K_REACH 2,098,014 / AXIOM 585 / MODULES 5,241 / UNIVERSE 2,110,736 / COVERAGE 99.3973%；口径 II 36,314 / 62 / 585 / 47,479。历史基线 T–AI、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -94,9 +94,7 @@
 
 ## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
-> **2026-11-13 16:30 接管后盘面**：`jlxfdmj-w4` LANDED `73d6c4e6`；`urrcellbody-w7` LANDED `59208114`（SORRIED 66→65，基线 AH）；三处泄漏交付恢复落库——`c8172dd0`（jlxfdmj-w1 wrapper，免 SF）、`58517f80`（vasw0-w1：YebwjngKit/CQAOQLR/WGDHPPI/YEBWJNG）、`8231788d`（k4cprep-w3：LA18 3 sorry）。**下一步发 L1（6I1）/ L2（LA33）/ L3（OCBICBY）三车道**；L4（K4c/5M2）为第 4 补位。详见 §8 续1042–1045。
->
-> **在飞（16:35，4 车道）**：`sc6i1close-w1`（L1 6I1）/ `la33keys-w1`（L2 LA33 两件）/ `ocbicby-w3`（L3 OCBICBY）/ `k4c5m2-w1`（L4 5M2+K4c）；均自 HEAD `65b64256`，每车道 ≤1 lean。
+> **2026-11-13 17:20 四车道批次收官**：`a7e699d1`（L1 6I1 三件，锥内 −1）、`24725045`（L2 LA33 两件 + ARDBZYE，−2）、`23c16896`（L4 LA18 三件，非锥内）、`f5f96b8b`（L3 `empty_4T4/4T5`，非锥内）——**SORRIED 65→62，基线 AI**。5M2/OCBICBY 判 BLOCKED（缺口与配方见 §8 续1047）；下一批建议 N1 `vv_split_azim_generic` / N2 `deform_planar_p21` / N3 `coplanar_cross_reduction_p18`。详见 §8 续1047。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -267,6 +265,15 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（17:05–17:20，续1047）**：**四车道批次全部落库 + 基线 AI 定档（SORRIED 65→62，Text 10→7）**。
+① **L1 `a7e699d1`**（sc6i1close-w1）：LocalConcl 三件真证（`SCS_6M1_IMP_SCS_6T1` / `SCS_6I1_IMP_SCS_6T1` / `SCS_6I1_BERAK_BY_CSTAB`，+102/−11，删除面恰 3 sorry）；锥内 Text −1；三件 + `OEHDBEN_PRIME`/`OEHDBEN_discharged` 下游标准三。
+② **L2 `24725045`**（la33keys-w1）：LA33 两件真证（`SCS_4I2_IMP_SCS_4T1_p33` / `SCS_4I1_IMP_SCS_4I2_p33`，+114/−9）+ `ARDBZYE_p33` 转净；LA33 sorry 2→0；锥内 −2。
+③ **L4 `23c16896`**（k4c5m2-w1）：LA18 三件真证（`azim_dih_y_p18` / `planar_deform_dist_p18` / `ARCV_ADD_AFF_GE_p18`，+184/−11；LA18 sorry 7→4）；**`SCS_5M2_IMP_SCS_5T1_p29` BLOCKED**——缺口是 `IUNBUIG_p18`（需 `deform_planar_p21`+`coplanar_cross_reduction_p18`+`vv_split_azim_generic`）与 `xrr_le_1553{,_BB}_p29`，非 `JLXFDMJ`。**ERRATA：`deform_planar_exists_p21`（LA21:1799）实测含 `sorryAx`（项引用 `deform_planar_p21` 的 sorry）——k4cprep-w3 的「已真证」判词作废。**
+④ **L3 `f5f96b8b`**（ocbicby-w3）：LA22 `empty_4T4`/`empty_4T5` 真证（+411/−0，标准三）；**`OCBICBY_p22` BLOCKED**（14 前提 10 已证；剩 `empty_4T2` Cayley–Menger crux、`empty_4T3` 4 条 LA38+LA5、`empty_5T1` 随 vv_split、`empty_6T1` 只差 `terminal_hex_taum` 重导出）。**勘误：`vv_split_azim_generic`（LA38:2669）的 `EGHNAVX` 上游已在 LA14:6965 真证、`sum4_azim_fan` 在 TopologyFan:1105；SCC 实核无环，配方 600–800 行（DELIVERY §3.3）。**
+⑤ **地图 AI**（`reachmap_f5f96b8b.out`）：K_REACH **2,098,014**（+268）/ **SORRIED 62**（65→62，closed 恰 3 件、added ∅）/ K_AXIOM 585（0/0）/ MODULES 5,241（0）/ UNIVERSE **2,110,736**（+51）/ COVERAGE **99.3973%**（+0.0103pp）；口径 II 36,314 / 62 / 585 / 47,479；TSV 5,907 行。**SORRIED 62 = Assembly 55（54 nli* + 1 hLP）+ Text 7**。
+⑥ **下一步（待发）**：N1 `vv_split_azim_generic`（LA38，600–800，最大杠杆）→ N2 `deform_planar_p21`（LA21，340）→ N3 `coplanar_cross_reduction_p18`（LA18，200–300）→ N4 `xrr_le_1553`（LA29）→ N5 `empty_4T2/4T3/6T1`（OCBICBY 收尾）。VASYYAU 三 master / B1 / hNL / hLP 仍等用户裁决。
+⑦ 下一条：续1048。
 
 - **2026-11-13（16:35，续1046）**：**用户令 push + 发 L1–L4 四车道**。
 ① push：`0eb579b86..65b64256f`（54 笔）已推 `origin/main`。

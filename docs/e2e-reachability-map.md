@@ -797,6 +797,37 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AI：四车道批次（6I1 / LA33 / LA18 / OCBICBY-kit）@ `f5f96b8b`（2026-11-13）
+
+> 触发：`a7e699d1`（sc6i1close-w1：LocalConcl 三件，+102/−11）+ `24725045`（la33keys-w1：
+> LA33 两件 + `ARDBZYE_p33`，+114/−9）+ `23c16896`（k4c5m2-w1：LA18 三件，+184/−11）+
+> `f5f96b8b`（ocbicby-w3：`empty_4T4`/`empty_4T5`，+411/−0）。前三笔锥内真还债，末笔 cone-neutral。
+> 仪器原样换装（**5,907 行**，−3 = SORRIED −3）。manifest `--check` PASS。
+
+| 指标 | 基线 AI | 基线 AH | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,098,014** | 2,097,746 | +268 |
+| SORRIED | **62** | 65 | **−3** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,241 | 5,241 | 0 |
+| K_UNIVERSE | 2,110,736 | 2,110,685 | +51 |
+| COVERAGE | 99.3973% | 99.3870% | +0.0103pp |
+| 口径 II（ex-Cases） | K_REACH **36,314** / SORRIED **62** / AXIOM **585** / UNIVERSE **47,479** | 36,046 / 65 / 585 / 47,428 | +268 / −3 / 0 / +51 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.SCS_4I1_IMP_SCS_4I2_p33`,
+`Kepler.Text.SCS_4I2_IMP_SCS_4T1_p33`, `Kepler.Text.SCS_6I1_BERAK_BY_CSTAB`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：Text 10→7。K_REACH +268 = 三条链的证明体入锥（6I1 链、LA33 两件、wrapper 消费）；
+K_UNIVERSE +51 远小于 reach（新增私件全部可达）。**零装债**：三件的新证明未拉入任何在案 sorry
+（closed 之外 added = ∅）。剩余 **62** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 7**
+（`LFLACKU_p23` / `MIQMCSN_p32` / `NWDGKXH_p32` / `YOBIMPP_p32` / `OCBICBY_p22` /
+`SCS_5M2_IMP_SCS_5T1_p29` / `fully_surrounded_perimeter_bound`）。同批非锥内资产：
+`23c16896` LA18 三件（`azim_dih_y` / `planar_deform_dist` / `ARCV_ADD_AFF_GE`）、
+`f5f96b8b` LA22 `empty_4T4`/`empty_4T5`（OCBICBY 14 前提 10 已证）。
+勘误：`deform_planar_exists_p21`（LA21:1799）实测含 `sorryAx`（k4cprep-w3「已证」作废）；
+`vv_split_azim_generic` 的 `EGHNAVX`/`sum4_azim_fan` 上游已在库、SCC 无环（配方 600–800 行）。
+
 ### 基线 AH：URRPHBZ2 真证 @ `59208114`（2026-11-13）
 
 > 触发：urrcellbody-w7 交付 `URRPHBZ2` 真证（PA13 +796/−1，唯一删除 = 本体 `sorry`；
