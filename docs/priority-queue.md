@@ -310,6 +310,8 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（20:05，续1053）**：**用户指令：penthex-w3 与 t5body-w1 收线后不再启动新 subagent，等新指令**。此间编排侧只做：两车道交付的完整闸（亲测探针）+ 落库 + 账本；不派车、不续车（中断接管亦须经用户点头）。
+
 - **2026-11-13（20:00，续1052）**：**中断潮第 20 例（penthex-w2 开场 76s）→ 僵尸锁第 11 例 → fresh w3（agent-48）**。w1 遗产两件仍在 w1 快照安全，w3 工单第一步 = 验收它们（直编+装池+探针恰标准三）再续 ③-⑦。在飞 2：penthex-w3 / t5body-w1。
 
 - **2026-11-13（19:55，续1051）**：**penthex-w1 中断#19（14 min，假终讯）→ 编排者从 /tmp 抢救两件成品（flat_term2_126_x_eval / delta_126_x_2h0_le_d，均消费已净塔基件）→ fresh 接管 penthex-w2（agent-46，先验收遗产再续 ③-⑦）+ 按用户上问推荐发 t5body-w1（agent-47，empty_5T1_p22 本体，卡点已于今晚拔除）**。
