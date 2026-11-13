@@ -684,6 +684,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（07:05，续1096）**：**enclosed 集群 `enclosed4-w1` 交付落库 `92ec0f90`（1/5 真证 + 4/5 细判 BLOCKED，LA38 +75/−4）+ 第二份 DEF-FIX 章程草案（enclosed4-anchor）呈用户**。
+① **DISCHARGED**：`IN_V_IMP_AZIM_LESS_PI_ALT`（HOL terminal.hl:1765，LocalFan→wedge→azimInFan≤π + 2 私族桥 42 行；LA38 旧「LOCAL_FAN_RHO_NODE_PROS2 hole」注记勘误为过时——缺的只是 import AzimBridge+LocalAuto5）。
+② **4/5 BLOCKED 细判（根因非 LP）**：`enclosedP38`/`cayleyRP38` 锚点假桩族（LA38:167/:194 `:= sorry`）。sym/sym2 证明文本已写好并在 shadow（桩填真身）实测 RC=0+探针标准三，解锁即落（各 7 行）；enclosed4_lemma 另缺 `CAYLEYR_5POINTS`（5 点 Cayley-Menger，树内零命中，建议单独立项）；vv_enclosed4 = 装配线 ~150-300 行（叶件 rg 全在树内）。
+③ 闸（亲跑）：apply--check@da71c4a0 PASS；禁词 0；直编 10.6 s + 探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
+④ **章程草案 enclosed4-anchor**（`~/c17_backup/lane_snapshots/enclosed4-w1/docs-draft/enclosed4-anchor/`，呈用户批）：填 cayleyRP38（IneqClosureDefs:780 逐字移植）+ enclosedP38（enclosed_def.hl:22-24 形，声明下移过 muRP38 解决前向引用）；DF_SORRY_NET=−4；连带账：cayleytrP38 树内无真身须单独立项；muR_ALT 等 rfl 件 shadow 实测保持 rfl。
+⑤ 在飞 1：tauxkit-w1（agent-60，假失败第 7 例后实活，跑消费者影响探针）；用户 V19（PWEIWBZ str p 支）在飞。
+
 - **2026-11-14（05:25，续1091）**：**用户批 1+2，双车道复飞——tauxkit-w1（agent-60：tau_x kit 考古+章程草案，全程只读）+ enclosed4-w1（agent-61：LA38 enclosed 集群 5 件，4T3 收口供料）**。
 ① tau_x kit 立项背景：两桩（taumX_p19/tauResidualX_p19，常量锚 0）消费者面经编排者初查仅 LA19/LA38——换真身影响面小，正适合立项；车道任务 = HOL 考古 + 消费者逐件影响表（哪件仍真/哪件需 SF，机器证据）+ charter-draft.md（格式先例 docs/def-fix-charters/ox3q1h-deffix、p21-anchor）。产出后用户批章程本体，再派施工车道。
 ② enclosed 集群（vv_enclosed4/enclosed_sym/enclosed_sym2/enclosed4_lemma/IN_V_IMP_AZIM_LESS_PI_ALT）：quad4t3-w1 判词里与 LP wrapper 分列的 5 件几何件；车道先逐件验明与 LP 无关再证，有消费 LP 桩的移 BLOCKED。
