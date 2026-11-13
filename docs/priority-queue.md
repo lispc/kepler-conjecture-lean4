@@ -261,6 +261,11 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（15:08，续1041）**：**用户指令：全部车道收工、不再起新、等指令——执行完毕**。
+① urrcellbody-w7 停前抢救最新 WIP（202,821 B 落盘 w7 快照）；tmxllipls-w1 无头循环杀进程 + 留 STAND DOWN 尾条（成果 cert 链已安全，恢复口径见 handoff §3-4）；顺手清杀 14.5h 孤儿 `lean --run A00.lean`（ppid=1，昨夜遗留）。
+② **全名扫描确认：0 车道进程、0 lean、pressure=1**；机器全空进入待命。
+③ 待命期间编排侧纪律：不派/不续 subagent；只应用户点名的账本/闸/commit。恢复入口 = `docs/handoff-2026-11-13.md` §3 车道恢复表（配额重置后按序）。
+
 - **2026-11-13（15:05，续1040）**：**交接文档 `docs/handoff-2026-11-13.md` 落盘（用户：可能让别的 coding agent 接手）**——基线 AG 盘面 + 配额封盘状态 + 车道恢复表（重置后按序：jlxfdmj resume → vasw0 → urrcellbody-w7 在飞 → tmxllipls ps 预检 → OCBICBY wave3 → K4c）+ 工具链路径地图 + 闸验速查。**当前仅 urrcellbody-w7 一车道在飞 + tmxllipls-w1 无头存活**；其余等配额窗口。待命期间编排侧只维护账本，不派新车道。
 
 - **2026-11-13（14:58，续1039）**：**中断潮根因实锤 = 账户 5h 配额（429）——jlxfdmj-w2 续跑撞硬错误 "You've reached your 5-hour usage limit"（官方 error-reference 原文）⇒ 下午 18 例静默截断 = 配额逼近时的请求丢流症状（时间聚集 12:43–14:54 = 滚向触顶）。编排者早前「引擎过载」定性修正为配额根因（AGENTS §7.1-22 已同步）。**
