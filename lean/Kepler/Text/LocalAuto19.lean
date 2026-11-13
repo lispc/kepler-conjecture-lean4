@@ -612,8 +612,9 @@ theorem derived_form_taud_ALT_p19 (y1 y2 y3 y4 y5 y6 : ℝ)
     field_simp
     try ring)
 
-/-- HOL `deriv_form_taud_D2` (pent_hex.hl:424). NEEDS: second-order chain
-computation for `taud_D1_num / sqrt(delta)` (large but mechanical). -/
+/-- HOL `deriv_form_taud_D2` (pent_hex.hl:424): the second-order chain
+computation for `taud_D1_num / sqrt(delta)`, assembled from the component
+derivatives (`delta_y`, `delta_x1`, `mu_y`, `sqrt`). -/
 theorem deriv_form_taud_D2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
     derivedForm (0 < deltaY y1 y2 y3 y4 y5 y6 ∧ 0 < y1 ∧ 0 ≤ y2 ∧ 0 ≤ y3)
       (fun q => yOfX taudD1numX_p19 q y2 y3 y4 y5 y6 /
@@ -621,7 +622,139 @@ theorem deriv_form_taud_D2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
       (yOfX taudD2numX_p19 y1 y2 y3 y4 y5 y6 /
         Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) ^ 3)
       y1 Set.univ := by
-  sorry
+  rintro ⟨hd, hy1, hy2, hy3⟩
+  have hne : deltaY y1 y2 y3 y4 y5 y6 ≠ 0 := ne_of_gt hd
+  have hne1 : y1 * y1 ≠ 0 := ne_of_gt (mul_pos hy1 hy1)
+  have hy10 : y1 ≠ 0 := ne_of_gt hy1
+  have hsΔne : Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.mpr hd)
+  have h20 : (2:ℝ) * h0 - 2 ≠ 0 := by
+    rw [h0_num_p19.2.1]; norm_num
+  have hg : HasDerivAt (fun w : ℝ => w * w) (2 * y1) y1 :=
+    HasDerivAt.congr_deriv ((hasDerivAt_id y1).mul (hasDerivAt_id y1)) (by simp [two_mul])
+  have hB : HasDerivAt
+      (fun q => deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))
+      (-2 * (y4 * y4) * (2 * y1)) y1 := by
+    have he : (fun q => deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))
+        = fun q => -2 * (y4 * y4) * (q * q)
+          + deltaX1_p19 0 (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := by
+      funext q; unfold deltaX1_p19; ring
+    rw [he]
+    exact HasDerivAt.congr_deriv
+      ((hg.const_mul (-2 * (y4 * y4))).add
+        (hasDerivAt_const (x := y1)
+          (c := deltaX1_p19 0 (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))) (by ring)
+  have hS0 : HasDerivAt (fun q => Real.sqrt (q * q))
+      (1 / (2 * Real.sqrt (y1 * y1)) * (2 * y1)) y1 :=
+    HasDerivAt.comp y1 (Real.hasDerivAt_sqrt hne1) hg
+  have hmu : HasDerivAt
+      (fun q => muY_p19 (Real.sqrt (q * q)) (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3)))
+      ((-0.07) * (1 / (2 * Real.sqrt (y1 * y1)) * (2 * y1))) y1 := by
+    have he : (fun q => muY_p19 (Real.sqrt (q * q)) (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3)))
+        = fun q => 0.012 + 0.07 * 2.52
+            + 0.01 * (2.52 * 2 - Real.sqrt (y2 * y2) - Real.sqrt (y3 * y3))
+          + -0.07 * Real.sqrt (q * q) := by
+      funext q; unfold muY_p19; ring
+    rw [he]
+    exact HasDerivAt.congr_deriv
+      ((hasDerivAt_const (x := y1)
+          (c := 0.012 + 0.07 * 2.52
+            + 0.01 * (2.52 * 2 - Real.sqrt (y2 * y2) - Real.sqrt (y3 * y3)))).add
+        (hS0.const_mul (-0.07))) (by ring)
+  have hΔ : HasDerivAt (fun q => deltaY q y2 y3 y4 y5 y6)
+      (2 * y1 * deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)) y1 :=
+    deltaY_hasDerivAt_p19 y1 y2 y3 y4 y5 y6
+  have hSΔ : HasDerivAt (fun q => Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+      (1 / (2 * Real.sqrt (deltaY y1 y2 y3 y4 y5 y6)) *
+        (2 * y1 * deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))) y1 :=
+    HasDerivAt.comp y1 (Real.hasDerivAt_sqrt hne) hΔ
+  have hB2S0 : HasDerivAt
+      (fun q => deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2
+        * Real.sqrt (q * q))
+      _ y1 :=
+    (hB.mul (hasDerivAt_const (x := y1) (c := (2 : ℝ)))).mul hS0
+  have hN0 : HasDerivAt (fun q => (-0.07) * deltaY q y2 y3 y4 y5 y6) _ y1 :=
+    hΔ.const_mul (-0.07)
+  have hN1 : HasDerivAt
+      (fun q => (1 / 2) * (muY_p19 (Real.sqrt (q * q)) (Real.sqrt (y2 * y2))
+        (Real.sqrt (y3 * y3)) *
+        (deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2
+          * Real.sqrt (q * q))))
+      _ y1 :=
+    (hmu.mul hB2S0).const_mul (1 / 2)
+  have hN2 : HasDerivAt
+      (fun q => (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaY q y2 y3 y4 y5 y6)) _ y1 :=
+    hSΔ.const_mul (sol0 / (2 * h0 - 2))
+  have hN : HasDerivAt
+      (fun q => (-0.07) * deltaY q y2 y3 y4 y5 y6
+        + (1 / 2) * (muY_p19 (Real.sqrt (q * q)) (Real.sqrt (y2 * y2))
+            (Real.sqrt (y3 * y3)) *
+          (deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2
+            * Real.sqrt (q * q)))
+        + (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+      ((-0.07) * (2 * y1 * deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+          (y6 * y6))
+        + (1 / 2) * (((-0.07) * (1 / (2 * Real.sqrt (y1 * y1)) * (2 * y1))) *
+            (deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2
+              * Real.sqrt (y1 * y1))
+          + muY_p19 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3)) *
+            (((-2 * (y4 * y4) * (2 * y1)) * 2
+                + deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 0)
+              * Real.sqrt (y1 * y1)
+              + (deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2)
+                * (1 / (2 * Real.sqrt (y1 * y1)) * (2 * y1))))
+        + (sol0 / (2 * h0 - 2)) *
+          (1 / (2 * Real.sqrt (deltaY y1 y2 y3 y4 y5 y6)) *
+            (2 * y1 * deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+              (y6 * y6)))) y1 :=
+    (hN0.add hN1).add hN2
+  have hev : (fun q => yOfX taudD1numX_p19 q y2 y3 y4 y5 y6 /
+      Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+    =ᶠ[nhds y1] ((fun q => (-0.07) * deltaY q y2 y3 y4 y5 y6
+        + (1 / 2) * (muY_p19 (Real.sqrt (q * q)) (Real.sqrt (y2 * y2))
+            (Real.sqrt (y3 * y3)) *
+          (deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2
+            * Real.sqrt (q * q)))
+        + (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+      / (fun q => Real.sqrt (deltaY q y2 y3 y4 y5 y6))) :=
+    Filter.Eventually.of_forall fun q => by
+      show yOfX taudD1numX_p19 q y2 y3 y4 y5 y6 / Real.sqrt (deltaY q y2 y3 y4 y5 y6)
+        = (fun q => (-0.07) * deltaY q y2 y3 y4 y5 y6
+            + (1 / 2) * (muY_p19 (Real.sqrt (q * q)) (Real.sqrt (y2 * y2))
+                (Real.sqrt (y3 * y3)) *
+              (deltaX1_p19 (q * q) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2
+                * Real.sqrt (q * q)))
+            + (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaY q y2 y3 y4 y5 y6)) q
+          / (fun q => Real.sqrt (deltaY q y2 y3 y4 y5 y6)) q
+      simp only [yOfX, taudD1numX_p19, mu6X_p19, deltaY]
+      ring
+  have hdiv : HasDerivAt
+      (fun q => yOfX taudD1numX_p19 q y2 y3 y4 y5 y6 /
+        Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+      (yOfX taudD2numX_p19 y1 y2 y3 y4 y5 y6 /
+        Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) ^ 3) y1 := by
+    have h1 := (hN.div hSΔ hsΔne).congr_of_eventuallyEq hev
+    exact HasDerivAt.congr_deriv h1 (by
+      have hs01 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self hy1.le
+      have hsq : Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * Real.sqrt (deltaY y1 y2 y3 y4 y5 y6)
+          = deltaY y1 y2 y3 y4 y5 y6 := Real.mul_self_sqrt hd.le
+      have h20v : (2:ℝ) * h0 - 2 = (0.52:ℝ) := by
+        rw [h0_num_p19.2.1]; norm_num
+      simp only [yOfX, taudD1numX_p19, taudD2numX_p19, mu6X_p19, deltaY,
+        Function.comp_apply]
+      rw [h20v, hs01]
+      set u : ℝ := deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+        with hu_def
+      set t : ℝ := Real.sqrt u with ht_def
+      have ht0 : t ≠ 0 := hsΔne
+      have hu : u = t ^ 2 := by
+        rw [ht_def, pow_two]
+        exact (Real.mul_self_sqrt (le_of_lt hd)).symm
+      rw [div_eq_div_iff (pow_ne_zero 2 ht0) (pow_ne_zero 3 ht0)]
+      field_simp [ht0, hy10]
+      rw [hu]
+      ring)
+  exact hdiv.hasDerivWithinAt
 
 /-- Existence of the D2-derivative (HOL `derived_form_taud_D3`, computed in
 HOL via the `thD3` differentiation script): the D2-slope function is
@@ -745,7 +878,57 @@ theorem SECOND_DERIVATIVE_TEST_p19 (f f' f'' : ℝ → ℝ) (z : ℝ) (s : Set �
     (hfc : ContinuousAt f'' z)
     (hmin : ∀ x ∈ s, f z ≤ f x) :
     f' z = 0 ∧ 0 ≤ f'' z := by
-  sorry
+  have hmem : s ∈ nhds z := hs.mem_nhds hz
+  have hlocal : IsLocalMin f z := Filter.eventually_of_mem hmem hmin
+  have h1 : f' z = 0 := hlocal.hasDerivAt_eq_zero (hf z hz)
+  refine ⟨h1, le_of_not_gt ?_⟩
+  intro hlt
+  have hev : {x : ℝ | f'' x < 0} ∈ nhds z :=
+    Filter.Tendsto.eventually_lt hfc.tendsto tendsto_const_nhds hlt
+  rw [Metric.mem_nhds_iff] at hev
+  obtain ⟨v, hv0, hv⟩ := hev
+  obtain ⟨u, hu0, hus⟩ := Metric.isOpen_iff.mp hs z hz
+  have hr0 : 0 < min u v / 2 := half_pos (lt_min hu0 hv0)
+  have hball : Metric.ball z (min u v) ⊆ s := fun x hx =>
+    hus (Metric.ball_subset_ball (min_le_left u v) hx)
+  have hneg : Metric.ball z (min u v) ⊆ {x : ℝ | f'' x < 0} := fun x hx =>
+    hv (Metric.ball_subset_ball (min_le_right u v) hx)
+  have hIcc : Set.Icc z (z + min u v / 2) ⊆ Metric.ball z (min u v) := by
+    intro x hx
+    rw [Metric.mem_ball, Real.dist_eq, abs_of_nonneg (sub_nonneg.mpr hx.1)]
+    linarith [hx.2, lt_min hu0 hv0]
+  have hsub : Set.Icc z (z + min u v / 2) ⊆ s := fun x hx => hball (hIcc hx)
+  have hcon1 : ContinuousOn f (Set.Icc z (z + min u v / 2)) := fun x hx =>
+    (hf x (hsub hx)).continuousAt.continuousWithinAt
+  have hdiff1 : DifferentiableOn ℝ f (Set.Ioo z (z + min u v / 2)) := fun x hx =>
+    (hf x (hsub (Set.Ioo_subset_Icc_self hx))).differentiableAt.differentiableWithinAt
+  obtain ⟨c, hc, hcs⟩ := exists_deriv_eq_slope f (by linarith) hcon1 hdiff1
+  have hdfc : deriv f c = f' c :=
+    HasDerivAt.deriv (hf c (hsub (Set.Ioo_subset_Icc_self hc)))
+  have hcc : Set.Icc z c ⊆ Set.Icc z (z + min u v / 2) :=
+    Set.Icc_subset_Icc le_rfl (le_of_lt hc.2)
+  have hcon2 : ContinuousOn f' (Set.Icc z c) := fun x hx =>
+    (hf' x (hsub (hcc hx))).continuousAt.continuousWithinAt
+  have hdiff2 : DifferentiableOn ℝ f' (Set.Ioo z c) := fun x hx =>
+    (hf' x (hsub (hcc (Set.Ioo_subset_Icc_self hx)))).differentiableAt.differentiableWithinAt
+  obtain ⟨d, hd, hds⟩ := exists_deriv_eq_slope f' hc.1 hcon2 hdiff2
+  have hcpos : 0 < c - z := sub_pos.mpr hc.1
+  have hf''d : f'' d < 0 := hneg (hIcc (hcc (Set.Ioo_subset_Icc_self hd)))
+  have e2 : f'' d * (c - z) = f' c - f' z := by
+    rw [HasDerivAt.deriv (hf' d (hsub (hcc (Set.Ioo_subset_Icc_self hd))))] at hds
+    rw [eq_comm, div_eq_iff (ne_of_gt hcpos)] at hds
+    exact hds.symm
+  have hfc' : f' c < 0 := by
+    have e3 : f' c = f'' d * (c - z) := by linarith
+    rw [e3]; exact mul_neg_of_neg_of_pos hf''d hcpos
+  have hrpos : 0 < z + min u v / 2 - z := by linarith
+  have e4 : f' c * (z + min u v / 2 - z) = f (z + min u v / 2) - f z := by
+    rw [hdfc, eq_comm, div_eq_iff (ne_of_gt hrpos)] at hcs
+    exact hcs.symm
+  have hlt' : f (z + min u v / 2) - f z < 0 := by
+    rw [← e4]; exact mul_neg_of_neg_of_pos hfc' hrpos
+  have hge : f z ≤ f (z + min u v / 2) := hmin _ (hsub ⟨by linarith, le_rfl⟩)
+  linarith
 
 /-- HOL `delta_y_continuous` (pent_hex.hl:838). -/
 theorem delta_y_continuous_p19 (y2 y3 y4 y5 y6 : ℝ) :
@@ -1190,8 +1373,8 @@ theorem flat_term2_135_x_eval_p19 (h : mainNonlinearTerminalV11_p18)
   have hy3le : y3 ≤ 2.52 := by rw [← h2h0]; exact b3'
   have hl3 := edge2_flatD_x1_delta_lemma3_p19 h d z y1 y3 y5 2 2
     hd hd0 hd20 bz hzle b1 hy1le b3 hy3le b5 b5' rfl rfl
-  have hb := hl3 ⟨by linarith, by linarith⟩ ⟨b1, hy1le⟩ ⟨by linarith, by linarith⟩
-    ⟨by linarith, by linarith⟩ ⟨le_refl 2, le_refl 2⟩ ⟨le_refl 2, le_refl 2⟩
+  have hb := hl3 ⟨bz, hzle⟩ ⟨b1, hy1le⟩ ⟨b3, hy3le⟩ ⟨b5, b5'⟩
+    ⟨le_refl (2:ℝ), le_refl _⟩ ⟨le_refl (2:ℝ), le_refl _⟩
   rw [show (2:ℝ) * 2 = 4 from by norm_num] at hb
   simp only [yOfX, flatTerm2_135x_p19]
   rw [hb, Real.sqrt_mul_self (by linarith : (0:ℝ) ≤ z)]
@@ -1213,13 +1396,13 @@ theorem delta_126_x_2h0_le_d_p19 (h : mainNonlinearTerminalV11_p18)
       = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y2 * y2) (y6 * y6) 4 4 := by
     unfold deltaY
     rw [show (2:ℝ) * 2 = 4 from by norm_num]
-  have hperm : deltaX (y1 * y1) (y2 * y2) ((2 * h0) * (2 * h0)) 4 4 (y6 * y6)
-      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y2 * y2) (y6 * y6) 4 4 := by
-    unfold deltaX
-    ring
   rw [hd] at hmono
   simp only [yOfX, delta126x_p19]
-  rw [h4, hperm, ← hdy]
+  rw [h4]
+  have hperm : deltaX (y1 * y1) (y2 * y2) ((2 * h0) * (2 * h0)) 4 4 (y6 * y6)
+      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y2 * y2) (y6 * y6) 4 4 := by
+    unfold deltaX; ring
+  rw [hperm, ← hdy]
   exact hmono
 
 /-- HOL `delta_135_x_2h0_le_d` (pent_hex.hl:1546). NEEDS-DB. -/
@@ -1239,13 +1422,13 @@ theorem delta_135_x_2h0_le_d_p19 (h : mainNonlinearTerminalV11_p18)
       = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y3 * y3) (y5 * y5) 4 4 := by
     unfold deltaY
     rw [show (2:ℝ) * 2 = 4 from by norm_num]
-  have hperm : deltaX (y1 * y1) ((2 * h0) * (2 * h0)) (y3 * y3) 4 (y5 * y5) 4
-      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y3 * y3) (y5 * y5) 4 4 := by
-    unfold deltaX
-    ring
   rw [hd] at hmono
   simp only [yOfX, delta135x_p19]
-  rw [h4, hperm, ← hdy]
+  rw [h4]
+  have hsym : deltaX (y1 * y1) ((2 * h0) * (2 * h0)) (y3 * y3) 4 (y5 * y5) 4
+      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y3 * y3) (y5 * y5) 4 4 := by
+    unfold deltaX; ring
+  rw [hsym, ← hdy]
   exact hmono
 
 /-- HOL `lemma_5546286427` (pent_hex.hl:1575). NEEDS-DB: database inequality
@@ -1266,17 +1449,17 @@ theorem lemma_5546286427_p19 (h : mainNonlinearTerminalV11_p18)
   rcases hreg' with h1 | h2
   · have hev := flat_term2_126_x_eval_p19 h 0 z1 y1 y2 y3 y4 y5 y6 hdz
       (le_refl 0) (by norm_num) c7.1
-      (by rw [h0_num_p19.2.1]; exact c7.2) c1.1
-      (by rw [h0_num_p19.2.1]; exact c1.2) c2.1
-      (by rw [h0_num_p19.2.1]; exact c2.2) c6.1 (by linarith)
+      (by have hc := c7.2; rw [← h0_num_p19.2.1] at hc; exact hc) c1.1
+      (by have hc := c1.2; rw [← h0_num_p19.2.1] at hc; exact hc) c2.1
+      (by have hc := c2.2; rw [← h0_num_p19.2.1] at hc; exact hc) c6.1 (by linarith)
     have h1' : taum y1 y2 y3 y4 y5 y6
         + yOfX (flatTerm2_126x_p19 0 4 4) y1 y2 y3 y4 y5 y6 + (0.12:ℝ) > (0.616:ℝ) := h1
     rw [hev] at h1'
     exact h1'
   · have hdle := delta_126_x_2h0_le_d_p19 h 0 z1 y1 y2 y3 y4 y5 y6 c7.1
-      (by rw [h0_num_p19.2.1]; exact c7.2) c1.1
-      (by rw [h0_num_p19.2.1]; exact c1.2) c2.1
-      (by rw [h0_num_p19.2.1]; exact c2.2) c6.1 (by linarith)
+      (by have hc := c7.2; rw [← h0_num_p19.2.1] at hc; exact hc) c1.1
+      (by have hc := c1.2; rw [← h0_num_p19.2.1] at hc; exact hc) c2.1
+      (by have hc := c2.2; rw [← h0_num_p19.2.1] at hc; exact hc) c6.1 (by linarith)
       (le_refl 0) (by norm_num) hdz
     have h2' : yOfX (delta126x_t11 (4 * h0 * h0) 4 4) y1 y2 y3 y4 y5 y6 ≤ (0:ℝ) := hdle
     linarith
