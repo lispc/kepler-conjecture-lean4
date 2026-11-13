@@ -558,6 +558,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（03:40，续1087）**：**🏁 5M2 线最终 keystone `scs5m2asm-w1` 交付落库 `37849ac2`（`SCS_5M2_IMP_SCS_5T1_p29` 真证，LA29 +307/−14）——Text 7 #1 落地，锥内 SORRIED 62→61（Text 7→6，以仪器复测为准）；第二车 `quad4t3-w1` 补位（agent-58：OCBICBY 4T3 支）**。
+① 路线（HOL HIJQAHA.hl:3579-3945 逐段）：RRCWNSJ genericity → JCYFMRP_V3 紧边 + JLXFDMJ_ge4 全边转移 → dist01=2 三角分岔（azim=π 双支 AZIM_COND+coplanar_aff_gt_simple+NUXCOEAv2；<π 支 BB_RHO_NODE_IVS+xrr_BB×2+IUNBUIG 直供）→ mod-5 全边 → BBsV39 scs5T1 → XWNHLMD_MM 运输。**连带清债**：HIJ_STEP_1_p29/HIJQAHA_p29 探针同转标准三。
+② 闸（亲跑）：apply--check@2782b2f5 PASS（用户 V11 未触 LA29）；删除面恰 1 sorry+3 DISCHARGES 注释+FILE MAP 陈旧段（JCYFMRP/xrr「sorry; NEEDS」注记全清）；添加行禁词 0；直编 RC=0/err0（26.7 s）+ 三探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。新增 import LocalAuto18 双向 BFS 无环、岛编实证。
+③ **5M2 战役全程收官**：ffc849da（N1 vv_split）→ 57faf2ef（N3）→ 3b863763（N2）→ 58765579（N4 xrr）→ 9c6574a1（deform_pent+azim5）→ ab9a1e2f（IUNBUIG+LEMMA）→ 本笔（本体）——七笔一役。
+④ 雷区入册（DELIVERY §5 七则，最值三则）：应用型参序错在大上下文触发 whnf 失控（报错点只在定理头，先查参序别怀疑上下文）；探针必须在自包含副本跑（--root 探针解析回主池旧 olean 给出假阳性 sorryAx）；xrr 第三参是 norm(v i − v(i+2)) 非 dist。
+⑤ 在飞 1：quad4t3-w1（LA22 4T3 支，4T2 模板）；用户 V11（PWE2 `2782b2f5`）已落、V12 待发。**两债进度：5M2 ✓ 收官；OCBICBY 剩 4T3（在飞）/6T1/5T1 支/装配。**
+
 - **2026-11-14（01:40，续1083）**：**`iunbfinish-w2` 交付落库 `ab9a1e2f`（IUNBUIG_p18 ~450 行真证 + LEMMA_6843920790_p22 附带清债，LA18 in-file sorry 归零）+ 第二车 `scs5m2asm-w1` 补位（agent-57：SCS_5M2_IMP_SCS_5T1_p29 本体）**。
 ① **IUNBUIG_p18**（HOL IUNBUIG.hl:1496-1885 逐步对照）：he1a 卡点按交接方案破解成功（azim_dih_y 双侧 + dih_y_mono slot-4 + he1b 恒等）；非线性区间收口（e2 自造窗口，Lean 开区间版）。LA18 全文件零 sorry。
 ② **LEMMA_6843920790_p22**（工单外扩面，自证必要）：孪生 4828966562 模板（registry 6843920790 + MVT）~80 行；**TSV 实证非锥内 62 名**（「锥内」系车道宽松措辞，实指 IUNBUIG 依赖锥）——SORRIED 62 未动，真还债待 SCS_5M2 本体装配。
