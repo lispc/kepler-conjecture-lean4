@@ -1000,8 +1000,9 @@ theorem taud_minimizer_p19 (a b d y2 y3 y4 y5 y6 : ℝ)
     hcomp.exists_isMinOn (Set.nonempty_iff_ne_empty.mpr hne) hcont
   exact ⟨z1, hz1, fun y1 hy1 => (isMinOn_iff.mp hmin) y1 hy1⟩
 
-/-- HOL `taud_minimizer_cases` (pent_hex.hl:937). NEEDS: the derivative-sign
-case analysis at interior minimizers (`taud_D1`/`taud_D2` numerology). -/
+/-- HOL `taud_minimizer_cases` (pent_hex.hl:937): at an interior minimizer the
+first derivative vanishes and the second is nonnegative (`SECOND_DERIVATIVE_TEST_p19`
+on the open slotted domain). -/
 theorem taud_minimizer_cases_p19 (a b d z1 y2 y3 y4 y5 y6 : ℝ)
     (hd : 0 ≤ d) (ha : 0 ≤ a) (hy2 : 0 ≤ y2) (hy3 : 0 ≤ y3)
     (hz1 : z1 ∈ Set.Icc a b ∩ {q : ℝ | d ≤ deltaY q y2 y3 y4 y5 y6})
@@ -1010,11 +1011,86 @@ theorem taud_minimizer_cases_p19 (a b d z1 y2 y3 y4 y5 y6 : ℝ)
     z1 = a ∨ z1 = b ∨ d = deltaY z1 y2 y3 y4 y5 y6 ∨
       (yOfX taudD1numX_p19 z1 y2 y3 y4 y5 y6 = 0 ∧
         0 ≤ yOfX taudD2numX_p19 z1 y2 y3 y4 y5 y6) := by
-  sorry
+  rcases eq_or_ne z1 a with h1 | h1
+  · exact Or.inl h1
+  · rcases eq_or_ne z1 b with h2 | h2
+    · exact Or.inr (Or.inl h2)
+    · rcases eq_or_ne d (deltaY z1 y2 y3 y4 y5 y6) with h3 | h3
+      · exact Or.inr (Or.inr (Or.inl h3))
+      · have hza : a < z1 := lt_of_le_of_ne hz1.1.1 (Ne.symm h1)
+        have hzb : z1 < b := lt_of_le_of_ne hz1.1.2 h2
+        have hzd : d < deltaY z1 y2 y3 y4 y5 y6 := lt_of_le_of_ne hz1.2 h3
+        have hdz : 0 < deltaY z1 y2 y3 y4 y5 y6 := lt_of_le_of_lt hd hzd
+        have hopen : IsOpen
+            (Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6}) := by
+          have key : IsOpen {q : ℝ | q ∈ Set.Ioo a b ∧
+              (fun q => deltaY q y2 y3 y4 y5 y6) q ∈ Set.Ioi d} :=
+            continuous_preimage_open_p19 isOpen_Ioo isOpen_Ioi
+              ((delta_y_continuous_p19 y2 y3 y4 y5 y6).mono (Set.subset_univ _))
+          have he : {q : ℝ | q ∈ Set.Ioo a b ∧
+                (fun q => deltaY q y2 y3 y4 y5 y6) q ∈ Set.Ioi d}
+              = Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6} := by
+            ext q
+            simp [Set.mem_Ioo]
+          rw [← he]
+          exact key
+        have hz1s' : z1 ∈ Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6} :=
+          ⟨Set.mem_Ioo.mpr ⟨hza, hzb⟩, hzd⟩
+        have hf : ∀ x ∈ Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6},
+            HasDerivAt (fun q => taudP19 q y2 y3 y4 y5 y6)
+              (yOfX taudD1numX_p19 x y2 y3 y4 y5 y6 /
+                Real.sqrt (deltaY x y2 y3 y4 y5 y6)) x := by
+          intro x hx
+          have hx0 : 0 ≤ x := le_trans ha (le_of_lt hx.1.1)
+          have hdx : 0 < deltaY x y2 y3 y4 y5 y6 := lt_of_le_of_lt hd hx.2
+          exact hasDerivWithinAt_univ.mp
+            (derived_form_taud_ALT_p19 x y2 y3 y4 y5 y6 hdx hx0 hy2 hy3
+              ⟨hdx, hx0, hy2, hy3⟩)
+        have hf' : ∀ x ∈ Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6},
+            HasDerivAt (fun q => yOfX taudD1numX_p19 q y2 y3 y4 y5 y6 /
+                Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+              (yOfX taudD2numX_p19 x y2 y3 y4 y5 y6 /
+                Real.sqrt (deltaY x y2 y3 y4 y5 y6) ^ 3) x := by
+          intro x hx
+          have hx0 : 0 < x := lt_of_le_of_lt ha hx.1.1
+          have hdx : 0 < deltaY x y2 y3 y4 y5 y6 := lt_of_le_of_lt hd hx.2
+          exact hasDerivWithinAt_univ.mp
+            (deriv_form_taud_D2_p19 x y2 y3 y4 y5 y6 ⟨hdx, hx0, hy2, hy3⟩)
+        have hfc : ContinuousAt (fun q => yOfX taudD2numX_p19 q y2 y3 y4 y5 y6 /
+            Real.sqrt (deltaY q y2 y3 y4 y5 y6) ^ 3) z1 := by
+          obtain ⟨g', hg'⟩ := derived_form_taud_D3_p19 z1 y2 y3 y4 y5 y6
+          have hz10 : 0 < z1 := lt_of_le_of_lt ha hza
+          exact (hasDerivWithinAt_univ.mp (hg' ⟨hdz, hz10, hy2, hy3⟩)).continuousAt
+        have hmin' : ∀ x ∈ Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6},
+            taudP19 z1 y2 y3 y4 y5 y6 ≤ taudP19 x y2 y3 y4 y5 y6 := by
+          intro x hx
+          have hxa : a ≤ x := le_of_lt hx.1.1
+          have hxb : x ≤ b := le_of_lt hx.1.2
+          have hxd : d ≤ deltaY x y2 y3 y4 y5 y6 := le_of_lt hx.2
+          exact hmin x ⟨Set.mem_Icc.mpr ⟨hxa, hxb⟩, hxd⟩
+        obtain ⟨hD1, hD2⟩ := SECOND_DERIVATIVE_TEST_p19
+          (fun q => taudP19 q y2 y3 y4 y5 y6)
+          (fun q => yOfX taudD1numX_p19 q y2 y3 y4 y5 y6 /
+            Real.sqrt (deltaY q y2 y3 y4 y5 y6))
+          (fun q => yOfX taudD2numX_p19 q y2 y3 y4 y5 y6 /
+            Real.sqrt (deltaY q y2 y3 y4 y5 y6) ^ 3)
+          z1 (Set.Ioo a b ∩ {q : ℝ | d < deltaY q y2 y3 y4 y5 y6})
+          hz1s' hopen hf hf' hfc hmin'
+        have hsqrt : 0 < Real.sqrt (deltaY z1 y2 y3 y4 y5 y6) := Real.sqrt_pos.mpr hdz
+        refine Or.inr (Or.inr (Or.inr ⟨?_, ?_⟩))
+        · rw [div_eq_zero_iff] at hD1
+          rcases hD1 with h | h
+          · exact h
+          · exact absurd h (ne_of_gt hsqrt)
+        · have h3 : 0 < Real.sqrt (deltaY z1 y2 y3 y4 y5 y6) ^ 3 := pow_pos hsqrt 3
+          have h := (le_div_iff₀ h3).mp hD2
+          have h0 : (0:ℝ) * Real.sqrt (deltaY z1 y2 y3 y4 y5 y6) ^ 3 = 0 := zero_mul _
+          linarith
 
-/-- HOL `taud_minimizer_terminal_pent_cases` (pent_hex.hl:1053).
-NEEDS-DB: consumes database inequality 5546286427 plus
-`taud_minimizer_cases`. -/
+/-- HOL `taud_minimizer_terminal_pent_cases` (pent_hex.hl:1053): minimize via
+`taud_minimizer_p19`, case-split via `taud_minimizer_cases_p19`, and discharge
+the stationary branch with database inequalities `1347067436` / `6601228004`
+(the delta < 20 subcase is numerically contradictory). -/
 theorem taud_minimizer_terminal_pent_cases_p19 (h : mainNonlinearTerminalV11_p18)
     (d y1 y2 y3 y4 y5 y6 : ℝ)
     (hy1 : y1 ∈ Set.Icc 2 (2 * h0) ∩ {q : ℝ | d ≤ deltaY q y2 y3 y4 y5 y6})
@@ -1025,7 +1101,69 @@ theorem taud_minimizer_terminal_pent_cases_p19 (h : mainNonlinearTerminalV11_p18
       taudP19 z1 y2 y3 y4 y5 y6 ≤ taudP19 y1 y2 y3 y4 y5 y6 ∧
         (z1 = 2 ∨ z1 = 2 * h0 ∨ d = deltaY z1 y2 y3 y4 y5 y6 ∨
           0.12 ≤ taudP19 z1 y2 y3 y4 y5 y6) := by
-  sorry
+  obtain ⟨z1, hz1, hmin⟩ := taud_minimizer_p19 2 (2 * h0) d y2 y3 y4 y5 y6 hd
+    (Set.Nonempty.ne_empty ⟨y1, hy1⟩)
+  refine ⟨z1, hz1, hmin y1 hy1, ?_⟩
+  have hcases := taud_minimizer_cases_p19 2 (2 * h0) d z1 y2 y3 y4 y5 y6 hd
+    (by norm_num) (by linarith) (by linarith) hz1 hmin
+  have hz1l : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1u : z1 ≤ (2.52:ℝ) := by have hc := hz1.1.2; rw [h0_num_p19.2.1] at hc; exact hc
+  have hy2u : y2 ≤ (2.52:ℝ) := by have hc := hy2'; rw [h0_num_p19.2.1] at hc; exact hc
+  have hy3u : y3 ≤ (2.52:ℝ) := by have hc := hy3'; rw [h0_num_p19.2.1] at hc; exact hc
+  have hy5l : (2:ℝ) ≤ y5 := by rw [hy5]
+  have hy5u : y5 ≤ (2:ℝ) := by rw [hy5]
+  have hy6l : (2:ℝ) ≤ y6 := by rw [hy6]
+  have hy6u : y6 ≤ (2:ℝ) := by rw [hy6]
+  rcases hcases with hz2 | hz2h0 | hdelta | ⟨hD1, hD2⟩
+  · exact Or.inl hz2
+  · exact Or.inr (Or.inl hz2h0)
+  · exact Or.inr (Or.inr (Or.inl hdelta))
+  · have bD1 : yOfX taudD1numX_t11 z1 y2 y3 y4 y5 y6
+        = yOfX taudD1numX_p19 z1 y2 y3 y4 y5 y6 := by
+      unfold yOfX taudD1numX_t11 taudD1numX_p19
+      rw [h0_num_p19.2.2]
+      exact rfl
+    have bD2 : yOfX taudD2numX_t11 z1 y2 y3 y4 y5 y6
+        = yOfX taudD2numX_p19 z1 y2 y3 y4 y5 y6 := rfl
+    by_cases hd20 : deltaY z1 y2 y3 y4 y5 y6 < 20
+    · have hDB : mainEstimate_6601228004 :=
+        h "6601228004" (by simp [mainNonlinearTerminalV11Ids_t11])
+      unfold mainEstimate_6601228004 at hDB
+      have hDB' := hDB z1 y2 y3 y4 y5 y6 hz1l hz1u hy2 hy2u hy3 hy3u hy4 hy4'
+        hy5l hy5u hy6l hy6u
+      rcases hDB' with h | h | h
+      · rw [bD2] at h
+        linarith
+      · linarith
+      · have hd0 : (0:ℝ) ≤ deltaY z1 y2 y3 y4 y5 y6 := le_trans hd hz1.2
+        linarith
+    · have hd20' : (20:ℝ) ≤ deltaY z1 y2 y3 y4 y5 y6 := le_of_not_gt hd20
+      have hDB : mainEstimate_1347067436 :=
+        h "1347067436" (by simp [mainNonlinearTerminalV11Ids_t11])
+      unfold mainEstimate_1347067436 at hDB
+      have hDB' := hDB z1 y2 y3 y4 y5 y6 hz1l hz1u hy2 hy2u hy3 hy3u hy4 hy4'
+        hy5l hy5u hy6l hy6u
+      rw [bD1] at hDB'
+      rcases hDB' with h | h | h | h | h
+      · rw [hD1] at h
+        linarith
+      · rw [hD1] at h
+        linarith
+      · rw [bD2] at h
+        linarith
+      · have hz1nn : (0:ℝ) ≤ z1 := by linarith
+        have hy2nn : (0:ℝ) ≤ y2 := by linarith
+        have hy3nn : (0:ℝ) ≤ y3 := by linarith
+        have bX : yOfX taudX_t11 z1 y2 y3 y4 y5 y6 = taudP19 z1 y2 y3 y4 y5 y6 := by
+          have s1 : Real.sqrt (z1 * z1) = z1 := Real.sqrt_mul_self hz1nn
+          have s2 : Real.sqrt (y2 * y2) = y2 := Real.sqrt_mul_self hy2nn
+          have s3 : Real.sqrt (y3 * y3) = y3 := Real.sqrt_mul_self hy3nn
+          unfold yOfX taudX_t11 flatTermX_t11 taudP19 deltaY
+          rw [s1, s2, s3]
+          exact rfl
+        rw [bX] at h
+        exact Or.inr (Or.inr (Or.inr (le_of_lt h)))
+      · linarith
 
 /-- HOL `taud_mud_126_x` (pent_hex.hl:1111). -/
 theorem taud_mud_126_x_p19 (y3 y4 y5 y1 y2 y3' y4' y5' y6 : ℝ) (h1 : 0 ≤ y1) (h2 : 0 ≤ y2) :
