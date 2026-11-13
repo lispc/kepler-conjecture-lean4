@@ -468,6 +468,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（00:12，续1082）**：**LA18 双件 `pent2iunb-w1` 交付落库 `9c6574a1`（`deform_pent_exists_p18` + `azim5_reduction_p18` 真证，+541/−9，in-file sorry 3→1）+ 卫生 commit 剥 23c16896 泄漏的 9 行 `#print` + 第二车 `iunbfinish-w2` 发车（agent-56：IUNBUIG_p18 本体收口）**。
+① **工单外扩面（车道已自证必要，编排者复核采信）**：工单原称 azim5「在案不动」，但 IUNBUIG DISCHARGES（现 :2359 区）硬依赖 azim5_reduction_p18——不证则 IUNBUIG 永带 sorryAx、探针纪律冲突 ⇒ 探针规则优先。删除面恰 2 sorry + 8 注释行；陈述逐字未动。
+② **IUNBUIG 止损交接（高价值）**：路线全测绘（~60% 输入可直实例化）+ 唯一卡点 he1a 已破解（azim_dih_y_p18 双侧 + `dih_y_mono_p22` LA22:4394 slot-4 单调 + dist(f0t,v1)=dist(v0,v1)−|t|）；余装配 400-600 行 → iunbfinish-w2 接续包已给全。
+③ **卫生项**：HEAD LA18 尾部发现 9 行泄漏 `#print axioms`（源 = `23c16896` k4c5m2-w1 拼接探针泄进树内，N3/今晚 pent2iunb 闸的输出里都带着它们的打印）——已剥除（纯命令、零语义；池 olean 待下次 LA18 重编自然更新）。纪律补遗：拼接探针只在 /tmp 副本做，主文件尾零 `#print`（已写入 iunbfinish-w2 工单）。
+④ 闸（亲跑）：apply--check@597fb7a7 PASS；添加行禁词 0（唯一命中=FILE MAP 注释「sorry giant」）；直编 RC=0/error 0（21.3 s）+ 双探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
+⑤ 在飞 1：iunbfinish-w2（LA18 IUNBUIG 收口）；用户 V7（LA23 ab4 两件）。SORRIED 62 未动（锥外收割继续：LA18 in-file 3→1）。
+
 - **2026-11-13（23:58，续1081）**：**OCBICBY 4T2 空壳支 `quad4t2-w1` 交付落库 `d0639252`（LA22 纯新增 +247/−0）——Text 7 #2 最大剩余块备料落地**。
 ① 四件：`emptykit_apos_4T2`/`emptykit_azim_4T2`（私）+ `empty_4T2`（公，HOL terminal.hl:2888）+ `OCBICBY_4T2_p22`（公，4T2 支成品）。OCBICBY_p22 本体仍 sorry——14 支齐套后装配（t4crux 情报：4T3/4T4/4T5 同款，模板已验证两次）。
 ② 路线：terminal_quad_lemma 0.467 + 周期坍缩 + 对角钉死 + quad_split + tau3_taum_40×2 + `ineq_5691615370_asym`（93bf9f73）12 槽 + 周长事实 σ>8.472 + registry 9563139965 d/e/f 分流。HOL 行段对照（terminal.hl:2888-3060 / OCBICBY.hl:4740-4761 / main_estimate_ineq.hl:2637/2657/2676）在 DELIVERY §2。

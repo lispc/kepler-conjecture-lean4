@@ -4293,16 +4293,5 @@ theorem CNICGSF5_p18 :
       (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his2) heq2))
   -- NEEDS: SCS_5M1_SLICE_24_p18 (still sorried) + LocalAuto1.YXIONXL3_concl.
 
-#print axioms azim_dih_y_p18
-#print axioms planar_deform_dist_p18
-#print axioms ARCV_ADD_AFF_GE_p18
-
 end Kepler.Text
-
-/- EV32 (lane la18-slice-w1): the five slice arrows must be standard-three. -/
-#print axioms Kepler.Text.SCS_5I1_SLICE_02_p18
-#print axioms Kepler.Text.SCS_5I2_SLICE_02_p18
-#print axioms Kepler.Text.SCS_5M1_SLICE_02_p18
-#print axioms Kepler.Text.SCS_5M1_SLICE_03_p18
-#print axioms Kepler.Text.SCS_5M1_SLICE_24_p18
 
