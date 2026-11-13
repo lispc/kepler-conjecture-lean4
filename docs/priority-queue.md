@@ -117,11 +117,13 @@
 > 反证 → dist=s.b=cstab 锁死 → g12=-|t| + ab4_2 → LEMMA_6843920790_p22 增区间 + 最小性反证）；
 > **V10 `b8df6bcb`**（`LEMMA_PWE1_p23` 真证 +333/−1，标准三；12 依赖件零 sorryAx；
 > 长对角 registry 6184614449 + 私有复证 `delta4_y_imp_obtuse`（拒绝消费 LA22 未证债）→ DIHV_EQ_DIH_Y_4PT_B；
-> 短对角 vv_split_azim + AZIM_DIHV_SAME_STRONG + registry 1348932091/5557288534 + dih_y_mono_p22）。
-> 十笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→4）。
-> **在飞 V11 `vaspwe2-w11`**：`LEMMA_PWE2_p23`（PWE1 镜像，HOL `JOTSWIX.hl:2994-3290`，297 行；
-> 结论 `π/2 < dihV 0 (v(p+3)) (v p) (v(p+2))`；复用 V10 私有 `vas10_obtuse_of_delta4` + 同 registry 五 id；
-> 删除面恰 1 sorry）。
+> 短对角 vv_split_azim + AZIM_DIHV_SAME_STRONG + registry 1348932091/5557288534 + dih_y_mono_p22）；
+> **V11 `2782b2f5`**（`LEMMA_PWE2_p23` 镜像真证 +310/−1，标准三；13 依赖件零 sorryAx；
+> 短对角两箱位置对调 `5557288534(cstab)↔(p+1)`/`1348932091(2h0)↔(p+3)`，A<1.7+B<1.4）。
+> 十一笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→3）。
+> **在飞 V12 `vaslin-w12`**：`LINDIH_11_p23`（HOL `JOTSWIX.hl:3291-3370`，79 行；
+> box ⇒ `dihY<1.1 ∨ deltaY<0`；`mi_lindihpi_lt_y`（PA21:3450）/ `bp_bdt`（PA1:232）/
+> registry 9368433105+8405387449 / T11 数值收尾；删除面恰 1 sorry）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -297,6 +299,23 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（03:31，续1087）**：**V11 `vaspwe2-w11` 落库 `2782b2f5`（PWE2 镜像真证 +310/−1）——簇内 sorry 4→3；V12 `vaslin-w12` 发车（`LINDIH_11_p23`）**。
+① **V11 交付**：HOL `JOTSWIX.hl:2994-3290`（PWE1 镜像）——长对角 `6184614449` 六参数按
+`(w,v1,v2)=(v(p+3),v p,v(p+2))` 派生，经 V10 私有 `vas10_dihY_swap23` + `dist_comm` 对齐 registry 序；
+`g482w3_deltaY_pos` 用 quad 新序 `{0,v(p+3),v(p+2),v p}`（新增集合外延步 `hncol_p3b`）；
+短对角两箱**位置对调**：`5557288534`(cstab)→`(p+1)` 顶点（新派生 `hd12_le`，`hbnd∘hbc`）、
+`1348932091`(2h0)→`(p+3)` 顶点（上界即 `hd`）；收口 `A<1.7 + B<1.4 = 3.1 < π`（与 PWE1 数值互换）。
+② **编排者闸（亲跑）**：worktree@`734037ab` apply RC=0；删除面恰 1 sorry；禁项 0/0/0/0；直编 **rc=0/error 0**
+（sorry-decls 4→3，217 s / 8.12 GB）；装池；探针目标件 **标准三**、PWE1/三 master 前置全标准三、
+其余 13 名 axioms 逐行同 HEAD（3 条仍 sorryAx：LINDIH_11/PWE3/PWE4）；13 依赖件零 sorryAx；
+根面 md5 **`246e952c…` 逐字节同**。commit `2782b2f5`，已 push。
+③ **V12 `vaslin-w12`（在飞）**：`LINDIH_11_p23`（HOL :3291-3370）——box ⇒ `dihY<1.1 ∨ deltaY<0`；
+候选：`mi_lindihpi_lt_y`（PA21:3450，可 import `PackingAuto21` 或文件内私有复证实际方向）、
+`bp_bdt`（PA1:232）、registry `9368433105`/`8405387449`、T11 数值收尾（`atn(sqrt 3.86)<1.1`）；
+删除面恰 1。
+④ 口径：V11 非锥内（锥内 62 不变）；簇内 sorry 3 余（LINDIH_11/PWE3/PWE4）。
+⑤ 下一条：续1088。
 
 - **2026-11-14（03:04，续1086）**：**V10 `vaspwe1-w10` 落库 `b8df6bcb`（`LEMMA_PWE1_p23` 真证 +333/−1）——簇内 sorry 5→4；V11 `vaspwe2-w11` 发车（PWE1 镜像）**。
 ① **V10 交付**：HOL `JOTSWIX.hl:2706-2993` 两分支——长对角 `3.3 ≤ dist(p,p+2)`：registry `6184614449`
