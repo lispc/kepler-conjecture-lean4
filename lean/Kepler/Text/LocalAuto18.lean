@@ -42,10 +42,11 @@ FILE MAP
     `coplanar_aff_gt_simple_p18`-adjacent kit (all discharged
     2026-11-13: `ARCV_ADD_AFF_GE_p18` / `planar_deform_dist_p18` /
     `azim_dih_y_p18` by lane k4c5m2-w1, `23c16896`, in-file 7→4;
-    `coplanar_cross_reduction_p18` by lane n3cross-w1, in-file 4→3);
-    remaining sorry giants: `deform_pent_exists_p18`,
-    `azim5_reduction_p18`, `IUNBUIG_p18` (`Deformation` from
-    LocalAuto1).  Discharged 2026-11-13 (lane k4cprep-w2) via the
+    `coplanar_cross_reduction_p18` by lane n3cross-w1, in-file 4→3;
+    `deform_pent_exists_p18` / `azim5_reduction_p18` by lane
+    pent2iunb-w1, in-file 3→1); remaining sorry giant:
+    `IUNBUIG_p18` (`Deformation` from LocalAuto1).  Discharged
+    2026-11-13 (lane k4cprep-w2) via the
     unconditional `EGHNAVX` (LA14:6965): `EGHNAVX_COLL_SCS_p18`,
     `EGHNAVX_SCS_p18`, `L13_LEMMA_p18`, `coplanar_aff_gt_simple_p18`.
   Section C (AURSIPD): `REP_NUMSEG_p18`, `PERIODIC_IMAGE2_p18` (proved);
@@ -639,6 +640,16 @@ theorem planar_deform_dist_p18 (v₀ v₁ v₂ : V3) (f : V3 → ℝ → V3) (V 
   -- (`real_continuous_finite_range_constant_p18`), and at `t = 0` it equals
   -- `dist v₁ v₂` (`Deformation`'s `f v 0 = v`).
 
+/-- Cross-triple cyclic identity on `V3` (Mathlib
+`triple_product_permutation` on the `Fin 3 → ℝ` identification). -/
+private theorem pent2iunb_triple (a b c : V3) :
+    a ⬝ᵥ cross3 b c = b ⬝ᵥ cross3 c a :=
+  triple_product_permutation (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+/-- Symmetry of the `V3` dot product. -/
+private theorem pent2iunb_dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
 /-- HOL `deform_pent_exists` (IUNBUIG.hl:269). Giant (needs
 `deform_684_pent_exists` / `deform_planar_exists` from Cuxvzoz). -/
 theorem deform_pent_exists_p18 (V : Set V3) (g₂₃ : ℝ → ℝ) (v₀ v₁ v₂ v₃ : V3)
@@ -657,7 +668,86 @@ theorem deform_pent_exists_p18 (V : Set V3) (g₂₃ : ℝ → ℝ) (v₀ v₁ v
         dist (f v₂ t) v₃ = dist v₂ v₃ + g₂₃ t ∧ ‖f v₂ t‖ = ‖v₂‖ ∧
         (Coplanar ({0, v₀, v₁, v₂} : Set V3) →
           Coplanar ({0, v₀, f v₁ t, f v₂ t} : Set V3))) := by
-  sorry
+  -- HOL IUNBUIG.hl:269-333: split on the coplanarity of `{0, v₀, v₁, v₂}`.
+  -- Non-planar branch: `deform_684_pent_exists_p21`; planar branch:
+  -- `deform_planar_exists_p21` at g₀₁ = g₀₂ = 0, closing the remaining
+  -- moving-edge distance with `planar_deform_dist_p18`.
+  rcases Classical.em (Coplanar ({0, v₀, v₁, v₂} : Set V3)) with hpl | hpl
+  · -- planar branch
+    have hv₁₂ : v₁ ≠ v₂ := by
+      intro h
+      apply hcol
+      rw [h]
+      have hset : ({0, v₂, v₂} : Set V3) = {0, v₂} := by
+        ext x
+        simp
+      show Collinear ℝ ({0, v₂, v₂} : Set V3)
+      rw [hset]
+      exact collinear_pair ℝ 0 v₂
+    have hv₀ : v₀ ≠ 0 := by
+      intro h
+      apply hncp
+      rw [h, show ({(0 : V3), (0 : V3), v₂, v₃} : Set V3) = {0, v₂, v₃} from by
+        ext x
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto]
+      exact coplanar_triple 0 v₂ v₃
+    obtain ⟨f, hf⟩ := deform_planar_exists_p21 V (fun _ => (0:ℝ)) (fun _ => (0:ℝ))
+      g₂₃ v₀ v₁ v₂ v₃ e
+    obtain ⟨e', he', hdef, hfix, hpt⟩ := hf hncp hpl hcr (hcp hpl) hv₁₂ he hcont hg₀
+      continuousOn_const rfl continuousOn_const rfl
+    have hfix' : ∀ v : V3, ∀ t : ℝ, v ≠ v₁ → v ≠ v₂ → f v t = v :=
+      fun v t h1 h2 => hfix v t ⟨h1, h2⟩
+    refine ⟨f, e', he', hdef, hfix', ?_⟩
+    intro t ht
+    obtain ⟨hcp', hd0, hn1, hd20, hd23, hn2⟩ := hpt t ht
+    have hd0' : dist v₀ (f v₁ t) = dist v₀ v₁ := by
+      rw [hd0]
+      simp
+    have hd20' : dist (f v₂ t) v₀ = dist v₂ v₀ := by
+      rw [hd20]
+      simp
+    refine ⟨hd0', ?_, hn1, hd20', hd23, hn2, fun _ => hcp'⟩
+    -- the moving-edge distance, via the planar rigidity lemma
+    have hpd := planar_deform_dist_p18 v₀ v₁ v₂ f V e' h₁ h₂ hv₀ he' hdef hfix'
+      (fun s hs => by
+        obtain ⟨hc, hd0s, hn1s, hd20s, -, hn2s⟩ := hpt s hs
+        exact ⟨hc, by rw [hd0s]; simp, hn1s, by rw [hd20s]; simp, hn2s⟩) t ht
+    rw [dist_comm (f v₂ t) (f v₁ t), dist_comm v₂ v₁]
+    exact hpd
+  · -- non-planar branch
+    obtain ⟨f, hf⟩ := deform_684_pent_exists_p21 V g₂₃ v₀ v₁ v₂ v₃ e
+    have hset : ({0, v₁, v₂, v₀} : Set V3) = {0, v₀, v₁, v₂} := by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    have hne0 : azim 0 v₁ v₂ v₀ ≠ 0 := by
+      intro h0
+      apply hpl
+      rw [← hset]
+      exact (AZIM_COND_FOR_COPLANAR 0 v₁ v₂ v₀).mp (Or.inl h0)
+    have hneπ : azim 0 v₁ v₂ v₀ ≠ Real.pi := by
+      intro hπ
+      apply hpl
+      rw [← hset]
+      exact (AZIM_COND_FOR_COPLANAR 0 v₁ v₂ v₀).mp (Or.inr hπ)
+    have hcr2 : 0 < v₁ ⬝ᵥ cross3 v₂ v₀ := by
+      have htri : v₁ ⬝ᵥ cross3 v₂ v₀ = (cross3 v₁ v₂) ⬝ᵥ v₀ :=
+        (pent2iunb_triple v₀ v₁ v₂).symm.trans
+          (pent2iunb_dot_comm (cross3 v₁ v₂) v₀).symm
+      have hpos : 0 < Real.sin (azim 0 v₁ v₂ v₀) :=
+        (sin_azim_pos_p21 0 v₁ v₂ v₀).mpr
+          ⟨lt_of_le_of_ne (azim_nonneg 0 v₁ v₂ v₀) (fun h => hne0 h.symm),
+            lt_of_le_of_ne haz hneπ⟩
+      rw [htri]
+      exact (SIN_AZIM_MUTUAL_CROSS v₁ v₂ v₀).2.1.mp hpos
+    obtain ⟨e', he', hdef, hfix, hpt⟩ := hf hncp hpl hcr hcr2 he hcont hg₀
+    have hfix' : ∀ v : V3, ∀ t : ℝ, v ≠ v₁ → v ≠ v₂ → f v t = v :=
+      fun v t h1 h2 => hfix v t ⟨h1, h2⟩
+    refine ⟨f, e', he', hdef, hfix', ?_⟩
+    intro t ht
+    obtain ⟨hd0, hd21, hn1, hd20, hd23, hn2⟩ := hpt t ht
+    exact ⟨hd0, hd21, hn1, hd20, hd23, hn2, fun hc => (hpl hc).elim⟩
   -- DISCHARGES: Cuxvzoz.deform_684_pent_exists / Cuxvzoz.deform_planar_exists
   -- plus planar_deform_dist_p18 for the coplanar branch.
 
@@ -1780,10 +1870,452 @@ theorem azim5_reduction_p18 (s : ScsV39) (f : V3 → ℝ → V3) (v : ℕ → V3
         azim 0 (v 3) (f (v 4) t) (f (v 0) t) = azim 0 (v 3) (v 4) (v 0) ∧
         azim 0 (f (v 4) t) (f (v 0) t) (v 3) = azim 0 (v 4) (v 0) (v 3) ∧
         azim 0 (f (v 0) t) (v 3) (f (v 4) t) = azim 0 (v 0) (v 3) (v 4)) := by
-  sorry
-  -- DISCHARGES: Terminal.vv_split_azim_generic (the three "addition"
-  -- conjuncts), the colinearity kit (Zlzthic.PROPERTIES_GENERIC_LOCAL_FAN_ALT)
-  -- and the deformation-invariance of `azim` under the he1b constraints.
+  -- HOL IUNBUIG.hl:1167-1450.  Bookkeeping.
+  have hinj : ∀ a b : ℕ, a < 5 ∧ b < 5 ∧ v a = v b → a = b :=
+    fun a b h => BBs_inj_p21 s v 5 his hk hBB a b h.1 h.2.1 h.2.2
+  obtain ⟨hann, hper', -, hclf0⟩ := hBB
+  have hper : Periodic v 5 := hk ▸ hper'
+  have hclf : ConvexLocalFan (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) := by
+    rcases hclf0 with h | h
+    · omega
+    · exact h
+  have hg : Generic (Set.range v) (Set.range fun i => {v i, v (i + 1)}) := hgen
+  have hwin : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → v i ≠ v j := fun i j hi hj hij =>
+    fun hvv => hij (hinj i j ⟨hi, hj, hvv⟩)
+  have hlf : LocalFan (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) := hclf.1
+  have hvm : ∀ i : ℕ, v i ∈ (Set.range v : Set V3) := fun i => Set.mem_range_self i
+  have hepos : 0 < e := hdef.1.2
+  have hv0 : v 0 ≠ 0 := by
+    have h2 := (ballAnnulus_norm_bounds (hann (hvm 0))).1
+    intro h
+    rw [h, norm_zero] at h2
+    norm_num at h2
+  have hv1 : v 1 ≠ 0 := by
+    have h2 := (ballAnnulus_norm_bounds (hann (hvm 1))).1
+    intro h
+    rw [h, norm_zero] at h2
+    norm_num at h2
+  have hv5 : v 5 = v 0 := by
+    have h := periodic_mod_p18 hper' 5; rw [hk] at h; norm_num at h; exact h.symm
+  have hv6 : v 6 = v 1 := by
+    have h := periodic_mod_p18 hper' 6; rw [hk] at h; norm_num at h; exact h.symm
+  have hv7 : v 7 = v 2 := by
+    have h := periodic_mod_p18 hper' 7; rw [hk] at h; norm_num at h; exact h.symm
+  have hv8 : v 8 = v 3 := by
+    have h := periodic_mod_p18 hper' 8; rw [hk] at h; norm_num at h; exact h.symm
+  -- the three additions (HOL :1191-1216)
+  have e1 := vv_split_azim_generic_p22 v 5 3 3 4 hper (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num) hg hclf hinj
+  have e2 := vv_split_azim_generic_p22 v 5 3 2 3 hper (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num) hg hclf hinj
+  have e3s := vv_split_azim_generic_p22 v 5 0 3 4 hper (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num) hg hclf hinj
+  have e4s := vv_split_azim_generic_p22 v 5 1 2 4 hper (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num) hg hclf hinj
+  simp only [Nat.reduceAdd] at e1 e2 e3s e4s
+  rw [hv7] at e1
+  rw [hv6] at e1 e2
+  rw [hv5] at e2 e4s
+  -- e1 : azim342 = azim341 + azim312; e2 : azim341 = azim340 + azim301
+  -- e3s : azim014 = azim013 + azim034; e4s : azim120 = azim123 + azim130
+  have hC1 : azim 0 (v 3) (v 4) (v 2) =
+      azim 0 (v 3) (v 4) (v 0) + azim 0 (v 3) (v 0) (v 1) + azim 0 (v 3) (v 1) (v 2) := by
+    linarith
+  have hC2 : azim 0 (v 0) (v 1) (v 4) =
+      azim 0 (v 0) (v 1) (v 3) + azim 0 (v 0) (v 3) (v 4) := e3s
+  have hC3 : azim 0 (v 1) (v 2) (v 0) =
+      azim 0 (v 1) (v 2) (v 3) + azim 0 (v 1) (v 3) (v 0) := e4s
+  -- fix facts (HOL :1217-1221)
+  have hf1 : ∀ t : ℝ, f (v 1) t = v 1 := fun t =>
+    hfix _ t (hwin 1 4 (by norm_num) (by norm_num) (by norm_num))
+      (hwin 1 0 (by norm_num) (by norm_num) (by norm_num))
+  have hf2 : ∀ t : ℝ, f (v 2) t = v 2 := fun t =>
+    hfix _ t (hwin 2 4 (by norm_num) (by norm_num) (by norm_num))
+      (hwin 2 0 (by norm_num) (by norm_num) (by norm_num))
+  have hf3 : ∀ t : ℝ, f (v 3) t = v 3 := fun t =>
+    hfix _ t (hwin 3 4 (by norm_num) (by norm_num) (by norm_num))
+      (hwin 3 0 (by norm_num) (by norm_num) (by norm_num))
+  -- window collinearity (HOL :1222-1231)
+  have hcol : ∀ i j : ℕ, i < 5 → j < 5 → i ≠ j → ¬ Collinear3 0 (v i) (v j) :=
+    fun i j hi hj hij => PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range v)
+      (Set.range fun i => {v i, v (i + 1)}) (Set.range fun i => (v i, v (i + 1)))
+      (v i) (v j) hlf (hvm i) (hvm j) (hwin i j hi hj hij) hg
+  have col3_swap : ∀ a b : V3, Collinear3 0 a b → Collinear3 0 b a := fun a b h => by
+    have hs : ({0, a, b} : Set V3) = {0, b, a} := by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [Collinear3, ← hs]
+    exact h
+  have he1a' := he1a
+  obtain ⟨e1', he1'p, he1a⟩ := he1a'
+  obtain ⟨e1x, he1xp, he1bf⟩ := he1b
+  -- deformation-window continuity helper (HOL :1232-1240)
+  have hdefcol : ∀ i j : ℕ, ¬ Collinear3 0 (v i) (v j) →
+      ∃ e1x : ℝ, 0 < e1x ∧ ∀ t : ℝ, |t| < e1x →
+        ¬ Collinear3 0 (f (v i) t) (f (v j) t) := by
+    intro i j hnc
+    obtain ⟨e1x, he1x, h1⟩ := CONTINUOUS_PRESERVE_COLLINEAR (0 : V3)
+      (fun t : ℝ => f (v i) t) (fun t : ℝ => f (v j) t) 0
+      (hdef.2.1 (v i) (hvm i) 0 hdef.1) (hdef.2.1 (v j) (hvm j) 0 hdef.1)
+      (by simpa [hdef.2.2 (v i) (hvm i), hdef.2.2 (v j) (hvm j)] using hnc)
+    refine ⟨e1x, he1x, ?_⟩
+    intro t ht
+    have h2 := h1 t
+    rw [show |(0:ℝ) - t| = |t| from by rw [zero_sub, abs_neg]] at h2
+    exact h2 ht
+  obtain ⟨e34, he34p, h34⟩ := hdefcol 0 4 (hcol 0 4 (by norm_num) (by norm_num) (by norm_num))
+  obtain ⟨e03, he03p, h03⟩ := hdefcol 0 3 (hcol 0 3 (by norm_num) (by norm_num) (by norm_num))
+  obtain ⟨e01, he01p, h01⟩ := hdefcol 0 1 (hcol 0 1 (by norm_num) (by norm_num) (by norm_num))
+  obtain ⟨e43, he43p, h43⟩ := hdefcol 4 3 (hcol 4 3 (by norm_num) (by norm_num) (by norm_num))
+  obtain ⟨e3, he3p, he3⟩ := epsilon_quad_p21 e34 e03 e01 e43 he34p he03p he01p he43p
+  have h034 : ∀ t : ℝ, |t| < e3 →
+      ¬ Collinear3 0 (f (v 0) t) (f (v 4) t) ∧
+      ¬ Collinear3 0 (f (v 0) t) (f (v 3) t) ∧
+      ¬ Collinear3 0 (f (v 0) t) (f (v 1) t) ∧
+      ¬ Collinear3 0 (f (v 4) t) (f (v 3) t) := fun t ht =>
+    ⟨h34 t (he3.1 t ht), h03 t (he3.2.1 t ht), h01 t (he3.2.2.1 t ht),
+      h43 t (he3.2.2.2 t ht)⟩
+  -- `convex_local_fan_azim_le_pi` (HOL :1241-1247)
+  have hazle : ∀ i : ℕ, azim 0 (v i) (v (i + 1)) (v (i + 4)) ≤ Real.pi := by
+    intro i
+    have h := convex_local_fan_azim_le_pi v 5 i hper (by norm_num) hinj hclf hann
+    rw [show i + 5 - 1 = i + 4 from by omega] at h
+    exact h
+  -- the azim bounds (HOL :1257-1269)
+  have hlt013 : azim 0 (v 0) (v 1) (v 3) < Real.pi := by
+    have h2 := azim_nonneg 0 (v 0) (v 3) (v 4)
+    linarith
+  have hncop013 : ¬ Coplanar ({0, v 0, v 1, v 3} : Set V3) := by
+    intro hc
+    rcases (AZIM_COND_FOR_COPLANAR 0 (v 0) (v 1) (v 3)).mpr hc with h0 | hpi
+    · rw [h0] at ha03
+      exact (lt_irrefl _ ha03).elim
+    · rw [hpi] at hlt013
+      exact (lt_irrefl _ hlt013).elim
+  have h301pos : 0 < azim 0 (v 3) (v 0) (v 1) := by
+    rw [azim_pos_iff_nz_p14]
+    intro h0
+    have hc := (AZIM_COND_FOR_COPLANAR 0 (v 3) (v 0) (v 1)).mp (Or.inl h0)
+    apply hncop013
+    rw [← show ({0, v 3, v 0, v 1} : Set V3) = {0, v 0, v 1, v 3} from by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto]
+    exact hc
+  have h130pos : 0 < azim 0 (v 1) (v 3) (v 0) := by
+    rw [azim_pos_iff_nz_p14]
+    intro h0
+    have hc := (AZIM_COND_FOR_COPLANAR 0 (v 1) (v 3) (v 0)).mp (Or.inl h0)
+    apply hncop013
+    rw [← show ({0, v 1, v 3, v 0} : Set V3) = {0, v 0, v 1, v 3} from by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto]
+    exact hc
+  -- the two `WNWSHJT_ALT` windows (HOL :1270-1297)
+  have hsub301 : ({v 3, v 0, v 1} : Set V3) ⊆ Set.range v := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    exacts [hvm 3, hvm 0, hvm 1]
+  have hdef301 : Deformation f ({v 3, v 0, v 1} : Set V3) (-e) e :=
+    deformation_subset_p14 f _ (Set.range v) (-e) e hsub301 hdef
+  have hlt034 : azim 0 (v 0) (v 1) (v 3) < Real.pi - azim 0 (v 0) (v 3) (v 4) := by
+    have h2 := azim_nonneg 0 (v 0) (v 3) (v 4)
+    linarith
+  obtain ⟨eB, heBp, hB⟩ := WNWSHJT_ALT_p21 (v 3) (v 0) (v 1) f (-e) e
+    (Real.pi - azim 0 (v 0) (v 3) (v 4)) hdef301 (hcol 0 1 (by norm_num) (by norm_num) (by norm_num)) (hcol 0 3 (by norm_num) (by norm_num) (by norm_num)) ha03 hlt034
+  have hB' : ∀ t : ℝ, |t| < eB → 0 < azim 0 (f (v 0) t) (v 1) (v 3) ∧
+      azim 0 (f (v 0) t) (v 1) (v 3) < Real.pi - azim 0 (v 0) (v 3) (v 4) := by
+    intro t ht
+    have h := hB t ht
+    rwa [hf1 t, hf3 t] at h
+  have hsub103 : ({v 0, v 1, v 3} : Set V3) ⊆ Set.range v := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    exacts [hvm 0, hvm 1, hvm 3]
+  have hdef103 : Deformation f ({v 0, v 1, v 3} : Set V3) (-e) e :=
+    deformation_subset_p14 f _ (Set.range v) (-e) e hsub103 hdef
+  have hlt123b : azim 0 (v 1) (v 3) (v 0) < Real.pi - azim 0 (v 1) (v 2) (v 3) := by
+    have h2 := azim_nonneg 0 (v 1) (v 2) (v 3)
+    linarith
+  obtain ⟨eC, heCp, hC⟩ := WNWSHJT_ALT_p21 (v 0) (v 1) (v 3) f (-e) e
+    (Real.pi - azim 0 (v 1) (v 2) (v 3)) hdef103 (hcol 1 3 (by norm_num) (by norm_num) (by norm_num)) (hcol 1 0 (by norm_num) (by norm_num) (by norm_num))
+    h130pos hlt123b
+  have hC' : ∀ t : ℝ, |t| < eC → 0 < azim 0 (v 1) (v 3) (f (v 0) t) ∧
+      azim 0 (v 1) (v 3) (f (v 0) t) < Real.pi - azim 0 (v 1) (v 2) (v 3) := by
+    intro t ht
+    have h := hC t ht
+    rwa [hf1 t, hf3 t] at h
+  -- `azim 0 (v 4) (v 0) (v 3) ≤ Real.pi` and the `e2` bound (HOL :1313-1365)
+  have h403 : azim 0 (v 4) (v 0) (v 3) ≤ Real.pi := by
+    have h := hazle 4
+    simp only [Nat.reduceAdd] at h
+    rw [hv5, hv8] at h
+    exact h
+  have hbound : ∃ e2 : ℝ, 0 < e2 ∧ ∀ t : ℝ, |t| < e2 →
+      azim 0 (f (v 4) t) (f (v 0) t) (v 3) ≤ Real.pi := by
+    by_cases hcop : Coplanar ({0, v 3, v 4, v 0} : Set V3)
+    · obtain ⟨eP, hePp, heP⟩ := epsilon_pair_p21 e1' e1x he1'p he1xp
+      refine ⟨eP, hePp, ?_⟩
+      intro t ht
+      obtain ⟨-, -, -, -, -, -, hc'⟩ := he1bf t (heP.2 t ht)
+      have hd := hc' hcop
+      have hdich := (AZIM_COND_FOR_COPLANAR 0 (v 3) (f (v 4) t) (f (v 0) t)).mpr hd
+      have hle : azim 0 (v 3) (f (v 4) t) (f (v 0) t) ≤ Real.pi := by
+        rcases hdich with h0 | hpi
+        · rw [h0]
+          exact Real.pi_pos.le
+        · rw [hpi]
+      exact FSQKWKK_p16 0 (v 3) (f (v 4) t) (f (v 0) t) hle
+    · have h403ne0 : azim 0 (v 4) (v 0) (v 3) ≠ 0 := by
+        intro h0
+        have hc := (AZIM_COND_FOR_COPLANAR 0 (v 4) (v 0) (v 3)).mp (Or.inl h0)
+        apply hcop
+        rw [← show ({0, v 4, v 0, v 3} : Set V3) = {0, v 3, v 4, v 0} from by
+          ext x
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto]
+        exact hc
+      have h403nepi : azim 0 (v 4) (v 0) (v 3) ≠ Real.pi := by
+        intro hpi
+        have hc := (AZIM_COND_FOR_COPLANAR 0 (v 4) (v 0) (v 3)).mp (Or.inr hpi)
+        apply hcop
+        rw [← show ({0, v 4, v 0, v 3} : Set V3) = {0, v 3, v 4, v 0} from by
+          ext x
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          tauto]
+        exact hc
+      have h403pos : 0 < azim 0 (v 4) (v 0) (v 3) := by
+        rw [azim_pos_iff_nz_p14]
+        exact h403ne0
+      have h403lt : azim 0 (v 4) (v 0) (v 3) < Real.pi :=
+        lt_of_le_of_ne h403 h403nepi
+      obtain ⟨e4p, he4pp, he4p⟩ := epsilon_pair_p21 e3 e he3p hepos
+      have hdefR : Deformation f (Set.range v) (-e4p) e4p :=
+        deformation_restrict_p21 e f (Set.range v) e4p hdef he4pp he4p.2
+      have hsub340 : ({v 3, v 4, v 0} : Set V3) ⊆ Set.range v := by
+        intro x hx
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+        rcases hx with rfl | rfl | rfl
+        exacts [hvm 3, hvm 4, hvm 0]
+      have hdef340 : Deformation f ({v 3, v 4, v 0} : Set V3) (-e4p) e4p :=
+        deformation_subset_p14 f _ (Set.range v) (-e4p) e4p hsub340 hdefR
+      obtain ⟨e5, he5p, h5⟩ := WNWSHJT_p14 (v 3) (v 4) (v 0) f (-e4p) e4p hdef340
+        (by
+          have h := hcol 4 0 (by norm_num) (by norm_num) (by norm_num)
+          rwa [← hdef.2.2 (v 4) (hvm 4), ← hdef.2.2 (v 0) (hvm 0)] at h)
+        (by
+          have h := hcol 4 3 (by norm_num) (by norm_num) (by norm_num)
+          rwa [← hdef.2.2 (v 4) (hvm 4), ← hdef.2.2 (v 3) (hvm 3)] at h)
+        h403pos h403lt
+      refine ⟨min e4p e5, lt_min he4pp he5p, ?_⟩
+      intro t ht
+      have hm := lt_min_iff.mp ht
+      have h := h5 t hm.2
+      rw [hf3 t] at h
+      exact h.le
+  obtain ⟨e2w, he2wp, he2⟩ := hbound
+  -- azim invariance under the deformation (HOL :1312-1331, conjunct six)
+  obtain ⟨eW, heWp, heW⟩ := epsilon_quad_p21 e1' e1x e3 e2w he1'p he1xp he3p he2wp
+  have hC6 : ∀ t : ℝ, |t| < eW →
+      azim 0 (v 3) (f (v 4) t) (f (v 0) t) = azim 0 (v 3) (v 4) (v 0) ∧
+      azim 0 (f (v 4) t) (f (v 0) t) (v 3) = azim 0 (v 4) (v 0) (v 3) ∧
+      azim 0 (f (v 0) t) (v 3) (f (v 4) t) = azim 0 (v 0) (v 3) (v 4) := by
+    intro t ht
+    have ht1 : |t| < e1' := heW.1 t ht
+    have ht1b : |t| < e1x := heW.2.1 t ht
+    have ht3 : |t| < e3 := heW.2.2.1 t ht
+    have ht2 : |t| < e2w := heW.2.2.2 t ht
+    obtain ⟨hd34, hd04, hn4, hd03, -, hn0, -⟩ := he1bf t ht1b
+    have hale := he2 t ht2
+    have h1 := FSQKWKK_p16 0 (f (v 4) t) (f (v 0) t) (v 3) hale
+    have h2 := FSQKWKK_p16 0 (f (v 0) t) (v 3) (f (v 4) t) h1
+    have h034' := FSQKWKK_p16 0 (v 4) (v 0) (v 3) h403
+    have h340' := FSQKWKK_p16 0 (v 0) (v 3) (v 4) h034'
+    -- noncollinearity from the `e3` window
+    have h2_34 : ¬ Collinear3 0 (v 3) (f (v 4) t) :=
+      fun hc => (h034 t ht3).2.2.2 (by rw [hf3 t]; exact col3_swap _ _ hc)
+    have h3_30 : ¬ Collinear3 0 (v 3) (f (v 0) t) :=
+      fun hc => (h034 t ht3).2.1 (by rw [hf3 t]; exact col3_swap _ _ hc)
+    have h2_40 : ¬ Collinear3 0 (f (v 4) t) (f (v 0) t) :=
+      fun hc => (h034 t ht3).1 (col3_swap _ _ hc)
+    have h3_43 : ¬ Collinear3 0 (f (v 4) t) (v 3) := by
+      have h := (h034 t ht3).2.2.2
+      rwa [hf3 t] at h
+    have h2_03 : ¬ Collinear3 0 (f (v 0) t) (v 3) := by
+      have h := (h034 t ht3).2.1
+      rwa [hf3 t] at h
+    have h3_04 : ¬ Collinear3 0 (f (v 0) t) (f (v 4) t) := (h034 t ht3).1
+    -- distance transfer from `he1b`
+    have e_n4 : dist (0:V3) (f (v 4) t) = dist 0 (v 4) := by
+      rw [dist_zero_left, dist_zero_left, hn4]
+    have e_n0 : dist (0:V3) (f (v 0) t) = dist 0 (v 0) := by
+      rw [dist_zero_left, dist_zero_left, hn0]
+    have e_40 : dist (f (v 4) t) (f (v 0) t) = dist (v 4) (v 0) := by
+      rw [dist_comm (f (v 4) t) (f (v 0) t), hd04, dist_comm (v 4) (v 0)]
+    have e_30 : dist (v 3) (f (v 0) t) = dist (v 3) (v 0) := by
+      rw [dist_comm (v 3) (f (v 0) t), hd03, dist_comm]
+    have eqA : azim 0 (v 3) (f (v 4) t) (f (v 0) t) = azim 0 (v 3) (v 4) (v 0) := by
+      rw [azim_dih_y_p18 0 (v 3) (f (v 4) t) (f (v 0) t) h2_34 h3_30 h2,
+        azim_dih_y_p18 0 (v 3) (v 4) (v 0) (hcol 3 4 (by norm_num) (by norm_num) (by norm_num)) (hcol 3 0 (by norm_num) (by norm_num) (by norm_num)) h340',
+        e_n4, e_n0, e_40, e_30, hd34]
+    have eqB : azim 0 (f (v 4) t) (f (v 0) t) (v 3) = azim 0 (v 4) (v 0) (v 3) := by
+      rw [azim_dih_y_p18 0 (f (v 4) t) (f (v 0) t) (v 3) h2_40 h3_43 hale,
+        azim_dih_y_p18 0 (v 4) (v 0) (v 3) (hcol 4 0 (by norm_num) (by norm_num) (by norm_num)) (hcol 4 3 (by norm_num) (by norm_num) (by norm_num)) h403,
+        e_n4, e_n0, hd03, dist_comm (f (v 4) t) (v 3), hd34, dist_comm (v 3) (v 4), e_40]
+    have eqC : azim 0 (f (v 0) t) (v 3) (f (v 4) t) = azim 0 (v 0) (v 3) (v 4) := by
+      rw [azim_dih_y_p18 0 (f (v 0) t) (v 3) (f (v 4) t) h2_03 h3_04 h1,
+        azim_dih_y_p18 0 (v 0) (v 3) (v 4) (hcol 0 3 (by norm_num) (by norm_num) (by norm_num)) (hcol 0 4 (by norm_num) (by norm_num) (by norm_num)) h034',
+        e_n0, e_n4, hd34, hd04, hd03]
+    exact ⟨eqA, eqB, eqC⟩
+  -- the merged window for the deformed azim equations
+  obtain ⟨e4a, he4ap, he4a⟩ := epsilon_quad_p21 e1' e1x eW eB he1'p he1xp heWp heBp
+  obtain ⟨eF, heFp, heF⟩ := epsilon_pair_p21 e4a eC he4ap heCp
+  have hC4 : ∀ t : ℝ, |t| < eF →
+      azim 0 (v 3) (f (v 4) t) (v 2) =
+        azim 0 (v 3) (f (v 4) t) (f (v 0) t) +
+          azim 0 (v 3) (f (v 0) t) (v 1) + azim 0 (v 3) (v 1) (v 2) ∧
+      azim 0 (f (v 0) t) (v 1) (f (v 4) t) =
+        azim 0 (f (v 0) t) (v 1) (v 3) + azim 0 (f (v 0) t) (v 3) (f (v 4) t) ∧
+      azim 0 (v 1) (v 2) (f (v 0) t) =
+        azim 0 (v 1) (v 2) (v 3) + azim 0 (v 1) (v 3) (f (v 0) t) ∧
+      0 < azim 0 (f (v 0) t) (v 1) (v 3) ∧
+      azim 0 (f (v 0) t) (v 1) (v 3) < Real.pi := by
+    intro t ht
+    have htF : |t| < e4a := heF.1 t ht
+    have htC : |t| < eC := heF.2 t ht
+    have ht1 : |t| < e1' := he4a.1 t htF
+    have ht1b : |t| < e1x := he4a.2.1 t htF
+    have htW : |t| < eW := he4a.2.2.1 t htF
+    have htB : |t| < eB := he4a.2.2.2 t htF
+    have ht3 : |t| < e3 := heW.2.2.1 t htW
+    obtain ⟨eqA, eqB, eqC⟩ := hC6 t htW
+    obtain ⟨-, -, -, -, -, hn0, -⟩ := he1bf t ht1b
+    have h2_34t : ¬ Collinear3 0 (v 3) (f (v 4) t) :=
+      fun hc => (h034 t ht3).2.2.2 (by rw [hf3 t]; exact col3_swap _ _ hc)
+    have h1_30 : ¬ Collinear3 0 (v 3) (f (v 0) t) :=
+      fun hc => (h034 t ht3).2.1 (by rw [hf3 t]; exact col3_swap _ _ hc)
+    -- equation one (HOL :1367-1386, two dominated splits)
+    have key1 : azim 0 (v 3) (f (v 4) t) (f (v 0) t) +
+        azim 0 (v 3) (f (v 0) t) (v 1) = azim 0 (v 3) (f (v 4) t) (v 1) := by
+      have hsplit2 : azim 0 (v 3) (v 4) (v 0) + azim 0 (v 3) (v 0) (v 1)
+          = azim 0 (v 3) (v 4) (v 1) := e2.symm
+      have hd1 : azim 0 (v 3) (f (v 4) t) (f (v 0) t) ≤ azim 0 (v 3) (v 4) (v 0) := by
+        rw [eqA]
+      have hd2 : azim 0 (v 3) (f (v 0) t) (v 1) ≤ azim 0 (v 3) (v 0) (v 1) :=
+        he1a t ht1
+      exact azim_dominated_split_p21 0 (v 3) (v 4) (v 0) (v 1) 0 (v 3)
+        (f (v 4) t) (f (v 0) t) (v 1) h1_30 (hcol 3 1 (by norm_num) (by norm_num) (by norm_num))
+        h2_34t hsplit2 hd1 hd2
+    have key2 : azim 0 (v 3) (f (v 4) t) (v 1) + azim 0 (v 3) (v 1) (v 2)
+        = azim 0 (v 3) (f (v 4) t) (v 2) := by
+      have hsplit1 : azim 0 (v 3) (v 4) (v 1) + azim 0 (v 3) (v 1) (v 2)
+          = azim 0 (v 3) (v 4) (v 2) := e1.symm
+      have hd1 : azim 0 (v 3) (f (v 4) t) (v 1) ≤ azim 0 (v 3) (v 4) (v 1) := by
+        have h1 := azim_nonneg 0 (v 3) (v 0) (v 1)
+        linarith [key1, eqA, he1a t ht1, e2]
+      exact azim_dominated_split_p21 0 (v 3) (v 4) (v 1) (v 2) 0 (v 3)
+        (f (v 4) t) (v 1) (v 2) (hcol 3 1 (by norm_num) (by norm_num) (by norm_num)) (hcol 3 2 (by norm_num) (by norm_num) (by norm_num)) h2_34t hsplit1 hd1 (le_refl _)
+    have eq1 : azim 0 (v 3) (f (v 4) t) (v 2) =
+        azim 0 (v 3) (f (v 4) t) (f (v 0) t) +
+          azim 0 (v 3) (f (v 0) t) (v 1) + azim 0 (v 3) (v 1) (v 2) := by
+      linarith [key1, key2]
+    -- equation two (HOL :1387-1397, `sum3_azim_fan`)
+    have hxv0 : f (v 0) t ≠ 0 := by
+      intro h
+      apply hv0
+      rw [← norm_eq_zero, ← hn0, h, norm_zero]
+    have eq2 : azim 0 (f (v 0) t) (v 1) (f (v 4) t) =
+        azim 0 (f (v 0) t) (v 1) (v 3) + azim 0 (f (v 0) t) (v 3) (f (v 4) t) := by
+      have hncu : ¬ Collinear3 0 (f (v 0) t) (v 1) := by
+        have h := (h034 t ht3).2.2.1
+        rwa [hf1 t] at h
+      have hnc1 : ¬ Collinear3 0 (f (v 0) t) (v 3) := by
+        have h := (h034 t ht3).2.1
+        rwa [hf3 t] at h
+      have hnc2 : ¬ Collinear3 0 (f (v 0) t) (f (v 4) t) := (h034 t ht3).1
+      have hlt : azim 0 (f (v 0) t) (v 1) (v 3) + azim 0 (f (v 0) t) (v 3) (f (v 4) t)
+          < 2 * Real.pi := by
+        have h1 := hB' t htB
+        have h2 := azim_nonneg 0 (v 0) (v 3) (v 4)
+        rw [eqC]
+        have h3 : (0:ℝ) < 2 * Real.pi := by positivity
+        linarith [h1.2, h2, Real.pi_pos, h3]
+      rw [sum3_azim_fan hxv0 hncu hnc1 hnc2 hlt]
+    -- equation three (HOL :1399-1413, `sum3_azim_fan`)
+    have eq3 : azim 0 (v 1) (v 2) (f (v 0) t) =
+        azim 0 (v 1) (v 2) (v 3) + azim 0 (v 1) (v 3) (f (v 0) t) := by
+      have hnc1 : ¬ Collinear3 0 (v 1) (v 3) := hcol 1 3 (by norm_num) (by norm_num) (by norm_num)
+      have hnc2 : ¬ Collinear3 0 (v 1) (f (v 0) t) :=
+        fun hc => ((h034 t ht3).2.2.1 (by rw [hf1 t]; exact col3_swap _ _ hc))
+      have hlt : azim 0 (v 1) (v 2) (v 3) + azim 0 (v 1) (v 3) (f (v 0) t) < 2 * Real.pi := by
+        have h1 := hC' t htC
+        have h2 := azim_nonneg 0 (v 1) (v 2) (v 3)
+        have h3 : (0:ℝ) < 2 * Real.pi := by positivity
+        linarith [h1.2, h2, Real.pi_pos, h3]
+      rw [sum3_azim_fan hv1 (hcol 1 2 (by norm_num) (by norm_num) (by norm_num)) hnc1 hnc2 hlt]
+    have hpos1 : 0 < azim 0 (f (v 0) t) (v 1) (v 3) := (hB' t htB).1
+    have hpos2 : azim 0 (f (v 0) t) (v 1) (v 3) < Real.pi := by
+      have h1 := hB' t htB
+      have h2 := azim_nonneg 0 (v 0) (v 3) (v 4)
+      exact lt_of_lt_of_le h1.2 (by linarith)
+    exact ⟨eq1, eq2, eq3, hpos1, hpos2⟩
+  -- the pi bounds (HOL :1414-1447)
+  have hC5 : ∀ i : ℕ, ∃ d₀ > 0, azim 0 (v i) (v (i + 1)) (v (i + 4)) = Real.pi →
+      ∀ t, |t| < d₀ →
+        azim 0 (f (v i) t) (f (v (i + 1)) t) (f (v (i + 4)) t) ≤ Real.pi := by
+    intro i
+    have e0 := periodic_mod_p18 hper' i
+    have e1'mod := periodic_mod_p18 hper' (i + 1)
+    have e4'mod := periodic_mod_p18 hper' (i + 4)
+    rw [hk] at e0 e1'mod e4'mod
+    rw [← e0, ← e1'mod, ← e4'mod, Nat.add_mod i 1 5, Nat.add_mod i 4 5]
+    have hr : i % 5 = 0 ∨ i % 5 = 1 ∨ i % 5 = 2 ∨ i % 5 = 3 ∨ i % 5 = 4 := by
+      have := Nat.mod_lt i (show (0:ℕ) < 5 by norm_num)
+      omega
+    rcases hr with hr | hr | hr | hr | hr
+    · rw [hr]
+      norm_num
+      refine ⟨1, one_pos, fun hpi => absurd hpi (ne_of_lt ha04)⟩
+    · rw [hr]
+      norm_num
+      refine ⟨1, one_pos, fun hpi => absurd hpi (ne_of_lt ha10)⟩
+    · rw [hr]
+      norm_num
+      refine ⟨1, one_pos, fun hpi t ht => ?_⟩
+      rw [hf2 t, hf3 t, hf1 t, hpi]
+    · rw [hr]
+      norm_num
+      -- `azim342 = pi` gives the bound through the C4/C6 equations and `he1a`
+      refine ⟨eF, heFp, fun hpi t ht => ?_⟩
+      have htF : |t| < e4a := heF.1 t ht
+      have ht1 : |t| < e1' := he4a.1 t htF
+      have htW : |t| < eW := he4a.2.2.1 t htF
+      obtain ⟨eqA, -, -⟩ := hC6 t htW
+      have h1 := hC4 t ht
+      rw [hf3 t, hf2 t]
+      linarith [h1.1, eqA, he1a t ht1, hC1, hpi]
+    · rw [hr]
+      norm_num
+      exact ⟨e2w, he2wp, fun _ t ht => by rw [hf3 t]; exact he2 t ht⟩
+  exact ⟨hC1, hC2, hC3, ⟨eF, heFp, hC4⟩, hC5, ⟨eW, heWp, hC6⟩⟩
+  -- DISCHARGED 2026-11-13 (lane pent2iunb-w1): HOL `azim5_reduction`
+  -- (IUNBUIG.hl:1106-1450).  The three additions are
+  -- `vv_split_azim_generic_p22` (LA22); the deformed-azim equalities are the
+  -- dominated splits `azim_dominated_split_p21` (C4 first conjunct, using the
+  -- azim-invariance equations) and `sum3_azim_fan` (C4 second/third
+  -- conjuncts); the azim invariance is `azim_dih_y_p18` over the `he1b`
+  -- distance identities, with the `azim ≤ pi` bounds from `FSQKWKK_p16` and
+  -- the dichotomy `AZIM_COND_FOR_COPLANAR` (coplanar branch) or `WNWSHJT_p14`
+  -- (non-coplanar branch); the positivity windows are `WNWSHJT_ALT_p21`
+  -- (HOL WNWSHJT_ALT) and the collinearity kit is
+  -- `PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14` + `CONTINUOUS_PRESERVE_COLLINEAR`.
+  -- `#print axioms` = the standard three.
 
 /-- HOL `L13_LEMMA` (IUNBUIG.hl:1454). -/
 theorem L13_LEMMA_p18 (h : mainNonlinearTerminalV11_p18) (V : Set V3)
