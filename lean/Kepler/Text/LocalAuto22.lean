@@ -679,13 +679,156 @@ theorem xrr_le_16_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < 
     (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) : xrr y1 y2 y6 ≤ 16 :=
   le_of_lt (xrr_bounds_p22 y1 y2 y6 hy1 hy2 hy6 hu).2
 
-/-- HOL `arclength_xrr` (NEEDS the atn2/acs bridge: `arcLength a b c =
-π/2 + atn2 (√upsX) (c²-a²-b²)` equals `acs ((a²+b²-c²)/(2ab))` on the
-positive-ups domain). -/
+/-- Analytic core for `arclength_xrr` (private re-proof of `p38_atn2_arccos`,
+`LocalAuto38.lean:827` / `PackingAuto22.lean:15434` — both private elsewhere,
+hence the verbatim re-proof): `π/2 + atn2 s (-t) = arccos (t / √(s²+t²))`
+on `0 ≤ s`, `0 < s² + t²`. -/
+private theorem la22_atn2_arccos {s t : ℝ} (hs : 0 ≤ s) (hr : 0 < s ^ 2 + t ^ 2) :
+    Real.pi / 2 + atn2 s (-t) = Real.arccos (t / Real.sqrt (s * s + t * t)) := by
+  have hr0 : 0 < s * s + t * t := by
+    have h9 : s * s = s ^ 2 := by ring
+    have h10 : t * t = t ^ 2 := by ring
+    rw [h9, h10]
+    exact hr
+  have hr' : Real.sqrt (s * s + t * t) ≠ 0 := ne_of_gt (Real.sqrt_pos.mpr hr0)
+  rw [atn2]
+  split
+  · next h =>
+    -- branch `|−t| < s`: atn2 = arctan (−t/s)
+    have hs1 : 0 < s := by
+      rcases abs_lt.mp h with ⟨h1, h2⟩
+      have h9 : -t = -1 * t := by ring
+      linarith
+    have hden : Real.sqrt (1 + (-(t / s)) ^ 2) = Real.sqrt (s * s + t * t) / s := by
+      have he : 1 + (-(t / s)) ^ 2 = (s * s + t * t) / (s * s) := by
+        field_simp
+      rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+        Real.sqrt_mul_self (le_of_lt hs1)]
+    have hcos : t / Real.sqrt (s * s + t * t)
+        = Real.cos (Real.pi / 2 + Real.arctan (-(t / s))) := by
+      rw [Real.cos_add, Real.cos_pi_div_two, Real.sin_pi_div_two, Real.sin_arctan,
+        hden]
+      field_simp [show s ≠ 0 from ne_of_gt hs1, hr']
+      ring
+    rw [hcos, show -t / s = -(t / s) from by ring]
+    exact (Real.arccos_cos
+      (x := Real.pi / 2 + Real.arctan (-(t / s)))
+      (by linarith [Real.neg_pi_div_two_lt_arctan (-(t / s))])
+      (by linarith [Real.arctan_lt_pi_div_two (-(t / s))])).symm
+  · next h1 =>
+    split
+    · next h2 =>
+      -- branch `0 < −t`: atn2 = π/2 − arctan (s/(−t))
+      have hyt : t < 0 := by
+        have h9 : -t = -1 * t := by ring
+        linarith
+      have ht0 : (t : ℝ) ≠ 0 := ne_of_lt hyt
+      have hden : Real.sqrt (1 + (s / -t) ^ 2) = Real.sqrt (s * s + t * t) / -t := by
+        have he : 1 + (s / -t) ^ 2 = (s * s + t * t) / (t * t) := by
+          rw [div_pow, show (-t) ^ 2 = t ^ 2 from by ring,
+            eq_div_iff (mul_ne_zero ht0 ht0)]
+          field_simp
+          ring
+        rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+          show (t * t) = t ^ 2 from by ring, Real.sqrt_sq_eq_abs, abs_of_neg hyt]
+      have hcos : t / Real.sqrt (s * s + t * t)
+          = Real.cos (Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t))) := by
+        have eA : Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t))
+            = Real.pi - Real.arctan (s / -t) := by ring
+        rw [eA, Real.cos_pi_sub, Real.cos_arctan, hden]
+        field_simp [ht0, hr']
+      rw [hcos]
+      have hA0 : 0 ≤ s / -t := div_nonneg hs (le_of_lt h2)
+      exact (Real.arccos_cos
+        (x := Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t)))
+        (by linarith [Real.arctan_nonneg.mpr hA0, Real.arctan_lt_pi_div_two (s / -t),
+          Real.pi_pos])
+        (by linarith [Real.arctan_nonneg.mpr hA0, Real.arctan_lt_pi_div_two (s / -t),
+          Real.pi_pos])).symm
+    · next h3 =>
+      split
+      · next h4 =>
+        -- branch `−t < 0`: atn2 = −π/2 − arctan (s/(−t))
+        have hyt : 0 < t := by
+          have h9 : -t = -1 * t := by ring
+          linarith
+        have ht0 : (t : ℝ) ≠ 0 := ne_of_gt hyt
+        have hden : Real.sqrt (1 + (s / -t) ^ 2) = Real.sqrt (s * s + t * t) / t := by
+          have he : 1 + (s / -t) ^ 2 = (s * s + t * t) / (t * t) := by
+            rw [div_pow, show (-t) ^ 2 = t ^ 2 from by ring,
+              eq_div_iff (mul_ne_zero ht0 ht0)]
+            field_simp
+            ring
+          rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+            show (t * t) = t ^ 2 from by ring, Real.sqrt_sq_eq_abs, abs_of_pos hyt]
+        have hcos : t / Real.sqrt (s * s + t * t)
+            = Real.cos (Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t))) := by
+          have eA : Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t))
+              = -(Real.arctan (s / -t)) := by ring
+          rw [eA, Real.cos_neg, Real.cos_arctan, hden]
+          field_simp [ht0, hr']
+        rw [hcos]
+        have hA0 : s / -t ≤ 0 := div_nonpos_of_nonneg_of_nonpos hs (le_of_lt h4)
+        have hA1 : Real.arctan (s / -t) ≤ 0 := by
+          have h2x : 0 ≤ -(s / -t) := by linarith
+          have h3x := Real.arctan_nonneg.mpr h2x
+          rw [Real.arctan_neg] at h3x
+          linarith
+        exact (Real.arccos_cos
+          (x := Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t)))
+          (by linarith)
+          (by linarith [Real.neg_pi_div_two_lt_arctan (s / -t), Real.pi_pos])).symm
+      · next h5 =>
+        -- junk branch: `−t = 0` and `s = 0` contradict `0 < s² + t²`
+        exfalso
+        have h6 : -t = 0 := le_antisymm (not_lt.mp h3) (not_lt.mp h5)
+        have ht0 : t = 0 := by
+          have h9 : -t = -1 * t := by ring
+          linarith
+        have h7 : s = 0 := by
+          have h8 : ¬ (0 < s) := fun hc => h1 (by simpa [h6] using hc)
+          linarith
+        rw [h7, ht0] at hr0
+        norm_num at hr0
+
+/-- HOL `arclength_xrr`; the `atn2`/`acs` bridge is `la22_atn2_arccos` above,
+with `upsX + (a²+b²-c²)² = 4a²b²` collapsing the square root to `2ab`. -/
 theorem arclength_xrr_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
     (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) :
     arcLength y1 y2 y6 = acsP22 (1 - xrr y1 y2 y6 / 8) := by
-  sorry
+  have _ := hy6
+  have hs2 : Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6)) ^ 2
+      = upsX (y1 * y1) (y2 * y2) (y6 * y6) := Real.sq_sqrt (le_of_lt hu)
+  have hst : Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6)) ^ 2
+        + (y1 * y1 + y2 * y2 - y6 * y6) ^ 2 = 4 * y1 * y1 * y2 * y2 := by
+    rw [hs2]
+    simp only [upsX]
+    ring
+  have hr : 0 < Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6)) ^ 2
+      + (y1 * y1 + y2 * y2 - y6 * y6) ^ 2 := by
+    rw [hst]
+    positivity
+  have hsqrt : Real.sqrt (Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6))
+        * Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6))
+        + (y1 * y1 + y2 * y2 - y6 * y6) * (y1 * y1 + y2 * y2 - y6 * y6))
+      = 2 * y1 * y2 := by
+    have e1 : Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6))
+          * Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6))
+        = Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6)) ^ 2 := by ring
+    have e2 : (y1 * y1 + y2 * y2 - y6 * y6) * (y1 * y1 + y2 * y2 - y6 * y6)
+        = (y1 * y1 + y2 * y2 - y6 * y6) ^ 2 := by ring
+    rw [e1, e2, hst, show 4 * y1 * y1 * y2 * y2 = (2 * y1 * y2) ^ 2 by ring,
+      Real.sqrt_sq (by positivity)]
+  have hkey := la22_atn2_arccos (s := Real.sqrt (upsX (y1 * y1) (y2 * y2) (y6 * y6)))
+    (t := y1 * y1 + y2 * y2 - y6 * y6) (Real.sqrt_nonneg _) hr
+  rw [hsqrt] at hkey
+  unfold arcLength acsP22
+  rw [show y6 * y6 - y1 * y1 - y2 * y2 = -(y1 * y1 + y2 * y2 - y6 * y6) by ring,
+    show 1 - xrr y1 y2 y6 / 8 = (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2) from by
+      unfold xrr
+      field_simp
+      ring]
+  exact hkey
 
 /-! ## Section G: chain tests and taum monotonicity (OCBICBY.hl 1158-2100) -/
 
@@ -1371,8 +1514,8 @@ end La22XrrSimpleKit
 /-- HOL `xrr_decreasing`. -/
 theorem xrr_decreasing_p22 (y1 y1' y2 y6 : ℝ) (h1 : 2 ≤ y1) (h1' : 2 ≤ y1')
     (h2 : 2 ≤ y2) (h6 : 2 ≤ y6) (h2' : y2 ≤ 2 * h0) (hlt : y1 ≤ y1') :
-    xrr y1' y2 y6 ≤ xrr y1 y2 y6 := by
-  sorry
+    xrr y1' y2 y6 ≤ xrr y1 y2 y6 :=
+  la22aux_xrr_decreasing y1 y1' y2 y6 h1 h1' h2 h6 h2' hlt
 
 /-- HOL `xrr_simple_lower_bound`. -/
 -- PROVED 2026-11-12 (lane `la22aux-w1`): from the early `La22XrrSimpleKit`
@@ -1756,7 +1899,39 @@ theorem INTERIOR_ANGLE1_AZIM_p22 (s : ScsV39) (vv : ℕ → V3) (i : ℕ)
     (f : Set (V3 × V3)) (hf : f = Set.range fun i => (vv i, vv (i + 1))) :
     azim 0 (vv i) (vv (i + 1)) (vv (i + (s.k - 1))) =
       interiorAngle1 0 f (vv i) := by
-  sorry
+  obtain ⟨-, hper, -, hcases⟩ := h2
+  have hclf : ConvexLocalFan (Set.range vv)
+      (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) := by
+    rcases hcases with hle | hclf
+    · exfalso
+      omega
+    · exact hclf
+  have hlf : LocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) := hclf.1
+  have hlf2 : localFan_p2 (Set.range vv)
+      (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) :=
+    localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp hlf)
+  have hrn : rhoNode1 (Set.range fun i => (vv i, vv (i + 1))) (vv i) = vv (i + 1) := by
+    have hrp : rhoNode1_p2 (Set.range fun i => (vv i, vv (i + 1))) (vv i) = vv (i + 1) :=
+      DETER_RHO_NODE hlf2 (v := vv i) (w := vv (i + 1))
+        (show (vv i, vv (i + 1)) ∈ (Set.range fun i => (vv i, vv (i + 1)))
+          from Set.mem_range.mpr ⟨i, rfl⟩)
+    simpa only [rhoNode1, rhoNode1_p2] using hrp
+  have hivs : ivsRhoNode1 (Set.range fun i => (vv i, vv (i + 1))) (vv i)
+      = vv (i + (s.k - 1)) := by
+    have hmem : (vv (i + (s.k - 1)), vv i) ∈ (Set.range fun i => (vv i, vv (i + 1))) := by
+      refine Set.mem_range.mpr ⟨i + (s.k - 1), ?_⟩
+      have hper' : vv (i + (s.k - 1) + 1) = vv i := by
+        rw [show i + (s.k - 1) + 1 = i + s.k by omega]
+        exact hper i
+      rw [hper']
+    have hip : ivsRhoNode1_p2 (Set.range fun i => (vv i, vv (i + 1))) (vv i)
+        = vv (i + (s.k - 1)) :=
+      PRE_IVS_RHO_NODE1_DETE hlf2 hmem
+    simpa only [ivsRhoNode1, ivsRhoNode1_p2] using hip
+  simp only [hf, interiorAngle1, hrn, hivs]
 
 /-- HOL `delta_x4_imp_obtuse` (NEEDS the atn2 sign kit). -/
 theorem delta_x4_imp_obtuse_p22 (x1 x2 x3 x4 x5 x6 : ℝ)
