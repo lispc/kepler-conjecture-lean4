@@ -3661,6 +3661,162 @@ theorem empty_4T2 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
   unfold scs4T2 at hB ⊢
   exact terminal_quad_lemma 0.467 _ _ emptykit_apos_4T2 (emptykit_azim_4T2 h) vv hB
 
+
+/-! ## LANE quad4t3-w1 (2026-11-14): quad emptiness `empty_4T3` — PARTIAL.
+
+HOL `terminal.hl:3943` (`empty_4T3`, renamed from
+`terminal_adhoc_quad_4680581274_empty`) dispatches through
+`terminal_quad_lemma` with the constant `0.513` (the `scs_4T3` mk value,
+LA1:3867), but unlike 4T2/4T4/4T5 the final numeric kill is NOT a
+`9563139965`-family registry pair: HOL terminal.hl:4111 applies
+`quad_4680581274_derived`, whose hypotheses are fed by the `vv_enclosed4`
+enclosed identity (HOL terminal.hl:4037, relabel :4051-4095). In the
+current tree every one of those is still `sorry`: `quad_4680581274_derived`
+(LA38:3708) with its whole wrapper bank `quad_4680581274_y` (:3680) /
+`_a` (:3662) / `_delta_issue` (:3645), plus `taum_x_sym` (:3693) /
+`taud_x_taum_x` (:3698) — LP-class debts whose statements route through
+the `taumXP38` / `tauqP38` (IneqClosureDefs:208) external-anchor stubs —
+and `vv_enclosed4` (LA38:2709) with `enclosed_sym` (:2729) /
+`enclosed_sym2` (:2736) and the `enclosedP38` stub (LA38 header, carried
+as a `_p38` EXTERNAL-ANCHOR). Lane discipline forbids consuming any of
+them (probe must stay exactly the standard three), so the 4T3 branch is
+BLOCKED on that cluster; the emptykit-3 wave-2 / t4crux intel "quad 其余件
+ineq 侧已无阻塞（9563139965 同款）" does not cover 4T3.
+
+PARTIAL delivered here, both probe-clean:
+- `emptykit_apos_4T3`: the `terminal_quad_lemma` `a`-positivity conjunct
+  (HOL digression terminal.hl:3957-3961).
+- `emptykit_azim_4T3_pre`: the full azim-sum reduction (HOL
+  terminal.hl:3965-4035): periodicity collapse, the six pinned `funlist`
+  slots (`d01 = cstab`, `d03 = d12 = d23 = 2`, `d02`/`d13 ≥ cstab`), the
+  `hinj`/`hsep` kit, the two diagonal `< 4` kills via `delta_4680581274`
+  plus `DELTA_Y_POS_4POINTS`, and the `vv_quad_split_short` split —
+  reducing the goal to `∀ i < 2, 0.513 ≤ tau3 (vv i) (vv (i + 1))
+  (vv (i + 2)) + tau3 (vv (i + 2)) (vv (i + 3)) (vv i)`.
+
+Remaining for the closer (HOL terminal.hl:4036-4127): case on the split's
+`i`, the `tau3_taum_40` conversions, the `vv_enclosed4` relabel
+(`enclosed = dist (vv (i + 1)) (vv (i + 3))`, `y4 ≤ y0` from the split's
+diagonal compare), the `DELTA_Y_POS_4POINTS` delta facts, and the
+`quad_4680581274_derived` application (its `0.513 < tauqP38 …` conclusion
+unfolds to the `taum` pair once the `tauqP38` stub gets its real body). -/
+
+/-- HOL `empty_4T3` digression (terminal.hl:3957-3961): every off-diagonal
+slot of the lower funlist is `2` or `cstab`, hence positive. -/
+private theorem emptykit_apos_4T3 :
+    ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j →
+      0 < funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j := by
+  intro i j ⟨hi, hj, hne⟩
+  interval_cases i <;> interval_cases j <;>
+    first
+      | exact absurd rfl hne
+      | norm_num [funlistV39, psort, assocdV39, cstab_eq_p22]
+
+/-- HOL `empty_4T3` (terminal.hl:3943) azim-sum reduction, up to the numeric
+quad inequality. The hypothesis `hnum` is exactly the statement the
+`quad_4680581274_derived` cluster will supply once discharged. -/
+private theorem emptykit_azim_4T3_pre :
+    ∀ vv : ℕ → V3, Set.range vv ⊆ ballAnnulus → Periodic vv 4 →
+      (∀ i j : ℕ,
+        funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j
+            ≤ dist (vv i) (vv j) ∧
+          dist (vv i) (vv j) ≤
+            funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4 i j) →
+      ConvexLocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) →
+      (∀ i : ℕ, i < 2 →
+        (0.513 : ℝ) ≤ tau3 (vv i) (vv (i + 1)) (vv (i + 2)) +
+          tau3 (vv (i + 2)) (vv (i + 3)) (vv i)) →
+      0.513 ≤ (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+          rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 4) +
+          rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 5) +
+          rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 4) (vv 6) + 0) -
+          (Real.pi + sol0) * (4 - 2) := by
+  intro vv hsub hper hdij hcf hnum
+  have h40 : vv 4 = vv 0 := by rw [show (4 : ℕ) = 0 + 4 by norm_num]; exact hper 0
+  have h50 : vv 5 = vv 1 := by rw [show (5 : ℕ) = 1 + 4 by norm_num]; exact hper 1
+  have h62 : vv 6 = vv 2 := by rw [show (6 : ℕ) = 2 + 4 by norm_num]; exact hper 2
+  -- the pinned `funlist` slots: both bounds coincide
+  have e01 : dist (vv 0) (vv 1) = cstab := by
+    have h1 := (hdij 0 1).1
+    have h2 := (hdij 0 1).2
+    norm_num [funlistV39, psort, assocdV39] at h1 h2
+    exact le_antisymm h2 h1
+  have e03 : dist (vv 0) (vv 3) = 2 := by
+    have h1 := (hdij 0 3).1
+    have h2 := (hdij 0 3).2
+    norm_num [funlistV39, psort, assocdV39] at h1 h2
+    exact le_antisymm h2 h1
+  have e12 : dist (vv 1) (vv 2) = 2 := by
+    have h1 := (hdij 1 2).1
+    have h2 := (hdij 1 2).2
+    norm_num [funlistV39, psort, assocdV39] at h1 h2
+    exact le_antisymm h2 h1
+  have e23 : dist (vv 2) (vv 3) = 2 := by
+    have h1 := (hdij 2 3).1
+    have h2 := (hdij 2 3).2
+    norm_num [funlistV39, psort, assocdV39] at h1 h2
+    exact le_antisymm h2 h1
+  -- the two diagonal lower bounds
+  have lo02 : cstab ≤ dist (vv 0) (vv 2) := by
+    have h := (hdij 0 2).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have lo13 : cstab ≤ dist (vv 1) (vv 3) := by
+    have h := (hdij 1 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j :=
+    emptykit_hinj4 vv _ emptykit_apos_4T3 (fun i j => (hdij i j).1)
+  have hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j) := by
+    refine emptykit_hsep4 vv _ hper hinj ?_ (fun i j => (hdij i j).1)
+    intro i j hne4
+    have hred : funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4) := by
+      simp only [funlistV39, psort, Nat.mod_mod]
+    rw [hred]
+    have hz1 : i % 4 < 4 := Nat.mod_lt i (by norm_num)
+    have hz2 : j % 4 < 4 := Nat.mod_lt j (by norm_num)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      first
+        | exact absurd rfl hne4
+        | norm_num [funlistV39, psort, assocdV39, cstab_eq_p22]
+  -- four sides pinned, well under `4`
+  have hct : cstab < 4 := by rw [cstab_eq_p22]; norm_num
+  have hd01 : dist (vv 0) (vv 1) < 4 := by rw [e01]; exact hct
+  have hd03 : dist (vv 0) (vv 3) < 4 := by rw [e03]; norm_num
+  have hd12 : dist (vv 1) (vv 2) < 4 := by rw [e12]; norm_num
+  have hd23 : dist (vv 2) (vv 3) < 4 := by rw [e23]; norm_num
+  -- the two diagonals: `delta_4680581274` plus 4-point delta positivity
+  -- (HOL `PROOF_BY_CONTR_TAC` + `DELTA_Y_POS_4POINTS`, terminal.hl:4001-4029)
+  have hd02 : dist (vv 0) (vv 2) < 4 := by
+    by_contra hcon
+    push Not at hcon
+    have hδ := delta_4680581274 (dist (vv 1) (vv 3)) (dist (vv 0) (vv 2)) lo13 hcon
+    have hpos := DELTA_Y_POS_4POINTS (vv 3) (vv 1) (vv 0) (vv 2)
+    rw [show dist (vv 3) (vv 1) = dist (vv 1) (vv 3) from dist_comm _ _,
+      show dist (vv 3) (vv 0) = dist (vv 0) (vv 3) from dist_comm _ _,
+      show dist (vv 3) (vv 2) = dist (vv 2) (vv 3) from dist_comm _ _,
+      show dist (vv 1) (vv 0) = dist (vv 0) (vv 1) from dist_comm _ _] at hpos
+    rw [e03, e23, e12, e01] at hpos
+    linarith
+  have hd13 : dist (vv 1) (vv 3) < 4 := by
+    by_contra hcon
+    push Not at hcon
+    have hδ := delta_4680581274 (dist (vv 0) (vv 2)) (dist (vv 1) (vv 3)) lo02 hcon
+    have hpos := DELTA_Y_POS_4POINTS (vv 2) (vv 0) (vv 1) (vv 3)
+    rw [show dist (vv 2) (vv 0) = dist (vv 0) (vv 2) from dist_comm _ _,
+      show dist (vv 2) (vv 1) = dist (vv 1) (vv 2) from dist_comm _ _] at hpos
+    rw [e12, e23, e03, e01] at hpos
+    linarith
+  -- short-diagonal split and the tau3 goal
+  have hsplit := vv_quad_split_short vv hper hsub hd01 hd03 hd02 hd12 hd13 hd23 hsep hcf hinj
+  rcases hsplit with ⟨i, hi2, _hdiag, hspl⟩
+  rw [h40, h50, h62]
+  have h42 : (4 : ℝ) - 2 = 2 := by norm_num
+  rw [h42, add_zero, hspl]
+  exact hnum i hi2
+
 /-- HOL `periodic_sum_shift`. NEEDS: `sum_nbij` 旋转双弹幕——注意本 Mathlib
 `Finset.sum_nbij` 的 h₀ 方向是 `f a = f' (g a)`(a ∈ LHS 集, g : LHS→RHS),
 故 g 须取逆向旋转 `fun x => (x + n - j % n) % n`(则 h₀ 化为 `j + g a ≡ a
