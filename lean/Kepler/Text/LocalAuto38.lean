@@ -3158,14 +3158,232 @@ theorem empty_3T2 (h : main_nonlinear_terminal_v11) :
     all_goals linarith
   · exact hB
 
-/-- HOL `ineq_5691615370_asym` (terminal.hl:2797). -/
+/-- Helper: the quadrilateral-side rotation (y2 y3 y5 y6 cycling, diagonal
+swap y1↔y4) leaves `delta_y` unchanged — a Cayley–Menger polynomial identity
+(`ring` after unfolding; numerically re-verified 2026-11-13). -/
+private theorem deltaY_quadRot_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY d f b a c e := by
+  simp only [deltaY, deltaX]; ring
+
+/-- Helper: the squared quadrilateral rotation (r²). -/
+private theorem deltaY_quadRotSq_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY a e f d b c := by
+  simp only [deltaY, deltaX]; ring
+
+/-- Helper: the cubed quadrilateral rotation (r³). -/
+private theorem deltaY_quadRotCu_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY d c e a f b := by
+  simp only [deltaY, deltaX]; ring
+
+/-- Helper: the diagonal swap y1↔y4 together with the side swap y3↔y6. -/
+private theorem deltaY_diagSwap_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY d b f a e c := by
+  simp only [deltaY, deltaX]; ring
+
+/-- Helper: the (2 3)(5 6) side-swap (already the `deltaX_swap23_p38` shape,
+lifted to `delta_y`). -/
+private theorem deltaY_sideSwap23_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY a c b d f e := by
+  simp only [deltaY, deltaX]; ring
+
+/-- Helper: rotation r² followed by the diagonal/side swap. -/
+private theorem deltaY_rotSqSwap_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY d e c a b f := by
+  simp only [deltaY, deltaX]; ring
+
+/-- Helper: rotation r followed by the diagonal/side swap. -/
+private theorem deltaY_rotSwap_p38 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY a f e d c b := by
+  simp only [deltaY, deltaX]; ring
+
+/-- HOL `ineq_5691615370_asym` (terminal.hl:2797). DISCHARGED 2026-11-13:
+the violation disjunction is a tautology on the box.  The twelve slot
+disjuncts are discharged by a `rcases` cascade; in the all-bounds-hold case
+the quadrilateral symmetry of `delta_y` (the seven private identities above,
+pure Cayley–Menger `ring` facts) reduces to the WLOG ordering
+`y2 ≥ y3 ∧ y2 ≥ y5 ∧ y2 ≥ y6 ∧ y3 ≥ y6`, under which the registry
+inequality `5691615370` (`mainEstimate_5691615370`, consumed from the
+`main_nonlinear_terminal_v11` hypothesis) has its four extra strict-ordering
+disjuncts killed and yields `delta_y < 0 ∨ y2+y3+y5+y6 > 8.472`.  This is
+the HOL route (WLOG + registry); the direct "crux" box-inequality is thereby
+avoided (it is the tight `4+2√5 > 8.472` quad-perimeter fact). -/
 theorem ineq_5691615370_asym (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       ineqP38 [(3.0, y1, 3.0), (2, y2, 2.52), (2, y3, 2.52), (3.0, y4, 3.0),
         (2, y5, 2.52), (2, y6, 2.52)]
         (deltaY y1 y2 y3 y4 y5 y6 < 0 ∨
           y2 + y3 + y5 + y6 > 8.472) := by
-  sorry -- DISCHARGES: LEMMA_5691615370 (LP asymmetric variant)
+  intro y1 y2 y3 y4 y5 y6
+  have h569 : mainEstimate_5691615370 :=
+    h "5691615370" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_5691615370 at h569
+  simp only [ineqP38]
+  rcases lt_or_ge y1 3.0 with h1l | h1l
+  · exact Or.inl h1l
+  rcases lt_or_ge 3.0 y1 with h1u | h1u
+  · exact Or.inr (Or.inl h1u)
+  rcases lt_or_ge y2 2 with h2l | h2l
+  · exact Or.inr (Or.inr (Or.inl h2l))
+  rcases lt_or_ge 2.52 y2 with h2u | h2u
+  · exact Or.inr (Or.inr (Or.inr (Or.inl h2u)))
+  rcases lt_or_ge y3 2 with h3l | h3l
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3l))))
+  rcases lt_or_ge 2.52 y3 with h3u | h3u
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3u)))))
+  rcases lt_or_ge y4 3.0 with h4l | h4l
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h4l))))))
+  rcases lt_or_ge 3.0 y4 with h4u | h4u
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h4u)))))))
+  rcases lt_or_ge y5 2 with h5l | h5l
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h5l))))))))
+  rcases lt_or_ge 2.52 y5 with h5u | h5u
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h5u)))))))))
+  rcases lt_or_ge y6 2 with h6l | h6l
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h6l))))))))))
+  rcases lt_or_ge 2.52 y6 with h6u | h6u
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h6u)))))))))))
+  have b1l : (3.0:ℝ) ≤ y1 := h1l
+  have b1u : y1 ≤ (3.0:ℝ) := h1u
+  have b2l : (2:ℝ) ≤ y2 := h2l
+  have b2u : y2 ≤ (2.52:ℝ) := h2u
+  have b3l : (2:ℝ) ≤ y3 := h3l
+  have b3u : y3 ≤ (2.52:ℝ) := h3u
+  have b4l : (3.0:ℝ) ≤ y4 := h4l
+  have b4u : y4 ≤ (3.0:ℝ) := h4u
+  have b5l : (2:ℝ) ≤ y5 := h5l
+  have b5u : y5 ≤ (2.52:ℝ) := h5u
+  have b6l : (2:ℝ) ≤ y6 := h6l
+  have b6u : y6 ≤ (2.52:ℝ) := h6u
+  -- registry 5691615370 under the WLOG ordering (its four extra strict
+  -- ordering disjuncts `b < c`, `b < e`, `b < f`, `c < f` are ruled out).
+  have hreg : ∀ a b c d e f : ℝ,
+      (3.0:ℝ) ≤ a → a ≤ (3.0:ℝ) → (2:ℝ) ≤ b → b ≤ (2.52:ℝ) →
+      (2:ℝ) ≤ c → c ≤ (2.52:ℝ) → (3.0:ℝ) ≤ d → d ≤ (3.0:ℝ) →
+      (2:ℝ) ≤ e → e ≤ (2.52:ℝ) → (2:ℝ) ≤ f → f ≤ (2.52:ℝ) →
+      c ≤ b → e ≤ b → f ≤ b → f ≤ c →
+      deltaY a b c d e f < 0 ∨ b + c + e + f > (8.472:ℝ) := by
+    intro a b c d e f ha1 ha2 hb1 hb2 hc1 hc2 hd1 hd2 he1 he2 hf1 hf2 hcb heb hfb hfc
+    rcases h569 a b c d e f ha1 ha2 hb1 hb2 hc1 hc2 hd1 hd2 he1 he2 hf1 hf2 with
+      hδ | hσ | h23 | h25 | h26 | h36
+    · exact Or.inl hδ
+    · exact Or.inr hσ
+    · exfalso; linarith
+    · exfalso; linarith
+    · exfalso; linarith
+    · exfalso; linarith
+  -- lift the short conclusion into the full twelve-slot disjunction
+  have ineq_expand : ∀ a b c d e f : ℝ,
+      (deltaY a b c d e f < 0 ∨ b + c + e + f > (8.472:ℝ)) →
+      (a < 3.0 ∨ 3.0 < a ∨ b < 2 ∨ 2.52 < b ∨ c < 2 ∨ 2.52 < c ∨
+        d < 3.0 ∨ 3.0 < d ∨ e < 2 ∨ 2.52 < e ∨ f < 2 ∨ 2.52 < f ∨
+        deltaY a b c d e f < 0 ∨ b + c + e + f > (8.472:ℝ)) := by
+    intro a b c d e f h
+    grind
+  by_cases h32 : y3 ≤ y2
+  · by_cases h52 : y5 ≤ y2
+    · by_cases h62 : y6 ≤ y2
+      · rcases le_total y6 y3 with h63 | h36
+        · exact ineq_expand _ _ _ _ _ _ (hreg y1 y2 y3 y4 y5 y6 b1l b1u b2l b2u b3l b3u b4l b4u b5l b5u b6l b6u h32 h52 h62 h63)
+        · have h := hreg y4 y2 y6 y1 y5 y3 b4l b4u b2l b2u b6l b6u b1l b1u b5l b5u b3l b3u h62 h52 h32 h36
+          rw [← deltaY_diagSwap_p38, show y2 + y6 + y5 + y3 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+      · have hy26 : y2 < y6 := not_le.mp h62
+        have hy36 : y3 ≤ y6 := by linarith
+        have hy56 : y5 ≤ y6 := by linarith
+        have h := hreg y4 y6 y2 y1 y3 y5 b4l b4u b6l b6u b2l b2u b1l b1u b3l b3u b5l b5u hy26.le hy36 hy56 h52
+        rw [← deltaY_quadRot_p38, show y6 + y2 + y3 + y5 = y2 + y3 + y5 + y6 from by ring] at h
+        exact ineq_expand _ _ _ _ _ _ h
+    · by_cases h62 : y6 ≤ y2
+      · have hy25 : y2 < y5 := not_le.mp h52
+        rcases le_total y6 y3 with h63 | h36
+        · have hy35 : y3 ≤ y5 := by linarith
+          have hy65 : y6 ≤ y5 := by linarith
+          have h := hreg y4 y5 y3 y1 y2 y6 b4l b4u b5l b5u b3l b3u b1l b1u b2l b2u b6l b6u hy35 hy25.le hy65 h63
+          rw [← deltaY_rotSqSwap_p38, show y5 + y3 + y2 + y6 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+        · have hy65 : y6 ≤ y5 := by linarith
+          have hy35 : y3 ≤ y5 := by linarith
+          have h := hreg y1 y5 y6 y4 y2 y3 b1l b1u b5l b5u b6l b6u b4l b4u b2l b2u b3l b3u hy65 hy25.le hy35 h36
+          rw [← deltaY_quadRotSq_p38, show y5 + y6 + y2 + y3 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+      · have hy25 : y2 < y5 := not_le.mp h52
+        have hy26 : y2 < y6 := not_le.mp h62
+        by_cases h65 : y6 ≤ y5
+        · rcases le_total y6 y3 with h63 | h36
+          · have hy35 : y3 ≤ y5 := by linarith
+            have h := hreg y4 y5 y3 y1 y2 y6 b4l b4u b5l b5u b3l b3u b1l b1u b2l b2u b6l b6u hy35 hy25.le h65 h63
+            rw [← deltaY_rotSqSwap_p38, show y5 + y3 + y2 + y6 = y2 + y3 + y5 + y6 from by ring] at h
+            exact ineq_expand _ _ _ _ _ _ h
+          · have hy35 : y3 ≤ y5 := by linarith
+            have h := hreg y1 y5 y6 y4 y2 y3 b1l b1u b5l b5u b6l b6u b4l b4u b2l b2u b3l b3u h65 hy25.le hy35 h36
+            rw [← deltaY_quadRotSq_p38, show y5 + y6 + y2 + y3 = y2 + y3 + y5 + y6 from by ring] at h
+            exact ineq_expand _ _ _ _ _ _ h
+        · have hy56 : y5 < y6 := not_le.mp h65
+          have hy36 : y3 ≤ y6 := by linarith
+          have h := hreg y1 y6 y5 y4 y3 y2 b1l b1u b6l b6u b5l b5u b4l b4u b3l b3u b2l b2u hy56.le hy36 hy26.le hy25.le
+          rw [← deltaY_rotSwap_p38, show y6 + y5 + y3 + y2 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+  · by_cases h52 : y5 ≤ y2
+    · by_cases h62 : y6 ≤ y2
+      · have hy23 : y2 < y3 := not_le.mp h32
+        have hy63 : y6 ≤ y3 := by linarith
+        have hy53 : y5 ≤ y3 := by linarith
+        have h := hreg y1 y3 y2 y4 y6 y5 b1l b1u b3l b3u b2l b2u b4l b4u b6l b6u b5l b5u hy23.le hy63 hy53 h52
+        rw [← deltaY_sideSwap23_p38, show y3 + y2 + y6 + y5 = y2 + y3 + y5 + y6 from by ring] at h
+        exact ineq_expand _ _ _ _ _ _ h
+      · have hy23 : y2 < y3 := not_le.mp h32
+        have hy26 : y2 < y6 := not_le.mp h62
+        by_cases h36 : y3 ≤ y6
+        · have hy56 : y5 ≤ y6 := by linarith
+          have h := hreg y4 y6 y2 y1 y3 y5 b4l b4u b6l b6u b2l b2u b1l b1u b3l b3u b5l b5u hy26.le h36 hy56 h52
+          rw [← deltaY_quadRot_p38, show y6 + y2 + y3 + y5 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+        · have hy63 : y6 ≤ y3 := (not_le.mp h36).le
+          have hy53 : y5 ≤ y3 := by linarith
+          have h := hreg y1 y3 y2 y4 y6 y5 b1l b1u b3l b3u b2l b2u b4l b4u b6l b6u b5l b5u hy23.le hy63 hy53 h52
+          rw [← deltaY_sideSwap23_p38, show y3 + y2 + y6 + y5 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+    · by_cases h62 : y6 ≤ y2
+      · have hy23 : y2 < y3 := not_le.mp h32
+        have hy25 : y2 < y5 := not_le.mp h52
+        by_cases h35 : y3 ≤ y5
+        · have hy65 : y6 ≤ y5 := by linarith
+          have hy63 : y6 ≤ y3 := by linarith
+          have h := hreg y4 y5 y3 y1 y2 y6 b4l b4u b5l b5u b3l b3u b1l b1u b2l b2u b6l b6u h35 hy25.le hy65 hy63
+          rw [← deltaY_rotSqSwap_p38, show y5 + y3 + y2 + y6 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+        · have hy53 : y5 ≤ y3 := (not_le.mp h35).le
+          have hy63 : y6 ≤ y3 := by linarith
+          have h := hreg y4 y3 y5 y1 y6 y2 b4l b4u b3l b3u b5l b5u b1l b1u b6l b6u b2l b2u hy53 hy63 hy23.le hy25.le
+          rw [← deltaY_quadRotCu_p38, show y3 + y5 + y6 + y2 = y2 + y3 + y5 + y6 from by ring] at h
+          exact ineq_expand _ _ _ _ _ _ h
+      · have hy23 : y2 < y3 := not_le.mp h32
+        have hy25 : y2 < y5 := not_le.mp h52
+        have hy26 : y2 < y6 := not_le.mp h62
+        by_cases h53 : y5 ≤ y3
+        · by_cases h63 : y6 ≤ y3
+          · have h := hreg y4 y3 y5 y1 y6 y2 b4l b4u b3l b3u b5l b5u b1l b1u b6l b6u b2l b2u h53 h63 hy23.le hy25.le
+            rw [← deltaY_quadRotCu_p38, show y3 + y5 + y6 + y2 = y2 + y3 + y5 + y6 from by ring] at h
+            exact ineq_expand _ _ _ _ _ _ h
+          · have hy36 : y3 < y6 := not_le.mp h63
+            have hy56 : y5 ≤ y6 := by linarith
+            have h := hreg y1 y6 y5 y4 y3 y2 b1l b1u b6l b6u b5l b5u b4l b4u b3l b3u b2l b2u hy56 hy36.le hy26.le hy25.le
+            rw [← deltaY_rotSwap_p38, show y6 + y5 + y3 + y2 = y2 + y3 + y5 + y6 from by ring] at h
+            exact ineq_expand _ _ _ _ _ _ h
+        · have hy35 : y3 < y5 := not_le.mp h53
+          by_cases h65 : y6 ≤ y5
+          · rcases le_total y6 y3 with h63 | h36
+            · have h := hreg y4 y5 y3 y1 y2 y6 b4l b4u b5l b5u b3l b3u b1l b1u b2l b2u b6l b6u hy35.le hy25.le h65 h63
+              rw [← deltaY_rotSqSwap_p38, show y5 + y3 + y2 + y6 = y2 + y3 + y5 + y6 from by ring] at h
+              exact ineq_expand _ _ _ _ _ _ h
+            · have h := hreg y1 y5 y6 y4 y2 y3 b1l b1u b5l b5u b6l b6u b4l b4u b2l b2u b3l b3u h65 hy25.le hy35.le h36
+              rw [← deltaY_quadRotSq_p38, show y5 + y6 + y2 + y3 = y2 + y3 + y5 + y6 from by ring] at h
+              exact ineq_expand _ _ _ _ _ _ h
+          · have hy56 : y5 < y6 := not_le.mp h65
+            have hy36 : y3 ≤ y6 := by linarith
+            have h := hreg y1 y6 y5 y4 y3 y2 b1l b1u b6l b6u b5l b5u b4l b4u b3l b3u b2l b2u hy56.le hy36 hy26.le hy25.le
+            rw [← deltaY_rotSwap_p38, show y6 + y5 + y3 + y2 = y2 + y3 + y5 + y6 from by ring] at h
+            exact ineq_expand _ _ _ _ _ _ h
 
 /-- Helper (proved here 2026-09-28): the 4-element index set sum expanded
 over `{0, 1, 2, 3}` (generic form of `setSum4_p38`). -/
