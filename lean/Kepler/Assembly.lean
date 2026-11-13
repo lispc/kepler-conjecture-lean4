@@ -56,6 +56,7 @@ import Kepler.Text.Reduction5J5JcajyduFinal
 -- 计算（la1reroute-w1 §1.2）。
 import Kepler.Text.LocalConcl
 import Kepler.Text.PackingConcl
+import Kepler.Text.PackIneqBiefjhuClose
 import Kepler.Text.TameLp
 import Kepler.Assembly.GoodListDefs
 import Kepler.Assembly.GoodListAll
@@ -1225,9 +1226,13 @@ theorem nliRest6096597438a : bank_6096597438a := by
 /-- rest 3/62：HOL ineq entry `1965189142 a`（ineq.hl:1598，盒
 [1.0,1.26]×[3,34]×[1,1]⁴；PA21 `bank_1965189142a` /
 `proj_bank_1965189142a`）。资产状态：deferred-compute（`asnFnhk` 实分析
-内容，证书不在库）。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRest1965189142a : bank_1965189142a := sorry
+内容，证书不在库）。**已兑现 2026-11-12**（biefjhu-tm-w2）：证书发射入
+`Kepler.Interval.Cases.C1965189142aHull`（300 叶 `by decide +kernel`，
+零新增公理），closer `Kepler.Text.packIneqABIEFJHUa`
+（PA22 `pka_bief_close` ∘ 证书正性）。
+-- NEEDS: G4 证书发射（~~原需求~~ 已兑现）；§2a 查表接线主波（nli 28+127）
+-- 其余件不变。 -/
+theorem nliRest1965189142a : bank_1965189142a := Kepler.Text.packIneqABIEFJHUa
 
 /-- rest 4/62：HOL ineq entry `1965189142 34`（ineq.hl:1587，盒
 [1.0,1.26]×[1,1]⁵；PA21 `bank_1965189142x34` /
