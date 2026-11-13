@@ -325,6 +325,13 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（20:55，续1057）**：**t5body-w1 交付处理：5T1 几何主体三私件落库 `10fd3fef`（+396 纯新增，拼接探针 3/3 标准三、根面逐字节同）——目标件 STOPPED（pent 塔未通）但收口骨架入档**。
+① **产出**：`empty5T1_setSum5`/`empty5T1_vpwshto_p22`/`empty5T1_pent_bridge_p22`（~330 行全几何主体：dsv 路线 taustar 展开 + 4× `vv_split_azim_generic_p22`（N1 落地即消费）+ 9× dihV + Σ恒等 + 3× tau3_taum_40；+import LA15/LA7 已验无环）。目标件 `empty_5T1_p22` 仍 sorry——缺口 = LA19 pent 塔（terminal_pent_taum2 族全脏）+ LA22 三件 pent 胶（`LEMMA_7175074394_p22` 需 lindih_lt/bp_bdt 解析胶，小专项）；**塔落地后收口只差 60-100 行**，骨架在 DELIVERY §5。
+② **车道纪律模范**：硬前置 probe 发现 pent 塔全脏后拒消费任何带债件、零假关闭（LA22 sorry 75→75），STOPPED 判词干净利落；9 条实烧雷区入档（多索引 rw 长链改用 simp only 规则集）。
+③ ** pent 塔并案**：hex 塔（6T1 线）断点=②OWZLKVY4/④minimizer_hex；**pent 塔（5T1 线）整条未动**——下一战役 = 导数对 + tau_x kit 移植，一次解锁 hex+pent 两座塔（与续1054/1056 判词一致）。
+④ 探针机制教训（入 §7.1-22 案例）：文件拼接探针必须 `-R <含 Kepler/ 的根>` + 模块内全限名；`grep -c` 零匹配返回 RC=1 会染黑任务状态（看输出不看 RC）。
+⑤ 在飞仅 penthex-w3（收工中）；其落地后按续1053 停发新车。
+
 - **2026-11-13（20:20，续1056）**：**penthex-w2 交付处理：135 镜像对落库 `73970943`（+28/−2，闸全绿）——LA19 塔基累计净 10 件；w3 任务清零已留 NOTE 收工**。
 ① w2 的 DELIVERY 质量极高：独立重验 w1 四件（直编日志与 w1 逐字节同）、主动撤回与主仓重复的 patch-1、增量交付 135 镜像对 + 超工单邻件 delta_135_x_2h0_le_d；BLOCKED 分析与 w1 独立吻合（tau_x kit 假桩 + 导数对）。ORCHESTRATOR_NOTE 渠道实证有效（w2 20:03 读条、20:07 按收束指令交付）。
 ② 塔况终盘：已净 10 件（主线程 3 + w1 四件 + w2 两件 + ge_flat 原有）；234 断点 = ②OWZLKVY4（tau_x kit 移植/SF 重述）+ ④minimizer_hex（导数对 60-100+150-250 行）。在飞：penthex-w3（收工中）/ t5body-w1（5T1 本体，~20 min 在飞）。
