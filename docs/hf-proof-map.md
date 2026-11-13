@@ -141,13 +141,14 @@
 > 声明**名**是稳定锚点：行号对不上时按名字 grep。
 >
 > ## 口径与数字出处（本文不自己重算任何指标）
-> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 Z @`75ed6d07`，2026-11-12**）
->   —— cone SORRIED **74**（= 55 `nli*` + 1 hLP + 18 Text 章级）/ `K_AXIOM` **585** /
->   根面 589 = 585 native + 标准三 + `sorryAx`。基线 Y（`e56181cb`）/ X / W 均为 SORRIED 75 / 根面 589；
+> - 根面/债务/公理数：`docs/priority-queue.md` 文件头（**基线 AH @`59208114`，2026-11-13**）
+>   —— cone SORRIED **65**（= 54 `nli*` + 1 hLP + 10 Text 章级）/ `K_AXIOM` **585** /
+>   根面 589 = 585 native + 标准三 + `sorryAx`。基线 AG（`156fabf8`）为 SORRIED 66 / 根面 589；
+>   基线 Y（`e56181cb`）/ X / W 均为 SORRIED 75 / 根面 589；
 >   基线 V（`9ac1bc89`）为 SORRIED 76 / 根面 589；
 >   基线 U（`64663be3`）为 SORRIED 77 / 根面 589；基线 T（`52275a1c`）为 SORRIED 78 / 根面 589。
-> - 75 的构成（56 Assembly + 19 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
->   `docs/e2e-reachability-map.md` 基线 Z + `handoff-2026-11-06.md` §0。
+> - 65 的构成（55 Assembly + 10 Text）、585 的构成（580 shard-range + 5 tri-single-seed）：
+>   `docs/e2e-reachability-map.md` 基线 AH + `handoff-2026-11-06.md` §0。
 > - 信任基座逐类对照（含 `by eval` ↔ `native_decide`）、原版怎么处理 624：`docs/trust-base.md` §2 + `handoff §0.1`。
 > - 图数 19,715（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）：`Kepler/Assembly.lean:7295-7299` docstring。
 > - LP 记录 43,078（root 19,237 + easy 4,403 + hard 19,438、infeasible 189）：`Kepler/Text/LP/LPCert.lean:28-35` 文件头（该文件自己的盘点口径）。

@@ -17,15 +17,18 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AG @`156fabf8`（2026-11-13，UAGHHBM_p30 真证——中断潮三代接力零丢失）**
-> cone `K_REACH 2,097,639` / **SORRIED 66** / **`K_AXIOM 585`** / MODULES 5,241 /
-> UNIVERSE 2,110,397 / COVERAGE **99.3955%**；口径 II 35,939 / 66 / 585 / 47,140。
-> `docs/e2e-reachability-map.tsv` 已按基线 AG 重写（5,911 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AH @`59208114`（2026-11-13，URRPHBZ2 真证——Text 11→10）**
+> cone `K_REACH 2,097,746` / **SORRIED 65** / **`K_AXIOM 585`** / MODULES 5,241 /
+> UNIVERSE 2,110,685 / COVERAGE **99.3870%**；口径 II 36,046 / 65 / 585 / 47,428。
+> `docs/e2e-reachability-map.tsv` 已按基线 AH 重写（5,910 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 66 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 11（`--- SORRIED ---` 段实测）。
-> 较基线 AF：SORRIED 67→66（清单 diff：closed 恰 `{UAGHHBM_p30}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +83（本体证明体入锥）、MODULES 0。
+> （与基线 AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 65 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 10（`--- SORRIED ---` 段实测）。
+> 较基线 AG：SORRIED 66→65（清单 diff：closed 恰 `{URRPHBZ2}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +107（本体证明体入锥）、UNIVERSE +288、MODULES 0。
+> 同批 cone-neutral 资产（不改变锥面）：`c8172dd0` LA27 公共 `JLXFDMJ_ge4_p27`
+> （HOL `3 < s.k` 前提，免 SF wrapper）、`58517f80` vasw0-w1 恢复（YebwjngKit + CQAOQLR_p16 +
+> WGDHPPI/YEBWJNG discharge）、`8231788d` k4cprep-w3（LA18 +135/−31，3 sorry）。
 > 中间档：`04ab3cac` DAG 切面四刀（cone-neutral 解锁件）、`3cb72c17` TM 18 文件（300 叶证书）；
 > 各节见 map。
 >
@@ -39,7 +42,7 @@
 
 | 里程碑 | 定义 | 现状（**当前基线 Z @`75ed6d07`；历史数字见 map 各基线节**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 Z（2026-11-12 @`75ed6d07`）：SORRIED 74 / K_REACH 2,095,561 / AXIOM 585 / MODULES 5,219 / UNIVERSE 2,108,677 / COVERAGE 99.3796%；口径 II 35,138 / 74 / 585 / 46,697。历史基线 T–Y、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AH（2026-11-13 @`59208114`）：SORRIED 65 / K_REACH 2,097,746 / AXIOM 585 / MODULES 5,241 / UNIVERSE 2,110,685 / COVERAGE 99.3870%；口径 II 36,046 / 65 / 585 / 47,428。历史基线 T–AH、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -91,7 +94,7 @@
 
 ## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
-> **2026-11-13 15:22 接管注记（新编排者 ZCode 主会话）**：用户令在飞两车道（`urrcellbody-w7` / `tmxllipls-w1`）交 kimi code 侧收口，不杀；本会话发 **`jlxfdmj-w4`**（fresh，从 `jlxfdmj-w3/` 接续包）——K4b 三线钥匙，Text 11→8 通道。两车道 15:11–15:19 仍活（w7 两轮直编、TM 四次自重启且样本全 NEG），详见 §8 续1042。**`jlxfdmj-w4` 已 LANDED `73d6c4e6`**（+1235 纯新增，cone-neutral；§8 续1043）。
+> **2026-11-13 16:30 接管后盘面**：`jlxfdmj-w4` LANDED `73d6c4e6`；`urrcellbody-w7` LANDED `59208114`（SORRIED 66→65，基线 AH）；三处泄漏交付恢复落库——`c8172dd0`（jlxfdmj-w1 wrapper，免 SF）、`58517f80`（vasw0-w1：YebwjngKit/CQAOQLR/WGDHPPI/YEBWJNG）、`8231788d`（k4cprep-w3：LA18 3 sorry）。**下一步发 L1（6I1）/ L2（LA33）/ L3（OCBICBY）三车道**；L4（K4c/5M2）为第 4 补位。详见 §8 续1042–1045。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -262,6 +265,19 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（16:25，续1045）**：**三处泄漏交付全部 pick 落库：jlxfdmj-w1 / vasw0-w1 / k4cprep-w3**（用户令审计 lane_snapshots 后）。
+① **A `c8172dd0`**：LA27 公共 `JLXFDMJ_ge4_p27`（HOL `3 < s.k` 前提，wrapper on landed private `jlxfdmj_ge4`，+17/−0）——**免 SF**（原陈述不动；用户 16:00 裁「新方案好就用新方案」）；探针标准三、原 `JLXFDMJ_p27` 面不变、根面同。
+② **B `58517f80`**：vasw0-w1 恢复（YebwjngKit 新文件 152 行 + LocalAuto16 CQAOQLR_p16 + LocalConcl WGDHPPI/YEBWJNG discharge）；车道 patch 有 4 处机械错，编排者修（LA16 `dneg`/`_hb01v`/`dneg` 重写；LocalConcl `YEBWJNG_kit h`）；三模块 rc=0/0 err、五探针标准三、根面同。
+③ **C `8231788d`**：k4cprep-w3 恢复（LA18 +135/−31，`coplanar_aff_gt_simple_p18` + `EGHNAVX_COLL_SCS_p18`/`EGHNAVX_SCS_p18` 真证，LA18 sorry 10→7；`IUNBUIG_p18` 仍 BLOCKED）；四探针标准三、根面同。
+④ **泄漏教训（入 AGENTS §7.1 待补）**：w1 在宣死 1.5h 后交付、w3 交付了但编排者以为还卡在 rescue、vasw0-w1 的 `make_patches.sh` 未执行导致 patch 未落快照；⇒ 交付必须把 patch 落快照；接管/收工前按 mtime 扫「DELIVERY 无 LANDED」的目录。
+⑤ 下一条：续1046。
+
+- **2026-11-13（16:20，续1044）**：**w7 落库 `59208114`（URRPHBZ2 真证）+ 基线 AH 定档**。
+① 闸：PA13 +796/−1（唯一删除=sorry）、直编 rc=0/0 err、`URRPHBZ2` 标准三、根面 md5 `246e952c…` 同、manifest PASS。
+② 地图（`reachmap_59208114.out`）：K_REACH **2,097,746**（+107）/ **SORRIED 65**（66→65，清单 diff closed 恰 `{URRPHBZ2}`、added ∅）/ K_AXIOM 585（0/0）/ MODULES 5,241（0）/ UNIVERSE **2,110,685**（+288）/ COVERAGE **99.3870%**（−0.0085pp，证明体入 universe）；口径 II 36,046 / 65 / 585 / 47,428；TSV 5,910 行。**SORRIED 65 = Assembly 55（54 nli* + 1 hLP）+ Text 10**。
+③ 文档六件已刷（pq 头/§0、TSV、map.md 基线 AH 节、AGENTS §1、README ×2、hf-map）。
+④ 下一条：续1045。
 
 - **2026-11-13（15:48，续1043）**：**落库 `73d6c4e6`：jlxfdmj-w4 段1+2+3 拼接（LA27 +1235 纯新增）——K4b 三线钥匙第一段（cone-neutral 资产）**。
 ① 交付：`jlxfdmj_ge4`（k≥4 主引理）+ 5 条模算术引理 + opp 套件/`jlx_bwd_step`；`JLXFDMJ_p27` 本体未改仍 sorry（k=3 缺口，SF 草案在 `lane_snapshots/jlxfdmj-w4/DELIVERY.md §5`）。patch 0 删除、定理签名未动、交付 sha256 `245b4e22…` 与车道一致。

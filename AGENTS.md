@@ -8,8 +8,8 @@
 - 终局（**用户 2026-11-06 裁决**）：**不比 Flyspeck/Isabelle 更差**，不是完美标准三。
   验收式：`#print axioms Kepler.the_kepler_conjecture_e2e`（`lean/Kepler/Final.lean:22`）
   = `[propext, Classical.choice, Quot.sound]` ∪ **恰好 585 条地面 `native_decide` 公理**，且
-  1. **零 `sorryAx`**（锥内 66 条 sorry 是唯一还算"债"的东西：54 `nli*` + 1 hLP + 11 Text 章级；
-     基线 AG `156fabf8`，2026-11-13）；
+  1. **零 `sorryAx`**（锥内 65 条 sorry 是唯一还算"债"的东西：54 `nli*` + 1 hLP + 10 Text 章级；
+     基线 AH `59208114`，2026-11-13）；
   2. 每条公理的陈述是**封闭可判定的地面事实**（无自由变量、无对无限类型的量词），
      进 manifest、可 replay、注明数据源与生成器版本；
   3. 与原文形式化的 `same*`/`pre_iso_test*` **同数据、同信任类别**（见
@@ -241,6 +241,16 @@
    WIP 续，绝不从 HEAD 重来；④ 里程碑落盘制（每轮编译/每段收口覆盖写快照）是生死线；
    ⑤ resume 撞锁等 90s 重试 ≤2 次即转 fresh，不三试。每次中断记 pq §8，
    假失败变体曾修正既有彻查结论（续1037 → 续1038 ERRATA 式更新）。
+
+23. **交付泄漏（2026-11-13 pick 审计，用户令；jlxfdmj-w1 / vasw0-w1 / k4cprep-w3 三例）**：
+   ① 车道**晚交付**——jlxfdmj-w1 被通知 failed/零工件、编排者已发 fresh w2，1.5h 后它又产出
+   50KB patch + 完整 DELIVERY（假失败变体的延长版）；② **patch 未落快照**——vasw0-w1 的
+   `make_patches.sh` 从未执行，DELIVERY 里列的 patch 文件在快照里不存在，只有 `/tmp` 工作区还有；
+   ③ **交付≠picked**——k4cprep-w3 11:02 已交付 LA18 +135/−31（3 sorry），但编排者一直按
+   「K4c 挂起、WIP 在 rescue」记，直到全面审计才发现。⇒ 硬纪律：**工单必须要求 patch 文件
+   写进快照**；编排者每次接管/收工前按 mtime 扫最近目录，凡「有 DELIVERY/Evidence、无 LANDED
+   commit、无 pq 落库记录」立即 pick 或显式退役；被 fresh 取代的前代目录不删，回扫到其最后
+   mtime。审计方法：`git log --grep=<lane>` + `git apply --check` + pq 关键词三查。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）

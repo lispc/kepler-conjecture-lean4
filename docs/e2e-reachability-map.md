@@ -797,6 +797,32 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AH：URRPHBZ2 真证 @ `59208114`（2026-11-13）
+
+> 触发：urrcellbody-w7 交付 `URRPHBZ2` 真证（PA13 +796/−1，唯一删除 = 本体 `sorry`；
+> S1/S2/S3 kit + 五路分派，HOL URRPHBZ2.hl:215-969；w2→w7 前滚链，202.6 KB WIP 无损）。
+> 仪器原样换装（**5,910 行**，−1 = 闭 URRPHBZ2）。manifest `--check` PASS。
+> 同批 cone-neutral 资产（不改变本基线锥面）：`c8172dd0` LA27 公共 `JLXFDMJ_ge4_p27`
+> （HOL `3 < s.k` 前提，免 SF wrapper）、`58517f80` vasw0-w1 恢复（YebwjngKit + CQAOQLR_p16 +
+> WGDHPPI/YEBWJNG discharge）、`8231788d` k4cprep-w3 恢复（LA18 +135/−31，3 sorry）。
+
+| 指标 | 基线 AH | 基线 AG | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,097,746** | 2,097,639 | +107 |
+| SORRIED | **65** | 66 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,241 | 5,241 | 0 |
+| K_UNIVERSE | 2,110,685 | 2,110,397 | +288 |
+| COVERAGE | 99.3870% | 99.3955% | −0.0085pp |
+| 口径 II（ex-Cases） | K_REACH **36,046** / SORRIED **65** / AXIOM **585** / UNIVERSE **47,428** | 35,939 / 66 / 585 / 47,140 | +107 / −1 / 0 / +288 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.URRPHBZ2`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：Text 11→10。K_REACH +107 = URRPHBZ2 证明体（S1–S3 共 18 个 `p13u_*` 私件 +
+五路分派）入锥；K_UNIVERSE +288 > reach（私件/证明项辅助），COVERAGE 微降 0.0085pp
+是分母涨，非回退。剩余 **65** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 10**。
+
 ### 基线 AG：UAGHHBM_p30 真证 @ `156fabf8`（2026-11-13）
 
 > 触发：uagbody 战役两笔收官——K14 kit `5f7c511a`（双 isScs private 件）+ 本体真证 `156fabf8`
