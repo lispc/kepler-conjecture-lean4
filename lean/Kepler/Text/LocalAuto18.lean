@@ -37,12 +37,14 @@ FILE MAP
     `epsilon_pent/hex/hept_p18`,
     `real_continuous_finite_range_constant_p18`,
     `a5_assumption_reduction_p18`, `b5_assumption_reduction_p18`
-    (proved); `ARCV_ADD_AFF_GE_p18`, `coplanar_delta_y_zero_p18`,
+    (proved); `ARCV_ADD_AFF_GE_p18`,
     `planar_deform_dist_p18`, `deform_pent_exists_p18`,
-    `EGHNAVX_COLL_SCS_p18`, `EGHNAVX_SCS_p18`,
-    `coplanar_cross_reduction_p18`, `coplanar_aff_gt_simple_p18`,
-    `azim_dih_y_p18`, `azim5_reduction_p18`, `L13_LEMMA_p18`,
-    `IUNBUIG_p18` (sorry giants; `Deformation` from LocalAuto1).
+    `coplanar_cross_reduction_p18`,
+    `azim_dih_y_p18`, `azim5_reduction_p18`, `IUNBUIG_p18` (sorry
+    giants; `Deformation` from LocalAuto1).  Discharged 2026-11-13
+    (lane k4cprep-w2) via the unconditional `EGHNAVX` (LA14:6965):
+    `EGHNAVX_COLL_SCS_p18`, `EGHNAVX_SCS_p18`, `L13_LEMMA_p18`,
+    `coplanar_aff_gt_simple_p18`.
   Section C (AURSIPD): `REP_NUMSEG_p18`, `PERIODIC_IMAGE2_p18` (proved);
     `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18` (proved 2026-11-05, la18-sumazim kit),
     `AURSIPD_p18` (proved 2026-11-05, la18-aursipd kit).
@@ -508,10 +510,75 @@ theorem EGHNAVX_COLL_SCS_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (p : ℕ)
           q ≤ j → j < k →
           ((q < j → azim 0 (v (p + j)) (v (p + j + 1)) (v (p + j + (k - 1))) = Real.pi) ∧
             v (p + j) ∈ affGt {0, v p} {v (p + (k - 1))})) := by
-  sorry
-  -- DISCHARGES: HOL Cuxvzoz.BBs_inj, Terminal.ITER_vv_rho_node1,
-  -- Odxlstc.CARD_V_EQ_SCS_K1, Local_lemmas.EGHNAVX and
-  -- Ocbicby.INTERIOR_ANGLE1_AZIM (the LocalAuto2-side kit).
+  have hBBc := hBB
+  obtain ⟨-, hper, -, hclf⟩ := hBB
+  rcases hclf with hle | hclf
+  · omega
+  have hperk : Periodic v k := by rw [← hk]; exact hper
+  have hk3 : 3 ≤ k := by omega
+  have hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ v i = v j → i = j := fun i j h =>
+    BBs_inj_p21 s v k his hk hBBc i j h.1 h.2.1 h.2.2
+  have hcard : (Set.range v).ncard = k :=
+    CARD_V_EQ_SCS_K1_p31 s k v (Set.range v) hk rfl his hk₃ hBBc
+  have hiter : ∀ j : ℕ, (rhoNode1 (Set.range fun i => (v i, v (i + 1))))^[j] (v p)
+      = v (p + j) := fun j => ITER_vv_rho_node1 v k j hperk hk3 hinj p
+  have hcol' : ∀ w ∈ (Set.range v : Set V3), w ≠ v p →
+      ¬ Collinear ℝ ({0, v p, w} : Set V3) := by
+    rintro w ⟨i, rfl⟩ hne
+    exact hcol i hne
+  have hlf : LocalFan (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) := hclf.1
+  have hlf2 : localFan_p2 (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) :=
+    localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp hlf)
+  -- the interior angle of `v (p + j)` is the fan azimuth onto the
+  -- predecessor (`DETER_RHO_NODE` / `PRE_IVS_RHO_NODE1_DETE` route, as in
+  -- `LOCAL_FAN_AZIM_POS_p22`)
+  have hconv : ∀ j : ℕ, interiorAngle1 0 (Set.range fun i => (v i, v (i + 1)))
+      (v (p + j)) = azim 0 (v (p + j)) (v (p + j + 1)) (v (p + j + (k - 1))) := by
+    intro j
+    have hrn : rhoNode1 (Set.range fun i => (v i, v (i + 1))) (v (p + j))
+        = v (p + j + 1) := by
+      have hrp : rhoNode1_p2 (Set.range fun i => (v i, v (i + 1))) (v (p + j))
+          = v (p + j + 1) := DETER_RHO_NODE hlf2 (v := v (p + j)) (w := v (p + j + 1))
+        (show (v (p + j), v (p + j + 1)) ∈ (Set.range fun i => (v i, v (i + 1)))
+          from Set.mem_range.mpr ⟨p + j, rfl⟩)
+      simpa only [rhoNode1, rhoNode1_p2] using hrp
+    have hivs : ivsRhoNode1 (Set.range fun i => (v i, v (i + 1))) (v (p + j))
+        = v (p + j + (k - 1)) := by
+      have hper2 : v (p + j + (k - 1) + 1) = v (p + j) := by
+        rw [show p + j + (k - 1) + 1 = p + j + k from by omega]
+        exact hperk (p + j)
+      have hmem : (v (p + j + (k - 1)), v (p + j))
+          ∈ (Set.range fun i => (v i, v (i + 1))) :=
+        Set.mem_range.mpr ⟨p + j + (k - 1), by rw [hper2]⟩
+      have hip : ivsRhoNode1_p2 (Set.range fun i => (v i, v (i + 1))) (v (p + j))
+          = v (p + j + (k - 1)) := PRE_IVS_RHO_NODE1_DETE hlf2 hmem
+      simpa only [ivsRhoNode1, ivsRhoNode1_p2] using hip
+    simp only [interiorAngle1, hrn, hivs]
+  obtain ⟨h1, h2, h3, h45⟩ := EGHNAVX (V := Set.range v)
+    (E := Set.range fun i => ({v i, v (i + 1)} : Set V3))
+    (FF := Set.range fun i => (v i, v (i + 1)))
+    (v0 := v p) (vv := fun i => v (p + i))
+    (bta := fun j => azim 0 (v p) (v (p + 1)) (v (p + j)))
+    (k := k) hclf (Set.mem_range_self p) hcard hcol' hiter (fun i => rfl)
+  refine ⟨h1, h2, h3, ?_, ?_⟩
+  · intro q j hbq hj0 hjq hqk
+    obtain ⟨hint, hsub⟩ := (h45 q).1 ⟨hbq, hqk⟩
+    have hmem : v (p + j) ∈ affGt ({0, v p} : Set V3) ({v (p + 1)} : Set V3) :=
+      hsub ⟨j, hj0, hjq, rfl⟩
+    exact ⟨fun hjlt => by rw [← hconv j]; exact hint j ⟨hj0, hjlt⟩, hmem⟩
+  · intro q j hbq hq0 hqk1 hqj hjk
+    obtain ⟨hint, hsub⟩ := (h45 q).2 ⟨hbq, hq0, hqk1⟩
+    have hmem : v (p + j) ∈ affGt ({0, v p} : Set V3) ({v (p + (k - 1))} : Set V3) :=
+      hsub ⟨j, hqj, hjk, rfl⟩
+    exact ⟨fun hqlt => by rw [← hconv j]; exact hint j ⟨hqlt, hjk⟩, hmem⟩
+  -- DISCHARGED 2026-11-13 (lane k4cprep-w2): HOL Local_lemmas.EGHNAVX at
+  -- `v0 := v p`, `vv := fun i => v (p + i)` (the proved unconditional form
+  -- `EGHNAVX`, LA14:6965); window injectivity `BBs_inj_p21` (LA21:2297),
+  -- orbit `ITER_vv_rho_node1` (LA38:2515), cardinality `CARD_V_EQ_SCS_K1_p31`
+  -- (LA31:2071), rho/predecessor determinism `DETER_RHO_NODE` /
+  -- `PRE_IVS_RHO_NODE1_DETE` (LA5).  `#print axioms` = the standard three.
 
 /-- HOL `EGHNAVX_SCS` (IUNBUIG.hl:432): same conclusion from `scs_generic`.
 Giant (reduces to EGHNAVX_COLL_SCS). -/
@@ -530,10 +597,23 @@ theorem EGHNAVX_SCS_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (p : ℕ)
           q ≤ j → j < k →
           ((q < j → azim 0 (v (p + j)) (v (p + j + 1)) (v (p + j + (k - 1))) = Real.pi) ∧
             v (p + j) ∈ affGt {0, v p} {v (p + (k - 1))})) := by
-  sorry
-  -- DISCHARGES: EGHNAVX_COLL_SCS_p18 once the generic-local-fan
-  -- collinearity property (Nkezbfc_local.PROPERTIES_GENERIC_LOCAL_FAN,
-  -- LocalAuto2 side) gives the `hcol` hypothesis from `scsGeneric`.
+  refine EGHNAVX_COLL_SCS_p18 s k v p his hk hk₃ hBB hbas ?_
+  obtain ⟨-, hper, -, hclf⟩ := hBB
+  rcases hclf with hle | hclf
+  · omega
+  have hlf : LocalFan (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) := hclf.1
+  have hlf2 : localFan_p2 (Set.range v) (Set.range fun i => {v i, v (i + 1)})
+      (Set.range fun i => (v i, v (i + 1))) :=
+    localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp hlf)
+  have hg : generic_p2 (Set.range v) (Set.range fun i => {v i, v (i + 1)}) := hgen
+  intro i hne
+  exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg (v p)
+    (Set.mem_range_self p) (v i) (Set.mem_range_self i) hne
+  -- DISCHARGED 2026-11-13 (lane k4cprep-w2): `EGHNAVX_COLL_SCS_p18` with the
+  -- `hcol` hypothesis from `scsGeneric` via `PROPERTIES_GENERIC_LOCAL_FAN_p9`
+  -- (LA9:1832, HOL Nkezbfc_local.PROPERTIES_GENERIC_LOCAL_FAN; `generic_p2` is
+  -- definitionally `Generic`).  `#print axioms` = the standard three.
 
 /-- HOL `coplanar_cross_reduction` (IUNBUIG.hl:477). Giant. -/
 theorem coplanar_cross_reduction_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : ℕ)
@@ -653,18 +733,17 @@ private theorem w4sg_bbs_fan_p18 {s : ScsV39} {k : ℕ} {v : ℕ → V3}
 --   * w4sg_azim_pi_mem_p18 - azim = pi places w1 in affineSpan {v0, v1, w2};
 --   * w4sg_bbs_fan_p18     - BBsV39 + 3 < k gives Periodic + FAN 0
 --     (range v) (range edges) via ConvexLocalFan/LocalFan projections.
--- Wave-2 gap (HOL IUNBUIG.hl:672-906, still open):
---   * EGHNAVX_COLL_SCS_p18 (in-file sorried giant) supplies conclusions
---     2/3/4/5; FEKTYIY_p27 (LA27, sorried, in-closure) supplies the
---     case-2 non-coplanarity contradiction; both are already in the e2e
---     cone, so assembling with them is net -1 with zero new sorries;
---   * still to port: w4sg_periodic_shift (periodicity window shift),
---     w4sg_coplanar_mem_span (the la5_coplanar_diff_span-style span
---     argument, LA5/PackingAuto4 shapes in-closure), the barycentric
---     goal-builder via Affsign.of_triple, and the two-case assembly
---     (fan6 edge kit + hcol give all non-collinearity instances; no
---     injectivity lemma is needed - degenerate sub-cases die via the
---     azim definition's collinear branches).
+-- Wave-2 (DISCHARGED 2026-11-13, lane k4cprep-w2): the assembly below is
+-- complete; its former sorried inputs are now proved —
+--   * `EGHNAVX_COLL_SCS_p18` (was the in-file sorried giant) supplies
+--     conclusions 2/3/4/5 (discharged via LA14 `EGHNAVX`);
+--   * FEKTYIY_p27 (LA27, proved, in-closure) supplies the case-2
+--     non-coplanarity contradiction;
+--   * the w4sg kit below (periodicity window shift, the
+--     la5_coplanar_diff_span-style span argument, the barycentric
+--     goal-builder via Affsign.of_triple, and the two-case assembly)
+--     was ported wave 1.  No injectivity lemma is needed - degenerate
+--     sub-cases die via the azim definition's collinear branches.
 /-! ## W4 wave 2 (lane scsgeneric-w4b): staging kit toward
 `coplanar_aff_gt_simple_p18` -/
 
@@ -1408,11 +1487,37 @@ theorem L13_LEMMA_p18 (h : mainNonlinearTerminalV11_p18) (V : Set V3)
     (hE : (Set.range fun i => {v i, v (i + 1)}) = E)
     (hcp : ¬ Coplanar ({0, v 1, v 2, v 0} : Set V3)) :
     0 < azim 0 (v 0) (v 1) (v 3) := by
-  sorry
-  -- DISCHARGES: Counting_spheres.AZIM_NN (azim nonnegativity) +
-  -- EGHNAVX_SCS_p18 with `bta q = 0` at q = 0 giving `v 2 ∈ aff_gt`,
-  -- hence coplanarity — contradicting `hcp` unless the azimuth is
-  -- positive.
+  by_contra hz
+  rw [not_lt] at hz
+  have haz : azim 0 (v 0) (v 1) (v 3) = 0 :=
+    le_antisymm hz (azim_nonneg 0 (v 0) (v 1) (v 3))
+  obtain ⟨-, -, -, E4, -⟩ := EGHNAVX_SCS_p18 s 5 v 0 his hk (by norm_num) hBB hbas hgen
+  obtain ⟨-, h2aff⟩ := E4 3 2 haz (by norm_num) (by norm_num) (by norm_num)
+  refine hcp ⟨0, v 0, v 1, fun u hu => ?_⟩
+  have hunion : (({0, v 0} : Set V3) ∪ ({v 1} : Set V3)) = ({0, v 0, v 1} : Set V3) := by
+    ext z
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+      Set.mem_empty_iff_false, or_false]
+    tauto
+  have h21 : (v 2 : V3) ∈ (affineSpan ℝ ({0, v 0, v 1} : Set V3) : Set V3) := by
+    rw [← hunion]
+    exact AFF_GT_SUBSET_AFFINE_HULL ({0, v 0} : Set V3) ({v 1} : Set V3) h2aff
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu
+  rcases hu with rfl | rfl | rfl | rfl
+  · exact subset_affineSpan ℝ ({0, v 0, v 1} : Set V3)
+      (Set.mem_insert 0 ({v 0, v 1} : Set V3))
+  · exact subset_affineSpan ℝ ({0, v 0, v 1} : Set V3)
+      (Set.mem_insert_of_mem 0
+        (Set.mem_insert_of_mem (v 0) (Set.mem_singleton (v 1))))
+  · exact h21
+  · exact subset_affineSpan ℝ ({0, v 0, v 1} : Set V3)
+      (Set.mem_insert_of_mem 0 (Set.mem_insert (v 0) ({v 1} : Set V3)))
+  -- DISCHARGED 2026-11-13 (lane k4cprep-w2): `azim_nonneg` (HOL
+  -- Counting_spheres.AZIM_NN) forces `azim = 0` from `¬ 0 < azim`; then
+  -- `EGHNAVX_SCS_p18` conjunct 4 at `q = 3, j = 2` puts `v 2` in
+  -- `affGt {0, v 0} {v 1} ⊆ affineSpan {0, v 0, v 1}`
+  -- (`AFF_GT_SUBSET_AFFINE_HULL`), making `{0, v 1, v 2, v 0}` coplanar and
+  -- contradicting `hcp`.  `#print axioms` = the standard three.
 
 /-- HOL `IUNBUIG` (IUNBUIG.hl:1496): the main estimate for the 5-cycle.
 Giant. -/
