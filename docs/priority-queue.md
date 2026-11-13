@@ -262,6 +262,13 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（13:50，续1035）**：**一笔落库：tamelp-door-w1 `6a584f6d`（LocalFanPerimeterCond 新文件 59 行纯新增，cone-neutral 资产）+ 挂账销账 ERRATA**。
+① **交付**：`p21_fully_surrounded_perimeter_bound''`——fully_surrounded_perimeter_bound 条件形的 p21 族命名收口（W22dN 已占 `'` 名，新件加撇），一行转发 `pW43_parent_perimeterBound_of_fullySurrounded`。
+② **ERRATA（销账）**：续996/续478/续1032/续1033 的「便宜门只差 hNKE 供给件 60–120」挂账**陈旧**——供给件本体 `pW42_hNKE_hia`（LocalFanStepW42B:38-60，`ddec2058`）与父件条件形 `pW43_parent_perimeterBound_of_fullySurrounded`（LocalFanPerimeterFinal:54-64，`20506a3a`）**11-10 已在库**（pq 全文 W42|pW43 零命中 = 落库时账本未记名）。「还差 hNKE 供给件」的路线说法从续478 起即过期，今日便宜门车道实为「补 p21 族命名收口」。
+③ **编排者闸**：岛编 RC=0/0 err；文件自带探针 `#print axioms` = 标准三（传递覆盖 pW43/pW42/W19-W24 全链）；删除面 0；根面探针 md5 `246e952c…` 逐字节同（本笔闭合）。
+④ **hia 结论（机核）**：W13F/W21 的 hNKE 槽 hia 自由形 × provider hia 形 = 类型不可配的类型事实，链走 hia 并行 aux（已落库），**非 SF gap**；UNRESOLVED-4（yk11 ESTD 桥）已由 stepB C0 结案。B1 真证后本件一行退无条件形（用户已裁 B1 缓议）。
+⑤ **在飞 3**：jlxfdmj-w2 / urrcellbody-w4 / uagbody-w3。待命：6I1 收口（等 jlxfdmj）、K4c、VASYYAU W0（等用户）、TM 下一盒 TSKAJXY-XLLIPLS（等用户）。
+
 - **2026-11-13（13:30，续1034）**：**vasrecon-w1 交付（三 master 总预算 ≈4,900–8,300 行，战役顺序 TUAPYYU→PWEIWBZ→VASYYAU）+ 中断潮 +2（今日 11 例）→ urrcellbody-w4 / uagbody-w2 fresh 接管（WIP 已由编排者抢救落盘）**。
 ① **vasrecon 关键发现**：(a) vas-nhx BLOCKED 判词**半过期**——LA21/LA22 deform kit 内容实测全 no-sorry，残余硬门只剩 LA23 体内 ab4/deform_azim_sum 两件 + import DAG 死锁（编排级决策 R3）；(b) **装债陷阱**——LA25 五条 `_p25` 转发行扫描无 sorry 但 axioms 带债，收口必须 discharge 重接后全锥零 sorryAx；(c) 依赖强序 TUAPYYU→PWEIWBZ→VASYYAU，TUAPYYU 新数学最少（HOL 本体仅 6 行）。
 ② **推荐波次**：W0（2 车道 230–470：LA25 stub 贴 kit proof + YEBWJNG/CQAOQLR/KEITDWB）→ W1（解析小件簇 250–510）→ W2（2 车道 + **R3 DAG 裁决点**）→ W3（三收口）。三高风险：R1 LEMMA_PWE 机制深度 / R2 叶子模板可崩塌度 / R3 DAG 死锁。**战役总预算已呈用户，等点头**。
