@@ -5203,7 +5203,86 @@ theorem LEMMA_6843920790_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y
     (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
     ∃ a b, y4 ∈ Set.Ioo a b ∧ ∀ y4' y4'', y4' ∈ Set.Ioo a b → y4'' ∈ Set.Ioo a b →
       y4' < y4'' → taum y1 y2 y3 y4' y5 y6 < taum y1 y2 y3 y4'' y5 y6 := by
-  sorry
+  have hy1p : 0 < y1 := by linarith [hy1.1]
+  have hy2p : 0 < y2 := by linarith [hy2.1]
+  have hy3p : 0 < y3 := by linarith [hy3.1]
+  have hy4p : 0 < y4 := by linarith [hy4.1]
+  have hy5p : 0 < y5 := by linarith [hy5.1]
+  have hy6p : 0 < y6 := by linarith [hy6.1]
+  have hu4 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4) :=
+    la22_upsX_pos3 y2 y3 y4 hy2.1 hy2.2 hy3.1 hy3.2 hy4.1 hy4.2
+  have h4lo : (2 / h0) ^ 2 ≤ xrr y2 y3 y4 :=
+    la22_xrr_simple_lower y2 y3 y4 2 hy2.1 hy2.2 hy3.1 hy3.2 (by norm_num) hy4.1
+  have h4hi : xrr y2 y3 y4 ≤ (3.01 : ℝ) ^ 2 :=
+    la22_xrr_simple_upper y2 y3 y4 3.01 hy2.1 hy2.2 hy3.1 hy3.2 hy4.1 hy4.2
+      (by norm_num)
+  have h5lo' : ((3 : ℝ) / h0) ^ 2 ≤ xrr y1 y3 y5 :=
+    la22_xrr_simple_lower y1 y3 y5 3 hy1.1 hy1.2 hy3.1 hy3.2 (by norm_num)
+      (by linarith : (3 : ℝ) ≤ y5)
+  have h5reg : (2.38 : ℝ) ^ 2 ≤ xrr y1 y3 y5 := by
+    have hc : (2.38 : ℝ) ^ 2 ≤ ((3 : ℝ) / h0) ^ 2 := by
+      rw [h0_eq_p22]
+      norm_num
+    linarith
+  have h5hi : xrr y1 y3 y5 ≤ 15.53 := hy5.2
+  have h6lo' : ((3 : ℝ) / h0) ^ 2 ≤ xrr y1 y2 y6 :=
+    la22_xrr_simple_lower y1 y2 y6 3 hy1.1 hy1.2 hy2.1 hy2.2 (by norm_num) hy6.1
+  have h6reg : (2.38 : ℝ) ^ 2 ≤ xrr y1 y2 y6 := by
+    have hc : (2.38 : ℝ) ^ 2 ≤ ((3 : ℝ) / h0) ^ 2 := by
+      rw [h0_eq_p22]
+      norm_num
+    linarith
+  have h6hi : xrr y1 y2 y6 ≤ 15.53 := hy6.2
+  have hnum := (h "6843920790" (by simp [mainNonlinearTerminalV11Ids_t11]))
+    (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)
+    (rho_bounds_p22 y1 hy1.1 hy1.2).1 (rho_bounds_p22 y1 hy1.1 hy1.2).2
+    (rho_bounds_p22 y2 hy2.1 hy2.2).1 (rho_bounds_p22 y2 hy2.1 hy2.2).2
+    (rho_bounds_p22 y3 hy3.1 hy3.2).1 (rho_bounds_p22 y3 hy3.1 hy3.2).2
+    h4lo h4hi h5reg h5hi h6reg h6hi
+  let S : Set ℝ := {q | 0 < deltaY y1 y2 y3 q y5 y6} ∩ {q | 0 < q} ∩
+    {q | 0 < upsX (y2 * y2) (y3 * y3) (q * q)} ∩
+    {q | 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 q) (xrr y1 y3 y5)
+      (xrr y1 y2 y6)}
+  have hSopen : IsOpen S := by
+    have h1 : IsOpen {q : ℝ | 0 < deltaY y1 y2 y3 q y5 y6} :=
+      isOpen_lt continuous_const (la22_deltaY_continuous y1 y2 y3 y5 y6)
+    have h2 : IsOpen {q : ℝ | 0 < q} := isOpen_Ioi
+    have h3 : IsOpen {q : ℝ | 0 < upsX (y2 * y2) (y3 * y3) (q * q)} := by
+      apply isOpen_lt continuous_const
+      unfold upsX
+      continuity
+    have h4 : IsOpen {q : ℝ | 0 < num1 (rho y1) (rho y2) (rho y3) (xrr y2 y3 q)
+        (xrr y1 y3 y5) (xrr y1 y2 y6)} := by
+      apply isOpen_lt continuous_const
+      unfold num1 xrr
+      continuity
+    exact ((h1.inter h2).inter h3).inter h4
+  have hy4S : y4 ∈ S := ⟨⟨⟨hd, hy4p⟩, hu4⟩, hnum⟩
+  obtain ⟨α, β, hy4αβ, hαβS⟩ :=
+    real_open_contains_real_interval_p22 y4 S hy4S hSopen
+  have hcont : ContinuousOn (fun q => taum y1 y2 y3 q y5 y6) (Set.Ioo α β) := by
+    intro c hc
+    obtain ⟨⟨⟨hdc, hcpos⟩, huc⟩, _⟩ := hαβS hc
+    exact (la22_taum_hasDerivAt y1 y2 y3 c y5 y6 hy1p hy2p hy3p hcpos hy5p hy6p
+      hdc huc).continuousAt.continuousWithinAt
+  have hderiv : ∀ c ∈ interior (Set.Ioo α β),
+      0 < deriv (fun q => taum y1 y2 y3 q y5 y6) c := by
+    intro c hc
+    rw [interior_Ioo] at hc
+    obtain ⟨⟨⟨hdc, hcpos⟩, huc⟩, hnumc⟩ := hαβS hc
+    exact la22_taum_deriv_pos y1 y2 y3 c y5 y6 hy1p hy2p hy3p hcpos hy5p hy6p
+      hdc huc hnumc
+  have hmono := strictMonoOn_of_deriv_pos (D := Set.Ioo α β)
+    (f := fun q => taum y1 y2 y3 q y5 y6) (convex_Ioo α β) hcont hderiv
+  exact ⟨α, β, hy4αβ, fun y4' y4'' h1 h2 hlt => hmono h1 h2 hlt⟩
+  -- PROVED 2026-11-14 (lane iunbfinish-w2): registry `6843920790`
+  -- (`num1 > 0` on the box `(2/h0)^2 ≤ xrr y2 y3 y4 ≤ 3.01^2`,
+  -- `2.38^2 ≤ xrr y1 y3 y5 ≤ 15.53`, `2.38^2 ≤ xrr y1 y2 y6 ≤ 15.53`,
+  -- T11Proofs `t11_6843920790`) plus the `La22TaumMonoKit` MVT template of
+  -- `LEMMA_4828966562_p22` above (the `y4 ≤ 3.01` slot uses
+  -- `la22_upsX_pos3`/`la22_xrr_simple_upper` at `3.01`; the y5/y6 lower
+  -- boxes come from `la22_xrr_simple_lower` at `3`).  Consumed by
+  -- `IUNBUIG_p18` (LocalAuto18).  `#print axioms` = the standard three.
 
 /-! ## Section M: the funlist case bank and the OCBICBY assembly -/
 
