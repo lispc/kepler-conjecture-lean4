@@ -261,6 +261,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（14:58，续1039）**：**中断潮根因实锤 = 账户 5h 配额（429）——jlxfdmj-w2 续跑撞硬错误 "You've reached your 5-hour usage limit"（官方 error-reference 原文）⇒ 下午 18 例静默截断 = 配额逼近时的请求丢流症状（时间聚集 12:43–14:54 = 滚向触顶）。编排者早前「引擎过载」定性修正为配额根因（AGENTS §7.1-22 已同步）。**
+① **当前盘面**：subagent 派发/续跑封（再发即 429 烧额度）——vasw0-w2 resume 暂缓；主会话仍可用（账本/闸照做）；tmxllipls-w1 无头循环下轮要模型时也会 429，其 smoke_seq 脚本不依赖模型可自跑；**等 5h 窗口重置（Console 可查时刻）或用户购加油包/升档**。
+② **止损盘点（等重置期间零浪费）**：jlxfdmj-w3 接续包齐（段1/2 全绿 + 段3 DevAll3 52.6KB + 错误清单）；vasw0-w2 probes 已救（A 路线实锤止损判死、B 路线 YEBWJNG dev 在案）；urrcellbody-w7 WIP 202.6 KB；tmxllipls-w1 证书链健康（6,512 叶 + tight 改版）。**重置后按序 resume：jlxfdmj → vasw0 → 其余按到期顺序**。
+③ **僵尸 lean 清杀**：三个死代 urrcellbody 编译（w1/w2/w3 的孤儿，reparent 到 479 绕过 PPID=1 自检）持 17.6 GB 烧 1-3h，已杀——lean 槽归零。⇒ **§4 orphan 自检升级：除 PPID=1 外，编排者接管时 ps 扫车道名残留编译一并清**。
+④ 教训：**多车道并行 = 配额消耗乘法**；高峰期（14-17 时）+ 多车道 = 5h 窗口提前触顶。后续车道数与 TM 长窗口需把配额节奏纳入（用户裁）。
+
 - **2026-11-13（14:50，续1038）**：**中断潮第 17 例引出重大变体——「假失败」：tmxllipls-w1 被通知 failed 后进程与 agent 均存活且健康推进；w2 接管前置侦察发现实况、主动退役**。
 ① **新变体定性（修正续1037 彻查结论）**：部分「turn ended without final message」通知是**假信号**——实例活着继续干活（w1 时间链 14:06→14:40 连续产出：case JSON → bb_arb cert → CXlliplsHullBase.lean → 探针自救修复 → w0 cert）；**resume 僵尸锁的真相 = 实例真的还在跑**（非实例注册表 bug）。⇒ **fresh 接管前必做 ps 预检**（车道名/工作区进程+文件 mtime 双查），防双线驾驶。
 ② **TM 盒实况**：叶数 **6,512**；w1 的 w0 改版 cert 正确且必要（原 cert 根盒 lo 沿 2.65080000019 > 2.6508 漏缝，w0 的 ...826/2^30 = 2.65079999906 补上——w2 独立复核背书）；leaf 0 默认档 NEG（margin ≈ −2.5e-35，模型分辨率极限，属 FIXPLAN 预警的 w2 尾区型）；**成本预警**：单叶 eval ≈ 5 min，若 24 叶压力样本确认分钟级/叶，6512 叶全链将远超 0.5–1.5 天估算——探针出数后报用户重估窗口。
