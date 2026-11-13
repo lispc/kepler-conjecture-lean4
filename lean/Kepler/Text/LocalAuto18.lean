@@ -38,13 +38,16 @@ FILE MAP
     `real_continuous_finite_range_constant_p18`,
     `a5_assumption_reduction_p18`, `b5_assumption_reduction_p18`
     (proved); `ARCV_ADD_AFF_GE_p18`,
-    `planar_deform_dist_p18`, `deform_pent_exists_p18`,
-    `coplanar_cross_reduction_p18`,
-    `azim_dih_y_p18`, `azim5_reduction_p18`, `IUNBUIG_p18` (sorry
-    giants; `Deformation` from LocalAuto1).  Discharged 2026-11-13
-    (lane k4cprep-w2) via the unconditional `EGHNAVX` (LA14:6965):
-    `EGHNAVX_COLL_SCS_p18`, `EGHNAVX_SCS_p18`, `L13_LEMMA_p18`,
-    `coplanar_aff_gt_simple_p18`.
+    `planar_deform_dist_p18`, `azim_dih_y_p18`,
+    `coplanar_aff_gt_simple_p18`-adjacent kit (all discharged
+    2026-11-13: `ARCV_ADD_AFF_GE_p18` / `planar_deform_dist_p18` /
+    `azim_dih_y_p18` by lane k4c5m2-w1, `23c16896`, in-file 7→4;
+    `coplanar_cross_reduction_p18` by lane n3cross-w1, in-file 4→3);
+    remaining sorry giants: `deform_pent_exists_p18`,
+    `azim5_reduction_p18`, `IUNBUIG_p18` (`Deformation` from
+    LocalAuto1).  Discharged 2026-11-13 (lane k4cprep-w2) via the
+    unconditional `EGHNAVX` (LA14:6965): `EGHNAVX_COLL_SCS_p18`,
+    `EGHNAVX_SCS_p18`, `L13_LEMMA_p18`, `coplanar_aff_gt_simple_p18`.
   Section C (AURSIPD): `REP_NUMSEG_p18`, `PERIODIC_IMAGE2_p18` (proved);
     `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18` (proved 2026-11-05, la18-sumazim kit),
     `AURSIPD_p18` (proved 2026-11-05, la18-aursipd kit).
@@ -781,17 +784,6 @@ theorem EGHNAVX_SCS_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (p : ℕ)
   -- (LA9:1832, HOL Nkezbfc_local.PROPERTIES_GENERIC_LOCAL_FAN; `generic_p2` is
   -- definitionally `Generic`).  `#print axioms` = the standard three.
 
-/-- HOL `coplanar_cross_reduction` (IUNBUIG.hl:477). Giant. -/
-theorem coplanar_cross_reduction_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : ℕ)
-    (his : isScsV39 s) (hk : s.k = k) (hk₃ : 3 < k) (hMM : v ∈ MMsV39 s)
-    (hbas : scsBasicV39 s) (hgen : scsGeneric v)
-    (hcp : Coplanar ({0, v i, v (i + 1), v (i + 2)} : Set V3)) :
-    0 < (cross3 (v (i + 1)) (v i)) ⬝ᵥ (cross3 (v (i + 2)) (v i)) := by
-  sorry
-  -- DISCHARGES: EGHNAVX_SCS_p18 + FEKTYIY + COLL_AFF_GT_2_1 +
-  -- AFFINE_HULL_3_GENERATED / periodic-image machinery (HOL proof
-  -- IUNBUIG.hl:486-660).
-
 /-- In-plane azimuth dichotomy (HOL `AZIM_COND_FOR_COPLANAR` consumption
 shape): a point of the linear plane through `0`, `a`, `b` sits at azimuth
 `0` or `π`. Adapted from the `lkgrqui-sectortri-asm-w3` kit item. -/
@@ -1139,6 +1131,152 @@ private theorem w4sg_coplanar_mem_span_p18 {p q r : V3}
   obtain ⟨μ, ν, hμν⟩ := Submodule.mem_span_pair.mp (hEq ▸ hr)
   simp only [sub_zero] at hμν
   exact ⟨μ, ν, hμν.symm⟩
+
+/-- Lane n3cross: `cross3` is additive in its first argument (Pi-level
+`crossProduct` linearity through the `WithLp` coercion). -/
+private theorem n3cr_cross3_add_left (a b c : V3) :
+    cross3 (a + b) c = cross3 a c + cross3 b c := by
+  simp only [cross3, WithLp.ofLp_add, map_add, LinearMap.add_apply,
+    WithLp.toLp_add]
+
+/-- Lane n3cross: `cross3` scales in its first argument. -/
+private theorem n3cr_cross3_smul_left (a : V3) (c : ℝ) (x : V3) :
+    cross3 (c • a) x = c • cross3 a x := by
+  simp only [cross3, WithLp.ofLp_smul, map_smul, LinearMap.smul_apply,
+    WithLp.toLp_smul]
+
+/-- Lane n3cross: the self cross product vanishes. -/
+private theorem n3cr_cross3_self (a : V3) : cross3 a a = 0 := by
+  simp only [cross3, cross_self, WithLp.toLp_zero]
+
+/-- HOL `coplanar_cross_reduction` (IUNBUIG.hl:477). Giant. -/
+theorem coplanar_cross_reduction_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : ℕ)
+    (his : isScsV39 s) (hk : s.k = k) (hk₃ : 3 < k) (hMM : v ∈ MMsV39 s)
+    (hbas : scsBasicV39 s) (hgen : scsGeneric v)
+    (hcp : Coplanar ({0, v i, v (i + 1), v (i + 2)} : Set V3)) :
+    0 < (cross3 (v (i + 1)) (v i)) ⬝ᵥ (cross3 (v (i + 2)) (v i)) := by
+  obtain ⟨hBB, -⟩ := mm_BBs_taustar_p27 s v hMM
+  obtain ⟨hper, hfan⟩ := w4sg_bbs_fan_p18 hk hk₃ hBB
+  have hfan2 := hfan.2.2.2.1
+  have hv0 : ∀ j : ℕ, v j ≠ 0 := by
+    intro j he
+    exact hfan2 (Set.mem_range.mpr ⟨j, he⟩)
+  have heI : ({v i, v (i + 1)} : Set V3) ∈
+      Set.range (fun j : ℕ => ({v j, v (j + 1)} : Set V3)) := Set.mem_range.mpr ⟨i, rfl⟩
+  have hi0 : v i ≠ 0 := hv0 i
+  have hnc01 : ¬ Collinear3 0 (v i) (v (i + 1)) :=
+    Kepler.Text.Fan.fan_not_collinear hfan heI
+  have hi1 : v i ≠ v (i + 1) := by
+    intro he
+    exact hnc01 (by rw [he]; exact collinear3_pair_right rfl)
+  obtain ⟨-, E2, E3, E4, E5⟩ := EGHNAVX_SCS_p18 s k v i his hk hk₃ hBB hbas hgen
+  obtain ⟨μ, ν, hμν⟩ := w4sg_coplanar_mem_span_p18 hnc01 hcp
+  have hx1 : v (i + 2) - 0 = μ • (v i - 0) + ν • (v (i + 1) - 0) := by
+    rw [sub_zero, sub_zero, sub_zero, hμν]
+  rcases w4sg_azim_plane_p18 hi0 (hv0 (i + 1)) hnc01 ⟨μ, ν, hx1⟩ with haz0 | hazπ
+  · -- Case `azim 0 (v i) (v (i+1)) (v (i+2)) = 0`: `v (i+2)` is a positive
+    -- combination of `v (i+1)` and `v i`; the cross collapses to a positive
+    -- scalar times `cross3 (v (i+1)) (v i)`.
+    obtain ⟨-, h4⟩ := E4 2 2 haz0 (by norm_num) (by norm_num) (by omega)
+    obtain ⟨c1, hc1, h1c, hexp1⟩ :=
+      (affGt_pair_iff (v0 := (0:V3)) (v1 := v i) (x := v (i+1)) (y := v (i+2))
+        (Ne.symm hi0) (hv0 (i+1)) (Ne.symm hi1)).mp h4
+    simp only [sub_zero] at hexp1
+    have hxne : cross3 (v (i + 1)) (v i) ≠ 0 := by
+      intro h0
+      apply hnc01
+      show Collinear ℝ ({0, v i, v (i + 1)} : Set V3)
+      rw [show ({0, v i, v (i + 1)} : Set V3) = ({0, v (i + 1), v i} : Set V3)
+          from by
+        ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      refine (COLLINEAR_CROSS_0 (x := (0:V3)) (y := v (i + 1)) (z := v i)).mpr ?_
+      simp only [sub_zero]
+      rw [show (WithLp.toLp 2 (crossProduct ((v (i+1) : V3) : Fin 3 → ℝ)
+          ((v i : V3) : Fin 3 → ℝ)) : V3) = cross3 (v (i+1)) (v i) from rfl]
+      exact h0
+    have hcr : cross3 (v (i + 2)) (v i)
+        = c1 • cross3 (v (i + 1)) (v i) := by
+      rw [hexp1, n3cr_cross3_add_left, n3cr_cross3_smul_left,
+        n3cr_cross3_smul_left, n3cr_cross3_self, smul_zero, add_zero]
+    have hpos : 0 < cross3 (v (i + 1)) (v i) ⬝ᵥ cross3 (v (i + 1)) (v i) := by
+      rw [← norm_sq_eq_dot]
+      exact pow_pos (norm_pos_iff.2 hxne) 2
+    rw [hcr]
+    -- `cross3` elaborates through the `WithLp.ofLp` coercion; restate the
+    -- smul at the Pi level (defeq via `WithLp.ofLp_smul`) so the
+    -- `dotProduct` simp lemmas fire syntactically.
+    show 0 < (cross3 (v (i + 1)) (v i) : Fin 3 → ℝ) ⬝ᵥ
+        c1 • (cross3 (v (i + 1)) (v i) : Fin 3 → ℝ)
+    rw [dotProduct_smul, smul_eq_mul]
+    exact mul_pos hc1 hpos
+  · -- Case `azim = π`: every `v j` lies in the affine span of
+    -- `{0, v i, v (i+k-1)}`, contradicting `FEKTYIY`.
+    have hk0 : k ≠ 0 := by omega
+    have hk2 : 2 < k - 1 := by omega
+    have hge : Real.pi ≤ azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) := by
+      rw [← hazπ]; exact E3 2 (k - 1) hk2 (by omega)
+    have hreq : azim 0 (v i) (v (i + 1)) (v (i + (k - 1))) = Real.pi :=
+      le_antisymm E2 hge
+    have h0 : azim 0 (v i) (v (i + 1)) (v i) = 0 := by
+      rw [azim, if_pos (Or.inr (collinear3_pair_right rfl))]
+    have hneIK : v (i + (k - 1)) ≠ v i := by
+      intro he
+      rw [he] at hreq
+      rw [h0] at hreq
+      exact Real.pi_ne_zero hreq.symm
+    have hncIK : ¬ Collinear3 0 (v i) (v (i + (k - 1))) := by
+      obtain ⟨-, -, -, hclf⟩ := hBB
+      rcases hclf with hle | hclf
+      · omega
+      have hlf : LocalFan (Set.range v) (Set.range fun j => {v j, v (j + 1)})
+          (Set.range fun j => (v j, v (j + 1))) := hclf.1
+      have hlf2 : localFan_p2 (Set.range v)
+          (Set.range fun j => {v j, v (j + 1)})
+          (Set.range fun j => (v j, v (j + 1))) :=
+        localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp hlf)
+      have hg : generic_p2 (Set.range v) (Set.range fun j => {v j, v (j + 1)}) :=
+        hgen
+      exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg
+        (v i) (Set.mem_range_self i) (v (i + (k - 1)))
+        (Set.mem_range_self (i + (k - 1))) hneIK
+    refine absurd (?_ : Coplanar ({0} ∪ Set.range v : Set V3))
+      (FEKTYIY_p27 s v his hMM (by rw [hk]; omega))
+    refine ⟨(0:V3), v i, v (i + (k - 1)), ?_⟩
+    intro z hz
+    rcases hz with h0z | hj
+    · rw [h0z]
+      have hz0 : (0:V3) = (1:ℝ) • (0:V3) + (0:ℝ) • v i + (0:ℝ) • v (i + (k - 1)) := by
+        simp
+      exact w4sg_mem_affineSpan3_p18 (hy := hz0) (by norm_num)
+    · obtain ⟨j, hjv⟩ := Set.mem_range.mp hj
+      rw [← hjv]
+      obtain ⟨d, hdlt, hdv⟩ := w4sg_periodic_shift_p18 hk0 hper i j
+      rw [hdv]
+      rcases Nat.eq_zero_or_pos d with hd0 | hd1p
+      · rw [hd0, Nat.add_zero]
+        have hvi : v i = (0:ℝ) • (0:V3) + (1:ℝ) • v i + (0:ℝ) • v (i + (k - 1)) := by
+          simp
+        exact w4sg_mem_affineSpan3_p18 (hy := hvi) (by norm_num)
+      · by_cases hd1 : d = 1
+        · rw [hd1]
+          exact w4sg_azim_pi_mem_p18 hi0 hnc01 hncIK hreq
+        · have hd2 : 2 ≤ d := by omega
+          have h5 := (E5 2 d (hazπ.trans hreq.symm) (by norm_num) hk2 hd2 hdlt).2
+          exact w4sg_affGt_pair_mem3_p18 h5
+  -- DISCHARGED 2026-11-13 (lane n3cross-w1): HOL IUNBUIG.hl:477-660.
+  -- Coplanarity puts `v (i+2)` in the linear span of `{v i, v (i+1)}`
+  -- (`w4sg_coplanar_mem_span_p18`), so `azim 0 (v i) (v (i+1)) (v (i+2))`
+  -- is `0` or `π` (`w4sg_azim_plane_p18`, the `AZIM_COND_FOR_COPLANAR`
+  -- consumption shape).  Case azim = 0: `EGHNAVX_SCS_p18` conjunct 4 +
+  -- `affGt_pair_iff` (HOL `COLL_AFF_GT_2_1`) write `v (i+2)` with a
+  -- positive `v (i+1)`-coefficient; the cross/dot computation collapses
+  -- the goal to a positive multiple of `cross3 (v (i+1)) (v i) ⬝ᵥ` itself.
+  -- Case azim = π: monotonicity (conjunct 3) and the π-bound (conjunct 2)
+  -- give `azim 0 (v i) (v (i+1)) (v (i+k-1)) = π`; conjunct 5 then puts
+  -- every `v (i+d)`, `2 ≤ d < k`, in `affGt {0, v i} {v (i+k-1)}`, the
+  -- `d = 1` case goes through `w4sg_azim_pi_mem_p18`, so all of
+  -- `{0} ∪ V` lies in the affine span of `{0, v i, v (i+k-1)}`,
+  -- contradicting `FEKTYIY_p27`.  `#print axioms` = the standard three.
 
 /-- HOL `coplanar_aff_gt_simple` (IUNBUIG.hl:663). Giant. -/
 theorem coplanar_aff_gt_simple_p18 (s : ScsV39) (k : ℕ) (v : ℕ → V3) (i : ℕ)
