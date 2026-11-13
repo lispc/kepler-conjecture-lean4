@@ -310,6 +310,10 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（20:20，续1056）**：**penthex-w2 交付处理：135 镜像对落库 `73970943`（+28/−2，闸全绿）——LA19 塔基累计净 10 件；w3 任务清零已留 NOTE 收工**。
+① w2 的 DELIVERY 质量极高：独立重验 w1 四件（直编日志与 w1 逐字节同）、主动撤回与主仓重复的 patch-1、增量交付 135 镜像对 + 超工单邻件 delta_135_x_2h0_le_d；BLOCKED 分析与 w1 独立吻合（tau_x kit 假桩 + 导数对）。ORCHESTRATOR_NOTE 渠道实证有效（w2 20:03 读条、20:07 按收束指令交付）。
+② 塔况终盘：已净 10 件（主线程 3 + w1 四件 + w2 两件 + ge_flat 原有）；234 断点 = ②OWZLKVY4（tau_x kit 移植/SF 重述）+ ④minimizer_hex（导数对 60-100+150-250 行）。在飞：penthex-w3（收工中）/ t5body-w1（5T1 本体，~20 min 在飞）。
+
 - **2026-11-13（20:15，续1055）**：**用户发现 penthex-w2 也在无头跑（UI 不可见）→ 编排者定位管理 + 「假失败处置协议」入 AGENTS §7.1-22**。
 ① **w2 实态**：alive 且已完成 w1 遗产验收（accept1-3 三轮日志 + patch-1.diff 落快照 19:56，probe 迭代至 20:02）——与 w3 任务面重叠（双线同验已落库的四件 = 浪费已发生但有限）。处置：双快照各留 ORCHESTRATOR_NOTE（w2：两件已落库 0c7da7de、独剩 135_x_eval、做完即收；w3：验收任务取消、独做 135_x_eval）；②④⑤ 标已知 BLOCKED 禁重啃；**闸口去重**：谁先落 135_x_eval 快照谁算数。
 ② **协议定型（§7.1-22 增补）**：failed 通知 ≠ 死亡；处置四步 = ps 预检 → 查快照 DELIVERY/patch（有即进闸不派接管）→ 活着无交付留 NOTE 登记「无头在飞」+ 每回合复查 → 真死才接管。根因 = harness 通知通道丢包（tmxllipls-w1/penthex-w1/w2 三案），本地以快照为唯一事实源。
