@@ -703,6 +703,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（07:20，续1098）**：**tauxkit-w1 交付（只读考古完成）——tau_x kit 章程草案出炉：真身已在树内（LA1 `_t11` 套件），7 桩改指即真身化，零陈述改动**。
+① 核心发现：`taumX_t11`（LA1:1243）/`tauResidualX_t11`（:1237）/`taudX_t11`（:1124）/`flatTermX_t11`（:1117）/`taud_t11`（:1120）≡ HOL taum_x/tau_residual_x/taud_x/flat_term_x/taud **逐字同体已在树**（`_t11` 后缀 = ICD/Text 根 sqrt3 撞名复制）；本修 = 7 桩各 1 行改指别名 + docstring，零 import 增、零 sorry 净增减、7 消费者陈述逐字节不动。
+② **机器证据**：桩态下 `tau_x_tau_residual_x_general_p19`（LA19:433）**按字为假**（平坦点 4,4,4,12,4,4 处化为 `0 = −sol0`，探针 probe_a 以标准三否定之）——本修同时清除一类 §2 隐性违例（假陈述债）。probe_b 6 形状数值验证全绿。
+③ 处置表（§3.1）：C1/C3/C4/C6 换后 = 真陈述+sorry（路线已给：HOL pent_hex.hl:136 双分支 / taum_123 / dih_y_sym，两条「顺手可收」）；C2/C5/C7/C8 另挂 NEEDS-DB（4 条 DB 引理，LP 级）。
+④ 闸门 DEF-FIX 模式草案齐备（gate-LocalAuto19/38.md 围栏 + DF_SORRY_NET=0 + 旧假命题消失验证 + 根面逐字节同）。**呈用户批章程本体**；批后：编排者正式化章程 → DEF-FIX 闸落 7 行 → 派 C1-C6 证明车道（含 enclosed sym×2 解锁波并案）。
+⑤ 在飞 0（本会话）；用户 V20（PWEIWBZ str(p+1) C-prep）在飞。两份章程待批：**tauxkit-realify**（本笔）+ **enclosed4-anchor**（续1096）。
+
 - **2026-11-14（07:05，续1096）**：**enclosed 集群 `enclosed4-w1` 交付落库 `92ec0f90`（1/5 真证 + 4/5 细判 BLOCKED，LA38 +75/−4）+ 第二份 DEF-FIX 章程草案（enclosed4-anchor）呈用户**。
 ① **DISCHARGED**：`IN_V_IMP_AZIM_LESS_PI_ALT`（HOL terminal.hl:1765，LocalFan→wedge→azimInFan≤π + 2 私族桥 42 行；LA38 旧「LOCAL_FAN_RHO_NODE_PROS2 hole」注记勘误为过时——缺的只是 import AzimBridge+LocalAuto5）。
 ② **4/5 BLOCKED 细判（根因非 LP）**：`enclosedP38`/`cayleyRP38` 锚点假桩族（LA38:167/:194 `:= sorry`）。sym/sym2 证明文本已写好并在 shadow（桩填真身）实测 RC=0+探针标准三，解锁即落（各 7 行）；enclosed4_lemma 另缺 `CAYLEYR_5POINTS`（5 点 Cayley-Menger，树内零命中，建议单独立项）；vv_enclosed4 = 装配线 ~150-300 行（叶件 rg 全在树内）。
