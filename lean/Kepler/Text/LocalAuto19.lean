@@ -1083,7 +1083,19 @@ theorem edge2_flatD_x1_delta_lemma3_p19 (h : mainNonlinearTerminalV11_p18)
     ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915), (2, y5, 2),
         (2, y6, 2)]
       (edge2FlatDX1_p19 d (y2 * y2) (y3 * y3) (y4 * y4) (2 * 2) (2 * 2) = y1 * y1) := by
-  sorry
+  intro _ _ _ _ _ _
+  have hreg : mainEstimate_3078028960 :=
+    h "3078028960" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_3078028960 at hreg
+  have hb : (2:ℝ) ≤ 2 := le_refl _
+  have hreg' := hreg y1 y2 y3 y4 2 2 b1 b1' b2 b2' b3 b3' b4 b4' hb hb hb hb
+  rw [b5, b6] at hd
+  rcases hreg' with hΔ | h20
+  · simp only [yOfX] at hΔ
+    have hx4 : 0 < y4 * y4 := mul_pos (by linarith) (by linarith)
+    exact edge2_flatD_x1_delta_lemma2_p19 d (y1 * y1) (y2 * y2) (y3 * y3)
+      (y4 * y4) (2 * 2) (2 * 2) hd hx4 hΔ
+  · linarith
 
 /-- HOL `delta_2_nn` (pent_hex.hl:1388). NEEDS-DB: database conjunct
 "3078028960". -/
