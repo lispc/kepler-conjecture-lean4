@@ -3426,6 +3426,241 @@ theorem empty_4T5 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
   unfold scs4T5 at hB ⊢
   exact terminal_quad_lemma 0.513 _ _ emptykit_apos_4T5 (emptykit_azim_4T5 h) vv hB
 
+/-! ## LANE quad4t2-w1 (2026-11-13): quad emptiness `empty_4T2`.
+
+HOL `terminal.hl:2888` (`terminal_adhoc_quad_9563139965B_empty`) dispatches
+through `terminal_quad_lemma` like 4T4/4T5 but the azim sum splits along the
+long diagonal 0-2 (`vv_quad_split012`): the two diagonals are pinned by
+`csAdj 4 2 3 ≤ dist ≤ csAdj 4 (2 * h0) 3` (both give `3`), so
+`ineq_5691615370_asym` (WLOG + registry `5691615370`, t4crux-w1) has its
+`y1/y4` slots at `3` and collapses to the perimeter fact `σ > 8.472`; the
+registries `9563139965 d` (all four sides `≤ 2.472`) resp. the `e/f` mix
+(one side `> 2.472`, the other triangle on `9563139965 f`) add to
+`d = 0.467` exactly. -/
+
+/-- HOL `terminal.hl:2896-2906` digression: `&2 <= cs_adj 4 (&2) (&3) i j`
+off the diagonal (both `cs_adj` values are `≥ 2`). -/
+private theorem emptykit_apos_4T2 :
+    ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j → 0 < csAdj 4 2 3 i j := by
+  intro i j ⟨hi, hj, hne⟩
+  have hmod : ¬ i % 4 = j % 4 := by
+    intro hc
+    apply hne
+    rw [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] at hc
+    exact hc
+  have h2 : (2 : ℝ) ≤ csAdj 4 2 3 i j :=
+    csAdj_ge2_p22 (a1 := 2) (a2 := 3) (by norm_num) (by norm_num) hmod
+  linarith
+
+private theorem emptykit_azim_4T2 (h : main_nonlinear_terminal_v11) :
+    ∀ vv : ℕ → V3, Set.range vv ⊆ ballAnnulus → Periodic vv 4 →
+      (∀ i j : ℕ,
+        csAdj 4 2 3 i j ≤ dist (vv i) (vv j) ∧
+          dist (vv i) (vv j) ≤ csAdj 4 (2 * h0) 3 i j) →
+      ConvexLocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) →
+      0.467 ≤ (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+          rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 4) +
+          rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 5) +
+          rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 4) (vv 6) + 0) -
+          (Real.pi + sol0) * (4 - 2) := by
+  intro vv hsub hper hdij hcf
+  -- periodicity: the `vv 4/5/6` slots collapse
+  have h40 : vv 4 = vv 0 := by
+    rw [show (4 : ℕ) = 0 + 4 by norm_num]; exact hper 0
+  have h50 : vv 5 = vv 1 := by
+    rw [show (5 : ℕ) = 1 + 4 by norm_num]; exact hper 1
+  have h62 : vv 6 = vv 2 := by
+    rw [show (6 : ℕ) = 2 + 4 by norm_num]; exact hper 2
+  have h2h0 : (2 : ℝ) * h0 = 2.52 := by norm_num [h0_eq_p22]
+  -- the six `csAdj` slot bounds: adjacent legs in `[2, 2 * h0]`, diagonals `= 3`
+  have lb01 : (2 : ℝ) ≤ dist (vv 0) (vv 1) := by
+    have h := (hdij 0 1).1
+    norm_num [csAdj] at h
+    exact h
+  have ub01 : dist (vv 0) (vv 1) ≤ 2 * h0 := by
+    have h := (hdij 0 1).2
+    norm_num [csAdj] at h
+    exact h
+  have lb03 : (2 : ℝ) ≤ dist (vv 0) (vv 3) := by
+    have h := (hdij 0 3).1
+    norm_num [csAdj] at h
+    exact h
+  have ub03 : dist (vv 0) (vv 3) ≤ 2 * h0 := by
+    have h := (hdij 0 3).2
+    norm_num [csAdj] at h
+    exact h
+  have lb12 : (2 : ℝ) ≤ dist (vv 1) (vv 2) := by
+    have h := (hdij 1 2).1
+    norm_num [csAdj] at h
+    exact h
+  have ub12 : dist (vv 1) (vv 2) ≤ 2 * h0 := by
+    have h := (hdij 1 2).2
+    norm_num [csAdj] at h
+    exact h
+  have lb23 : (2 : ℝ) ≤ dist (vv 2) (vv 3) := by
+    have h := (hdij 2 3).1
+    norm_num [csAdj] at h
+    exact h
+  have ub23 : dist (vv 2) (vv 3) ≤ 2 * h0 := by
+    have h := (hdij 2 3).2
+    norm_num [csAdj] at h
+    exact h
+  have diag02 : (3 : ℝ) ≤ dist (vv 0) (vv 2) := by
+    have h := (hdij 0 2).1
+    norm_num [csAdj] at h
+    exact h
+  have lb02 : (2 : ℝ) ≤ dist (vv 0) (vv 2) := by linarith
+  have ub02 : dist (vv 0) (vv 2) ≤ (3 : ℝ) := by
+    have h := (hdij 0 2).2
+    norm_num [csAdj] at h
+    exact h
+  have diag13 : (3 : ℝ) ≤ dist (vv 1) (vv 3) := by
+    have h := (hdij 1 3).1
+    norm_num [csAdj] at h
+    exact h
+  have ub13 : dist (vv 1) (vv 3) ≤ (3 : ℝ) := by
+    have h := (hdij 1 3).2
+    norm_num [csAdj] at h
+    exact h
+  have hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j :=
+    emptykit_hinj4 vv _ emptykit_apos_4T2 (fun i j => (hdij i j).1)
+  have hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j) := by
+    refine emptykit_hsep4 vv _ hper hinj ?_ (fun i j => (hdij i j).1)
+    intro i j hne4
+    exact csAdj_ge2_p22 (by norm_num) (by norm_num) hne4
+  have hlt : 2 * h0 < 4 := by rw [h0_eq_p22]; norm_num
+  have hd1 : dist (vv 0) (vv 1) < 4 := by linarith
+  have hd2 : dist (vv 0) (vv 2) < 4 := by linarith
+  have hd3 : dist (vv 0) (vv 3) < 4 := by linarith
+  have hd4 : dist (vv 1) (vv 2) < 4 := by linarith
+  have hd5 : dist (vv 2) (vv 3) < 4 := by linarith
+  have hsplit := vv_quad_split012 vv hper hsub hd1 hd2 hd3 hd4 hd5 hsep hcf hinj
+  -- registry instances `9563139965 d/e/f` (HOL `get_main_nonlinear`)
+  have hdd : mainEstimate_9563139965_d :=
+    h "9563139965 d" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_9563139965_d at hdd
+  have hde : mainEstimate_9563139965_e :=
+    h "9563139965 e" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_9563139965_e at hde
+  have hdf : mainEstimate_9563139965_f :=
+    h "9563139965 f" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_9563139965_f at hdf
+  -- norm bounds from the ball annulus
+  have hn0 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 0))
+  have hn1 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 1))
+  have hn2 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 2))
+  have hn3 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 3))
+  -- `ineq_5691615370_asym` (HOL `ineq_5691615370_asym`): the pinned-diagonal
+  -- slots make every `ineqP38` slot disjunct false, leaving `σ > 8.472`
+  have hI := ineq_5691615370_asym h (dist (vv 0) (vv 2)) (dist (vv 0) (vv 1))
+    (dist (vv 0) (vv 3)) (dist (vv 1) (vv 3)) (dist (vv 2) (vv 3)) (dist (vv 2) (vv 1))
+  have hδ := DELTA_Y_POS_4POINTS (vv 0) (vv 2) (vv 1) (vv 3)
+  have h21e : dist (vv 2) (vv 1) = dist (vv 1) (vv 2) := dist_comm _ _
+  have hσ : dist (vv 0) (vv 1) + dist (vv 0) (vv 3) + dist (vv 2) (vv 3) +
+      dist (vv 2) (vv 1) > 8.472 := by
+    simp only [ineqP38] at hI
+    rcases hI with h|h|h|h|h|h|h|h|h|h|h|h|hdy|hsig <;> linarith
+  -- `vv 4/5/6` collapse, split along the 0-2 diagonal, `tau3 = taum`
+  rw [h40, h50, h62]
+  have h42 : (4 : ℝ) - 2 = 2 := by norm_num
+  rw [h42, add_zero, hsplit]
+  have lb20 : (2 : ℝ) ≤ dist (vv 2) (vv 0) := by rw [dist_comm]; linarith
+  have lb30 : (2 : ℝ) ≤ dist (vv 3) (vv 0) := by rw [dist_comm]; exact lb03
+  have hd20 : dist (vv 2) (vv 0) < 4 := by rw [dist_comm]; exact hd2
+  have hd30 : dist (vv 3) (vv 0) < 4 := by rw [dist_comm]; exact hd3
+  rw [tau3_taum_40 (vv 0) (vv 1) (vv 2) (hsub (Set.mem_range_self 0))
+      (hsub (Set.mem_range_self 1)) (hsub (Set.mem_range_self 2)) lb01 lb02 lb12 hd1
+      hd2 hd4,
+    tau3_taum_40 (vv 2) (vv 3) (vv 0) (hsub (Set.mem_range_self 2))
+      (hsub (Set.mem_range_self 3)) (hsub (Set.mem_range_self 0)) lb23 lb20 lb30 hd5
+      hd20 hd30]
+  rw [show dist (vv 3) (vv 0) = dist (vv 0) (vv 3) from dist_comm _ _,
+    show dist (vv 2) (vv 0) = dist (vv 0) (vv 2) from dist_comm _ _]
+  -- `taum` orientations reachable from `taum_sym2` (HOL's ENOUGH_TO_SHOW)
+  have eA1 : taum ‖vv 0‖ ‖vv 1‖ ‖vv 2‖ (dist (vv 1) (vv 2)) (dist (vv 0) (vv 2))
+      (dist (vv 0) (vv 1)) =
+      taum ‖vv 1‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 1))
+        (dist (vv 1) (vv 2)) :=
+    (emptykit_taum_swap12 _ _ _ _ _ _).trans (emptykit_taum_swap23 _ _ _ _ _ _)
+  have eA2 : taum ‖vv 2‖ ‖vv 3‖ ‖vv 0‖ (dist (vv 0) (vv 3)) (dist (vv 0) (vv 2))
+      (dist (vv 2) (vv 3)) =
+      taum ‖vv 3‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 3))
+        (dist (vv 2) (vv 3)) :=
+    emptykit_taum_swap12 _ _ _ _ _ _
+  have eB2 : taum ‖vv 0‖ ‖vv 1‖ ‖vv 2‖ (dist (vv 1) (vv 2)) (dist (vv 0) (vv 2))
+      (dist (vv 0) (vv 1)) =
+      taum ‖vv 1‖ ‖vv 0‖ ‖vv 2‖ (dist (vv 0) (vv 2)) (dist (vv 1) (vv 2))
+        (dist (vv 0) (vv 1)) :=
+    emptykit_taum_swap12 _ _ _ _ _ _
+  have eB3 : taum ‖vv 2‖ ‖vv 3‖ ‖vv 0‖ (dist (vv 0) (vv 3)) (dist (vv 0) (vv 2))
+      (dist (vv 2) (vv 3)) =
+      taum ‖vv 3‖ ‖vv 0‖ ‖vv 2‖ (dist (vv 0) (vv 2)) (dist (vv 2) (vv 3))
+        (dist (vv 0) (vv 3)) :=
+    (emptykit_taum_swap12 _ _ _ _ _ _).trans (emptykit_taum_swap23 _ _ _ _ _ _)
+  -- HOL `ASM_CASES_TAC`: all four sides `≤ 2.472` feeds `9563139965 d` twice
+  by_cases hcase : dist (vv 0) (vv 1) ≤ (2.472 : ℝ) ∧ dist (vv 1) (vv 2) ≤
+      (2.472 : ℝ) ∧ dist (vv 2) (vv 3) ≤ (2.472 : ℝ) ∧
+      dist (vv 0) (vv 3) ≤ (2.472 : ℝ)
+  · have hd1i := hdd ‖vv 1‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 1))
+      (dist (vv 1) (vv 2)) hn1.1 hn1.2 hn2.1 hn2.2 hn0.1 hn0.2 diag02 ub02 lb01 hcase.1
+      lb12 hcase.2.1
+    rw [← eA1] at hd1i
+    have hd2i := hdd ‖vv 3‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 3))
+      (dist (vv 2) (vv 3)) hn3.1 hn3.2 hn2.1 hn2.2 hn0.1 hn0.2 diag02 ub02 lb03
+      hcase.2.2.2 lb23 hcase.2.2.1
+    rw [← eA2] at hd2i
+    linarith
+  · -- one side `> 2.472`: that triangle rides `9563139965 e`, the other `f`
+    rw [not_and_or, not_and_or, not_and_or] at hcase
+    have hf1i := hdf ‖vv 1‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 1))
+      (dist (vv 1) (vv 2)) hn1.1 hn1.2 hn2.1 hn2.2 hn0.1 hn0.2 diag02 ub02 lb01 ub01
+      lb12 ub12
+    rw [← eA1] at hf1i
+    have hf2i := hdf ‖vv 3‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 3))
+      (dist (vv 2) (vv 3)) hn3.1 hn3.2 hn2.1 hn2.2 hn0.1 hn0.2 diag02 ub02 lb03 ub03
+      lb23 ub23
+    rw [← eA2] at hf2i
+    rcases hcase with hc | hc | hc | hc
+    · have hb1 : (2.467 : ℝ) ≤ dist (vv 0) (vv 1) := by
+        have hbig : (2.472 : ℝ) < dist (vv 0) (vv 1) := not_le.mp hc
+        linarith
+      have he1i := hde ‖vv 1‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 1))
+        (dist (vv 1) (vv 2)) hn1.1 hn1.2 hn2.1 hn2.2 hn0.1 hn0.2 diag02 ub02 hb1 ub01
+        lb12 ub12
+      rw [← eA1] at he1i
+      linarith
+    · have hb2 : (2.467 : ℝ) ≤ dist (vv 1) (vv 2) := by
+        have hbig : (2.472 : ℝ) < dist (vv 1) (vv 2) := not_le.mp hc
+        linarith
+      have he2i := hde ‖vv 1‖ ‖vv 0‖ ‖vv 2‖ (dist (vv 0) (vv 2)) (dist (vv 1) (vv 2))
+        (dist (vv 0) (vv 1)) hn1.1 hn1.2 hn0.1 hn0.2 hn2.1 hn2.2 diag02 ub02 hb2 ub12
+        lb01 ub01
+      rw [← eB2] at he2i
+      linarith
+    · have hb3 : (2.467 : ℝ) ≤ dist (vv 2) (vv 3) := by
+        have hbig : (2.472 : ℝ) < dist (vv 2) (vv 3) := not_le.mp hc
+        linarith
+      have he3i := hde ‖vv 3‖ ‖vv 0‖ ‖vv 2‖ (dist (vv 0) (vv 2)) (dist (vv 2) (vv 3))
+        (dist (vv 0) (vv 3)) hn3.1 hn3.2 hn0.1 hn0.2 hn2.1 hn2.2 diag02 ub02 hb3 ub23
+        lb03 ub03
+      rw [← eB3] at he3i
+      linarith
+    · have hb4 : (2.467 : ℝ) ≤ dist (vv 0) (vv 3) := by
+        have hbig : (2.472 : ℝ) < dist (vv 0) (vv 3) := not_le.mp hc
+        linarith
+      have he4i := hde ‖vv 3‖ ‖vv 2‖ ‖vv 0‖ (dist (vv 0) (vv 2)) (dist (vv 0) (vv 3))
+        (dist (vv 2) (vv 3)) hn3.1 hn3.2 hn2.1 hn2.2 hn0.1 hn0.2 diag02 ub02 hb4 ub03
+        lb23 ub23
+      rw [← eA2] at he4i
+      linarith
+
+/-- HOL `Terminal.empty_4T2` (terminal.hl:2888). -/
+theorem empty_4T2 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs4T2 vv) : 0 ≤ taustarV39 scs4T2 vv := by
+  unfold scs4T2 at hB ⊢
+  exact terminal_quad_lemma 0.467 _ _ emptykit_apos_4T2 (emptykit_azim_4T2 h) vv hB
+
 /-- HOL `periodic_sum_shift`. NEEDS: `sum_nbij` 旋转双弹幕——注意本 Mathlib
 `Finset.sum_nbij` 的 h₀ 方向是 `f a = f' (g a)`(a ∈ LHS 集, g : LHS→RHS),
 故 g 须取逆向旋转 `fun x => (x + n - j % n) % n`(则 h₀ 化为 `j + g a ≡ a
@@ -5397,6 +5632,18 @@ theorem scs_arrow_sing_empty_p22 (s : ScsV39) :
     simp only [Set.mem_singleton_iff] at h'
     subst h'
     exact h
+
+/-- HOL `OCBICBY` 4T2 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs4T2 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_4T2`. -/
+theorem OCBICBY_4T2_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs4T2} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_4T2 h _ hbb)
 
 /-- HOL `OCBICBY`: the 14 T-row arrows to the empty system (giant; discharges
 LocalAuto16's `JEJTVGB_case_breakdown_p16` NEEDS marker when the `empty_*`
