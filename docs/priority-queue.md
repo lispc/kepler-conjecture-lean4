@@ -141,7 +141,9 @@
 > **V20 `40ce8799`**（PWEIWBZ 第四笔 +432/−0：私有 `PweiwbzC2Prep`（34 字段 C-prep）+ `pweiwbz_Cprep2`
 > （HOL :1784-1896）+ `pweiwbz_C_a12eq2` / `pweiwbz_C_a23le` / `pweiwbz_C_a12`（a12=2 组穷举，
 > 覆盖 HOL :1955-2196 含 23=2H0 叶 = **三叶合一**，叶 7/10）；5 新件标准三、9 公共消费件零 sorryAx）。
-> **在飞 V21 `pweiwbz-w21`**：`str(p+1)` 支 `a12≠2` 组两叶（HOL :2199-2345，`LEMMA_PWE4_p23` + `CUXVZOZ_p21`）；
+> **V21 `b1e75fae`**（PWEIWBZ 第五笔 +107/−0：私有 `pweiwbz_C_a12ne2`——a12≠2 组两值标签叶合一
+> （HOL :2199-2345），前提面与 `pweiwbz_C_a12` 逐字同形仅 ha12→ha12ne；叶 9/10）。
+> **在飞 V22 `pweiwbz-w22`**：norm≠2 两叶（`IMJXPHRv2_p28` 路线，str p / str(p+1) 各一）；
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
@@ -318,6 +320,19 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（07:52，续1103）**：**V21 `pweiwbz-w21` 落库 `b1e75fae`（PWEIWBZ 第五笔 +107/−0，两叶合一）——`str(p+1)` 支全闭合、叶 9/10；V22 `pweiwbz-w22` 发车（norm≠2 两叶）**。
+① **V21 交付**：私有 `pweiwbz_C_a12ne2`（HOL :2199-2345）——两个 HOL 块 `CASES a 1 2 NOT = 2` / `CASES 0 3= cstab` 经机器判定为**同一 `TUAPYYU@p+3` 析取的值标签叶**（`a12` 分叉是二元析取、无第三顶层叶；叶 2 只重放 CHANGE_A_SCS_MOD+PWE4，其化简表多出的 `2*h0 ≤ cstab` 正是 cstab 标签所需），故一 theorem 内 `rcases hTU` 双叶归并（V18/V19 先例）：
+`A_NOT_EQ2_IMP_B@p+1 → PRO_ADD_NOT_IN_SCS_M → B_LE_2h0_2_SCS_M_4_1 → B_LE_2h0_IMP_B@p+2 → YEBWJNG@(p+2) → TUAPYYU@(p+3) → CHANGE_A_SCS_MOD（a-对称∘P.a14）→ LEMMA_PWE4@(p+1) → CUXVZOZ@p`。
+**前提面与 `pweiwbz_C_a12` 逐字同形**（脚本 diff 实证：仅定理名 + `ha12 : … = 2` → `ha12ne : … ≠ 2` 两处），`PweiwbzC2Prep` 34 字段未扩、既有调用面未动。
+② **编排者闸（亲跑）**：worktree@`163368f0` apply RC=0；numstat 恰 **+107/−0**、删除面 0 sorry、禁项 0/0/0/0、import 零变化；直编 **rc=0/error 0 / sorry-decls=0**；装池；
+in-file 探针 7 项（新件 + `pweiwbz_C_a12/_C_a12eq2/_C_a23le/_Cprep2/PweiwbzC2Prep/_B_a30ne2`）**全标准三**；
+公共探针 6 项（两 kit + `LEMMA_PWE4_p23`/`CUXVZOZ_p21`/`YEBWJNG_kit`/`LEMMA_PWE3_p23`）零 sorryAx；
+根面 md5 **`246e952c…` 逐字节同**。commit `b1e75fae`，已 push（连带 kimi code 侧 `1dcbe0cd`/`163368f0` 已提交未推件）。
+③ **口径**：二十一笔均非锥内（锥内 SORRIED 61 不变）；PWEIWBZ 叶 **9/10**（车道口径；str p 支与 str(p+1) 支的 norm=2 面全闭）。
+**剩余**：norm≠2 两叶（V18-V21 按 `hn`/`hn1` 前提延后；str p 用 `IMJXPHRv2_p28@l=p`、str(p+1) 用 `@l=p+1`，需 hnc/haff/hlunar/hJ/hdiag1/hdiag2 早产品）+ 本体组装（两散叶：双非 str → `YEBWJNG@p`；`str p ∧ str(p+1)` → `pweiwbz_str_uniq` 反证）+ `PWEIWBZ_kit` 公共封装（陈述 = LA1 `PWEIWBZ_concl`）。
+④ **V22 `pweiwbz-w22`（在飞）**：norm≠2 两叶。工单已注：`IMJXPHRv2_p28`（LA28:8057）/`NUXCOEAv2_p28`（LA28:8037）接口、`VasArcKit` 内 `¬Lunar` 槽、`affGt`/`J` 早产品考古、禁项同上。
+⑤ 下一条：续1104。
 
 - **2026-11-14（07:33，续1100）**：**V20 `pweiwbz-w20` 落库 `40ce8799`（PWEIWBZ 第四笔 +432/−0，三叶合一）——`str(p+1)` 支 C-prep + a12=2 组全闭合、叶 7/10；V21 `pweiwbz-w21` 发车（a12≠2 组两叶）**。
 ① **V20 交付**（`VasMasterKit.lean` 纯追加 +432/−0，单 hunk `@@ -919,4 +919,436 @@`，import 面零变化）：
