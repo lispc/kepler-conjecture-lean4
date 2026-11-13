@@ -440,6 +440,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（22:40，续1075）**：**N2 线 `n2def-w1` 交付落库 `3b863763`（`deform_planar_p21` 真证，LA21 +551/−11）——IUNBUIG 腿三落地；闸面修正一例（剥除车道对 `planar2F_p21` 私 def 的实参序误改）入 §7.1-25**。
+① **件**：HOL CUXVZOZ.hl:1030 双阶段 487 行（stage1 planarF1 腿 + stage2 mkPlanar2 s=-1 腿 + 5 私件 `w2b_*`）；`deform_planar_exists_p21` 双重清债（探针恰标准三）；FILE MAP A/C 节刷新（随证随更）。删除面恰 1 sorry；in-file sorry 2→1（剩 `deform_planar_second_version_p21`）。
+② **闸（编排者亲跑）**：apply--check@71b141f3 PASS（LA21 自车道基线未被触碰）；禁词净（唯一命中=文件头既有审计注记）；剥除后全文件直编 RC=0/error 0（88.8 s）+ 双探针恰 `[propext, Classical.choice, Quot.sound]`；根面 589 **md5 246e952c 逐字节同**（新/旧 olean 各跑一遍，输出逐字节一致；canonical 探针须在 `namespace Kepler` 内跑才产出 246e952c 口径——名字缩短序）；新 olean 已装池（旧件备份 /tmp/LocalAuto21.olean.predolph）。
+③ **闸面修正（判词已写 lane 快照 ORCHESTRATOR_NOTE.md）**：车道把 `planar2F_p21`（**目标件不用它**——见证是孪生 def `planarF_p21`）的 mkPlanar2 实参序从 `(f1, v0)` 改成 `(v0, f1)`，援引 HOL :1038「锚点在前」——但 :1038 是**第一版** deform_planar 的 f（= planarF_p21，本来就对）；被改 def 属**第二版**（HOL :1421/:1790 锚序恰 `(f1, v0)`，原序逐字忠实），唯一消费者 = 仍 sorry 的 `deform_planar_second_version_p21` ⇒ 改动零贡献且漂移其陈述语义（§2 隐形改动）。已剥除（恢复原序一行）后重编译全绿。教训入 **AGENTS §7.1-25**（「def 实参序勘正」双重对表：消费者是谁 + HOL 哪个版本）。
+④ **IUNBUIG 现状**：腿一 vv_split ✓（ffc849da）+ 腿二 N3 ✓（57faf2ef）+ 腿三 N2 ✓（本笔）——三腿齐；本体装配 = 主估计链 + 消费件 `deform_pent_exists_p18`（LA18:644，仍 sorry）专属车道。LA21 剩 1 债（second_version）+ 文件头 Section E/G 在案件。
+⑤ **在飞 2**：t4crux-w1（agent-52）+ xrr1553-w1（agent-53）；用户 V6 vasnhx-w6 第三。SORRIED 62 未动（锥外资产）。
+
 - **2026-11-13（22:20，续1073）**：**第三车道发车（用户批）——xrr1553-w1（agent-53：N4 `xrr_le_1553{,_BB}_p29` 双件，LA29:3699/3708，5M2/HIJQAHA 线）**。侦察已备：HOL `HIJQAHA.hl:3517/3559`；LA22 xrr 单调族（`xrr_sym/bounds_2/increasing/decreasing_p22`、`arclength_xrr_p22`，V1 `f8adecea`）可用；import 硬闸 = BFS 验 LA22 闭包不触 LA29（成环则就地证小包络）。文件面 LA29 与在飞 LA21/LA38/LA23 全隔离；在飞 3（本会话 3 条全在树：n2def 编译/patch 前夜、t4crux probe2 迭代、xrr1553 侦察）。机器 pressure 1，lean 槽 guard_wait 自节流。
 
 - **2026-11-13（21:58，续1071）**：**ERRATA（续1070 判词作废）：t4crux-w1 未死、n2def-w1 亦未死——双车道均存活，harness 今夜双向误报（假 completed + 假 failed）**。

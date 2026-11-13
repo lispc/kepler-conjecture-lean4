@@ -261,6 +261,27 @@
    写进快照**；编排者每次接管/收工前按 mtime 扫最近目录，凡「有 DELIVERY/Evidence、无 LANDED
    commit、无 pq 落库记录」立即 pick 或显式退役；被 fresh 取代的前代目录不删，回扫到其最后
    mtime。审计方法：`git log --grep=<lane>` + `git apply --check` + pq 关键词三查。
+24. **harness 通知双向误报（假 completed / 假 failed）+ 判死唯一准则 = wire.jsonl 活性
+   （2026-11-13 夜 agent-52/agent-51 两例实证，仅 Kimi Code 生效）**：background agent 的
+   completed / failed 通知**都可能是假的**——agent-52（t4crux-w1）收 completed + TaskList 除名
+   + 102 B 截断式输出，实际仍存活（wire.jsonl 持续增长、`/tmp` 连续出新文件）；agent-51
+   （n2def-w1）收 failed「turn ended without a final message」，同刻 step 仍推进。**判死/判活
+   唯一准则 = 该车 agent wire.jsonl mtime 是否 1 分钟内仍在增长**（路径
+   `~/.kimi-code/sessions/wd_<repo>_<hash>/session_<id>/agents/<agentId>/wire.jsonl`，agentId
+   形如 agent-5x）；ps 只作辅证（agent 处于 Python/读稿/思考相位时常零匹配进程，假阴性高发）。
+   收线流程：任何通知（**含 completed**）→ 先 wire.jsonl 活性检查 → 活 = 登记「无头在飞」等下轮；
+   死 = 再跑 §7.1-22 四步。**绝不因 completed 通知就归档遗产/撤单/派接管**。与 §7.1-22 合并记：
+   通知通道双向不可靠，事实源只有 wire.jsonl + 快照目录。
+25. **「私有 def 实参序勘正」先过双重对表再动手**（2026-11-13 n2def-w1 闸面修正实证）：
+   车道把 `planar2F_p21`（私有 def）的 mkPlanar2 两个位置实参从 `(f1, v0)` 改成 `(v0, f1)`，
+   引 HOL CUXVZOZ.hl:1038「锚点在前」为据——但 :1038 是**第一版** deform_planar 的 f
+   （Lean 对应 `planarF_p21`，本来就对），被改的 def 属于**第二版**（HOL :1421/:1790 锚序
+   恰是 `(f1, v0)`，原序逐字忠实），唯一消费者是仍 sorry 的 `deform_planar_second_version_p21`
+   ⇒ 改动对工单零贡献、却会漂移该定理**陈述语义**（文本一字未变，§2 隐形改动），被编排者
+   剥除后落库（`3b863763`，判词见 lane 快照 ORCHESTRATOR_NOTE.md）。
+   ⇒ 对任何「def 写反了/实参序看反了」的勘正冲动：① 先查该 def 的直接消费者是谁
+   （目标件可能用的是孪生 def）；② HOL 同文件有多个版本定理时，锚序必须对上**对应的那个
+   版本**；③ 改动私 def = 改动所有消费者定理的语义，视同陈述改动，走 SF/DEF-FIX 级审慎。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
