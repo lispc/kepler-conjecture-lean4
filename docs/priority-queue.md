@@ -261,6 +261,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（14:50，续1038）**：**中断潮第 17 例引出重大变体——「假失败」：tmxllipls-w1 被通知 failed 后进程与 agent 均存活且健康推进；w2 接管前置侦察发现实况、主动退役**。
+① **新变体定性（修正续1037 彻查结论）**：部分「turn ended without final message」通知是**假信号**——实例活着继续干活（w1 时间链 14:06→14:40 连续产出：case JSON → bb_arb cert → CXlliplsHullBase.lean → 探针自救修复 → w0 cert）；**resume 僵尸锁的真相 = 实例真的还在跑**（非实例注册表 bug）。⇒ **fresh 接管前必做 ps 预检**（车道名/工作区进程+文件 mtime 双查），防双线驾驶。
+② **TM 盒实况**：叶数 **6,512**；w1 的 w0 改版 cert 正确且必要（原 cert 根盒 lo 沿 2.65080000019 > 2.6508 漏缝，w0 的 ...826/2^30 = 2.65079999906 补上——w2 独立复核背书）；leaf 0 默认档 NEG（margin ≈ −2.5e-35，模型分辨率极限，属 FIXPLAN 预警的 w2 尾区型）；**成本预警**：单叶 eval ≈ 5 min，若 24 叶压力样本确认分钟级/叶，6512 叶全链将远超 0.5–1.5 天估算——探针出数后报用户重估窗口。
+③ **处置**：w1 继续（已留 ORCHESTRATOR_NOTE：无竞争者、防防御性重跑）；w2 快照无损待命。止损触发不变（单叶全档 NEG → 停手诊断；切候选 B 需用户批）。
+④ **在飞**：jlxfdmj-w2（2h 限内）/ urrcellbody-w7（WIP 202.6 KB）/ tmxllipls-w1（存活）/ vasw0-w2。
+
 - **2026-11-13（14:30，续1037）**：**基线 AG 定档（67→66）+ 文档六件全套刷新 + 中断潮当日 16 例**。
 ① **仪器实测**（`reachmap_156fabf8.out`，rc=1 良性收尾）：K_REACH 2,097,639（+83）/ **SORRIED 66**（清单 diff：closed 恰 `{UAGHHBM_p30}`、added ∅）/ AXIOM 585（0/0）/ MODULES 5,241（0）/ UNIVERSE 2,110,397（+14）/ COVERAGE 99.3955%（+0.0033pp）；口径 II 35,939 / 66 / 585 / 47,140。根面 md5 逐字节同（落库时已验）。TSV 5,911 行换装 + manifest PASS。
 ② **文档六件**：pq 头（AG 全指标）/ map.md 基线 AG 节 / TSV / AGENTS §1（66 = 54 nli* + 1 hLP + 11 Text，基线 AG `156fabf8`）/ README ×2（67→66）/ hf-map 状态更新十九。同批入账 tamelp-door `6a584f6d`（续1035）。
