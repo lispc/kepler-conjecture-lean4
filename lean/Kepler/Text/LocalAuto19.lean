@@ -1104,7 +1104,28 @@ theorem delta_2_nn_p19 (h : mainNonlinearTerminalV11_p18) (z1 y2 y3 y4 : ℝ)
     (b3 : 2 ≤ y3) (b3' : y3 ≤ 2 * h0) (b4 : 3.01 ≤ y4) (b4' : y4 ≤ 3.915)
     (hz : deltaY z1 y2 y3 y4 2 2 = 0) :
     0 ≤ deltaY 2 y2 y3 y4 2 2 := by
-  sorry
+  have hreg : mainEstimate_3078028960 :=
+    h "3078028960" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_3078028960 at hreg
+  have hb : (2:ℝ) ≤ 2 := le_refl _
+  have hb' : (2:ℝ) ≤ 2.52 := by norm_num
+  have h2h0 : (2:ℝ) * h0 = 2.52 := by norm_num [h0]
+  have hy2u : y2 ≤ 2.52 := by rw [← h2h0]; exact b2'
+  have hy3u : y3 ≤ 2.52 := by rw [← h2h0]; exact b3'
+  have hreg' := hreg 2 y2 y3 y4 2 2 hb hb' b2 hy2u b3 hy3u b4 b4' hb hb hb hb
+  rcases hreg' with hΔ | h20
+  · have hdelta := delta_diff_p19 (2*2) (z1*z1) (y2*y2) (y3*y3) (y4*y4) (2*2) (2*2)
+    have hz0 : deltaX (z1 * z1) (y2*y2) (y3*y3) (y4*y4) (2*2) (2*2) = 0 := hz
+    show 0 ≤ deltaX (2*2) (y2*y2) (y3*y3) (y4*y4) (2*2) (2*2)
+    rw [hdelta, hz0, zero_add]
+    have hneg : 0 ≤ -deltaX1_p19 (2*2) (y2*y2) (y3*y3) (y4*y4) (2*2) (2*2) := by
+      have hΔ' : deltaX1_p19 (2*2) (y2*y2) (y3*y3) (y4*y4) (2*2) (2*2) < 0 := hΔ
+      linarith
+    have hzsq : (2:ℝ) * 2 ≤ z1 * z1 := mul_self_le_mul_self (by norm_num) b1
+    have hy4 : 0 ≤ y4 * y4 := mul_nonneg (by linarith) (by linarith)
+    nlinarith [mul_nonneg hneg (show (0:ℝ) ≤ z1*z1 - 2*2 by linarith),
+      mul_nonneg hy4 (sq_nonneg (2*2 - z1*z1))]
+  · linarith
 
 /-- HOL `delta_mono` (pent_hex.hl:1429). NEEDS-DB: database conjunct
 "3078028960". -/
@@ -1115,7 +1136,27 @@ theorem delta_mono_p19 (h : mainNonlinearTerminalV11_p18) (z1 y1 y2 y3 y4 y5 y6 
     (hd0 : 0 ≤ deltaY y1 y2 y3 y4 y5 y6)
     (hd20 : deltaY y1 y2 y3 y4 y5 y6 ≤ 20) :
     deltaY z1 y2 y3 y4 y5 y6 ≤ deltaY y1 y2 y3 y4 y5 y6 := by
-  sorry
+  have hdelta := delta_diff_p19 (y1*y1) (z1*z1) (y2*y2) (y3*y3) (y4*y4) (y5*y5) (y6*y6)
+  show deltaX (z1*z1) (y2*y2) (y3*y3) (y4*y4) (y5*y5) (y6*y6)
+    ≤ deltaX (y1*y1) (y2*y2) (y3*y3) (y4*y4) (y5*y5) (y6*y6)
+  rw [hdelta]
+  have hreg : mainEstimate_3078028960 :=
+    h "3078028960" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_3078028960 at hreg
+  have h2h0 : (2:ℝ) * h0 = 2.52 := by norm_num [h0]
+  have hy1u : y1 ≤ 2.52 := by rw [← h2h0]; exact le_trans b1' b1''
+  have hy2u : y2 ≤ 2.52 := by rw [← h2h0]; exact b2'
+  have hy3u : y3 ≤ 2.52 := by rw [← h2h0]; exact b3'
+  have hreg' := hreg y1 y2 y3 y4 y5 y6 b1 hy1u b2 hy2u b3 hy3u b4 b4' b5 b5' b6 b6'
+  rcases hreg' with hΔ | h20
+  · have hneg : 0 ≤ -deltaX1_p19 (y1*y1) (y2*y2) (y3*y3) (y4*y4) (y5*y5) (y6*y6) := by
+      have hΔ' : deltaX1_p19 (y1*y1) (y2*y2) (y3*y3) (y4*y4) (y5*y5) (y6*y6) < 0 := hΔ
+      linarith
+    have hzsq : y1 * y1 ≤ z1 * z1 := mul_self_le_mul_self (by linarith) b1'
+    have hy4 : 0 ≤ y4 * y4 := mul_nonneg (by linarith) (by linarith)
+    nlinarith [mul_nonneg hneg (show (0:ℝ) ≤ z1*z1 - y1*y1 by linarith),
+      mul_nonneg hy4 (sq_nonneg (y1*y1 - z1*z1))]
+  · linarith
 
 /-- HOL `flat_term2_126_x_eval` (pent_hex.hl:1469). NEEDS-DB. -/
 theorem flat_term2_126_x_eval_p19 (h : mainNonlinearTerminalV11_p18)
