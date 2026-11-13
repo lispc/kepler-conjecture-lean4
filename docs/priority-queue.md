@@ -95,6 +95,14 @@
 ## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
 > **2026-11-13 17:20 四车道批次收官**：`a7e699d1`（L1 6I1 三件，锥内 −1）、`24725045`（L2 LA33 两件 + ARDBZYE，−2）、`23c16896`（L4 LA18 三件，非锥内）、`f5f96b8b`（L3 `empty_4T4/4T5`，非锥内）——**SORRIED 65→62，基线 AI**。5M2/OCBICBY 判 BLOCKED（缺口与配方见 §8 续1047）；下一批建议 N1 `vv_split_azim_generic` / N2 `deform_planar_p21` / N3 `coplanar_cross_reduction_p18`。详见 §8 续1047。
+>
+> **VASYYAU 闸族（2026-11-13 20:35 起，本会话专责，恒 1 lane）**：范围 = LA1 三 master
+> （`VASYYAU_concl` / `TUAPYYU_concl` / `WKZZEEH_concl`，+ `PWEIWBZ_concl`）→ K6/K7/K8
+> （`NWDGKXH_p32` / `YOBIMPP_p32` / `MIQMCSN_p32`）。**在飞 V1 `vasgate-w1`**：LA22 解析小件簇
+> （`INTERIOR_ANGLE1_AZIM_p22` + `xrr_decreasing_p22` + `arclength_xrr_p22`）+ `RECON.md`。
+> 依据：LA23↛LA21/22 DAG 死锁（SCOUT R3），LA22 小件不受锁；W0 钥匙（`58517f80`）/
+> `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`+`vv_split_azim_generic_p22`（`ffc849da`）已落。
+> 并发：kimi code 的 `t5body-w1` 同文件写 5T1 段（不同 hunk，V1 出 patch 前重基）。流程 = V1 交付→闸→落库→发 V2。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -265,6 +273,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（20:35，续1057）**：**本会话接手 VASYYAU 闸族（用户令：kimi code 负责别事，本会话专责 VASYYAU，恒 1 lane）——V1 `vasgate-w1` 发车**。
+① 范围：LA1 三 master（`VASYYAU_concl` / `TUAPYYU_concl` / `WKZZEEH_concl`，+`PWEIWBZ_concl`）→ K6/K7/K8（`NWDGKXH_p32` / `YOBIMPP_p32` / `MIQMCSN_p32`）。目标 = 把 VASYYAU 闸族从 4 条 Text 债推到可收口。
+② **机器重基（HEAD `b53cfc86`，探针实测）**：三 master + LA23 簇（`ab4`/`deform_azim_sum`/`LEMMA_PWE1-4`/`LINDIH_11`/`JOTSWIX`/`NEHXMWH`/`BZQNDMN`）+ LA25 五转发行**全部仍 sorryAx**；`INTERIOR_ANGLE1_AZIM_p22`/`arclength_xrr_p22`/`xrr_decreasing_p22` 仍 sorry。W0 钥匙（YEBWJNG/CQAOQLR/KEITDWB）已落 `58517f80`，`ARCV_ADD_AFF_GE_p18` 已落 `23c16896`，`EGHNAVX1_ALT_p22`/`vv_split_azim_generic_p22` 已落 `ffc849da`——SCOUT（HEAD `40c30857`）部分判词过时。
+③ **V1 `vasgate-w1`（在飞）**：LA22 解析小件簇——`INTERIOR_ANGLE1_AZIM_p22`（主目标，~44 HOL 行；V1 已侦察到 `LOCAL_FAN_AZIM_POS_p22` 同款 `DETER_RHO_NODE` 路线）+ `xrr_decreasing_p22`（已发现文件内 `la22aux_xrr_decreasing` 同陈述，可一行转发）+ `arclength_xrr_p22`（待验 atn2/acs 桥）；≤450 行；附 `RECON.md`（更新战役图 / LA23↛LA21/22 DAG 死锁 / 最小 DEF-FIX 提案 / 下一波推荐）。
+④ **并发纪律**：kimi code 的 `t5body-w1` 正在同文件（LA22）写 `empty_5T1` 段；V1 只碰 :670-690/:1357-1375/:1740-1755，出 patch 前按最新 LA22 重基（已发 NOTE；V1 已确认基线 `b53cfc86`/sha `19beee7d…`）。**本会话恒 1 lane：V1 交付→闸→落库→立刻发 V2**。
+⑤ 下一条：续1058。
 
 - **2026-11-13（17:05–17:20，续1047）**：**四车道批次全部落库 + 基线 AI 定档（SORRIED 65→62，Text 10→7）**。
 ① **L1 `a7e699d1`**（sc6i1close-w1）：LocalConcl 三件真证（`SCS_6M1_IMP_SCS_6T1` / `SCS_6I1_IMP_SCS_6T1` / `SCS_6I1_BERAK_BY_CSTAB`，+102/−11，删除面恰 3 sorry）；锥内 Text −1；三件 + `OEHDBEN_PRIME`/`OEHDBEN_discharged` 下游标准三。
