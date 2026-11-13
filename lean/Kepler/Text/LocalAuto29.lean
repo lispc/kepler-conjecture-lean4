@@ -3695,14 +3695,171 @@ theorem ARC_222_p29 : arcLength 2 2 2 = Real.pi / 3 := by
   rw [h1, Real.arccos_eq_pi_div_two_sub_arcsin, ← Real.sin_pi_div_six,
     Real.arcsin_sin] <;> linarith [Real.pi_pos]
 
+/-- HOL `KEITDWB` = `ARCV_INEQUALTY` (trig2.hl:1050-1090): the angle
+triangle inequality, `arcV p u v ≤ arcV p u x + arcV p x v`.  Private
+in-place copy of `Kepler.Text.KEITDWB_kit` (YebwjngKit.lean:134): that
+kit transitively imports LocalAuto29 (import cycle), so its public
+theorem cannot be consumed here.  The Cauchy–Schwarz core of the HOL
+proof is `InnerProductGeometry.angle_le_angle_add_angle` in Mathlib;
+this is the bridge through `arcV p a b = angle (a - p) (b - p)`. -/
+private theorem p29keitdwb (p u v x : V3) (_hxp : x ≠ p) (_hup : u ≠ p)
+    (_hvp : v ≠ p) : arcV p u v ≤ arcV p u x + arcV p x v := by
+  have hdot : ∀ a b : V3, a ⬝ᵥ b = inner ℝ a b := by
+    intro a b
+    rw [PiLp.inner_apply, dotProduct]
+    exact Finset.sum_congr rfl fun i _ => by
+      simp [RCLike.inner_apply, mul_comm]
+  have e : ∀ a b : V3, arcV p a b = InnerProductGeometry.angle (a - p) (b - p) := by
+    intro a b
+    have hnum : (a - p) ⬝ᵥ (b - p) = inner ℝ (a - p) (b - p) := hdot _ _
+    have hd1 : dist a p = ‖a - p‖ := dist_eq_norm a p
+    have hd2 : dist b p = ‖b - p‖ := dist_eq_norm b p
+    show Real.arccos (((a - p) ⬝ᵥ (b - p)) / (dist a p * dist b p)) =
+      Real.arccos (inner ℝ (a - p) (b - p) / (‖a - p‖ * ‖b - p‖))
+    rw [hnum, hd1, hd2]
+  rw [e u v, e u x, e x v]
+  exact InnerProductGeometry.angle_le_angle_add_angle (u - p) (x - p) (v - p)
+
+/-- Cosine-law form of `arcV 0 a b`: `arcV 0 a b = arccos (1 - xrr ‖a‖ ‖b‖
+(dist a b) / 8)` (HOL `arcVarc` + `arclength_xrr` collapsed into one
+identity).  Private in-place copy of `Kepler.Text.vasArcKit_arcV_eq_acs`
+(VasArcKit.lean:58): that kit transitively imports LocalAuto29 (import
+cycle), so its public theorem cannot be consumed here. -/
+private theorem p29arcV_eq_acs (a b : V3) (ha : a ≠ 0) (hb : b ≠ 0) :
+    arcV 0 a b = Real.arccos (1 - xrr ‖a‖ ‖b‖ (dist a b) / 8) := by
+  have hna : ‖a‖ ≠ 0 := norm_ne_zero_iff.mpr ha
+  have hnb : ‖b‖ ≠ 0 := norm_ne_zero_iff.mpr hb
+  have hdot : a ⬝ᵥ b = inner ℝ a b := by
+    rw [PiLp.inner_apply, dotProduct]
+    exact Finset.sum_congr rfl fun i _ => by
+      simp [RCLike.inner_apply, mul_comm]
+  have hcos : 2 * (a ⬝ᵥ b) = ‖a‖ * ‖a‖ + ‖b‖ * ‖b‖ - dist a b * dist a b := by
+    have h := norm_sub_sq_real a b
+    rw [dist_eq_norm, hdot]
+    nlinarith [h]
+  simp only [arcV, sub_zero, WithLp.ofLp_zero, dist_zero_right]
+  have harg : (a ⬝ᵥ b) / (‖a‖ * ‖b‖) = 1 - xrr ‖a‖ ‖b‖ (dist a b) / 8 := by
+    unfold xrr
+    field_simp
+    nlinarith [hcos]
+  rw [harg]
+
+/-- The `xrr` envelope at the `(2,2)` dipole (HOL `OIQKKEP`'s core,
+HIJQAHA.hl:3524-3533): on radii `a b ≥ 2` the value `xrr a b 2` is at
+most `4` (cosine at least `1/2`, i.e. angle at most `pi/3`).  One-shot
+`nlinarith` in place of HOL's `xrr_increasing`/`xrr_decreasing` chain. -/
+private theorem p29xrr_two_le_four (a b : ℝ) (ha : 2 ≤ a) (hb : 2 ≤ b) :
+    xrr a b 2 ≤ 4 := by
+  have hp : (0:ℝ) < 2 * a * b := by nlinarith [ha, hb]
+  have hab : a * b ≤ a * a + b * b - 2 * 2 := by
+    nlinarith [mul_nonneg (sub_nonneg.mpr ha) (sub_nonneg.mpr hb), sq_nonneg (a - b)]
+  have hx : (1:ℝ) / 2 ≤ (a * a + b * b - 2 * 2) / (2 * a * b) := by
+    rw [le_div_iff₀ hp]
+    nlinarith [hab]
+  have h1 : (1:ℝ) - (a * a + b * b - 2 * 2) / (2 * a * b) ≤ 1 / 2 := by linarith
+  unfold xrr
+  linarith
+
 /-- HOL `xrr_le_1553` (HIJQAHA.hl:3517). -/
 theorem xrr_le_1553_p29 : ∀ v u w : V3, v ∈ ballAnnulus → u ∈ ballAnnulus →
     w ∈ ballAnnulus → ¬Collinear ℝ ({0, v, u} : Set V3) →
     dist v w = 2 → dist w u = 2 →
     xrr (norm v) (norm u) (norm (v - u)) ≤ 15.53 := by
-  sorry
-  -- DISCHARGES: HL geometric case analysis on the annulus radii with
-  -- the `xrr` monotone envelope at the `2,2` dipole.
+  intro v u w hv hu hw _hcol hvw hwu
+  -- annulus lower radii (HOL `ckq_in_ball_annulus`; the `2.52` upper
+  -- bound is not needed on this route)
+  have hv2 : (2:ℝ) ≤ ‖v‖ := by
+    have h := hv
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      not_lt, dist_zero_right] at h
+    exact h.2
+  have hu2 : (2:ℝ) ≤ ‖u‖ := by
+    have h := hu
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      not_lt, dist_zero_right] at h
+    exact h.2
+  have hw2 : (2:ℝ) ≤ ‖w‖ := by
+    have h := hw
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      not_lt, dist_zero_right] at h
+    exact h.2
+  have hv0 : v ≠ 0 := by
+    intro h; rw [h, norm_zero] at hv2; norm_num at hv2
+  have hu0 : u ≠ 0 := by
+    intro h; rw [h, norm_zero] at hu2; norm_num at hu2
+  have hw0 : w ≠ 0 := by
+    intro h; rw [h, norm_zero] at hw2; norm_num at hw2
+  -- `arccos (1/2) = pi/3` (HOL `ARC_222` off `arclength2`; here direct)
+  have hpi3 : Real.arccos ((1:ℝ) / 2) = Real.pi / 3 := by
+    rw [Real.arccos_eq_pi_div_two_sub_arcsin, ← Real.sin_pi_div_six, Real.arcsin_sin]
+    <;> linarith [Real.pi_pos]
+  -- each 2-edge subtends at most pi/3 at the origin (HOL `OIQKKEP`)
+  have hvw3 : arcV 0 v w ≤ Real.pi / 3 := by
+    have hx4 : xrr ‖v‖ ‖w‖ 2 ≤ 4 := p29xrr_two_le_four ‖v‖ ‖w‖ hv2 hw2
+    have e : arcV 0 v w = Real.arccos (1 - xrr ‖v‖ ‖w‖ 2 / 8) := by
+      rw [p29arcV_eq_acs v w hv0 hw0, hvw]
+    rw [e, ← hpi3]
+    exact Real.arccos_le_arccos (by linarith)
+  have hwu3 : arcV 0 w u ≤ Real.pi / 3 := by
+    have hx4 : xrr ‖w‖ ‖u‖ 2 ≤ 4 := p29xrr_two_le_four ‖w‖ ‖u‖ hw2 hu2
+    have e : arcV 0 w u = Real.arccos (1 - xrr ‖w‖ ‖u‖ 2 / 8) := by
+      rw [p29arcV_eq_acs w u hw0 hu0, hwu]
+    rw [e, ← hpi3]
+    exact Real.arccos_le_arccos (by linarith)
+  -- spherical triangle inequality: the v-u angle is at most 2pi/3
+  have htri : arcV 0 v u ≤ arcV 0 v w + arcV 0 w u :=
+    p29keitdwb 0 v u w hw0 hv0 hu0
+  have hsum : arcV 0 v u ≤ 2 * Real.pi / 3 := by linarith
+  -- cosine-law form of `arcV 0 v u`
+  have hacs : arcV 0 v u
+      = Real.arccos (1 - xrr ‖v‖ ‖u‖ ‖v - u‖ / 8) := by
+    rw [p29arcV_eq_acs v u hv0 hu0, dist_eq_norm]
+  -- two-sided `0 <= xrr <= 16` from the plain (non-strict) triangle
+  -- inequalities; HOL's strict `ups_x > 0` from non-collinearity is not
+  -- needed at this step, so the `_hcol` hypothesis goes unused
+  have hpv : (0:ℝ) < 2 * ‖v‖ * ‖u‖ := by nlinarith [hv2, hu2]
+  have hrev : |‖v‖ - ‖u‖| ≤ ‖v - u‖ := abs_norm_sub_norm_le v u
+  have hsqle := sq_le_sq' (abs_le.mp hrev).1 (abs_le.mp hrev).2
+  have hxlo : (0:ℝ) ≤ xrr ‖v‖ ‖u‖ ‖v - u‖ := by
+    have hx : (‖v‖ * ‖v‖ + ‖u‖ * ‖u‖ - ‖v - u‖ * ‖v - u‖) / (2 * ‖v‖ * ‖u‖) ≤ 1 := by
+      rw [div_le_iff₀ hpv]
+      nlinarith [hsqle]
+    unfold xrr
+    linarith
+  have htri2 : ‖v - u‖ ≤ ‖v‖ + ‖u‖ := norm_sub_le v u
+  have hsqhi : ‖v - u‖ * ‖v - u‖ ≤ (‖v‖ + ‖u‖) * (‖v‖ + ‖u‖) :=
+    mul_self_le_mul_self (norm_nonneg _) htri2
+  have hxhi : xrr ‖v‖ ‖u‖ ‖v - u‖ ≤ 16 := by
+    have hx : -(1:ℝ)
+        ≤ (‖v‖ * ‖v‖ + ‖u‖ * ‖u‖ - ‖v - u‖ * ‖v - u‖) / (2 * ‖v‖ * ‖u‖) := by
+      rw [le_div_iff₀ hpv, neg_mul, one_mul]
+      nlinarith [hsqhi]
+    unfold xrr
+    linarith
+  -- close: `arccos` antitone on `[0, pi]` via `cos`
+  rw [hacs] at hsum
+  have hcos23 : Real.cos (2 * Real.pi / 3) = -((1:ℝ) / 2) := by
+    rw [show 2 * Real.pi / 3 = Real.pi - Real.pi / 3 by ring, Real.cos_pi_sub,
+      Real.cos_pi_div_three]
+  have hanti := Real.cos_le_cos_of_nonneg_of_le_pi (Real.arccos_nonneg _)
+    (by linarith [Real.pi_pos] : 2 * Real.pi / 3 ≤ Real.pi) hsum
+  have hcosvu : Real.cos (Real.arccos (1 - xrr ‖v‖ ‖u‖ ‖v - u‖ / 8))
+      = 1 - xrr ‖v‖ ‖u‖ ‖v - u‖ / 8 :=
+    Real.cos_arccos (by linarith) (by linarith)
+  rw [hcos23, hcosvu] at hanti
+  have h12 : xrr ‖v‖ ‖u‖ ‖v - u‖ ≤ 12 := by linarith
+  exact h12.trans (by norm_num : (12:ℝ) ≤ 15.53)
+  -- DISCHARGED (2026-11-13, lane xrr1553-w1): HOL HIJQAHA.hl:3517-3557 —
+  -- `ARCV_INEQUALTY` (private copy `p29keitdwb` of YebwjngKit's
+  -- `KEITDWB_kit`, cycle-safe) + two `OIQKKEP` cores (`p29xrr_two_le_four`:
+  -- radii >= 2, 2-edge => arcV <= pi/3) + cosine-law bridge
+  -- (`p29arcV_eq_acs`, private copy of VasArcKit's `vasArcKit_arcV_eq_acs`)
+  -- + `Real.arccos_le_arccos`/`Real.cos_le_cos_of_nonneg_of_le_pi`; the
+  -- xrr <= 12 bound is closed by the cos round-trip needing only the
+  -- non-strict `0 <= xrr <= 16` (plain triangle inequalities), so HOL's
+  -- `NOT_COL_EQ_UPS_X_POS` strict step is bypassed and the non-collinearity
+  -- hypothesis is genuinely unused.  No new sorry; theorem axioms face =
+  -- standard three (probe: logs/probe_xrr1553.log).
 
 /-- HOL `xrr_le_1553_BB` (HIJQAHA.hl:3559). -/
 theorem xrr_le_1553_BB_p29 (s : ScsV39) (v : ℕ → V3) (i : ℕ)
@@ -3710,9 +3867,16 @@ theorem xrr_le_1553_BB_p29 (s : ScsV39) (v : ℕ → V3) (i : ℕ)
     dist (v (i + 1)) (v (i + 2)) = 2 →
     ¬Collinear ℝ ({0, v i, v (i + 2)} : Set V3) →
     xrr (norm (v i)) (norm (v (i + 2))) (norm (v i - v (i + 2))) ≤ 15.53 := by
-  sorry
-  -- DISCHARGES: HL application of `xrr_le_1553` to `v i, v (i+2), v (i+1)`
-  -- inside the `BBs` annulus.
+  intro h1 h2 hcol
+  exact xrr_le_1553_p29 (v i) (v (i + 2)) (v (i + 1))
+    (hbb.1 (Set.mem_range.mpr ⟨i, rfl⟩))
+    (hbb.1 (Set.mem_range.mpr ⟨i + 2, rfl⟩))
+    (hbb.1 (Set.mem_range.mpr ⟨i + 1, rfl⟩)) hcol h1 h2
+  -- DISCHARGED (2026-11-13, lane xrr1553-w1): HOL HIJQAHA.hl:3559-3567 —
+  -- direct application of `xrr_le_1553_p29` at `v i, v (i+2), v (i+1)`;
+  -- annulus membership of the three vertices from `BBsV39`'s first
+  -- conjunct (`Set.range v ⊆ ballAnnulus`, HOL `WL_IN_BALL_ANNULUS`).
+  -- No new sorry; theorem axioms face = standard three.
 
 /-- HOL `J_SCS_5M2_0` (HIJQAHA.hl:3574). -/
 theorem J_SCS_5M2_0_p29 : ∀ (i j : ℕ), ¬scs5M2.J j i := by
