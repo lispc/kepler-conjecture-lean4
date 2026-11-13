@@ -3343,16 +3343,157 @@ theorem LEMMA_PWE2_p23 (h : main_nonlinear_terminal_v11) (s : ScsV39)
     exfalso
     linarith [Real.pi_gt_d2]
 
+/-- Taylor 下界包络（V12 私有复证，PA25:15727 同款；LP 通道专用）：
+`arctan t ≥ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9 - t¹¹/11`（`[0,∞)`）。
+导数误差 `+u¹²/(1+u²) ≥ 0`，FTC 于 `0`。 -/
+private theorem vas12_arctan_ge_taylor6 (t : ℝ) (ht : 0 ≤ t) :
+    t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 - t ^ 11 / 11 ≤ Real.arctan t := by
+  have h3 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 3 / 3) (u ^ 2) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 3).div_const 3
+  have h5 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 5 / 5) (u ^ 4) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 5).div_const 5
+  have h7 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 7 / 7) (u ^ 6) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 7).div_const 7
+  have h9 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 9 / 9) (u ^ 8) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 9).div_const 9
+  have h11 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 11 / 11) (u ^ 10) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 11).div_const 11
+  have hpoly : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
+      + v ^ 9 / 9 - v ^ 11 / 11) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8 - u ^ 10) u := by
+    intro u
+    have s1 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3) (1 - u ^ 2) u :=
+      (hasDerivAt_id u).sub (h3 u)
+    have s2 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5)
+        (1 - u ^ 2 + u ^ 4) u := s1.add (h5 u)
+    have s3 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7)
+        (1 - u ^ 2 + u ^ 4 - u ^ 6) u := s2.sub (h7 u)
+    have s4 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
+        + v ^ 9 / 9) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) u := s3.add (h9 u)
+    exact s4.sub (h11 u)
+  have hf' : deriv (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11))
+      = fun u => u ^ 12 / (1 + u ^ 2) := by
+    funext u
+    have hd : HasDerivAt (fun v : ℝ => Real.arctan v
+        - (v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7 + v ^ 9 / 9 - v ^ 11 / 11))
+        (1 / (1 + u ^ 2) - (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8 - u ^ 10)) u :=
+      HasDerivAt.sub (Real.hasDerivAt_arctan u) (hpoly u)
+    rw [hd.deriv]
+    field_simp
+    ring
+  have hdiff : ∀ x ∈ uIcc (0:ℝ) t, DifferentiableAt ℝ (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) x := by
+    intro x _
+    exact DifferentiableAt.sub (Real.differentiableAt_arctan x) (by fun_prop)
+  have hcont : Continuous (fun u : ℝ => u ^ 12 / (1 + u ^ 2)) :=
+    Continuous.div (by fun_prop) (by fun_prop)
+      (fun u => ne_of_gt (by positivity : (0:ℝ) < 1 + u ^ 2))
+  have hftc := intervalIntegral.integral_deriv_eq_sub'
+    (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) hf' hdiff
+    hcont.continuousOn
+  have hint : ∫ y in (0:ℝ)..t, y ^ 12 / (1 + y ^ 2)
+      = Real.arctan t - (t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 - t ^ 11 / 11) := by
+    have hzero : (fun u => Real.arctan u
+        - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) (0:ℝ) = 0 := by
+      simp [Real.arctan_zero]
+    simpa [hzero] using hftc
+  have hnonneg : (0:ℝ) ≤ ∫ y in (0:ℝ)..t, y ^ 12 / (1 + y ^ 2) :=
+    intervalIntegral.integral_nonneg ht
+      (fun y (hy : y ∈ Icc (0:ℝ) t) => div_nonneg (pow_nonneg hy.1 12) (by positivity))
+  linarith
+
+/-- `arctan (sqrt 3.86) < 1.1`（HOL `Flyspeck_constants.calc` 的零证书复证；V12 私有）。
+补角恒等式 + `arctan z ≥ S₆(z)` 在 `z = (√3.86)⁻¹`（`z² = 50/193` 精确、
+`z ≥ 508986/1000000`）处取值；数值夹逼只用 `Real.pi_lt_d6`。 -/
+private theorem vas12_atan_sqrt_386_lt : Real.arctan (Real.sqrt 3.86) < 1.1 := by
+  have hsq386 : Real.sqrt 3.86 * Real.sqrt 3.86 = 3.86 := Real.mul_self_sqrt (by norm_num)
+  have hcomp : Real.arctan (Real.sqrt 3.86)
+      = Real.pi / 2 - Real.arctan ((Real.sqrt 3.86)⁻¹) := by
+    have h := Real.arctan_inv_of_pos (x := Real.sqrt 3.86) (by positivity)
+    linarith
+  rw [hcomp]
+  set z : ℝ := (Real.sqrt 3.86)⁻¹ with hzdef
+  have hz2 : z * z = 50 / 193 := by
+    rw [hzdef]
+    calc (Real.sqrt 3.86)⁻¹ * (Real.sqrt 3.86)⁻¹
+        = (Real.sqrt 3.86 * Real.sqrt 3.86)⁻¹ := by field_simp
+      _ = 50 / 193 := by rw [hsq386]; norm_num
+  have hz0 : 0 ≤ z := by positivity
+  have hfact : z - z ^ 3 / 3 + z ^ 5 / 5 - z ^ 7 / 7 + z ^ 9 / 9 - z ^ 11 / 11
+      = z * (1 - (z * z) / 3 + (z * z) ^ 2 / 5 - (z * z) ^ 3 / 7
+          + (z * z) ^ 4 / 9 - (z * z) ^ 5 / 11) := by ring
+  have hlow := vas12_arctan_ge_taylor6 z hz0
+  rw [hfact, hz2] at hlow
+  have hF : (0:ℝ) < 1 - (50:ℝ) / 193 / 3 + ((50:ℝ) / 193) ^ 2 / 5
+      - ((50:ℝ) / 193) ^ 3 / 7 + ((50:ℝ) / 193) ^ 4 / 9
+      - ((50:ℝ) / 193) ^ 5 / 11 := by norm_num
+  have hzge : (508986 / 1000000 : ℝ) ≤ z := by
+    have hp : Real.sqrt 3.86 ≤ 1000000 / 508986 := by
+      calc Real.sqrt 3.86 ≤ Real.sqrt ((1000000 / 508986 : ℝ) ^ 2) :=
+            Real.sqrt_le_sqrt (by norm_num)
+        _ = 1000000 / 508986 := Real.sqrt_sq (by norm_num)
+    calc (508986 / 1000000 : ℝ) = (1000000 / 508986)⁻¹ := by norm_num
+      _ ≤ (Real.sqrt 3.86)⁻¹ := (inv_le_inv₀ (by norm_num) (by positivity)).2 hp
+  have hL0 : (508986 / 1000000 : ℝ) * (1 - (50:ℝ) / 193 / 3 + ((50:ℝ) / 193) ^ 2 / 5
+      - ((50:ℝ) / 193) ^ 3 / 7 + ((50:ℝ) / 193) ^ 4 / 9
+      - ((50:ℝ) / 193) ^ 5 / 11) ≤ Real.arctan z := by
+    calc (508986 / 1000000 : ℝ) * (1 - (50:ℝ) / 193 / 3 + ((50:ℝ) / 193) ^ 2 / 5
+          - ((50:ℝ) / 193) ^ 3 / 7 + ((50:ℝ) / 193) ^ 4 / 9
+          - ((50:ℝ) / 193) ^ 5 / 11)
+        ≤ z * (1 - (50:ℝ) / 193 / 3 + ((50:ℝ) / 193) ^ 2 / 5
+          - ((50:ℝ) / 193) ^ 3 / 7 + ((50:ℝ) / 193) ^ 4 / 9
+          - ((50:ℝ) / 193) ^ 5 / 11) := mul_le_mul_of_nonneg_right hzge hF.le
+      _ ≤ Real.arctan z := hlow
+  have hC1 : (0.4707965 : ℝ) < (508986 / 1000000 : ℝ) * (1 - (50:ℝ) / 193 / 3
+      + ((50:ℝ) / 193) ^ 2 / 5 - ((50:ℝ) / 193) ^ 3 / 7
+      + ((50:ℝ) / 193) ^ 4 / 9 - ((50:ℝ) / 193) ^ 5 / 11) := by norm_num
+  have hC2 : Real.pi / 2 - 1.1 < (0.4707965 : ℝ) := by
+    have hpi := Real.pi_lt_d6
+    linarith
+  linarith
+
 /-- HOL `LINDIH_11` (JOTSWIX.hl:3291): the registry box
 `[(2,y1,2);(2,y2,2.52);(2,y3,2.52);(2,y4,2);(3.01,y5,3.55);(2*h0,y6,3.01)]`
-forces small dihedral or negative delta. NEEDS: the terminal Ineq
-registry entry for the box (opaque). -/
+forces small dihedral or negative delta.
+PROVED 2026-11-14 (lane `vaslin-w12`): `deltaY < 0` closes the goal outright;
+otherwise the terminal estimates `9368433105` (`0 < delta4Y`) and
+`8405387449` (`4·x1Δy < 3.86·Δ₄y²`) feed `lindihpi_lt_y_small_p11`
+(HOL `lindih_lt`-y at `u = atn (√3.86)`, i.e. HOL's
+`Merge_ineq.lindih_lt` route with `tan2lower = 3.86`), and the numeric tail
+`atn (√3.86) < 1.1` is the zero-certificate complement plus S₆ Taylor
+bracket (HOL `Flyspeck_constants.calc`). -/
 theorem LINDIH_11_p23 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
     (hy1 : y1 = 2) (hy2 : 2 ≤ y2 ∧ y2 ≤ 2.52) (hy3 : 2 ≤ y3 ∧ y3 ≤ 2.52)
     (hy4 : y4 = 2) (hy5 : 3.01 ≤ y5 ∧ y5 ≤ 3.55)
     (hy6 : 2 * h0 ≤ y6 ∧ y6 ≤ 3.01) :
     dihY y1 y2 y3 y4 y5 y6 < 1.1 ∨ deltaY y1 y2 y3 y4 y5 y6 < 0 := by
-  sorry
+  by_cases hneg : deltaY y1 y2 y3 y4 y5 y6 < 0
+  · exact Or.inr hneg
+  · left
+    have hdy : 0 ≤ deltaY y1 y2 y3 y4 y5 y6 := le_of_not_gt hneg
+    have h936 : mainEstimate_9368433105 :=
+      h "9368433105" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have h840 : mainEstimate_8405387449 :=
+      h "8405387449" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have h4pos : 0 < delta4Y y1 y2 y3 y4 y5 y6 :=
+      h936 y1 y2 y3 y4 y5 y6 (le_of_eq hy1.symm) (le_of_eq hy1) hy2.1 hy2.2
+        hy3.1 hy3.2 (le_of_eq hy4.symm) (le_of_eq hy4) hy5.1 hy5.2 hy6.1 hy6.2
+    have h840' : (4 * x1DeltaY_t11 y1 y2 y3 y4 y5 y6
+          < 3.86 * delta4SquaredY_t11 y1 y2 y3 y4 y5 y6)
+        ∨ deltaY y1 y2 y3 y4 y5 y6 < 0 :=
+      h840 y1 y2 y3 y4 y5 y6 (le_of_eq hy1.symm) (le_of_eq hy1) hy2.1 hy2.2
+        hy3.1 hy3.2 (le_of_eq hy4.symm) (le_of_eq hy4) hy5.1 hy5.2 hy6.1 hy6.2
+    rcases h840' with hlt | hdneg
+    · have hiff := lindihpi_lt_y_small_p11 (b := (3.86 : ℝ)) (y1 := y1) (y2 := y2)
+        (y3 := y3) (y4 := y4) (y5 := y5) (y6 := y6)
+        (by rw [hy1]; norm_num) (by norm_num) hdy h4pos
+      have hsmall : 4 * x1DeltaY_p11 y1 y2 y3 y4 y5 y6
+          < 3.86 * delta4SquaredY_p11 y1 y2 y3 y4 y5 y6 := by
+        simpa only [x1DeltaY_p11, x1DeltaY_t11, delta4SquaredY_p11,
+          delta4SquaredY_t11] using hlt
+      exact lt_trans (hiff.mp hsmall) vas12_atan_sqrt_386_lt
+    · exact absurd hdneg hneg
 
 /-- HOL `LEMMA_PWE3` (JOTSWIX.hl:3370). NEEDS: same kit as
 `LEMMA_PWE1_p23`. -/
