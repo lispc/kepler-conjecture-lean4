@@ -56,7 +56,198 @@ theorem ab4_assumption_reduction_p23 (s : ScsV39) (p : ℕ) (f : V3 → ℝ → 
         ∀ t, |t| < e1 → s.a i j ≤ dist (f (v i) t) (f (v j) t))) ∧
     (∀ i j, ∃ e2 : ℝ, 0 < e2 ∧ (dist (v i) (v j) = s.b i j →
         ∀ t, |t| < e2 → dist (f (v i) t) (f (v j) t) ≤ s.b i j)) := by
-  sorry
+  -- ── substrate: periodicity + injectivity of `v` on one period ──
+  have hinj : ∀ i j : ℕ, i < 4 → j < 4 → v i = v j → i = j := BBs_inj_p21 s v 4 hs hk hBB
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpb, -, hsym, hch, ha0, -, -, -, -, -, -⟩ := hs
+  obtain ⟨hann, hperv, hdistBB, -⟩ := hBB
+  have hperv4 : Periodic v 4 := hk ▸ hperv
+  have hpa4 : Periodic2 s.a 4 := hk ▸ hpa
+  have hpb4 : Periodic2 s.b 4 := hk ▸ hpb
+  have h4 : (4 : ℕ) ≠ 0 := by norm_num
+  have hAred : ∀ i j : ℕ, s.a i j = s.a (i % 4) (j % 4) := fun i j => periodic2_MOD_p21 h4 hpa4
+  have hBred : ∀ i j : ℕ, s.b i j = s.b (i % 4) (j % 4) := fun i j => periodic2_MOD_p21 h4 hpb4
+  have hvred : ∀ i : ℕ, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hperv4 i
+  have hAcong : ∀ i j k l : ℕ, i % 4 = k % 4 → j % 4 = l % 4 → s.a i j = s.a k l := by
+    intro i j k l hi hj
+    rw [hAred i j, hAred k l, hi, hj]
+  have hBcong : ∀ i j k l : ℕ, i % 4 = k % 4 → j % 4 = l % 4 → s.b i j = s.b k l := by
+    intro i j k l hi hj
+    rw [hBred i j, hBred k l, hi, hj]
+  have hmodv : ∀ i : ℕ, v i = v p → i % 4 = p % 4 := by
+    intro i hi
+    exact hinj (i % 4) (p % 4) (Nat.mod_lt _ (by norm_num)) (Nat.mod_lt _ (by norm_num))
+      (by rw [hvred i, hvred p]; exact hi)
+  have hne_vp : ∀ i : ℕ, i % 4 ≠ p % 4 → v i ≠ v p :=
+    fun i hne hc => hne (hmodv i hc)
+  -- every vertex of the annulus has norm ≤ `2 * h0`
+  have hnorm : ∀ i : ℕ, ‖v i‖ ≤ 2 * h0 := by
+    intro i
+    have hx : v i ∈ ballAnnulus := hann (Set.mem_range_self i)
+    unfold ballAnnulus at hx
+    have h1 : dist (v i) 0 ≤ 2 * h0 := Metric.mem_closedBall.mp hx.1
+    rwa [dist_eq_norm, sub_zero] at h1
+  have htri : dist (v p) (v (p + 2)) ≤ 4 * h0 := by
+    have h1 : dist (v p) (v (p + 2)) ≤ dist (v p) 0 + dist 0 (v (p + 2)) :=
+      dist_triangle (v p) 0 (v (p + 2))
+    have h2 : dist (v p) 0 = ‖v p‖ := by rw [dist_eq_norm, sub_zero]
+    have h3 : dist 0 (v (p + 2)) = ‖v (p + 2)‖ := by rw [dist_eq_norm, zero_sub, norm_neg]
+    rw [h2, h3] at h1
+    linarith [hnorm p, hnorm (p + 2)]
+  have hdiag2 : scsDiag 4 p (p + 2) := by
+    unfold scsDiag
+    exact ⟨by intro hc; omega, by intro hc; omega, by intro hc; omega⟩
+  -- ── row lemma at `p`, `a` side (HOL `scs_a_v39` block) ──
+  have hrowA : ∀ j : ℕ, j < 4 → ∃ e1 : ℝ, 0 < e1 ∧ (s.a p j = dist (v p) (v j) →
+      ∀ t : ℝ, |t| < e1 → s.a p j ≤ dist (f (v p) t) (f (v j) t)) := by
+    intro j hj
+    rcases MOD_4_CASES_p23 j p hj with h | h | h | h
+    · -- `j ≡ p`: both slots coincide, `s.a p p = 0` and the distance is `0`
+      refine ⟨1, by norm_num, fun _ t _ => ?_⟩
+      have hjeq : j % 4 = p % 4 := by rw [h, Nat.mod_mod]; omega
+      have hjv : v j = v p := by rw [← hvred j, hjeq]; exact hvred p
+      have hz : s.a p j = s.a p p := hAcong p j p p rfl hjeq
+      rw [hz, ha0 p, hjv, dist_self]
+    · -- `j ≡ p + 1`: `hab.1` makes the `a` hypothesis impossible
+      refine ⟨1, by norm_num, fun hhyp t ht => ?_⟩
+      have hjmod : j % 4 = (p + 1) % 4 := by rw [h, Nat.mod_mod]
+      have ha : s.a p j = s.a p (p + 1) := hAcong p j p (p + 1) rfl hjmod
+      have hjv : v j = v (p + 1) := by rw [h]; exact hvred (p + 1)
+      have he1 : s.a p (p + 1) = dist (v p) (v (p + 1)) := by
+        rw [← ha, ← hjv]; exact hhyp
+      exact absurd he1 (ne_of_lt hab.1)
+    · -- `j ≡ p + 2`: the (p,p+2) diagonal, `hdg` makes it impossible
+      refine ⟨1, by norm_num, fun hhyp t ht => ?_⟩
+      have hjmod : j % 4 = (p + 2) % 4 := by rw [h, Nat.mod_mod]
+      have ha : s.a p j = s.a p (p + 2) := hAcong p j p (p + 2) rfl hjmod
+      have hjv : v j = v (p + 2) := by rw [h]; exact hvred (p + 2)
+      have he1 : s.a p (p + 2) = dist (v p) (v (p + 2)) := by
+        rw [← ha, ← hjv]; exact hhyp
+      exact absurd he1 (ne_of_lt (hdg p (p + 2) hdiag2).1)
+    · -- `j ≡ p + 3`: the one deformed slot; the `hdist` invariance closes it
+      refine ⟨e, he, fun hhyp t ht => ?_⟩
+      have hjmod : j % 4 = (p + 3) % 4 := by rw [h, Nat.mod_mod]
+      have ha : s.a p j = s.a p (p + 3) := hAcong p j p (p + 3) rfl hjmod
+      have hjv : v j = v (p + 3) := by rw [h]; exact hvred (p + 3)
+      have hne3 : v (p + 3) ≠ v p := hne_vp (p + 3) (by omega)
+      rw [ha, hjv, hfix (v (p + 3)) t hne3]
+      have hd3 : dist (f (v p) t) (v (p + 3)) = dist (v p) (v (p + 3)) :=
+        (dist_comm _ _).trans ((hdist t ht).trans (dist_comm _ _))
+      rw [hd3]
+      exact (hdistBB p (p + 3)).1
+  -- ── row lemma at `p`, `b` side (HOL `now the b end` block) ──
+  have hrowB : ∀ j : ℕ, j < 4 → ∃ e2 : ℝ, 0 < e2 ∧ (dist (v p) (v j) = s.b p j →
+      ∀ t : ℝ, |t| < e2 → dist (f (v p) t) (f (v j) t) ≤ s.b p j) := by
+    intro j hj
+    rcases MOD_4_CASES_p23 j p hj with h | h | h | h
+    · -- `j ≡ p`: both slots coincide; `0 ≤ s.b p p` from the `a ≤ b` chain
+      refine ⟨1, by norm_num, fun _ t _ => ?_⟩
+      have hjeq : j % 4 = p % 4 := by rw [h, Nat.mod_mod]; omega
+      have hjv : v j = v p := by rw [← hvred j, hjeq]; exact hvred p
+      have hz : s.a p j = s.a p p := hAcong p j p p rfl hjeq
+      have hle : s.a p j ≤ s.b p j :=
+        (hch p j).1.trans ((hch p j).2.1.trans (hch p j).2.2)
+      rw [hz, ha0 p] at hle
+      rw [hjv, dist_self]
+      exact hle
+    · -- `j ≡ p + 1`: `hab.2` makes the `b` hypothesis impossible
+      refine ⟨1, by norm_num, fun hhyp t ht => ?_⟩
+      have hjmod : j % 4 = (p + 1) % 4 := by rw [h, Nat.mod_mod]
+      have hb : s.b p j = s.b p (p + 1) := hBcong p j p (p + 1) rfl hjmod
+      have hjv : v j = v (p + 1) := by rw [h]; exact hvred (p + 1)
+      have he1 : dist (v p) (v (p + 1)) = s.b p (p + 1) := by
+        rw [← hb, ← hjv]; exact hhyp
+      exact absurd he1 (ne_of_lt hab.2)
+    · -- `j ≡ p + 2`: the diagonal is shorter than `4 * h0 < s.b p (p+2)`
+      refine ⟨1, by norm_num, fun hhyp t ht => ?_⟩
+      have hjmod : j % 4 = (p + 2) % 4 := by rw [h, Nat.mod_mod]
+      have hb : s.b p j = s.b p (p + 2) := hBcong p j p (p + 2) rfl hjmod
+      have hjv : v j = v (p + 2) := by rw [h]; exact hvred (p + 2)
+      have he1 : dist (v p) (v (p + 2)) = s.b p (p + 2) := by
+        rw [← hb, ← hjv]; exact hhyp
+      exact absurd he1 (ne_of_lt (lt_of_le_of_lt htri (hdg p (p + 2) hdiag2).2))
+    · -- `j ≡ p + 3`: same invariance as the `a` side
+      refine ⟨e, he, fun hhyp t ht => ?_⟩
+      have hjmod : j % 4 = (p + 3) % 4 := by rw [h, Nat.mod_mod]
+      have hb : s.b p j = s.b p (p + 3) := hBcong p j p (p + 3) rfl hjmod
+      have hjv : v j = v (p + 3) := by rw [h]; exact hvred (p + 3)
+      have hne3 : v (p + 3) ≠ v p := hne_vp (p + 3) (by omega)
+      rw [hb, hjv, hfix (v (p + 3)) t hne3]
+      have hd3 : dist (f (v p) t) (v (p + 3)) = dist (v p) (v (p + 3)) :=
+        (dist_comm _ _).trans ((hdist t ht).trans (dist_comm _ _))
+      rw [hd3]
+      exact (hdistBB p (p + 3)).2
+  -- ── lift the row lemmas off the `% 4`-class of `j` ──
+  have hArow : ∀ j : ℕ, ∃ e1 : ℝ, 0 < e1 ∧ (s.a p j = dist (v p) (v j) →
+      ∀ t : ℝ, |t| < e1 → s.a p j ≤ dist (f (v p) t) (f (v j) t)) := by
+    intro j
+    obtain ⟨e1, he1, hall⟩ := hrowA (j % 4) (Nat.mod_lt _ (by norm_num))
+    refine ⟨e1, he1, fun hhyp t ht => ?_⟩
+    have hap : s.a p (j % 4) = s.a p j := hAcong p (j % 4) p j rfl (by omega)
+    have hvj : v (j % 4) = v j := hvred j
+    rw [← hap, ← hvj] at hhyp ⊢
+    exact hall hhyp t ht
+  have hBrow : ∀ j : ℕ, ∃ e2 : ℝ, 0 < e2 ∧ (dist (v p) (v j) = s.b p j →
+      ∀ t : ℝ, |t| < e2 → dist (f (v p) t) (f (v j) t) ≤ s.b p j) := by
+    intro j
+    obtain ⟨e2, he2, hall⟩ := hrowB (j % 4) (Nat.mod_lt _ (by norm_num))
+    refine ⟨e2, he2, fun hhyp t ht => ?_⟩
+    have hbp : s.b p (j % 4) = s.b p j := hBcong p (j % 4) p j rfl (by omega)
+    have hvj : v (j % 4) = v j := hvred j
+    rw [← hbp, ← hvj] at hhyp ⊢
+    exact hall hhyp t ht
+  -- ── assemble: HOL's four-way `MOD_4_CASES` split on `(i,j)` ──
+  refine ⟨?_, ?_⟩
+  · intro i j
+    by_cases hA : i % 4 = p % 4
+    · -- `i` sits on the deformed vertex: transport the row lemma at `p`
+      obtain ⟨e1, he1, hall⟩ := hArow j
+      refine ⟨e1, he1, fun hhyp t ht => ?_⟩
+      have hvi : v i = v p := by rw [← hvred i, hA]; exact hvred p
+      have haij : s.a i j = s.a p j := hAcong i j p j hA rfl
+      rw [haij, hvi] at hhyp ⊢
+      exact hall hhyp t ht
+    · by_cases hB : j % 4 = p % 4
+      · -- `j` sits on the deformed vertex: row lemma at `p` with `DIST_SYM`
+        obtain ⟨e1, he1, hall⟩ := hArow i
+        refine ⟨e1, he1, fun hhyp t ht => ?_⟩
+        have hvj : v j = v p := by rw [← hvred j, hB]; exact hvred p
+        have haij : s.a i j = s.a p i := (hAcong i j i p rfl hB).trans (hsym i p).1
+        have hdi : dist (v i) (v j) = dist (v p) (v i) := by rw [hvj, dist_comm]
+        have hdf : dist (f (v i) t) (f (v j) t) = dist (f (v p) t) (f (v i) t) := by
+          rw [hvj, dist_comm]
+        rw [haij, hdi] at hhyp
+        rw [haij, hdf]
+        exact hall hhyp t ht
+      · -- neither slot is deformed: `f` fixes both, `BBsV39` gives the bound
+        refine ⟨1, by norm_num, fun hhyp t ht => ?_⟩
+        have hfi : f (v i) t = v i := hfix _ t (hne_vp i hA)
+        have hfj : f (v j) t = v j := hfix _ t (hne_vp j hB)
+        rw [hfi, hfj]
+        exact (hdistBB i j).1
+  · intro i j
+    by_cases hA : i % 4 = p % 4
+    · obtain ⟨e2, he2, hall⟩ := hBrow j
+      refine ⟨e2, he2, fun hhyp t ht => ?_⟩
+      have hvi : v i = v p := by rw [← hvred i, hA]; exact hvred p
+      have hbij : s.b i j = s.b p j := hBcong i j p j hA rfl
+      rw [hbij, hvi] at hhyp ⊢
+      exact hall hhyp t ht
+    · by_cases hB : j % 4 = p % 4
+      · obtain ⟨e2, he2, hall⟩ := hBrow i
+        refine ⟨e2, he2, fun hhyp t ht => ?_⟩
+        have hvj : v j = v p := by rw [← hvred j, hB]; exact hvred p
+        have hbij : s.b i j = s.b p i := (hBcong i j i p rfl hB).trans (hsym i p).2.2.2.1
+        have hdi : dist (v i) (v j) = dist (v p) (v i) := by rw [hvj, dist_comm]
+        have hdf : dist (f (v i) t) (f (v j) t) = dist (f (v p) t) (f (v i) t) := by
+          rw [hvj, dist_comm]
+        rw [hbij, hdi] at hhyp
+        rw [hbij, hdf]
+        exact hall hhyp t ht
+      · refine ⟨1, by norm_num, fun hhyp t ht => ?_⟩
+        have hfi : f (v i) t = v i := hfix _ t (hne_vp i hA)
+        have hfj : f (v j) t = v j := hfix _ t (hne_vp j hB)
+        rw [hfi, hfj]
+        exact (hdistBB i j).2
 
 /-- HOL `PERIODIC_INJ_MOD` (JOTSWIX.hl:668). -/
 theorem PERIODIC_INJ_MOD_p23 {α : Sort u} (v : ℕ → α) (k : ℕ) (hk : k ≠ 0)
