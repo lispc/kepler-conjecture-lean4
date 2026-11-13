@@ -3583,7 +3583,51 @@ theorem CARD_SCS_M_5M2_p29 : (scsM scs5M2).ncard ≤ 1 := by
   rw [SCS_M_5M2_p29]
   simp
 
-/-- HOL `JCYFMRP_V2` (HIJQAHA.hl:3420). -/
+/-- HOL `JCYFMRP_V2` (HIJQAHA.hl:3420), the `~(i MOD k IN scs_M s)` case-split
+branch (proved 2026-11-12, lane jv23-w1): the residue `i % s.k` lies outside
+`scsM s`, so unfolding the `scsM` predicate gives the two tight-edge bounds
+`b (i%k) (i%k+1) ≤ 2*h0` and `a (i%k) (i%k+1) ≤ 2` at that residue;
+`SCS_A_2_p27` supplies `2 ≤ a`, turning the `a` bound into equality, and the
+`CHANGE_A/B_SCS_MOD_p28` mod folds transport both facts to the edge `(i, i+1)`
+itself (witness `i`, with its `dist = 2` hypothesis). -/
+private theorem jcyfmrp_v2_not_mem_p29 (s : ScsV39) (v : ℕ → V3) (i : ℕ)
+    (hk3 : 3 < s.k) (hs : isScsV39 s) (hdist : dist (v i) (v (i + 1)) = 2)
+    (hi : i % s.k ∉ scsM s) :
+    ∃ i1, s.b i1 (i1 + 1) ≤ 2 * h0 ∧ s.a i1 (i1 + 1) = 2 ∧
+      dist (v i1) (v (i1 + 1)) = 2 := by
+  classical
+  have hik : i % s.k < s.k := Nat.mod_lt i (by omega)
+  rw [scsM, Set.mem_setOf_eq] at hi
+  have hb_le : s.b (i % s.k) (i % s.k + 1) ≤ 2 * h0 := by
+    by_contra h'
+    push_neg at h'
+    exact hi ⟨hik, Or.inl h'⟩
+  have ha_le2 : s.a (i % s.k) (i % s.k + 1) ≤ 2 := by
+    by_contra h'
+    push_neg at h'
+    exact hi ⟨hik, Or.inr h'⟩
+  have ha_eq : s.a (i % s.k) (i % s.k + 1) = 2 :=
+    le_antisymm ha_le2 (SCS_A_2_p27 s hs (i % s.k))
+  have h1k : 1 < s.k := by omega
+  have hmod : (i + 1) % s.k = (i % s.k + 1) % s.k :=
+    (mod_add_c_p27 (i := i) (c := 1) h1k).symm
+  have hmodi : i % s.k = i % s.k % s.k := (Nat.mod_mod i s.k).symm
+  have hb_i : s.b i (i + 1) ≤ 2 * h0 := by
+    rw [CHANGE_B_SCS_MOD_p28 s hs (j := i + 1) (j1 := i % s.k + 1) (l := i)
+      (l1 := i % s.k) hmod hmodi]
+    exact hb_le
+  have ha_i : s.a i (i + 1) = 2 := by
+    rw [CHANGE_A_SCS_MOD_p28 s hs (j := i + 1) (j1 := i % s.k + 1) (l := i)
+      (l1 := i % s.k) hmod hmodi]
+    exact ha_eq
+  exact ⟨i, hb_i, ha_i, hdist⟩
+
+/-- HOL `JCYFMRP_V2` (HIJQAHA.hl:3420).  Case split on `i % s.k ∈ scsM s`
+(faithful to the HOL `SET_RULE` dichotomy).  The `∉` branch is discharged by
+`jcyfmrp_v2_not_mem_p29` above.  The `∈` branch still NEEDS `TFITSKC_p27`
+(the tight-edge-successor route: `SCS_M_EQ_1_p27` at `SUC i`, then `TFITSKC`
+on the fixed edge `i` — exactly the HOL ∈-branch); it is the active boundary
+of lane TFITSKCv1-w1, so the `sorry` is retained there. -/
 theorem JCYFMRP_V2_p29 : main_nonlinear_terminal_v11 →
     ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), 3 < s.k → isScsV39 s →
       v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
@@ -3593,9 +3637,11 @@ theorem JCYFMRP_V2_p29 : main_nonlinear_terminal_v11 →
       (∀ i, s.a i (i + 1) < s.b i (i + 1)) →
       ∃ i1, s.b i1 (i1 + 1) ≤ 2 * h0 ∧ s.a i1 (i1 + 1) = 2 ∧
         dist (v i1) (v (i1 + 1)) = 2 := by
-  sorry
-  -- DISCHARGES: HL `MP` on `JCYFMRP_concl`-class machinery with the
-  -- fixed `i` edge hypothesis carried through the `scs_M` case split.
+  intro _hmnl s v i hk3 hs _hMMs _hgen _hbasic hdist _hM _hdiag _hadge
+  classical
+  by_cases hi : i % s.k ∈ scsM s
+  · sorry
+  · exact jcyfmrp_v2_not_mem_p29 s v i hk3 hs hdist hi
 
 /-- HOL `JCYFMRP_V3` (HIJQAHA.hl:3487). -/
 theorem JCYFMRP_V3_p29 : main_nonlinear_terminal_v11 →
@@ -3646,6 +3692,28 @@ theorem xrr_le_1553_BB_p29 (s : ScsV39) (v : ℕ → V3) (i : ℕ)
 theorem J_SCS_5M2_0_p29 : ∀ (i j : ℕ), ¬scs5M2.J j i := by
   intro i j
   simp [scs5M2, mkUnadornedV39]
+
+/-- HOL `PROPERTIES_GENERIC` (NKEZBFC.hl:460): the two-line corollary of
+`PROPERTIES_GENERIC_LOCAL_FAN` (LA9) at the members of the pair `{v, w}` —
+`u ∈ {v, w}` splits into two direct applications.  Supplies the missing
+`PROPERTIES_GENERIC` premise of `SCS_5M2_IMP_SCS_5T1_p29`
+(closure-matrix row 11).  The `LocalFan`→`localFan_p2` bridge reuses the
+`localFanEquiv_p35`↔`of_localFan_p3` route of `JCYFMRP_p27` (LA27). -/
+theorem PROPERTIES_GENERIC_p29 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (v w : V3) (h1 : LocalFan V E FF) (h2 : v ∈ V) (h3 : w ∈ V) (h5 : Generic V E) :
+    ∀ u u1 : V3, u ∈ ({v, w} : Set V3) → u1 ∈ V → u ≠ u1 →
+      ¬ Collinear ℝ ({0, u, u1} : Set V3) := by
+  have hlf2 : localFan_p2 V E FF :=
+    localFan_p2.of_localFan_p3 (localFanEquiv_p35.mp h1)
+  have hg2 : generic_p2 V E := fun v w u h1 h2 => h5 v w u h1 h2
+  intro u u1 hu hu1 huu1
+  rcases hu with huv | huw
+  · rw [huv] at huu1 ⊢
+    exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg2 v h2 u1 hu1
+      (Ne.symm huu1)
+  · rw [huw] at huu1 ⊢
+    exact PROPERTIES_GENERIC_LOCAL_FAN_p9 hlf2 (fun _ _ => True.intro) hg2 w h3 u1 hu1
+      (Ne.symm huu1)
 
 /-- HOL `SCS_5M2_IMP_SCS_5T1` (HIJQAHA.hl:3579). -/
 theorem SCS_5M2_IMP_SCS_5T1_p29 : main_nonlinear_terminal_v11 →
