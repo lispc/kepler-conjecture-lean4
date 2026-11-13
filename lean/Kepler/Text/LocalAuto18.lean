@@ -422,13 +422,103 @@ theorem epsilon_hept_p18 {e e₁ e₂ e₃ e₄ e₅ e₆ : ℝ} (he : 0 < e) (h
     simp only [lt_min_iff] at ht
     tauto
 
+/-- `arcV u v w` is the Euclidean angle at `u` (HL `ARCV_ANGLE`). -/
+private theorem p18_arcV_eq_angle (u v w : V3) :
+    arcV u v w = EuclideanGeometry.angle v u w := by
+  rw [arcV, EuclideanGeometry.angle, vsub_eq_sub, vsub_eq_sub, InnerProductGeometry.angle,
+    inner_eq_dot, ← dist_eq_norm, ← dist_eq_norm]
+  simp only [WithLp.ofLp_sub]
+
 /-- HOL `ARCV_ADD_AFF_GE` (IUNBUIG.hl:44). -/
 theorem ARCV_ADD_AFF_GE_p18 (u v w x : V3) (hv : v ≠ u) (hw : w ≠ u)
     (hx : x ≠ u) (haff : x ∈ affGe {u} {v, w}) :
     arcV u v x + arcV u x w = arcV u v w := by
-  sorry
-  -- DISCHARGES: HOL ANGLES_ADD_AFF_GE (Harrison, fan geometry); the `arcV`
-  -- rendering is Kepler.Geom.LuneVolume's (HOL sphere.hl:375).
+  rw [p18_arcV_eq_angle, p18_arcV_eq_angle, p18_arcV_eq_angle]
+  simp only [affGe, Set.mem_setOf_eq] at haff
+  by_cases hvw : v = w
+  · -- degenerate: `{v, w}` collapses to the single ray `u → v`
+    subst hvw
+    have hset : ({v, v} : Set V3) = {v} := by simp
+    rw [hset] at haff
+    obtain ⟨f, hfin, hxsum, hpos, hone⟩ := haff
+    have hsum1 : f u + f v = 1 := by
+      rw [← sum_insert_single_s hfin hv.symm]; exact hone
+    have hsumv : ∑ z ∈ hfin.toFinset, f z • z = f u • u + f v • v :=
+      sum_insert_single_v hfin hv.symm
+    have hxu_eq : x - u = f v • (v - u) := by
+      rw [hxsum, hsumv]
+      have hfu : f u = 1 - f v := by linarith
+      rw [hfu, sub_smul]
+      module
+    have hfv : 0 ≤ f v := hpos v (by simp)
+    have hfvpos : 0 < f v := by
+      rcases lt_or_eq_of_le hfv with h | h
+      · exact h
+      · exfalso
+        have hzero : x - u = 0 := by rw [hxu_eq, ← h, zero_smul]
+        exact hx (sub_eq_zero.mp hzero)
+    have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u v :=
+      EuclideanGeometry.angle_smul_right_of_pos v hfvpos
+        (show f v • (v - u) = x - u from hxu_eq.symm)
+    rw [h1, EuclideanGeometry.angle_comm x u v, h1, EuclideanGeometry.angle_self_of_ne hv]
+    ring
+  · -- v ≠ w: extract `x - u = f v • (v - u) + f w • (w - u)` with `f v, f w ≥ 0`
+    obtain ⟨f, hfin, hxsum, hpos, hone⟩ := haff
+    have hsum1 : f u + f v + f w = 1 := by
+      rw [← sum_insert_pair_s hfin hv.symm hw.symm hvw]; exact hone
+    have hsumv : ∑ z ∈ hfin.toFinset, f z • z = f u • u + f v • v + f w • w :=
+      sum_insert_pair_v hfin hv.symm hw.symm hvw
+    have hxu_eq : x - u = f v • (v - u) + f w • (w - u) := by
+      rw [hxsum, hsumv]
+      have hfu : f u = 1 - f v - f w := by linarith
+      rw [hfu, sub_smul]
+      module
+    have hfv : 0 ≤ f v := hpos v (by simp)
+    have hfw : 0 ≤ f w := hpos w (by simp)
+    rcases lt_or_eq_of_le hfv with hfvpos | hfv0
+    · rcases lt_or_eq_of_le hfw with hfwpos | hfw0
+      · -- interior of the cone: the strict fan angle addition
+        refine ANGLES_ADD_AFF_GE hv hw hx ?_
+        refine ⟨f, hfin, hxsum, ?_, hone⟩
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with rfl | rfl
+        · exact hfvpos
+        · exact hfwpos
+      · -- boundary: `x` on the ray `u → v`
+        have hkey : x - u = f v • (v - u) := by
+          rw [← hfw0, zero_smul, add_zero] at hxu_eq
+          exact hxu_eq
+        have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u v :=
+          EuclideanGeometry.angle_smul_right_of_pos v hfvpos
+            (show f v • (v - u) = x - u from hkey.symm)
+        have h2 : EuclideanGeometry.angle x u w = EuclideanGeometry.angle v u w :=
+          EuclideanGeometry.angle_smul_left_of_pos w hfvpos
+            (show f v • (v - u) = x - u from hkey.symm)
+        rw [h1, h2, EuclideanGeometry.angle_self_of_ne hv, zero_add]
+    · -- boundary: `x` on the ray `u → w`
+      have hkey : x - u = f w • (w - u) := by
+        rw [← hfv0, zero_smul, zero_add] at hxu_eq
+        exact hxu_eq
+      have hfwpos : 0 < f w := by
+        rcases lt_or_eq_of_le hfw with h | h
+        · exact h
+        · exfalso
+          have hzero : x - u = 0 := by rw [hkey, ← h, zero_smul]
+          exact hx (sub_eq_zero.mp hzero)
+      have h1 : EuclideanGeometry.angle v u x = EuclideanGeometry.angle v u w :=
+        EuclideanGeometry.angle_smul_right_of_pos v hfwpos
+          (show f w • (w - u) = x - u from hkey.symm)
+      have h2 : EuclideanGeometry.angle x u w = 0 := by
+        have h3 : EuclideanGeometry.angle w u x = EuclideanGeometry.angle w u w :=
+          EuclideanGeometry.angle_smul_right_of_pos w hfwpos
+            (show f w • (w - u) = x - u from hkey.symm)
+        rw [EuclideanGeometry.angle_comm x u w, h3, EuclideanGeometry.angle_self_of_ne hw]
+      rw [h1, h2, add_zero]
+  -- DISCHARGED 2026-11-13 (lane k4c5m2-w1): `arcV` is Mathlib's Euclidean
+  -- angle (`arcV`/`angle` bridge as in PackingAuto7 `ARCV_ANGLE`), and the
+  -- closed-cone membership splits into the strict cone (`ANGLES_ADD_AFF_GE`,
+  -- LocalAuto7:767) and the two boundary rays, where one summand vanishes.
 
 /-- HOL `real_continuous_finite_range_constant` (IUNBUIG.hl:157): a real
 function continuous on an open interval with finite range is constant
@@ -465,10 +555,86 @@ theorem planar_deform_dist_p18 (v₀ v₁ v₂ : V3) (f : V3 → ℝ → V3) (V 
       dist v₀ (f v₁ t) = dist v₀ v₁ ∧ ‖f v₁ t‖ = ‖v₁‖ ∧
       dist (f v₂ t) v₀ = dist v₂ v₀ ∧ ‖f v₂ t‖ = ‖v₂‖) :
     ∀ t, |t| < e' → dist (f v₁ t) (f v₂ t) = dist v₁ v₂ := by
-  sorry
-  -- DISCHARGES: quadratic_at_most_2_roots_p18 (proved above) + the
-  -- `delta_quadratic` identity (Nonlinear_lemma) on deltaY via
-  -- coplanar_delta_y_zero_p18, plus the continuity clause of `Deformation`.
+  obtain ⟨h0mem, hcont, hfix0⟩ := hdef
+  -- The quadratic whose roots are the admissible values of `dist (f v₁ t) (f v₂ t) ^ 2`:
+  -- `deltaY ‖v₀‖ ‖v₁‖ ‖v₂‖ y (dist v₂ v₀) (dist v₀ v₁) = 0` expanded in `y ^ 2`.
+  set a : ℝ := -(‖v₀‖ ^ 2) with ha
+  set b : ℝ := ‖v₀‖ ^ 2 * (-(‖v₀‖ ^ 2) + ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 +
+      (dist v₂ v₀) ^ 2 + (dist v₀ v₁) ^ 2) +
+      ‖v₁‖ ^ 2 * (dist v₂ v₀) ^ 2 + ‖v₂‖ ^ 2 * (dist v₀ v₁) ^ 2 -
+      ‖v₁‖ ^ 2 * ‖v₂‖ ^ 2 - (dist v₂ v₀) ^ 2 * (dist v₀ v₁) ^ 2 with hb
+  set c : ℝ := ‖v₁‖ ^ 2 * (dist v₂ v₀) ^ 2 *
+      (‖v₀‖ ^ 2 - ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 - (dist v₂ v₀) ^ 2 + (dist v₀ v₁) ^ 2) +
+      ‖v₂‖ ^ 2 * (dist v₀ v₁) ^ 2 *
+      (‖v₀‖ ^ 2 + ‖v₁‖ ^ 2 - ‖v₂‖ ^ 2 + (dist v₂ v₀) ^ 2 - (dist v₀ v₁) ^ 2) -
+      ‖v₀‖ ^ 2 * ‖v₂‖ ^ 2 * (dist v₂ v₀) ^ 2 -
+      ‖v₀‖ ^ 2 * ‖v₁‖ ^ 2 * (dist v₀ v₁) ^ 2 with hc
+  have ha0 : a ≠ 0 := by
+    rw [ha]
+    exact neg_ne_zero.mpr (pow_ne_zero 2 (norm_ne_zero_iff.mpr hv₀))
+  obtain ⟨r₁, r₂, hroots⟩ := quadratic_at_most_2_roots_p18 a b c
+  -- Every `t` in the window puts `dist (f v₁ t) (f v₂ t) ^ 2` at a root.
+  have hquad : ∀ t, |t| < e' →
+      a * ((dist (f v₁ t) (f v₂ t)) ^ 2) ^ 2 +
+        b * ((dist (f v₁ t) (f v₂ t)) ^ 2) + c = 0 := by
+    intro t ht
+    obtain ⟨hcp, hd1, hn1, hd2, hn2⟩ := h t ht
+    have hdy := (coplanar_delta_y_zero_p18 0 v₀ (f v₁ t) (f v₂ t)).mp hcp
+    simp only [dist_zero_left] at hdy
+    rw [hn1, hn2, hd1, dist_comm v₀ (f v₂ t), hd2] at hdy
+    have key : deltaY ‖v₀‖ ‖v₁‖ ‖v₂‖ (dist (f v₁ t) (f v₂ t)) (dist v₂ v₀) (dist v₀ v₁)
+        = a * ((dist (f v₁ t) (f v₂ t)) ^ 2) ^ 2 +
+          b * ((dist (f v₁ t) (f v₂ t)) ^ 2) + c := by
+      simp only [ha, hb, hc, deltaY, deltaX]
+      ring
+    rw [key] at hdy
+    exact hdy
+  -- Continuity of the squared distance on the window.
+  have hcontg : ContinuousOn (fun t => (dist (f v₁ t) (f v₂ t)) ^ 2)
+      (Set.Ioo (-e') e') := by
+    intro t ht
+    have h1 : ContinuousAt (f v₁) t := hcont v₁ h₁ t ht
+    have h2 : ContinuousAt (f v₂) t := hcont v₂ h₂ t ht
+    have hd : ContinuousAt (fun s => dist (f v₁ s) (f v₂ s)) t :=
+      Filter.Tendsto.dist h1 h2
+    exact (hd.pow 2).continuousWithinAt
+  -- Its image is contained in the two roots, hence finite.
+  have hfin : (Set.image (fun t => (dist (f v₁ t) (f v₂ t)) ^ 2)
+      (Set.Ioo (-e') e')).Finite := by
+    have hsub : Set.image (fun t => (dist (f v₁ t) (f v₂ t)) ^ 2) (Set.Ioo (-e') e')
+        ⊆ ({r₁, r₂} : Set ℝ) := by
+      rintro y ⟨t, ht, rfl⟩
+      have ht' : |t| < e' := abs_lt.mpr ⟨ht.1, ht.2⟩
+      rcases hroots _ ha0 (hquad t ht') with h | h
+      · show (dist (f v₁ t) (f v₂ t)) ^ 2 ∈ ({r₁, r₂} : Set ℝ)
+        rw [h]; exact Or.inl rfl
+      · show (dist (f v₁ t) (f v₂ t)) ^ 2 ∈ ({r₁, r₂} : Set ℝ)
+        rw [h]; exact Set.mem_insert_of_mem r₁ (Set.mem_singleton r₂)
+    exact (Set.finite_singleton r₂).insert r₁ |>.subset hsub
+  obtain ⟨c₀, hc₀⟩ := real_continuous_finite_range_constant_p18
+    (fun t => (dist (f v₁ t) (f v₂ t)) ^ 2) (-e') e' hcontg hfin
+  -- A continuous function into a two-point set is constant; evaluate at `0`.
+  have hzero : (0 : ℝ) ∈ Set.Ioo (-e') e' := ⟨by linarith, by linarith⟩
+  intro t ht
+  have hmem : t ∈ Set.Ioo (-e') e' := abs_lt.mp ht
+  have hsq : (dist (f v₁ t) (f v₂ t)) ^ 2 = (dist v₁ v₂) ^ 2 := by
+    rw [hc₀ t hmem, ← hc₀ 0 hzero, hfix0 v₁ h₁, hfix0 v₂ h₂]
+  rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq with h | h
+  · exact h
+  · have hb0 : dist v₁ v₂ = 0 := by
+      have h1 : (0 : ℝ) ≤ dist (f v₁ t) (f v₂ t) := dist_nonneg
+      have h2 : (0 : ℝ) ≤ dist v₁ v₂ := dist_nonneg
+      linarith
+    rw [hb0] at h ⊢
+    simpa using h
+  -- DISCHARGED 2026-11-13 (lane k4c5m2-w1): the HOL route (IUNBUIG.hl:191-267).
+  -- `coplanar_delta_y_zero_p18` turns the coplanarity into `deltaY … = 0`; with
+  -- the four preserved distances `deltaY` is a quadratic in `dist (f v₁ t) (f v₂ t)^2`
+  -- (`deltaY`/`deltaX` unfolding + `ring`), so by `quadratic_at_most_2_roots_p18`
+  -- the squared distance takes at most two values; it is continuous on the open
+  -- window (`Deformation`'s pointwise continuity), hence constant
+  -- (`real_continuous_finite_range_constant_p18`), and at `t = 0` it equals
+  -- `dist v₁ v₂` (`Deformation`'s `f v 0 = v`).
 
 /-- HOL `deform_pent_exists` (IUNBUIG.hl:269). Giant (needs
 `deform_684_pent_exists` / `deform_planar_exists` from Cuxvzoz). -/
@@ -1424,10 +1590,13 @@ theorem azim_dih_y_p18 (v₀ v₁ v₂ v₃ : V3)
     (hpi : azim v₀ v₁ v₂ v₃ ≤ Real.pi) :
     azim v₀ v₁ v₂ v₃ = dihY (dist v₀ v₁) (dist v₀ v₂) (dist v₀ v₃)
       (dist v₂ v₃) (dist v₁ v₃) (dist v₁ v₂) := by
-  sorry
-  -- DISCHARGES: HOL AZIM_DIHV_SAME_STRONG (LocalAuto2-side azimuth kit),
-  -- Merge_ineq.DIHV_DIH_X and Collect_geom2.NOT_COL_EQ_UPS_X_POS
-  -- (`upsX`-positivity off the non-collinearity hypotheses).
+  rw [AZIM_DIHV_SAME_STRONG h₂ h₃ hpi]
+  exact DIHV_EQ_DIH_Y_4PT v₀ v₁ v₂ v₃ h₂ h₃
+  -- DISCHARGED 2026-11-13 (lane k4c5m2-w1): HOL `AZIM_DIHV_SAME_STRONG`
+  -- (polar_fan.hl:23; LocalAuto7:592) turns the `azim` into `dihV`, and the
+  -- public bridge `DIHV_EQ_DIH_Y_4PT` (LocalAuto38:1455) rewrites `dihV` as the
+  -- `dihY` of the six distances (it carries the `ups_x`-positivity internally).
+  -- The `Collinear3` premises are definitionally the `Collinear ℝ {…}` ones.
 
 /-- HOL `azim5_reduction` (IUNBUIG.hl:1106). Monster statement + giant. -/
 theorem azim5_reduction_p18 (s : ScsV39) (f : V3 → ℝ → V3) (v : ℕ → V3)
@@ -3453,6 +3622,10 @@ theorem CNICGSF5_p18 :
     (scsArrowV39_pair_union_p18 (scsArrowV39_lift_p18 (YXIONXL3_concl _ 2 his1) heq1)
       (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his2) heq2))
   -- NEEDS: SCS_5M1_SLICE_24_p18 (still sorried) + LocalAuto1.YXIONXL3_concl.
+
+#print axioms azim_dih_y_p18
+#print axioms planar_deform_dist_p18
+#print axioms ARCV_ADD_AFF_GE_p18
 
 end Kepler.Text
 
