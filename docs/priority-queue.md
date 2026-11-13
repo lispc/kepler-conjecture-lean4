@@ -90,7 +90,7 @@
 ---
 
 
-## 1. 在飞（2026-11-12 午后，池 **6/6**；用户两次确认并发、无需错开）
+## 1. 在飞（2026-11-13 午后，池 **4/4**；用户裁定「任一车道完成可补巨件/挂起一件」）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -261,6 +261,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（午后，续1031）**：**车道池轮换——emptykit-3 wave2 深勘止损交付（无 patch）让槽，uagkit-w6 fresh 发车；agent-24/26 中断僵尸锁二次重试无效，fresh 接管为 jlxfdmj-w2 / nextbox-scout（接管）**。当前在飞 4/4。
+① **emptykit-3 wave2 交付（agent-11，零 patch 止损）**：`ineq_5691615370_asym` 深勘——HOL `Sphere.ineq` 实为全界蕴涵链（WEAKER_STRIP 不可直搬）；WLOG 的 P 是位置形（rot 实例 `P a b c d e f = P b c d a f e`，2 万随机样本零反例）；hmax 平凡已被 `grind` 闭；**hrot 是真难点**，crux 引理已定型（箱体多项式非线性，需 nlinarith+手工 hints，估 2–4 编迭代）→ wave3 从 quad 4T5 起手（桥引理全绿、线性为主，skeleton 可复用至 4T4）。工件全在 `emptykit-3/`（DELIVERY 附录 A/B/C + ineq 尝试全文）。
+② **uagkit-w6 发车（agent-28，fresh 接管）**：修 uagkit-w2 破损 patch 全 23 个编译错误（`gate_uag3.log` 在 `~/c17_backup/`，错误三类：rw 模式/unknown `hs`/invalid projection，全在 LA30 新增段 1221–1548）；照 w5 compile.sh 配方（-R 直编 + 主仓 LEAN_PATH）。用户规则触发器：emptykit-3 wave2 完成 → 补巨件/挂起首件。
+③ **中断潮 +2 例**：agent-24（jlxfdmj-w1，26 min 零工件——TaskList 实锤无任务但实例锁 "already running"，等 90s×2 重试无效）→ **fresh 接管 jlxfdmj-w2（agent-29）**，原工单全量重发 + 前车道已探线索（`JLXFDMJ_concl` LA1:3720 的 `3 < k` 条件 × TFITSKCv1_p27 的 k 条件对比）；agent-26（nextbox-scout）同处置 → **fresh 接管（agent-30）**。僵尸锁缓解更新：等 90s 重试上限 2 次，仍锁即 fresh。
+④ **待命映射（用户规则）**：agent-11/26/27 类完成 → 补 uagkit（已执行②）；jlxfdmj 类完成 → 闸落库后派 **6I1 收口**（sc6i1prove-w1 DELIVERY 路线全齐，Text 12→9 通道）+ LA33 两件；空两槽 → + K4c（LA18，WIP 在 k4cprep-w2_rescue/）。
+⑤ **冻结项裁决已呈用户待回**：VASYYAU 本体（4M6/4M7/4M8 梯族总闸，②b 暂缓中）、TameLp/WSEWPCH（便宜门 hNKE 60–120 vs 大会战 1,000–1,500 + B1 不确定性投资）、UAGHHBM 本体（K14 落后续 800–1,300）、hLP（LP 农场，42,889 bound 叶）。详见本批会话；裁决入档后刷新 §2 排队。
 
 - **2026-11-13（11:21，续1030）**：**uagkit（K14）正式挂起**——五条车道（w2 原交/w3/w4 修/w5 外科 + 编排者亲试）全部因中断潮零修复产出；破损 patch 的 23 个编译错误为战术级（rw 模式/override 未展开/假设名漂移/投影误用，全在新增段 1221–1548），无路线级 blocker，但需要交互式修错循环（估 0.5 个工作日）。工件齐备：uagkit-w2/patch.diff（破损原版）+ gate_uag3.log（全错误清单）+ w5 快照（compile.sh 可直接复跑）。**恢复条件**：中断潮平息（明日观察）或编排者手工修。同挂：K4c 的 LA18 两件（k4cprep-w2_rescue/ 有 WIP）。
 ① **真还债两笔**：`TFITSKC_p27`（`2dd2f699`，K2 门兑现）+ **接线**（`766f8896`，`nliRest1965189142a := packIneqABIEFJHUa`——BIEFJHU-a TM pilot 闭环，Assembly 56 条 nli* 首条实质清偿；300 叶 `by decide +kernel` 入锥、零新公理、585 基座不动）。AF 实测：K_REACH 2,097,556（+9,402）/ **SORRIED 67**（closed 恰 `{TFITSKC_p27, nliRest1965189142a}`、added ∅）/ AXIOM 585 / MODULES 5,241（+20）/ COVERAGE 99.3922%；TSV 5,912 行 + manifest PASS + 根面逐字节同。剩余 67 = Assembly 55 + Text 12。
