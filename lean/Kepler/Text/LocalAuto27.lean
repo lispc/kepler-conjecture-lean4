@@ -68,7 +68,7 @@ FILE MAP
     A/B/C).
   Section A (TFITSKC): `SCS_DIAG_A_LE_DIST_p27` (proved),
     `DIST_EQ_2_IMP_A_EQ_2_p27` (proved), `SCS_DIAG_2_p27` (proved),
-    `TFITSKCv1_p27` (sorry), `TFITSKC_p27` (sorry).
+    `TFITSKCv1_p27` (proved), `TFITSKC_p27` (proved).
   Section B (JCYFMRP): `J_EMPY_CASES_A_EQ_2_p27` (proved),
     `DIST_EDGE_LE_CSTAB_CASE_LE3_p27` (proved),
     `J_EMPY_CASES_A_EQ_2_V1_p27` (proved), `SCS_M_LE_1_p27` (proved
@@ -325,23 +325,6 @@ theorem SCS_DIAG_2_p27 (k i : ℕ) : 3 < k → scsDiag k i (i + 2) := by
       ne_step_mod_p27 (r := i % k) (c := 3) (by norm_num) hk (Nat.mod_lt i hkpos)
     have hm : (i % k + 3) % k = (i + 3) % k := mod_add_c_p27 (i := i) (c := 3) hk
     exact hn (heq.trans hm.symm)
-
-/-- HOL `TFITSKC_concl` (TFITSKC.hl:636). Note the registry twin
-`TFITSKC_concl` (LocalAuto1) strengthens `s.b (i+1)(i+2) ≤ 2*h0` to `=`; this
-statement follows the source (`≤`). -/
-theorem TFITSKC_p27 :
-    main_nonlinear_terminal_v11 →
-      ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
-        s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) → 3 < s.k → isScsV39 s →
-          v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
-            s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
-              dist (v i) (v (i + 1)) = 2 → 2 < s.b i (i + 1) →
-                (∀ i j, scsDiag s.k i j →
-                  s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < s.b i j) →
-                  dist (v (i + 1)) (v (i + 2)) = 2 := by
-  sorry
-    -- DISCHARGES: NEEDS `TFITSKCv1`; the `i'` J-emptyness premise is derived
-    -- in the source from `scs_basic_v39` (`scs_J_v39 s (SUC(SUC i)) i' = False`).
 
 /-! ## Section B: JCYFMRP -/
 
@@ -1412,6 +1395,34 @@ theorem TFITSKCv1_p27 :
   -- by `JKQEWGV2_p23` and the lunar fork by the JCYFMRP coplanarity engine
   -- (`HKIRPEP_ALT_p37` + `jcyfmrp_flat_residues_coplanar` + `FEKTYIY_p27`).
   -- Zero new sorries; axioms face = standard three.
+
+/-- HOL `TFITSKC_concl` (TFITSKC.hl:636). Note the registry twin
+`TFITSKC_concl` (LocalAuto1) strengthens `s.b (i+1)(i+2) ≤ 2*h0` to `=`; this
+statement follows the source (`≤`). -/
+-- Placement (lane tfitskc-w1, 2026-11-13): declared after `TFITSKCv1_p27` for
+-- Lean's declaration order (HOL proves `TFITSKC` by `MP_TAC TFITSKCv1`,
+-- TFITSKC.hl:649-659); docstring + statement byte-identical to the skeleton.
+theorem TFITSKC_p27 :
+    main_nonlinear_terminal_v11 →
+      ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ),
+        s.a (i + 2) (i + 3) < s.b (i + 2) (i + 3) → 3 < s.k → isScsV39 s →
+          v ∈ MMsV39 s → scsGeneric v → scsBasicV39 s →
+            s.a (i + 1) (i + 2) = 2 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
+              dist (v i) (v (i + 1)) = 2 → 2 < s.b i (i + 1) →
+                (∀ i j, scsDiag s.k i j →
+                  s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < s.b i j) →
+                  dist (v (i + 1)) (v (i + 2)) = 2 := by
+  intro hmnl s v i hab23 hk3 hs hMMs hgen hbasic ha12 hb12 hd01 hb0gt hadiag
+  have hJ2 : ∀ i', ¬ s.J (i + 2) i' := fun i' hJ => (hbasic.2 (i + 2) i') ▸ hJ
+  have hdb0 : dist (v i) (v (i + 1)) < s.b i (i + 1) := by
+    rw [hd01]; exact hb0gt
+  exact TFITSKCv1_p27 hmnl s v i hJ2 hab23 hk3 hs hMMs hgen hbasic ha12 hb12
+    hd01 hdb0 hadiag
+  -- DISCHARGES (2026-11-13, lane tfitskc-w1): HOL TFITSKC.hl:649-659 — the
+  -- 13-line wrapper on `TFITSKCv1_p27`.  The J-emptyness premise is discharged
+  -- from `scsBasicV39` (`s.J i j = False`, the HOL `scs_basic` unfolding at
+  -- TFITSKC.hl:655-656), and the strict bound `dist (v i) (v (i+1)) < b i (i+1)`
+  -- is `hb0gt` with `hd01` rewrote.
 
 /-- HOL `JCYFMRP_concl` (JCYFMRP.hl:240). -/
 theorem JCYFMRP_p27 :
