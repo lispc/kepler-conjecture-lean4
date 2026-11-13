@@ -91,7 +91,7 @@
 
 ## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
-> **2026-11-13 15:22 接管注记（新编排者 ZCode 主会话）**：用户令在飞两车道（`urrcellbody-w7` / `tmxllipls-w1`）交 kimi code 侧收口，不杀；本会话发 **`jlxfdmj-w4`**（fresh，从 `jlxfdmj-w3/` 接续包）——K4b 三线钥匙，Text 11→8 通道。两车道 15:11–15:19 仍活（w7 两轮直编、TM 四次自重启且样本全 NEG），详见 §8 续1042。
+> **2026-11-13 15:22 接管注记（新编排者 ZCode 主会话）**：用户令在飞两车道（`urrcellbody-w7` / `tmxllipls-w1`）交 kimi code 侧收口，不杀；本会话发 **`jlxfdmj-w4`**（fresh，从 `jlxfdmj-w3/` 接续包）——K4b 三线钥匙，Text 11→8 通道。两车道 15:11–15:19 仍活（w7 两轮直编、TM 四次自重启且样本全 NEG），详见 §8 续1042。**`jlxfdmj-w4` 已 LANDED `73d6c4e6`**（+1235 纯新增，cone-neutral；§8 续1043）。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -262,6 +262,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（15:48，续1043）**：**落库 `73d6c4e6`：jlxfdmj-w4 段1+2+3 拼接（LA27 +1235 纯新增）——K4b 三线钥匙第一段（cone-neutral 资产）**。
+① 交付：`jlxfdmj_ge4`（k≥4 主引理）+ 5 条模算术引理 + opp 套件/`jlx_bwd_step`；`JLXFDMJ_p27` 本体未改仍 sorry（k=3 缺口，SF 草案在 `lane_snapshots/jlxfdmj-w4/DELIVERY.md §5`）。patch 0 删除、定理签名未动、交付 sha256 `245b4e22…` 与车道一致。
+② 编排者闸（亲跑）：worktree@`f7ac9189` apply → 模块直编 rc=0/error=0 → 探针 `jlxfdmj_ge4` = `[propext, choice, Quot.sound]`（零 sorryAx）、`JLXFDMJ_p27` 面逐字不变（含 sorryAx）→ olean 装池 → 根面 md5 **`246e952c…` 逐字节同**；manifest `--check` PASS。TSV 无 JLXFDMJ（目前不在锥内，因其消费者 SCS_6I1 仍 sorry）⇒ SORRIED 66 不变。
+③ 勘误（车道实测）：段3 omega 卡点真因是缺模唯一性/补距离推理（非 let 不可见）；`lake env lean` 不能编包外源文件（岛协议须裸 `lean -R` + 完整 LEAN_PATH）；HOL 正本 = `lean/scripts/local/JLXFDMJ.hl:214-224`（首前提 `3 < scs_k_v39 s`）。
+④ **待用户裁决**：SF 提案（LA27 `JLXFDMJ_p27` / LA1 `JLXFDMJ_concl` 补 `3 < s.k`，依据 HOL 正本 + SF-72 先例）。SF 获批后一行 `exact jlxfdmj_ge4` 即真证到标准三；k=3 情形另立件。随后即派 SCS_6I1 收口 + LA33 两件（Text 11→8 通道）。
+⑤ 下一条：续1044。
 
 - **2026-11-13（15:22，续1042）**：**新编排者（ZCode 主会话）接管**；用户令：在飞两车道交 kimi code 侧收口（不杀、不干预），主线发 jlxfdmj-w4。
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
