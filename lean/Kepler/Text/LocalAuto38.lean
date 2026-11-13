@@ -2818,15 +2818,21 @@ theorem vv_enclosed4 (vv : ℕ → V3) (i : ℕ)
 theorem enclosed_sym (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
     enclosedP38 y1 y5 y6 y4 y2 y3 y7 y8 y9 =
       enclosedP38 y1 y6 y5 y4 y3 y2 y7 y9 y8 := by
-  sorry -- DISCHARGES: enclosedP38 body (external anchor)
-  -- BLOCKED: enclosedP38 stub (body unported).
+  set_option maxRecDepth 65536 in
+  unfold enclosedP38
+  congr 1
+  congr 1
+  all_goals simp only [abcOfQuadraticP38, muRP38, cayleyRP38, cayleyR]; ring
 
 /-- HOL `enclosed_sym2` (terminal.hl:1946). -/
 theorem enclosed_sym2 (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
     enclosedP38 y1 y5 y6 y4 y2 y3 y7 y8 y9 =
       enclosedP38 y7 y8 y9 y4 y2 y3 y1 y5 y6 := by
-  sorry -- DISCHARGES: enclosedP38 body (external anchor)
-  -- BLOCKED: enclosedP38 stub (body unported).
+  set_option maxRecDepth 65536 in
+  unfold enclosedP38
+  congr 1
+  congr 1
+  all_goals simp only [abcOfQuadraticP38, muRP38, cayleyRP38, cayleyR]; ring
 
 /-- HOL `convex_local_fan_azim_le_pi` (terminal.hl:1962). DISCHARGED
 2026-09-28: the second `convex_local_fan` conjunct gives
