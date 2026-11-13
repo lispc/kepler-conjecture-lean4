@@ -36,6 +36,8 @@ Evidence.md): `GSXRFWM_p33`, `MMS_IMP_BBS_p28`, `BBS_IMP_CONVEX_LOCAL_FAN_p34`,
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto9
 import Kepler.Text.LocalAuto14
+import Kepler.Text.LocalAuto16
+import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto22
 import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto23Vas
@@ -45,6 +47,7 @@ import Kepler.Text.LocalAuto28
 import Kepler.Text.LocalAuto33
 import Kepler.Text.LocalAuto34
 import Kepler.Text.VasTuaKit
+import Kepler.Text.YebwjngKit
 import Mathlib
 
 set_option maxHeartbeats 6000000
@@ -205,5 +208,124 @@ theorem TUAPYYU_kit (h : main_nonlinear_terminal_v11) :
       his hk hv hbasic hgen hdiag hang
   intro s v p his hbasic hk hv hdiag hval h1 h2
   exact TUAPYYU1_vaskit hN1 hN2 h s v p his hbasic hk hv hdiag hval h1 h2
+
+/-- At most one straight index at `k = 4`: any two straight indices are
+congruent mod `4`.  This is the `NOT_STR_IN_CASES_4` engine re-derived from
+`AURSIPD_p18` because its upstream twins `WGDHPPI_concl` /
+`WGDHPPI_p25` / `NOT_STR_IN_CASES_4(_1)_p25` still carry `sorryAx` at HEAD
+(probe in `Evidence.md`); `AURSIPD_p18` is standard-three. -/
+private theorem pweiwbz_str_uniq (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (his : isScsV39 s) (hk : s.k = 4) (hv : v ∈ MMsV39 s) :
+    ∀ i j : ℕ, scsIsStr s v i → scsIsStr s v j → i % 4 = j % 4 := by
+  have hgen : scsGeneric v := GSXRFWM_p33 s v his hk hv
+  have hcard : {i : ℕ | i < s.k ∧ scsIsStr s v i}.ncard ≤ 1 := by
+    have h3 := AURSIPD_p18 s v (by rw [hk]; norm_num) his hgen hv
+    rw [hk] at h3 ⊢
+    omega
+  have hSfin : ({i : ℕ | i < s.k ∧ scsIsStr s v i} : Set ℕ).Finite :=
+    FINITE_SET_STR_p25 s.k s v
+  intro i j hi hj
+  by_contra hne
+  have hmi : i % 4 ∈ {i : ℕ | i < s.k ∧ scsIsStr s v i} :=
+    ⟨by omega, (STR_MOD_EQ_p25 s v 4 his hk hv i).mpr hi⟩
+  have hmj : j % 4 ∈ {i : ℕ | i < s.k ∧ scsIsStr s v i} :=
+    ⟨by omega, (STR_MOD_EQ_p25 s v 4 his hk hv j).mpr hj⟩
+  have hpair : ({i % 4, j % 4} : Set ℕ) ⊆ {i : ℕ | i < s.k ∧ scsIsStr s v i} := by
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with hx | hx
+    · rw [hx]; exact hmi
+    · rw [Set.mem_singleton_iff.mp hx]; exact hmj
+  have hle := Set.ncard_le_ncard hpair hSfin
+  rw [Set.ncard_pair (show i % 4 ≠ j % 4 by omega)] at hle
+  omega
+
+/-- HOL `PWEIWBZ` (VASYYAU.hl:1126-2348), C-branch leaf
+`scs_is_str s v (p+1) ∧ scs_a_v39 s (p+3) p = &2` (VASYYAU.hl:1897-1924):
+under the master premises, a straight `p+1` vertex together with the minimal
+`(p+3,p)` edge pins `dist(v p, v(p+1))` at `2`.
+
+Assembly (HOL :1902-1923): `YEBWJNG` at `p+3` gives
+`dist (v (p+3)) (v (p+4)) = 2` (its `~str` pair `p+3`, `p+4` comes from the
+at-most-one-straight bound, derived here directly from `AURSIPD_p18` because
+the `WGDHPPI` twin `WGDHPPI_concl` still carries `sorryAx`); `CQAOQLR` at
+`p+3` transports the equation across the opposite diagonal to
+`dist (v (p+4)) (v (p+5)) = 2`, and periodicity (`v (p+4) = v p`,
+`v (p+5) = v (p+1)`) lands on the goal.  Every shifted `a`/`b` premise is a
+`Periodic2` image of the `p`-indexed value table. -/
+private theorem pweiwbz_C1 (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s) (hb : scsBasicV39 s) (hk : s.k = 4)
+    (hv : v ∈ MMsV39 s)
+    (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j)
+    (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+    (ha : s.a p (p + 1) = 2)
+    (hstr1 : scsIsStr s v (p + 1)) (ha30 : s.a (p + 3) p = 2) :
+    dist (v p) (v (p + 1)) = 2 := by
+  -- ═══ A. substrate: generic position, BBS bounds, periodicity ═══
+  have hgen : scsGeneric v := GSXRFWM_p33 s v his hk hv
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hv
+  have hper : Periodic v 4 := by
+    have h1 := hBB.2.1
+    rw [hk] at h1
+    exact h1
+  have his' : isScsV39 s := his
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpb, -, -, -, -, -, -, -, -, -, -⟩ := his
+  have hpa4 : Periodic2 s.a 4 := hk ▸ hpa
+  have hpb4 : Periodic2 s.b 4 := hk ▸ hpb
+  -- ═══ B. at most one straight index, straight from `AURSIPD` ═══
+  have hns3 : ¬scsIsStr s v (p + 3) := by
+    intro hc
+    have e := pweiwbz_str_uniq h s v his' hk hv (p + 3) (p + 1) hc hstr1
+    omega
+  have hns4 : ¬scsIsStr s v (p + 4) := by
+    intro hc
+    have e := pweiwbz_str_uniq h s v his' hk hv (p + 4) (p + 1) hc hstr1
+    omega
+  -- ═══ C. the `(p+3,p)` edge value and its mod-shifts ═══
+  have ha34 : s.a (p + 3) (p + 4) = 2 := ((hpa4 (p + 3) p).2).trans ha30
+  have hb34 : s.b (p + 3) (p + 4) = 2 * h0 := A_EQ2_IMP_B_p25 s (p + 3) hval ha34
+  have hb01 : s.b p (p + 1) = 2 * h0 := A_EQ2_IMP_B_p25 s p hval ha
+  have ha45 : s.a (p + 4) (p + 5) = 2 :=
+    ((hpa4 (p + 4) (p + 1)).2).trans (((hpa4 p (p + 1)).1).trans ha)
+  have hb45 : s.b (p + 4) (p + 5) = 2 * h0 :=
+    ((hpb4 (p + 4) (p + 1)).2).trans (((hpb4 p (p + 1)).1).trans hb01)
+  -- ═══ D. strict `a < b` on the two remaining edges ═══
+  have hlt : ∀ i : ℕ, s.a i (i + 1) < s.b i (i + 1) := by
+    intro i
+    rcases hval i with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · rw [h1, h2]; norm_num [h0]
+    · rw [h1, h2]; norm_num [h0, cstab]
+  have ea56 : s.a (p + 5) (p + 6) = s.a (p + 1) (p + 2) :=
+    ((hpa4 (p + 1) (p + 6)).1).trans ((hpa4 (p + 1) (p + 2)).2)
+  have eb56 : s.b (p + 5) (p + 6) = s.b (p + 1) (p + 2) :=
+    ((hpb4 (p + 1) (p + 6)).1).trans ((hpb4 (p + 1) (p + 2)).2)
+  have ea63 : s.a (p + 6) (p + 3) = s.a (p + 2) (p + 3) :=
+    (hpa4 (p + 2) (p + 3)).1
+  have eb63 : s.b (p + 6) (p + 3) = s.b (p + 2) (p + 3) :=
+    (hpb4 (p + 2) (p + 3)).1
+  -- ═══ E. `YEBWJNG` at `p+3`: the opposite `(p+3,p)` diagonal is `2` ═══
+  have hY : dist (v (p + 3)) (v (p + 4)) = 2 :=
+    YEBWJNG_kit h s v (p + 3) his' hb hk hv hdiag hval hns3 hns4 ha34
+  -- ═══ F. `CQAOQLR` at `p+3` transports it across the opposite edge ═══
+  have hsix : (p + 3) + s.k - 1 = p + 6 := by rw [hk]; omega
+  have hCQ : dist (v (p + 3)) (v (p + 4)) = 2 ↔
+      dist (v (p + 4)) (v (p + 5)) = 2 :=
+    CQAOQLR_p16 h s v (p + 3)
+      (by rw [hk]; norm_num)
+      his' hv hgen hb
+      (by rw [hk]; exact hdiag)
+      (by rw [hb34]; norm_num [h0])
+      (by rw [hb45]; norm_num [h0])
+      (by rw [ea56, eb56]; exact hlt (p + 1))
+      (by rw [hsix, ea63, eb63]; exact hlt (p + 2))
+      ha34 (le_of_eq hb34) ha45 (le_of_eq hb45)
+  -- ═══ G. periodicity lands the shifted edge on the goal ═══
+  have hstep : dist (v (p + 4)) (v (p + 5)) = 2 := hCQ.mp hY
+  have hv4 : v (p + 4) = v p := hper p
+  have hv5 : v (p + 5) = v (p + 1) := by
+    have h1 := hper (p + 1)
+    simpa only [show (p + 1) + 4 = p + 5 by omega] using h1
+  simpa only [hv4, hv5] using hstep
 
 end Kepler.Text
