@@ -1836,14 +1836,86 @@ theorem SCS_M_4I1_p33 : scsM scs4I1 = ∅ := by
 theorem CARD_SCS_M_4I1_p33 : Set.ncard (scsM scs4I1) ≤ 1 := by
   rw [SCS_M_4I1_p33]; simp
 
-/-- HOL `SCS_4I2_IMP_SCS_4T1` (ARDBZYE.hl:1357).  NEEDS: the terminal
-ear-diagram case bank (consumes `ear_acute_p33`/`EDGE_EQ_2_4I2_*`). -/
+/-- HOL `SCS_4I2_IMP_SCS_4T1` (ARDBZYE.hl:1357).  DISCHARGED 2026-11-13
+(la33keys-w1): the all-diags-open branch closes through
+`JCYFMRP_V3_p29` (pinned edge) -> `JLXFDMJ_ge4_p27` (all edges = 2) ->
+`BBsV39 scs4T1 v` reconstruction -> `XWNHLMD_MM_p33`. -/
 theorem SCS_4I2_IMP_SCS_4T1_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3)
     (hv : v ∈ MMsV39 scs4I2)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    MMsV39 scs4T1 ≠ ∅ := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I2_IMP_SCS_4T1 (main_nonlinear_terminal
-  -- case bank + 3≤ diag + straightness calculus).
+    MMsV39 scs4T1 ≠ ∅ := by
+  have hBB : BBsV39 scs4I2 v := MMs_imp_BBs_p33 hv
+  have hgen : scsGeneric v := SCS_4I2_GENERIC_p33 v hv
+  have hdiagP : ∀ i j, scsDiag scs4I2.k i j →
+      scs4I2.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < scs4I2.b i j :=
+    fun i j hd => ⟨h0_LT_B_SCS_4I2_p33.2 i j hd, hdiag i j hd, h0_LT_B_SCS_4I2_p33.1 i j hd⟩
+  have hab : ∀ i, scs4I2.a i (i + 1) < scs4I2.b i (i + 1) := by
+    intro i
+    rw [A_LT_B_4I2_p33.2 i]
+    exact A_LT_B_4I2_p33.1 i
+  have ha2 : ∀ i, scs4I2.a i (i + 1) = 2 := fun i => A_LT_B_4I2_p33.2 i
+  obtain ⟨i0, hbi0, hai0, hdist0⟩ :=
+    JCYFMRP_V3_p29 _hmn scs4I2 v (by rw [K_SCS_4I2_p33]; norm_num)
+      SCS_4I2_IS_SCS_p33 hv hgen SCS_4I2_BASIC_p33 CARD_SCS_M_4I2_p33 hdiagP hab ha2
+  have hall : ∀ j, dist (v j) (v (j + 1)) = 2 := by
+    intro j
+    exact JLXFDMJ_ge4_p27 _hmn scs4I2 v i0 (by rw [K_SCS_4I2_p33]; norm_num)
+      SCS_4I2_IS_SCS_p33 hv hgen SCS_4I2_BASIC_p33 hdist0
+      (fun i j hd => h0_LT_B_SCS_4I2_p33.1 i j hd) CARD_SCS_M_4I2_p33
+      (fun i j hd => ⟨h0_LT_B_SCS_4I2_p33.2 i j hd, hdiag i j hd⟩) hab hai0 hbi0 j
+      (by rw [SCS_M_4I2_p33]; simp)
+  have hfan : ConvexLocalFan (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3))
+      (Set.range fun i => (v i, v (i + 1))) :=
+    (hBB.2.2.2).resolve_left (by rw [K_SCS_4I2_p33]; norm_num)
+  have hBB' : BBsV39 scs4T1 v := by
+    refine ⟨hBB.1, ?_, ?_, Or.inr hfan⟩
+    · simpa [K_SCS_4I2_p33, K_SCS_4T1_p33] using hBB.2.1
+    · intro i j
+      constructor
+      · simpa only [scs4I2, scs4T1, mkUnadornedV39] using (hBB.2.2.1 i j).1
+      · have hb2 := (hBB.2.2.1 i j).2
+        by_cases hsame : i % 4 = j % 4
+        · have hvij : v i = v j :=
+            CHANGE_W_IN_BBS_MOD_IS_SCS_p28 scs4I2 v i j SCS_4I2_IS_SCS_p33 hBB
+              (by rw [K_SCS_4I2_p33]; exact hsame)
+          have hbval : scs4T1.b i j = 0 := by
+            simp only [scs4T1, mkUnadornedV39, csAdj, if_pos hsame]
+          rw [hbval]
+          exact le_of_eq (by rw [hvij]; exact dist_self (v j))
+        · by_cases hadj : j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4
+          · rcases hadj with hadj | hadj
+            · have hvj : v j = v (i + 1) :=
+                CHANGE_W_IN_BBS_MOD_IS_SCS_p28 scs4I2 v j (i + 1) SCS_4I2_IS_SCS_p33 hBB
+                  (by rw [K_SCS_4I2_p33]; exact hadj)
+              have hbval : scs4T1.b i j = 2 := by
+                simp only [scs4T1, mkUnadornedV39, csAdj, if_neg hsame, if_pos (Or.inl hadj)]
+              rw [hbval]
+              exact le_of_eq (by rw [hvj]; exact hall i)
+            · have hvi : v i = v (j + 1) :=
+                CHANGE_W_IN_BBS_MOD_IS_SCS_p28 scs4I2 v i (j + 1) SCS_4I2_IS_SCS_p33 hBB
+                  (by rw [K_SCS_4I2_p33]; exact hadj.symm)
+              have hbval : scs4T1.b i j = 2 := by
+                simp only [scs4T1, mkUnadornedV39, csAdj, if_neg hsame, if_pos (Or.inr hadj)]
+              rw [hbval]
+              exact le_of_eq (by rw [hvi, dist_comm]; exact hall j)
+          · have hbval : scs4T1.b i j = 6 := by
+              simp only [scs4T1, mkUnadornedV39, csAdj, if_neg hsame, if_neg hadj]
+            rw [hbval]
+            have hb6 : dist (v i) (v j) ≤ 6 := by
+              have h := hb2
+              rw [show scs4I2.b i j = 6 from by
+                simp only [scs4I2, mkUnadornedV39, csAdj, if_neg hsame, if_neg hadj]] at h
+              exact h
+            exact hb6
+  exact XWNHLMD_MM_p33 scs4I2 scs4T1 v SCS_4I2_IS_SCS_p33 SCS_4T1_IS_SCS_p33
+    SCS_4I2_BASIC_p33 SCS_4T1_BASIC_p33 (by simp [K_SCS_4I2_p33, K_SCS_4T1_p33]) hv hBB'
+    (by norm_num [scs4I2, scs4T1, mkUnadornedV39])
+  -- DISCHARGED (2026-11-13, lane la33keys-w1): HOL ARDBZYE.hl:1357 chain —
+  -- `SCS_4I2_GENERIC` -> `JCYFMRP_V3` (pinned edge) -> `JLXFDMJ` (all edges,
+  -- via the `ge4` form `JLXFDMJ_ge4_p27` with `3 < 4` by `norm_num`) ->
+  -- `BBsV39 scs4T1 v` (adjacent b-row `&2` from the edge equalities, residue
+  -- classes via `CHANGE_W_IN_BBS_MOD_IS_SCS`) -> `XWNHLMD_MM`.  No new sorry;
+  -- axioms = standard three.
 
 /-- HOL `SCS_DIAG_4_CASES` (ARDBZYE.hl:1439). -/
 theorem SCS_DIAG_4_CASES_p33 (i j : ℕ) :
@@ -2959,13 +3031,46 @@ theorem ARDBZYE_p33 (_hmn : main_nonlinear_terminal_v11) :
   -- DISCHARGES: NEEDS ARDBZYE.hl ARDBZYE (2026-10-28, la33-w2: assembly over
   -- the two frozen leaves; farm gap list in the lane DELIVERY).
 
-/-- HOL `SCS_4I1_IMP_SCS_4I2` (ARDBZYE.hl:2575).  NEEDS: the terminal case
-bank (the 4I1 b-table dominates 4I2's away from the diagonals). -/
+/-- HOL `SCS_4I1_IMP_SCS_4I2` (ARDBZYE.hl:2575).  DISCHARGED 2026-11-13
+(la33keys-w1): `BBsV39 scs4I2 v` reconstruction — the b-row is shared, the
+diagonal `a`-row upgrades from `2*h0` to `3` by the open-diagonal hypothesis —
+then `XWNHLMD_MM_p33` (`d = 0.206 ≤ 0.467`). -/
 theorem SCS_4I1_IMP_SCS_4I2_p33 (_hmn : main_nonlinear_terminal_v11) (v : ℕ → V3)
     (hv : v ∈ MMsV39 scs4I1)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    MMsV39 scs4I2 ≠ ∅ := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl SCS_4I1_IMP_SCS_4I2.
+    MMsV39 scs4I2 ≠ ∅ := by
+  have hBB : BBsV39 scs4I1 v := MMs_imp_BBs_p33 hv
+  have hfan : ConvexLocalFan (Set.range v) (Set.range fun i => ({v i, v (i + 1)} : Set V3))
+      (Set.range fun i => (v i, v (i + 1))) :=
+    (hBB.2.2.2).resolve_left (by rw [K_SCS_4I1_p33]; norm_num)
+  have hBB' : BBsV39 scs4I2 v := by
+    refine ⟨hBB.1, ?_, ?_, Or.inr hfan⟩
+    · simpa [K_SCS_4I1_p33, K_SCS_4I2_p33] using hBB.2.1
+    · intro i j
+      constructor
+      · by_cases hsame : i % 4 = j % 4
+        · simp only [scs4I2, mkUnadornedV39, csAdj, if_pos hsame]
+          exact dist_nonneg
+        · by_cases hadj : j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4
+          · have h1 := (hBB.2.2.1 i j).1
+            simp only [scs4I1, mkUnadornedV39, csAdj, if_neg hsame, if_pos hadj] at h1
+            simpa only [scs4I2, mkUnadornedV39, csAdj, if_neg hsame, if_pos hadj] using h1
+          · have hd : scsDiag 4 i j :=
+              ⟨hsame, fun hh => hadj (Or.inl hh.symm), fun hh => hadj (Or.inr hh.symm)⟩
+            have hc := hdiag i j hd
+            simp only [scs4I2, mkUnadornedV39, csAdj, if_neg hsame, if_neg hadj]
+            have h3 : (3 : ℝ) ≤ dist (v i) (v j) := by
+              rw [cstab] at hc; linarith
+            exact h3
+      · simpa only [scs4I1, scs4I2, mkUnadornedV39] using (hBB.2.2.1 i j).2
+  exact XWNHLMD_MM_p33 scs4I1 scs4I2 v SCS_4I1_IS_SCS_p33 SCS_4I2_IS_SCS_p33
+    SCS_4I1_BASIC_p33 SCS_4I2_BASIC_p33 (by simp [K_SCS_4I1_p33, K_SCS_4I2_p33]) hv hBB'
+    (by norm_num [scs4I1, scs4I2, mkUnadornedV39, dTame])
+  -- DISCHARGED (2026-11-13, lane la33keys-w1): HOL ARDBZYE.hl:2575 — the
+  -- 4I1 b-table equals 4I2's, and the only `a`-row gap (diagonal
+  -- `2*h0` vs `3`) is supplied by the open-diagonal hypothesis
+  -- (`cstab = 3.01`); `XWNHLMD_MM` upgrades with `d = d_tame 4 ≤ 0.467`.
+  -- No new sorry; axioms = standard three.
 
 /-- HOL `SCS_4I1_STAB_DIAG` (ARDBZYE.hl:2642). -/
 theorem SCS_4I1_STAB_DIAG_p33 (v : ℕ → V3) (i j : ℕ) (hbb : BBsV39 scs4I1 v)
