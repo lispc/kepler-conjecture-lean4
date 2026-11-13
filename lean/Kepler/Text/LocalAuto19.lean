@@ -1165,7 +1165,17 @@ theorem flat_term2_126_x_eval_p19 (h : mainNonlinearTerminalV11_p18)
     (bz : 2 ≤ z) (bz' : z ≤ 2 * h0) (b1 : 2 ≤ y1) (b1' : y1 ≤ 2 * h0)
     (b2 : 2 ≤ y2) (b2' : y2 ≤ 2 * h0) (b6 : 3.01 ≤ y6) (b6' : y6 ≤ 3.915) :
     yOfX (flatTerm2_126x_p19 d 4 4) y1 y2 y3 y4 y5 y6 = flatTerm_p19 z := by
-  sorry
+  have h2h0 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hzle : z ≤ 2.52 := by rw [← h2h0]; exact bz'
+  have hy1le : y1 ≤ 2.52 := by rw [← h2h0]; exact b1'
+  have hy2le : y2 ≤ 2.52 := by rw [← h2h0]; exact b2'
+  have hl3 := edge2_flatD_x1_delta_lemma3_p19 h d z y1 y2 y6 2 2
+    hd hd0 hd20 bz hzle b1 hy1le b2 hy2le b6 b6' rfl rfl
+  have hb := hl3 ⟨by linarith, by linarith⟩ ⟨b1, hy1le⟩ ⟨b2, hy2le⟩
+    ⟨by linarith, by linarith⟩ ⟨le_refl 2, le_refl 2⟩ ⟨le_refl 2, le_refl 2⟩
+  rw [show (2:ℝ) * 2 = 4 from by norm_num] at hb
+  simp only [yOfX, flatTerm2_126x_p19]
+  rw [hb, Real.sqrt_mul_self (by linarith : (0:ℝ) ≤ z)]
 
 /-- HOL `flat_term2_135_x_eval` (pent_hex.hl:1493). NEEDS-DB. -/
 theorem flat_term2_135_x_eval_p19 (h : mainNonlinearTerminalV11_p18)
@@ -1184,7 +1194,23 @@ theorem delta_126_x_2h0_le_d_p19 (h : mainNonlinearTerminalV11_p18)
     (hd0 : 0 ≤ d) (hd20 : d ≤ 20)
     (hd : deltaY z1 y1 y2 y6 2 2 = d) :
     yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y2 y3 y4 y5 y6 ≤ d := by
-  sorry
+  have h4 : (4:ℝ) * h0 * h0 = (2 * h0) * (2 * h0) := by ring
+  have hd0' : 0 ≤ deltaY z1 y1 y2 y6 2 2 := by rw [hd]; exact hd0
+  have hd20' : deltaY z1 y1 y2 y6 2 2 ≤ 20 := by rw [hd]; exact hd20
+  have hmono := delta_mono_p19 h (2 * h0) z1 y1 y2 y6 2 2 bz bz' (le_refl _)
+    b1 b1' b2 b2' b6 b6' (le_refl _) (le_refl _) (le_refl _) (le_refl _) hd0' hd20'
+  have hdy : deltaY (2 * h0) y1 y2 y6 2 2
+      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y2 * y2) (y6 * y6) 4 4 := by
+    unfold deltaY
+    rw [show (2:ℝ) * 2 = 4 from by norm_num]
+  have hperm : deltaX (y1 * y1) (y2 * y2) ((2 * h0) * (2 * h0)) 4 4 (y6 * y6)
+      = deltaX ((2 * h0) * (2 * h0)) (y1 * y1) (y2 * y2) (y6 * y6) 4 4 := by
+    unfold deltaX
+    ring
+  rw [hd] at hmono
+  simp only [yOfX, delta126x_p19]
+  rw [h4, hperm, ← hdy]
+  exact hmono
 
 /-- HOL `delta_135_x_2h0_le_d` (pent_hex.hl:1546). NEEDS-DB. -/
 theorem delta_135_x_2h0_le_d_p19 (h : mainNonlinearTerminalV11_p18)
@@ -1204,7 +1230,30 @@ theorem lemma_5546286427_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, z1, 2.52)]
       (0 = deltaY z1 y1 y2 y6 2 2 →
         taum y1 y2 y3 y4 y5 y6 + flatTerm_p19 z1 + 0.12 > 0.616) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 hd0
+  have hreg : mainEstimate_5546286427 :=
+    h "5546286427" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_5546286427 at hreg
+  have hreg' := hreg y1 y2 y3 y4 y5 y6 c1.1 c1.2 c2.1 c2.2 c3.1 c3.2 c4.1 c4.2
+    c5.1 c5.2 c6.1 c6.2
+  have hdz : deltaY z1 y1 y2 y6 2 2 = 0 := hd0.symm
+  rcases hreg' with h1 | h2
+  · have hev := flat_term2_126_x_eval_p19 h 0 z1 y1 y2 y3 y4 y5 y6 hdz
+      (le_refl 0) (by norm_num) c7.1
+      (by rw [h0_num_p19.2.1]; exact c7.2) c1.1
+      (by rw [h0_num_p19.2.1]; exact c1.2) c2.1
+      (by rw [h0_num_p19.2.1]; exact c2.2) c6.1 (by linarith)
+    have h1' : taum y1 y2 y3 y4 y5 y6
+        + yOfX (flatTerm2_126x_p19 0 4 4) y1 y2 y3 y4 y5 y6 + (0.12:ℝ) > (0.616:ℝ) := h1
+    rw [hev] at h1'
+    exact h1'
+  · have hdle := delta_126_x_2h0_le_d_p19 h 0 z1 y1 y2 y3 y4 y5 y6 c7.1
+      (by rw [h0_num_p19.2.1]; exact c7.2) c1.1
+      (by rw [h0_num_p19.2.1]; exact c1.2) c2.1
+      (by rw [h0_num_p19.2.1]; exact c2.2) c6.1 (by linarith)
+      (le_refl 0) (by norm_num) hdz
+    have h2' : yOfX (delta126x_t11 (4 * h0 * h0) 4 4) y1 y2 y3 y4 y5 y6 ≤ (0:ℝ) := hdle
+    linarith
 
 /-- HOL `taud_ge_flat_term` (pent_hex.hl:1610). -/
 theorem taud_ge_flat_term_p19 (y1 y2 y3 y4 y5 y6 : ℝ)
@@ -1661,7 +1710,36 @@ theorem taud_mu_clauses_p19 (h : mainNonlinearTerminalV11_p18) (y2 y3 y4 : ℝ)
         muY_p19 2 (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3))
               * Real.sqrt (deltaY 2 y2 y3 y4 2 2) - sol0
           ≤ taudP19 2 y2 y3 y4 2 2) := by
-  sorry
+  obtain ⟨hy2l, hy2u, hy3l, hy3u, hy4l, hy4u⟩ := hb
+  have h2h0 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hy2h : y2 ≤ 2 * h0 := by rw [h2h0]; exact hy2u
+  have hy3h : y3 ≤ 2 * h0 := by rw [h2h0]; exact hy3u
+  have hs2 : Real.sqrt (y2 * y2) = y2 := Real.sqrt_mul_self (by linarith)
+  have hs3 : Real.sqrt (y3 * y3) = y3 := Real.sqrt_mul_self (by linarith)
+  refine ⟨?_, ?_, ?_⟩
+  · rintro ⟨hd0, _⟩
+    have hge := taud_ge_flat_term_p19 2 y2 y3 y4 2 2
+      (by rw [h2h0]; norm_num) hy2h hy3h hd0
+    rw [flat_term_2_p19] at hge
+    exact hge
+  · rintro ⟨hd16, hd100⟩
+    have hmu : 0 ≤ muY_p19 2 y2 y3 := by
+      unfold muY_p19
+      linarith
+    rw [hs2, hs3, taudP19, flat_term_2_p19]
+    have hs16 : Real.sqrt (16:ℝ) = 4 := by
+      rw [Real.sqrt_eq_iff_mul_self_eq (by norm_num) (by norm_num)]; norm_num
+    have hs100 : Real.sqrt (100:ℝ) = 10 := by
+      rw [Real.sqrt_eq_iff_mul_self_eq (by norm_num) (by norm_num)]; norm_num
+    have hsec := sqrt_secant_approx_p19 (x1 := 16) (x2 := 100)
+      (x := deltaY 2 y2 y3 y4 2 2) (by norm_num) hd16 hd100
+    rw [hs16, hs100, show (1:ℝ) / (4 + 10) = 1 / 14 from by norm_num] at hsec
+    have hmul := mul_le_mul_of_nonneg_left hsec hmu
+    rw [show (2:ℝ) * 2 = 4 from by norm_num]
+    linarith
+  · rintro _
+    rw [hs2, hs3, taudP19, flat_term_2_p19]
+    linarith
 
 /-! ## The hex terminal reductions -/
 
