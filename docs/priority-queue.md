@@ -262,6 +262,12 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（13:30，续1034）**：**vasrecon-w1 交付（三 master 总预算 ≈4,900–8,300 行，战役顺序 TUAPYYU→PWEIWBZ→VASYYAU）+ 中断潮 +2（今日 11 例）→ urrcellbody-w4 / uagbody-w2 fresh 接管（WIP 已由编排者抢救落盘）**。
+① **vasrecon 关键发现**：(a) vas-nhx BLOCKED 判词**半过期**——LA21/LA22 deform kit 内容实测全 no-sorry，残余硬门只剩 LA23 体内 ab4/deform_azim_sum 两件 + import DAG 死锁（编排级决策 R3）；(b) **装债陷阱**——LA25 五条 `_p25` 转发行扫描无 sorry 但 axioms 带债，收口必须 discharge 重接后全锥零 sorryAx；(c) 依赖强序 TUAPYYU→PWEIWBZ→VASYYAU，TUAPYYU 新数学最少（HOL 本体仅 6 行）。
+② **推荐波次**：W0（2 车道 230–470：LA25 stub 贴 kit proof + YEBWJNG/CQAOQLR/KEITDWB）→ W1（解析小件簇 250–510）→ W2（2 车道 + **R3 DAG 裁决点**）→ W3（三收口）。三高风险：R1 LEMMA_PWE 机制深度 / R2 叶子模板可崩塌度 / R3 DAG 死锁。**战役总预算已呈用户，等点头**。
+③ **中断潮 +2**：uagbody-w1（16 min，PLAN+首次编译现场，WIP +153 行已抢救）、urrcellbody-w3（resume 僵尸锁第 6/7 例——agent-31/33 双锁）。w4/w2 接管车道工单新增**硬纪律第一条：开场先落盘 b/ 再干活**（编排者已代为落盘，接管从快照接续）。
+④ **在飞 4（全编译面）**：jlxfdmj-w2 / tamelp-door-w1 / urrcellbody-w4 / uagbody-w2。待命：6I1 收口（等 jlxfdmj）、K4c、VASYYAU W0（等用户）、TameLp B1（缓议）。
+
 - **2026-11-13（13:25，续1033）**：**nextbox-scout 交付（下一盒推荐 = TSKAJXY-XLLIPLS，待用户点头 certtm 窗口）+ TameLp 便宜门车道发车（tamelp-door-w1，agent-34）+ urrcellbody-w3 再截断**。
 ① **scout 结论（案头零编译，SCOUT.md 8 节）**：54 条 nli* 归约 = **11 个 TM 可消费盒** + 2 个缺 case JSON 的生成模板族（ZTGIJCF4×10 / QITNPEA1×4，可重建）+ 5 条非盒注册表直挂。三候选：**TSKAJXY-XLLIPLS 第一**（原始 ~1,826 格 → TM 3k–8k 叶，唯一严格+无析取+全数值 dyadic，case 在库免 hand-hybrid，重放估 0.5–1.5 天；战略收益 = gamma4fgcy IExpr 编码+bridge 是 ≥15 条 nli* 共享前置）；QZECFIC wt0 第二；QITNPEA-linear 五银行第三（≥2×10⁵ 叶/件，定位战略后续）。标定：BIEFJHU-a 原始 162 格 ↔ TM 300 叶（×1.85）。
 ② **裁决待用户**：下一盒 = TSKAJXY-XLLIPLS 是否批（certtm 解冻是单盒专项，BIEFJHU-a 后需逐盒点头）；UNRESOLVED：certtm 能否直吃 plain case JSON 未验证（XLLIPLS 无 hybrid 变体，或需机械预改写）；止损触发 = certtm 探针重演 w2 尾区型全档 NEG → 切候选 B。
