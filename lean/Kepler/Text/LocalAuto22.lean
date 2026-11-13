@@ -83,6 +83,14 @@ import Kepler.Text.LocalAuto1
 -- this supersedes the "same-wave lanes 19-21/23-27 are NOT imported" note
 -- in the file header for this one item.
 import Kepler.Text.LocalAuto23
+-- LANE emptykit-3 (2026-11-12): the `empty_*` terminal-emptiness kit below
+-- consumes the `taustar_taum`/`taustar_taum_dfun`/`FUNLIST_EXPLICIT` bridges
+-- and the `MOD_4_EXPLICIT`/`sqrt8` kit from LA38.  SCC-simulated on HEAD
+-- `db534f91` and re-verified on `3cb72c17`: +1 edge keeps all 541 SCCs
+-- trivial (LA38 reaches neither LA22 nor LA23; LA22 already transitively
+-- sees LA38 via LA23, this edge makes the dependency direct per the
+-- dagcut-eval-w1 work order).
+import Kepler.Text.LocalAuto38
 import Kepler.Text.SphereKit
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
@@ -2481,6 +2489,281 @@ theorem empty_6T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
 theorem empty_5T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
     (hB : BBsV39 scs5T1 vv) : 0 ≤ taustarV39 scs5T1 vv := by
   sorry
+
+/-! ## LANE emptykit-3 (2026-11-12): the `OCBICBY_p22` `empty_*` kit.
+
+Six tri-system emptiness pieces (`empty_3T1`, `empty_3T3`..`empty_3T7`) and
+`empty_4T1`, discharged per the HOL originals in `terminal.hl:2558-2820`
+through the `taustar_taum`/`taustar_taum_dfun` bridges (LA38, now directly
+imported above) and the `main_nonlinear_terminal_v11` registry.  The two
+giant pieces `empty_5T1_p22`/`empty_6T1_p22` above remain `sorry`: they need
+the `vv_split_azim_generic` fan-split family (LA38, still `sorry` — its
+`EGHNAVX` input is only reachable from LA14, which cannot be imported into
+LA38 since LA14 reaches LA38) plus, for `empty_6T1_p22`, the chapter-level
+`JKQEWGV1_concl` (LA1, `sorry`) — see DELIVERY.md. -/
+
+/-- Helper: `delta_y` under legs (2 3) swap (HOL `Merge_ineq.delta_y_sym`
+component; polynomial identity, `ring` after unfolding). -/
+private theorem emptykit_delta_swap23 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY a c b d f e := by
+  unfold deltaY deltaX
+  ring
+
+/-- Helper: `delta_y` under legs (1 2) swap (same provenance). -/
+private theorem emptykit_delta_swap12 (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY b a c e d f := by
+  unfold deltaY deltaX
+  ring
+
+/-- Helper: the (1 3) leg permutation of `taum` from `taum_sym2`. -/
+private theorem emptykit_taum13 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y1 y2 y3 y4 y5 y6 = taum y3 y1 y2 y6 y4 y5 :=
+  (taum_sym2 y1 y2 y3 y4 y5 y6).2.trans (taum_sym2 y1 y3 y2 y4 y6 y5).1
+
+/-- Helper: the reversal leg permutation of `taum` from `taum_sym2`. -/
+private theorem emptykit_taum_rev (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y1 y2 y3 y4 y5 y6 = taum y3 y2 y1 y6 y5 y4 :=
+  (taum_sym2 y1 y2 y3 y4 y5 y6).1.trans
+    ((taum_sym2 y2 y1 y3 y5 y4 y6).2.trans (taum_sym2 y2 y3 y1 y5 y6 y4).1)
+
+/-- Helper: the (1 3) leg permutation of `delta_y`. -/
+private theorem emptykit_delta13 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y1 y2 y3 y4 y5 y6 = deltaY y3 y1 y2 y6 y4 y5 :=
+  (emptykit_delta_swap23 y1 y2 y3 y4 y5 y6).trans
+    (emptykit_delta_swap12 y1 y3 y2 y4 y6 y5)
+
+/-- Helper: the reversal leg permutation of `delta_y`. -/
+private theorem emptykit_delta_rev (y1 y2 y3 y4 y5 y6 : ℝ) :
+    deltaY y1 y2 y3 y4 y5 y6 = deltaY y3 y2 y1 y6 y5 y4 :=
+  (emptykit_delta_swap12 y1 y2 y3 y4 y5 y6).trans
+    ((emptykit_delta_swap23 y2 y1 y3 y5 y4 y6).trans
+      (emptykit_delta_swap12 y2 y3 y1 y5 y6 y4))
+
+/-- HOL `empty_3T3` (terminal.hl:2598). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): `taustar_taum` + registry `4010906068`; the registry instance
+is taken at the HOL permutation `[y1;y3;y2;y4;y6;y5]` and transported by
+`taum_sym2`. -/
+theorem empty_3T3 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs3T3 vv) : 0 ≤ taustarV39 scs3T3 vv := by
+  have h401 : mainEstimate_4010906068 :=
+    h "4010906068" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_4010906068 at h401
+  refine taustar_taum 0.476 (funlistV39 [] (2 * h0) 3) (funlistV39 [] cstab 3)
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u _
+    norm_num [funlistV39, psort, assocdV39, h0, cstab] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u h401
+    rw [(taum_sym2 y1 y2 y3 y4 y5 y6).2]
+    linarith [h401 y1 y3 y2 y4 y6 y5 hy1l hy1u hy3l hy3u hy2l hy2u hy4l hy4u
+      hy6l hy6u hy5l hy5u]
+  · exact hB
+
+/-- HOL `empty_3T4` (terminal.hl:2618). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): `taustar_taum` + registry `6833979866` at the HOL permutation
+`[y3;y1;y2;y6;y4;y5]`, transported by `emptykit_taum13`. -/
+theorem empty_3T4 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs3T4 vv) : 0 ≤ taustarV39 scs3T4 vv := by
+  have h683 : mainEstimate_6833979866 :=
+    h "6833979866" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_6833979866 at h683
+  refine taustar_taum 0.2759 (funlistV39 [((0, 1), 2)] (2 * h0) 3)
+    (funlistV39 [((0, 1), 2 * h0)] cstab 3) ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0, cstab]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u _
+    norm_num [funlistV39, psort, assocdV39, h0, cstab] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u h683
+    rw [emptykit_taum13]
+    linarith [h683 y3 y1 y2 y6 y4 y5 hy3l hy3u hy1l hy1u hy2l hy2u hy6l hy6u
+      hy4l hy4u hy5l hy5u]
+  · exact hB
+
+/-- HOL `empty_3T5` (terminal.hl:2644). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): `taustar_taum` + registry `5541487347` in order (no `taum`
+symmetry needed); the registry `sqrt8` upper bound on `y6` is met exactly by
+`b 0 1 = sqrt8`. -/
+theorem empty_3T5 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs3T5 vv) : 0 ≤ taustarV39 scs3T5 vv := by
+  have h554 : mainEstimate_5541487347 :=
+    h "5541487347" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_5541487347 at h554
+  refine taustar_taum 0.103 (funlistV39 [((0, 1), 2 * h0)] 2 3)
+    (funlistV39 [((0, 1), Real.sqrt 8)] (2 * h0) 3) ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39]
+    linarith [sqrt8_flyspeck_p22.2]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u _
+    norm_num [funlistV39, psort, assocdV39, h0, cstab] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u h554
+    linarith [h554 y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy4l hy4u hy5l hy5u hy6l hy6u]
+  · exact hB
+
+/-- HOL `empty_3T6` for `scs_3T6'` (terminal.hl:2668). DISCHARGED 2026-11-12
+(lane `emptykit-3`): `taustar_taum` + registry `5026777310a` at the HOL
+permutation `[y3;y1;y2;y6;y4;y5]`; `tameTableD_t11 4 1 = 0.6548` so the
+registry left branch closes the `d = 0.4348` target and the right branch
+contradicts the bridge's `delta_y` hypothesis via `emptykit_delta13`. -/
+theorem empty_3T6' (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs3T6' vv) : 0 ≤ taustarV39 scs3T6' vv := by
+  have h502 : mainEstimate_5026777310a :=
+    h "5026777310a" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_5026777310a at h502
+  refine taustar_taum 0.4348
+    (funlistV39 [((0, 1), Real.sqrt 8), ((1, 2), Real.sqrt 8)] 2 3)
+    (funlistV39 [((0, 1), cstab), ((1, 2), cstab)] (2 * h0) 3)
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39]
+    linarith [sqrt8_flyspeck_p22.1]
+  · norm_num [funlistV39, psort, assocdV39]
+    linarith [sqrt8_flyspeck_p22.1]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u hdelta
+    norm_num [funlistV39, psort, assocdV39, h0, cstab] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u h502
+    rcases h502 y3 y1 y2 y6 y4 y5 hy3l hy3u hy1l hy1u hy2l hy2u hy6l hy6u
+      hy4l hy4u hy5l hy5u with hl | hr
+    · rw [emptykit_taum13]
+      rw [show tameTableD_t11 4 1 = 0.6548 from by norm_num [tameTableD_t11]]
+        at hl
+      norm_num at hl
+      linarith
+    · rw [← emptykit_delta13] at hr
+      linarith
+  · exact hB
+
+/-- HOL `empty_3T7` (terminal.hl:2696). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): `taustar_taum` + registry `2468307358` at the HOL permutation
+`[y3;y2;y1;y6;y5;y4]`, transported by `emptykit_taum_rev`; the `cstab`-sharp
+slot bounds land exactly on the registry literals. -/
+theorem empty_3T7 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs3T7 vv) : 0 ≤ taustarV39 scs3T7 vv := by
+  have h246 : mainEstimate_2468307358 :=
+    h "2468307358" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_2468307358 at h246
+  refine taustar_taum 0.2565
+    (funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 2), 2)] 2 3)
+    (funlistV39 [((0, 1), 3.62), ((0, 2), cstab), ((1, 2), 2)] 2 3)
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u _
+    norm_num [funlistV39, psort, assocdV39, h0, cstab] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u h246
+    rw [emptykit_taum_rev]
+    linarith [h246 y3 y2 y1 y6 y5 y4 hy3l hy3u hy2l hy2u hy1l hy1u hy6l hy6u
+      hy5l hy5u hy4l hy4u]
+  · exact hB
+
+/-- HOL `empty_3T1` (terminal.hl:2721). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): the ear-shaped `scs_3T1` goes through
+`taustar_taum_dfun`; the `J = fun _ _ => False` correction term collapses to
+`0` by `simp`, and registry `3603097872` at the HOL reversal permutation
+closes the goal (right branch contradicts the bridge `delta_y` hypothesis
+via `emptykit_delta_rev`). -/
+theorem empty_3T1 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs3T1 vv) : 0 ≤ taustarV39 scs3T1 vv := by
+  have h360 : mainEstimate_3603097872 :=
+    h "3603097872" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_3603097872 at h360
+  refine taustar_taum_dfun 0.11 (funlistV39 [((0, 1), Real.sqrt 8)] 2 3)
+    (funlistV39 [((0, 1), cstab)] (2 * h0) 3) (fun _ _ => False)
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39]
+    linarith [sqrt8_flyspeck_p22.1]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39, cstab]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · norm_num [funlistV39, psort, assocdV39, h0]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u hdelta
+    norm_num [funlistV39, psort, assocdV39, h0, cstab] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u h360
+    rcases h360 y3 y2 y1 y6 y5 y4 hy3l hy3u hy2l hy2u hy1l hy1u hy6l hy6u
+      hy5l hy5u hy4l hy4u with hl | hr
+    · rw [emptykit_taum_rev]
+      simp
+      linarith
+    · rw [emptykit_delta_rev] at hr
+      linarith
+  · exact hB
+
+/-- HOL `empty_4T1` (terminal.hl:2752). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): the four cycle edges are forced to `2` by the `csAdj` bounds
+and the two diagonals are `≥ 3`; the four-point Cayley-Menger expression
+`deltaX 4 (d02^2) 4 4 (d13^2) 4` evaluates to `d13^2 * d02^2 * (16 - d13^2 -
+d02^2) ≤ -162`, contradicting `DELTA_Y_POS_4POINTS`.  The `BBs` set of
+`scs_4T1` is therefore empty. -/
+theorem empty_4T1 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs4T1 vv) : 0 ≤ taustarV39 scs4T1 vv := by
+  exfalso
+  have hper : ∀ n, vv (n + 4) = vv n := hB.2.1
+  have hb := hB.2.2.1
+  -- cycle edges forced to `2` by `csAdj 4 2 3 ≤ dist ≤ csAdj 4 2 6`
+  have h01 : dist (vv 0) (vv 1) = 2 := by
+    have e1 : (2:ℝ) ≤ dist (vv 0) (vv 1) := (hb 0 1).1
+    have e2 : dist (vv 0) (vv 1) ≤ (2:ℝ) := (hb 0 1).2
+    exact le_antisymm e2 e1
+  have h12 : dist (vv 1) (vv 2) = 2 := by
+    have e1 : (2:ℝ) ≤ dist (vv 1) (vv 2) := (hb 1 2).1
+    have e2 : dist (vv 1) (vv 2) ≤ (2:ℝ) := (hb 1 2).2
+    exact le_antisymm e2 e1
+  have h23 : dist (vv 2) (vv 3) = 2 := by
+    have e1 : (2:ℝ) ≤ dist (vv 2) (vv 3) := (hb 2 3).1
+    have e2 : dist (vv 2) (vv 3) ≤ (2:ℝ) := (hb 2 3).2
+    exact le_antisymm e2 e1
+  have h30 : dist (vv 3) (vv 0) = 2 := by
+    have e1 : (2:ℝ) ≤ dist (vv 3) (vv 4) := (hb 3 4).1
+    have e2 : dist (vv 3) (vv 4) ≤ (2:ℝ) := (hb 3 4).2
+    have e3 : vv 4 = vv 0 := by
+      have h40 : vv (0 + 4) = vv 0 := hper 0
+      norm_num at h40
+      exact h40
+    rw [e3] at e1 e2
+    exact le_antisymm e2 e1
+  have h03 : dist (vv 0) (vv 3) = 2 := by rw [dist_comm, h30]
+  -- diagonal lower bounds
+  have hd13 : (3:ℝ) ≤ dist (vv 1) (vv 3) := (hb 1 3).1
+  have hd02 : (3:ℝ) ≤ dist (vv 0) (vv 2) := (hb 0 2).1
+  -- Cayley-Menger positivity vs the forced negativity
+  have hδ := DELTA_Y_POS_4POINTS (vv 0) (vv 1) (vv 2) (vv 3)
+  rw [h01, h03, h12, h23] at hδ
+  have ha : 9 ≤ dist (vv 1) (vv 3) * dist (vv 1) (vv 3) := by nlinarith [hd13]
+  have hb9 : 9 ≤ dist (vv 0) (vv 2) * dist (vv 0) (vv 2) := by nlinarith [hd02]
+  have hab : 81 ≤ dist (vv 1) (vv 3) * dist (vv 1) (vv 3) *
+      (dist (vv 0) (vv 2) * dist (vv 0) (vv 2)) := by nlinarith [ha, hb9]
+  have hsum : 2 ≤ dist (vv 1) (vv 3) * dist (vv 1) (vv 3) +
+      dist (vv 0) (vv 2) * dist (vv 0) (vv 2) - 16 := by nlinarith [ha, hb9]
+  have hP : 162 ≤ (dist (vv 1) (vv 3) * dist (vv 1) (vv 3)) *
+      (dist (vv 0) (vv 2) * dist (vv 0) (vv 2)) *
+      (dist (vv 1) (vv 3) * dist (vv 1) (vv 3) +
+        dist (vv 0) (vv 2) * dist (vv 0) (vv 2) - 16) := by
+    have hm := mul_le_mul hab hsum (by norm_num) (by positivity)
+    norm_num at hm
+    exact hm
+  unfold deltaY deltaX at hδ
+  ring_nf at hδ hP
+  linarith
 
 /-- HOL `periodic_sum_shift`. NEEDS: `sum_nbij` 旋转双弹幕——注意本 Mathlib
 `Finset.sum_nbij` 的 h₀ 方向是 `f a = f' (g a)`(a ∈ LHS 集, g : LHS→RHS),

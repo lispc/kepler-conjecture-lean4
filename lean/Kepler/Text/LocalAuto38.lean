@@ -3132,12 +3132,31 @@ theorem sqrt8_bounds :
     (Real.le_sqrt (by norm_num : (0 : ℝ) ≤ 2) (by norm_num : (0 : ℝ) ≤ 8)).mpr hs2,
     (Real.sqrt_le_left (by norm_num : (0 : ℝ) ≤ 3.62)).mpr hs3⟩
 
-/-- HOL `empty_3T2` (terminal.hl:2558). -/
+/-- HOL `empty_3T2` (terminal.hl:2558). DISCHARGED 2026-11-12 (lane
+`emptykit-3`): `taustar_taum` (proved in this file) with `a = b = funlist [] 2 3`,
+fed by registry item `OMKYNLT 3336871894`; no registry permutation needed. -/
 theorem empty_3T2 (h : main_nonlinear_terminal_v11) :
     ∀ vv : ℕ → V3, BBsV39 scs3T2 vv → 0 ≤ taustarV39 scs3T2 vv := by
-  sorry -- DISCHARGES: the scs_3T2 emptiness of the BB set
-  -- BLOCKED: taustar_taum (tau3_taum hole) + LP registry OMKYNLT 3336871894.
-    -- registry OMKYNLT 3336871894 (external anchor)
+  intro vv hB
+  have homk : mainEstimate_OMKYNLT_3336871894 :=
+    h "OMKYNLT 3336871894" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_OMKYNLT_3336871894 at homk
+  refine taustar_taum 0 (funlistV39 [] 2 3) (funlistV39 [] 2 3)
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ vv ?_
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39]
+  · norm_num [funlistV39, psort, assocdV39]
+  · intro y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u
+      hy5l hy5u _
+    norm_num [funlistV39, psort, assocdV39, h0] at hy1l hy1u hy2l hy2u hy3l hy3u hy6l hy6u hy4l hy4u hy5l hy5u
+    have h00 : (0.0:ℝ) = 0 := by norm_num
+    rw [← h00]
+    refine homk y1 y2 y3 y4 y5 y6 ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    all_goals linarith
+  · exact hB
 
 /-- HOL `ineq_5691615370_asym` (terminal.hl:2797). -/
 theorem ineq_5691615370_asym (h : main_nonlinear_terminal_v11) :
