@@ -100,19 +100,18 @@
 > （`VASYYAU_concl` / `TUAPYYU_concl` / `WKZZEEH_concl`，+ `PWEIWBZ_concl`）→ K6/K7/K8
 > （`NWDGKXH_p32` / `YOBIMPP_p32` / `MIQMCSN_p32`）。流程 = 交付→闸→落库→立刻发下一车道。
 > **已落库**：V1 `f8adecea`（LA22 解析三件，+182/−7，删除面恰 3 sorry，三件+回归件标准三）；
-> **V2 `815775f6`**（`VasArcKit.lean` 新文件 411 行，6 声明标准三：`vasArcKit_2b_norm_ne` /
-> `vasArcKit_2b_norm_eq`（→False）/ `vasArcKit_2b` wrapper（结论与 `VASYYAU_concl` 逐字同形）+
-> arcV/acs、affGt⊆affGe、annulus 三桥；HOL 语义勘误：SCOUT 的 2b 标签反转、入口=2a 内支
-> `2<a(p+3)p`）。两笔均根面逐字节同（非锥内资产）。
-> **在飞 V3 `vasmove-w3`**：执行已批 DEF-FIX `vas-cluster-move`——LA23:427-646 的 14 条声明
-> （12 sorry）逐字节下移新汇点模块 `LocalAuto23Vas`（import LA1/LA21/LA22/LA23），donor 删块。
-> 依据：LA23↛LA21/22 DAG 死锁（SCOUT R3），2b 解析尾不受锁；W0 钥匙（`58517f80`）/
+> **V2 `815775f6`**（`VasArcKit.lean` 新文件 411 行，6 声明标准三：2b 两分支 + wrapper + 三桥；
+> HOL 语义勘误：SCOUT 的 2b 标签反转、入口=2a 内支 `2<a(p+3)p`）；
+> **V3 `448ccff2`**（DEF-FIX 簇下移：LA23 的 14 声明（2 已证 + 12 sorry）逐字节进 `LocalAuto23Vas`，
+> 块 md5 两侧同、全库 sorry 43381 不变、LA23/Vas/LA25 三模块 rc=0/err0、根面逐字节同——**R3 解除**）。
+> 三笔均非锥内资产（锥内 SORRIED 仍 62）。
+> **在飞 V4 `vasab4-w4`**：`LocalAuto23Vas` 内真证 `ab4_assumption_reduction_p23`（HOL `JOTSWIX.hl:476-668`；
+> 删除面恰 1 sorry；DAG 已解，LA21/22 kit 直接可用）。
+> 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
-> **DAG 死锁最小解（已批，V3 执行中）**：LA22 对 LA23 的直接引用面仅 4 名**但**前两件
-> （`JKQEWGV2/3_p23`）在 LA23 内有 ~30 条私有 helper 闭包 ⇒ 反向切 `LA22→LA23` 不便宜。
-> **采用 = 下移 LA23 的 VASYYAU/JOTSWIX 簇**：14 条声明全树**零代码引用**，逐字节搬进新汇点
-> `LocalAuto23Vas`——陈述逐字节、sorry 零增减、无环；搬后簇的证明车道可直接吃 LA21/22 azim kit。
-> 章程草案：`docs/def-fix-charters/vas-cluster-move/README.md`（待用户批 → V3 执行）。
+> **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
+> 采用**下移 LA23 的 VASYYAU/JOTSWIX 簇**（14 声明全树零代码引用 → 新汇点 `LocalAuto23Vas`，
+> 陈述逐字节、sorry 零增减、无环）。章程：`docs/def-fix-charters/vas-cluster-move/README.md`（**LANDED**）。
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -284,6 +283,19 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（21:56，续1071）**：**V3 `vasmove-w3` 落库 `448ccff2`（DEF-FIX 簇下移）——R3 DAG 死锁解除；V4 `vasab4-w4` 立刻发车（`ab4_assumption_reduction_p23`）**。
+① **V3**：patch 2 files / +265−225（LA23 +6/−225，新文件 `LocalAuto23Vas.lean` +259）；LA23:427-646 的
+220 行块（14 声明 = 2 已证 + 12 sorry）逐字节进 Vas:38-257，块 md5 两侧均 `e04bda9c…`；全库 Text sorry
+**43381 = 43381**、14 签名行多重集 EQUAL、LA23 8 条 import 逐字节不变、14 名全树零代码引用（DAG 汇点）。
+编排者闸：LA23/Vas/LA25 三模块直编 **RC=0/error 0**（18.3s/3.8s/7.9s）；探针 16 行与 HEAD 基线**逐行同**
+（2 已证件 `[propext, Quot.sound]`、12 移动件 `+sorryAx`、`TUAPYYU1_p25` 不变、`ASSWPOW_p25` 标准三）；
+根面 md5 **`246e952c…` 逐字节同**。commit `448ccff2`，已 push。章程状态 → LANDED。
+② **V4 `vasab4-w4`（在飞）**：`LocalAuto23Vas` 内真证 `ab4_assumption_reduction_p23`（HOL `JOTSWIX.hl:476-668`，
+按 i/j 是否 ≡p mod 4 的机械 case 分析；非 p 对用 `f w t = w` 取 e=1，边 (p,p+1) 用 hab+hdist）；
+删除面恰 1 sorry；≤450 行；DAG 已解，LA21/22 kit 与 `MOD_4_CASES_p23`/`PERIODIC_INJ_MOD_p23` 同文件可用。
+③ 口径：V3 为纯搬运（非锥内、零 sorry 增减、非还债），不跑地图仪器；V4 起进入簇内真证（仍非锥内资产）。
+④ 下一条：续1072。
+
 - **2026-11-13（21:45，续1069）**：**VASYYAU V3 `vasmove-w3` 发车——执行已批 DEF-FIX `vas-cluster-move`（LA23 簇下移）**。
 ① 任务：`LocalAuto23.lean:427-646` 连续块 14 条声明（12 条 sorry）逐字节搬入新汇点
 `lean/Kepler/Text/LocalAuto23Vas.lean`（import LA1/LA21/LA22/LA23 + Mathlib，LA23 同款 namespace/open/set_option），
@@ -392,6 +404,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-13（21:50，续1070）**：**巡检：t4crux-w1 判真死无交付（通知到达但非完工——max thinking 20 min 烧尽，终止句停在「pip 还在跑」；ps 无进程、快照无 DELIVERY/patch）——遗产归档 RECON.md + 三脚本，重发待命**。
+① **侦察结论（编排者重跑复验）**：delta_y 对称性 (d,c,e,a,f,b) 数值确认（2 万点）；crux 双向各 200 万采样 0 违例；**sympy 因子分解：a=b=3 时 delta2−delta1 = (d−3)(d+3)(e−3)(e+3)(c²−d²−e²+2f²−18)，盒内末因子 ≤ −6.95 ⇒ 两方向归并一个多项式界**；全盒 max delta2 = −1.873（余量足，纯解析路线首选）。
+② **并行情报**：用户会话已落 V2 `815775f6`（VasArcKit 411 行 6 声明标准三）+ 续1068-1069 + V3 vasmove-w3 发车（R3 簇 DEF-FIX 21:14 已批）——文件面 LA23，与 n2def（LA21）零冲突。
+③ **在飞 2**：n2def-w1（21:50 无交付、无 lean 进程，精读阶段）+ 用户 vasmove-w3；无头清单仍空；机器 pressure 1。t4crux-w2 重发等用户批（RECON 已备，可直接施工）。
 
 - **2026-11-13（21:40，续1067）**：**双车道再发（用户批）——n2def-w1（agent-51：N2 deform_planar 真身侦察+施工，5M2 收官腿）+ t4crux-w1（agent-52：ineq_5691615370_asym crux，emptykit-3 残卷+hrot crux 定型+禁 native_decide 纪律）**。文件面 LA21 / LA38 互异、与用户 V2（LA22）零冲突；在飞 3（含 V2），lean ≤3 顶格。若再要车须等其一收线。
 

@@ -1,10 +1,11 @@
 # DEF-FIX 章程：LA23 VASYYAU 簇下移（`LocalAuto23Vas`）
 
-> **状态：APPROVED（用户 2026-11-13 21:14 批准；V3 执行，待 V2 交付后发车）**。拟案：2026-11-13 编排者（VASYYAU 闸族）。
+> **状态：LANDED（`448ccff2`，2026-11-13 21:56；用户 21:14 批准，V3 `vasmove-w3` 执行，编排者闸全绿）**。拟案：2026-11-13 编排者（VASYYAU 闸族）。
 > 依据：AGENTS §2「定义改动只走 DEF-FIX 通道」+ `docs/def-fix-charters/la-dag-cuts/README.md`
 > 先例（用户 2026-11-12 已批裁决 ②a：纯搬运、保陈述逐字节、零 sorry 增减）。
 > **批准范围**：§3 的 14 条声明逐字节下移 + §4 的 import 边（新模块汇点）；不含 §4 末的 LocalConcl
-> 增 import（留给收口车道）、不含任何陈述/定义体改动。
+> 增 import（留给收口车道）、不含任何陈述/定义体改动。**落地证据**：块 md5 两侧 `e04bda9c…`、
+> 全库 Text sorry 43381 不变、LA23/Vas/LA25 三模块 rc=0/err0、根面 md5 `246e952c…` 逐字节同。
 
 ## 0. 一句话
 
@@ -107,4 +108,5 @@ VASYYAU 战役的三个硬巨人（`NEHXMWH` / `BZQNDMN` / `JOTSWIX` / `LEMMA_PW
 ## 8. 用户裁决
 
 - [x] **批准本搬运**（用户 2026-11-13 21:14；纯搬运、零陈述改动、零 sorry 增减）→ V3 执行（V2 交付后发车）。
-- V3 = shadow 验证（LA23 / LocalAuto23Vas / LA25 / 根面）+ patch + 本 charter 状态更新为 LANDED。
+- [x] **LANDED `448ccff2`（21:56）**：shadow 验证（LA23 rc=0/err0 18.3s；LocalAuto23Vas rc=0/err0 3.8s；
+  LA25 rc=0/err0 7.9s；探针 16 行与 HEAD 逐行同；根面 md5 `246e952c…` 逐字节同）+ patch + 本 charter 状态更新。
