@@ -232,8 +232,12 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
       itself (re-export), so a discharge would be vacuous (11):
       ZITHLQN (ZITHLQN_p25 = `ZITHLQN_concl h`; the PROVED CASE_3/4/5/6_p25
         are only BBs-realisation components, not the implication),
-      WGDHPPI (WGDHPPI_p25), TUAPYYU (TUAPYYU_p25 = `fun _ => TUAPYYU_concl`),
-      YEBWJNG (YEBWJNG_p25), WKZZEEH (WKZZEEH_p25), PWEIWBZ (PWEIWBZ_p25),
+      WGDHPPI (left the class 2026-11-13, lane vasw0-w1: `WGDHPPI_discharged`
+        wired to the proved `VasTuaKit.WGDHPPI_vaskit`; the in-place LA25
+        paste is DAG-blocked, see the entry below),
+      TUAPYYU (TUAPYYU_p25 = `fun _ => TUAPYYU_concl`),
+      YEBWJNG (left the class 2026-11-13, lane vasw0-w1: wired to the
+        proved `YebwjngKit.YEBWJNG_kit`), WKZZEEH (WKZZEEH_p25), PWEIWBZ (PWEIWBZ_p25),
       VASYYAU (VASYYAU_p25), WKEIDFT (WKEIDFT_concl_p24 = `WKEIDFT_concl`;
       the v2 `WKEIDFT`/`WKEIDFT_EQU_V2` remain sorried),
       PEDSLGV1 (LocalAuto20.PEDSLGV1), PEDSLGV2 (LocalAuto20.PEDSLGV2),
@@ -516,6 +520,8 @@ import Kepler.Text.LocalAuto35
 import Kepler.Text.LocalAuto36
 import Kepler.Text.LocalAuto37
 import Kepler.Text.LocalAuto38
+import Kepler.Text.VasTuaKit
+import Kepler.Text.YebwjngKit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -4939,11 +4945,16 @@ theorem ZITHLQN_discharged :
     JEJTVGB_assume_v39 := by
   sorry
 
-/-- HOLD (b) `WGDHPPI_concl`: cycle path
-`WGDHPPI_concl -> LA25.WGDHPPI_p25 (LA25:1009, proof = `WGDHPPI_concl ...`). -/
+/-- DISCHARGED 2026-11-13 (lane vasw0-w1, VASYYAU Wave 0): the in-place paste
+of the kit proof into `LocalAuto25.WGDHPPI_p25` is DAG-blocked (LA25 cannot
+import LocalAuto33 `GSXRFWM_p33` / LocalAuto18 `AURSIPD_p18` — cycle via
+LocalAuto27 -> LocalAuto25; twinning would cascade past 700 lines), so the
+discharge goes through the proved `VasTuaKit.WGDHPPI_vaskit` verbatim twin
+(standard three, probe in lane Evidence).  Historical cycle path:
+`WGDHPPI_concl -> LA25.WGDHPPI_p25 (LA25:1796, proof = `WGDHPPI_concl ...`). -/
 theorem WGDHPPI_discharged : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
-    s.k = 4 → v ∈ MMsV39 s → {i | i < s.k ∧ scsIsStr s v i}.ncard ≤ 1 := by
-  sorry
+    s.k = 4 → v ∈ MMsV39 s → {i | i < s.k ∧ scsIsStr s v i}.ncard ≤ 1 :=
+  WGDHPPI_vaskit
 
 /-- HOLD (b) `TUAPYYU_concl`: cycle path
 `TUAPYYU_concl -> LA25.TUAPYYU_p25 (LA25:1264, proof = `fun _ =>
@@ -4960,8 +4971,12 @@ theorem TUAPYYU_discharged (hmn : main_nonlinear_terminal_v11) :
       dist (v p) (v (p + 1)) = s.b p (p + 1) := by
   sorry
 
-/-- HOLD (b) `YEBWJNG_concl`: cycle path
-`YEBWJNG_concl -> LA25.YEBWJNG_p25 (LA25:1566, proof = `YEBWJNG_concl ...`). -/
+/-- DISCHARGED 2026-11-13 (lane vasw0-w1, VASYYAU Wave 0): proved as
+`YebwjngKit.YEBWJNG_kit` (CUXVZOZ_p21 engine + the TUAPYYU1-style fan
+assembly) and wired here; the LA25 `YEBWJNG_p25` re-export stays a
+registry twin for the same DAG reason as WGDHPPI (LA25 cannot import
+LA21/26/33).  Historical cycle path:
+`YEBWJNG_concl -> LA25.YEBWJNG_p25 (LA25:2556, proof = `YEBWJNG_concl ...`). -/
 theorem YEBWJNG_discharged (h : main_nonlinear_terminal_v11) :
     ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
@@ -4970,8 +4985,8 @@ theorem YEBWJNG_discharged (h : main_nonlinear_terminal_v11) :
     (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
     ¬scsIsStr s v p → ¬scsIsStr s v (p + 1) → s.a p (p + 1) = 2 →
-    dist (v p) (v (p + 1)) = 2 := by
-  sorry
+    dist (v p) (v (p + 1)) = 2 :=
+  YEBWJNG_kit h
 
 /-- HOLD (b) `WKZZEEH_concl`: cycle path
 `WKZZEEH_concl -> LA25.WKZZEEH_p25 (LA25:1400, proof = `WKZZEEH_concl ...`). -/

@@ -118,6 +118,10 @@ import Kepler.Text.LocalAuto5
 import Kepler.Text.LocalAuto7
 import Kepler.Text.XivphksKit
 import Kepler.Text.TopologyFan
+-- vasw0-w1 (2026-11-13): `MM_SCS_OPP_fb` for the CQAOQLR opposite-system
+-- direction.  Acyclic: FanBaseKit imports only LA1/LA3/AzimLemmas, none of
+-- which reaches LA16.
+import Kepler.Text.FanBaseKit
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
 import Mathlib
@@ -1685,12 +1689,136 @@ theorem K_SUC_2_MOD_F_SUB_ID_p16 {k i : ℕ} (hk : 1 < k) :
         exact Nat.mod_eq_of_lt (by omega : 1 < k)
       rw [hL, hR]
 
-/-- HOL `CQAOQLR` (CQAOQLR.hl:247): the ear-reciprocity conclusion.
-NEEDS: TFITSKC, MM_SCS_OPP, OPP_IS_SCS, SCS_GENERIC_SYM_0_p16,
-BASIC_OPP_p16, MMS_IMP_BBS, CHANGE_W_IN_BBS_MOD_IS_SCS,
-CHANGE_A/B_SCS_MOD, DIAG_OPP_p16 — the CQAOQLR assembly. -/
+/-- HOL `CQAOQLR` (CQAOQLR.hl:247-335): the ear-reciprocity iff.
+Forward direction: `TFITSKC_p27` at `i` (the distance-2 hypothesis
+propagates across the short ear).  Backward direction: the same lemma on
+the opposite system `scsOppV39 s` with the negated peropp sequence at the
+mirrored index `j0 = k - SUC((i + 2) MOD k)`, whose hypotheses unfold to
+the given ones via the Section-D modular kit (`K_SUC_2_MOD_SUB` /
+`K_SUC_2_MOD_SUB_ID` / `K_SUC_2_MOD_F_SUB_ID` / `SUC_OPP_ID`-free
+`peropp` value computation), `A_B_J_SCS_OPP` and `DIAG_OPP`.  Assembled
+2026-11-13 (lane vasw0-w1); consumes `MM_SCS_OPP_fb` (FanBaseKit) — the
+one import added for this proof. -/
 theorem CQAOQLR_p16 : CQAOQLR_concl_p16 := by
-  sorry
+  intro hmn s v i hk3 his hMMs hgen hbasic hdiag
+  intro hb01 hb12e hab23 habk1
+  intro ha01 _hb01v _ha12 hb12v
+  have hisD := his
+  obtain ⟨-,-,-,-,-,-,-,-,-,-,-,-, hsym, -,-,-,-,-,-,-⟩ := hisD
+  constructor
+  · -- forward: `TFITSKC` at `i`
+    intro hd01
+    exact TFITSKC_p27 hmn s v i hab23 hk3 his hMMs hgen hbasic _ha12 hb12v
+      hd01 hb01 hdiag
+  · -- backward: `TFITSKC` on the opposite system at the mirrored index
+    intro hd12
+    have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hMMs
+    have hk1 : 1 < s.k := by omega
+    have hk3' : ¬(s.k ≤ 3) := by omega
+    have his' : isScsV39 (scsOppV39 s) := OPP_IS_SCS_p33 s his
+    have hMMs' : MMsV39 (scsOppV39 s) (fun n => -(peropp v s.k n)) :=
+      MM_SCS_OPP_fb s v s.k rfl his hk3' hMMs
+    have hgen' : scsGeneric (fun n => -(peropp v s.k n)) :=
+      SCS_GENERIC_SYM_0_p16 s v hBB his hgen
+    have hbasic' : scsBasicV39 (scsOppV39 s) := BASIC_OPP_p16 s his hbasic
+    have dneg : ∀ x y : V3, dist (-x) (-y) = dist x y := by
+      intro x y
+      have h : (-x) - (-y) = -(x - y) := by
+        rw [sub_eq_add_neg, neg_neg, neg_sub, sub_eq_add_neg]
+        exact add_comm (-x) y
+      rw [dist_eq_norm, dist_eq_norm, h, norm_neg]
+    set j0 := s.k - ((i + 2) % s.k + 1) with hj0
+    have hm0 := Nat.mod_lt i (show 0 < s.k by omega)
+    have hm1 := Nat.mod_lt (i + 1) (show 0 < s.k by omega)
+    have hm2 := Nat.mod_lt (i + 2) (show 0 < s.k by omega)
+    have hmk := Nat.mod_lt (i + s.k - 1) (show 0 < s.k by omega)
+    have hsub : ∀ m : ℕ, m < s.k → s.k - (s.k - (m + 1) + 1) = m :=
+      fun m hm => by omega
+    have hj0lt : j0 < s.k := by rw [hj0]; omega
+    -- the peropp values at `j0, j0+1, j0+2, j0+3`
+    have hj01 : (j0 + 1) % s.k = s.k - ((i + 1) % s.k + 1) := by
+      rw [hj0, K_SUC_2_MOD_SUB_p16 hk1]
+      exact Nat.mod_eq_of_lt (by omega)
+    have hj02 : (j0 + 2) % s.k = s.k - (i % s.k + 1) := by
+      rw [hj0, K_SUC_2_MOD_SUB_ID_p16 hk1]
+      exact Nat.mod_eq_of_lt (by omega)
+    have hj03 : (j0 + 3) % s.k = s.k - ((i + s.k - 1) % s.k + 1) := by
+      rw [hj0, K_SUC_2_MOD_F_SUB_ID_p16 hk1]
+      exact Nat.mod_eq_of_lt (by omega)
+    have hj0m : j0 % s.k = j0 := Nat.mod_eq_of_lt hj0lt
+    have e0 : peropp v s.k j0 = v (i + 2) := by
+      show v (s.k - (j0 % s.k + 1)) = v (i + 2)
+      rw [hj0m, hj0, hsub _ hm2]
+      exact periodic_mod_eq_p23 hBB.2.1 (i + 2)
+    have e1 : peropp v s.k (j0 + 1) = v (i + 1) := by
+      show v (s.k - ((j0 + 1) % s.k + 1)) = v (i + 1)
+      rw [hj01, hsub _ hm1]
+      exact periodic_mod_eq_p23 hBB.2.1 (i + 1)
+    have e2 : peropp v s.k (j0 + 2) = v i := by
+      show v (s.k - ((j0 + 2) % s.k + 1)) = v i
+      rw [hj02, hsub _ hm0]
+      exact periodic_mod_eq_p23 hBB.2.1 i
+    have e3 : peropp v s.k (j0 + 3) = v (i + s.k - 1) := by
+      show v (s.k - ((j0 + 3) % s.k + 1)) = v (i + s.k - 1)
+      rw [hj03, hsub _ hmk]
+      exact periodic_mod_eq_p23 hBB.2.1 (i + s.k - 1)
+    -- the `a`/`b` slots of the opposite system at the needed indices
+    have hABJ := A_B_J_SCS_OPP_p16 s
+    have haopp := hABJ.1
+    have hbopp := hABJ.2.1
+    have ca : ∀ m n : ℕ, s.a (m % s.k) (n % s.k) = s.a m n := fun m n =>
+      CHANGE_A_SCS_MOD_p28 s his _ _ _ _ (by rw [Nat.mod_mod]) (by rw [Nat.mod_mod])
+    have cb : ∀ m n : ℕ, s.b (m % s.k) (n % s.k) = s.b m n := fun m n =>
+      CHANGE_B_SCS_MOD_p28 s his _ _ _ _ (by rw [Nat.mod_mod]) (by rw [Nat.mod_mod])
+    -- `TFITSKC` hypotheses on the opposite system
+    have hab23' : (scsOppV39 s).a (j0 + 2) (j0 + 3) < (scsOppV39 s).b (j0 + 2) (j0 + 3) := by
+      have ea : (scsOppV39 s).a (j0 + 2) (j0 + 3) = s.a (i % s.k) ((i + s.k - 1) % s.k) := by
+        rw [haopp, hj02, hj03, hsub _ hm0, hsub _ hmk]
+      have eb : (scsOppV39 s).b (j0 + 2) (j0 + 3) = s.b (i % s.k) ((i + s.k - 1) % s.k) := by
+        rw [hbopp, hj02, hj03, hsub _ hm0, hsub _ hmk]
+      rw [ea, eb, ca i ((i + s.k - 1)), cb i ((i + s.k - 1))]
+      have h1 := (hsym i (i + s.k - 1)).1
+      have h2 := (hsym (i + s.k - 1) i).2.2.2.1
+      rw [h1]
+      exact lt_of_lt_of_eq habk1 h2
+    have ha12' : (scsOppV39 s).a (j0 + 1) (j0 + 2) = 2 := by
+      have ea : (scsOppV39 s).a (j0 + 1) (j0 + 2) = s.a ((i + 1) % s.k) (i % s.k) := by
+        rw [haopp, hj01, hj02, hsub _ hm1, hsub _ hm0]
+      rw [ea, ca (i + 1) i, (hsym i (i + 1)).1.symm]
+      exact ha01
+    have hb12' : (scsOppV39 s).b (j0 + 1) (j0 + 2) ≤ 2 * h0 := by
+      have eb : (scsOppV39 s).b (j0 + 1) (j0 + 2) = s.b ((i + 1) % s.k) (i % s.k) := by
+        rw [hbopp, hj01, hj02, hsub _ hm1, hsub _ hm0]
+      rw [eb, cb (i + 1) i, (hsym i (i + 1)).2.2.2.1.symm]
+      exact _hb01v
+    have hd01' : dist (-(peropp v s.k j0)) (-(peropp v s.k (j0 + 1))) = 2 := by
+      rw [e0, e1, dneg, dist_comm]
+      exact hd12
+    have hb0gt' : 2 < (scsOppV39 s).b j0 (j0 + 1) := by
+      have eb : (scsOppV39 s).b j0 (j0 + 1) = s.b ((i + 2) % s.k) ((i + 1) % s.k) := by
+        rw [hbopp, hj0m, hj01, hj0, hsub _ hm2, hsub _ hm1]
+      rw [eb, cb (i + 2) (i + 1), (hsym (i + 1) (i + 2)).2.2.2.1.symm]
+      exact hb12e
+    have hadiag' : ∀ x y : ℕ, scsDiag (scsOppV39 s).k x y →
+        (scsOppV39 s).a x y ≤ cstab ∧
+          cstab < dist (-(peropp v s.k x)) (-(peropp v s.k y)) ∧
+          4 * h0 < (scsOppV39 s).b x y := by
+      intro x y hxy
+      have hxy' := DIAG_OPP_p16 s.k x y hk3 hxy
+      have hd := hdiag _ _ hxy'
+      refine ⟨?_, ?_, ?_⟩
+      · rw [haopp]
+        exact hd.1
+      · have ex : peropp v s.k x = v (s.k - (x % s.k + 1)) := rfl
+        have ey : peropp v s.k y = v (s.k - (y % s.k + 1)) := rfl
+        rw [ex, ey, dneg]
+        exact hd.2.1
+      · rw [hbopp]
+        exact hd.2.2
+    have hcon := TFITSKC_p27 hmn (scsOppV39 s) (fun n => -(peropp v s.k n)) j0
+      hab23' hk3 his' hMMs' hgen' hbasic' ha12' hb12' hd01' hb0gt' hadiag'
+    rw [e1, e2, dneg, dist_comm] at hcon
+    exact hcon
 
 /-! Coverage note: every JEJTVGB.hl / XIVPHKS.hl / BKOSSGE.hl /
 CQAOQLR.hl item is carried above (the XIVPHKS.hl items now live in
@@ -1701,8 +1829,10 @@ UPS_X_STD_POS, quad_nonexist_849, quad_diag_362, taum_dih_y,
 K_SUC_2_MOD_SUB, K_SUC_2_MOD_SUB_ID, SUC_OPP_ID, K_SUC_2_MOD_F_SUB_ID,
 A_B_J_SCS_OPP, ELEMENT1_SYM_0, UNADORNED_OPP, BASIC_OPP, DIAG_OPP,
 FSQKWKK, XIVPHKS, XIVPHKS_SHIFT, real_continuous_dih_y_wrt4/5/6,
-real_continuous_taum, SCS_GENERIC_SYM_0 (27).  Sorried (assembly):
-CQAOQLR (1).  The `_p16` sphere-kit copies were deduped
+real_continuous_taum, SCS_GENERIC_SYM_0 (27), CQAOQLR (28; assembled
+2026-11-13 lane vasw0-w1 — TFITSKC forward + opposite-system backward,
+consuming `MM_SCS_OPP_fb` via the FanBaseKit import above).  Zero sorries
+remain in this file.  The `_p16` sphere-kit copies were deduped
 into `Kepler.Text.SphereKit` 2026-09-17. -/
 
 /-! ## w13 axiom audit (closed items only) -/
