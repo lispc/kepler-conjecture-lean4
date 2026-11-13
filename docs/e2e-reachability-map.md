@@ -797,6 +797,29 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AG：UAGHHBM_p30 真证 @ `156fabf8`（2026-11-13）
+
+> 触发：uagbody 战役两笔收官——K14 kit `5f7c511a`（双 isScs private 件）+ 本体真证 `156fabf8`
+> （LA30 +171/−18，HOL UAGHHBM.hl:2501-4099 Sections D–G；中断潮 w1→w2/w3 三代接力、零成果丢失）。
+> 仪器原样换装（**5,911 行**，−1 = 闭 UAGHHBM_p30）。manifest `--check` PASS。
+
+| 指标 | 基线 AG | 基线 AF | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,097,639** | 2,097,556 | +83 |
+| SORRIED | **66** | 67 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,241 | 5,241 | 0 |
+| K_UNIVERSE | 2,110,397 | 2,110,383 | +14 |
+| COVERAGE | 99.3955% | 99.3922% | +0.0033pp |
+| 口径 II（ex-Cases） | K_REACH **35,939** / SORRIED **66** / AXIOM **585** / UNIVERSE **47,140** | 35,856 / 67 / 585 / 47,126 | +83 / −1 / 0 / +14 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.UAGHHBM_p30`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：Text 12→11。UAGHHBM 本体 171 行真证接力链 = w1 完成证明（断于收尾验收）→ w2/w3 fresh 接管
+逐字节核对 + 重跑验收（今日 15 例中断潮零成果丢失的证据链；WIP 落盘制成标配）。
+剩余 **66** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 11**。
+
 ### 基线 AE：JCYFMRP_p27 真证 @ `55512ac9`（2026-11-12）
 
 > 触发：`55512ac9`（`JCYFMRP_p27` 真证，LA27 +824/−179，dagcut-w2/w2：解锁边 +import LA21 等

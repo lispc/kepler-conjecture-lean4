@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2097556
-K_SORRIED 67
+K_REACH 2097639
+K_SORRIED 66
 K_AXIOM 585
 K_MODULES 5241
-K_UNIVERSE 2110383
-COVERAGE 2097556 / 2110383
-K_UNIVERSE_XCASES 47126
-K_REACH_XCASES 35856
-K_SORRIED_XCASES 67
+K_UNIVERSE 2110397
+COVERAGE 2097639 / 2110397
+K_UNIVERSE_XCASES 47140
+K_REACH_XCASES 35939
+K_SORRIED_XCASES 66
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2096875
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2096875
-SORRIED 67
+TOTAL_VALUE_DECLS 2096958
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2096958
+SORRIED 66
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -78,7 +78,6 @@ Kepler.Text.LocalAuto33	Kepler.Text.SCS_4I2_IMP_SCS_4T1_p33	parent=Kepler.Text.A
 Kepler.Text.LocalAuto29	Kepler.Text.SCS_5M2_IMP_SCS_5T1_p29	parent=Kepler.Text.HIJ_STEP_1_p29
 Kepler.Text.LocalConcl	Kepler.Text.SCS_6I1_BERAK_BY_CSTAB	parent=Kepler.Text.OEHDBEN_PRIME
 Kepler.Text.TameLp	Kepler.Text.TameLp.fully_surrounded_perimeter_bound	parent=Kepler.Text.TameLp.MQMSMAB
-Kepler.Text.LocalAuto30	Kepler.Text.UAGHHBM_p30	parent=Kepler.Text.UAGHHBM_discharged
 Kepler.Text.PackingAuto13	Kepler.Text.URRPHBZ2	parent=Kepler.Text.QZYZMJC
 Kepler.Text.LocalAuto32	Kepler.Text.YOBIMPP_p32	parent=Kepler.Text.YOBIMPP_discharged
 --- AXIOMS ---
@@ -4132,6 +4131,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 86	Kepler.Graphs.GeneratorProps
 86	Kepler.Interval.Basic
 85	Kepler.Text.Reduction5J5UvnsU2
+84	Kepler.Text.LocalAuto30
 84	Kepler.Text.PackingAuto16
 80	Kepler.Text.TameSpine.TameList10
 79	Kepler.Text.PolyAuto7
@@ -5844,7 +5844,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 1	Kepler.Text.ChainCardAtoms
 1	Kepler.Text.ChainQRDYXYJ
 1	Kepler.Text.Gamma4ValCornerKit
-1	Kepler.Text.LocalAuto30
 1	Kepler.Text.PackIneqBiefjhuClose
 1	Kepler.Text.PolyAuto1
 1	Kepler.Text.Reduction1Aqt2

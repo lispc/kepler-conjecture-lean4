@@ -17,16 +17,15 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AF @`766f8896`（2026-11-13，TFITSKC + hNL 接线双台阶）**
-> cone `K_REACH 2,097,556` / **SORRIED 67** / **`K_AXIOM 585`** / MODULES 5,241 /
-> UNIVERSE 2,110,383 / COVERAGE **99.3922%**；口径 II 35,856 / 67 / 585 / 47,126。
-> `docs/e2e-reachability-map.tsv` 已按基线 AF 重写（5,912 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AG @`156fabf8`（2026-11-13，UAGHHBM_p30 真证——中断潮三代接力零丢失）**
+> cone `K_REACH 2,097,639` / **SORRIED 66** / **`K_AXIOM 585`** / MODULES 5,241 /
+> UNIVERSE 2,110,397 / COVERAGE **99.3955%**；口径 II 35,939 / 66 / 585 / 47,140。
+> `docs/e2e-reachability-map.tsv` 已按基线 AG 重写（5,911 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 67 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 12（`--- SORRIED ---` 段实测）。
-> 较基线 AE：SORRIED 69→67（清单 diff：closed 恰 `{TFITSKC_p27, nliRest1965189142a}`、added ∅；
-> **双台阶真还债**——TFITSKC = K2 门兑现；接线 = BIEFJHU-a TM pilot 闭环、Assembly 首条 nli* 清偿）、
-> K_AXIOM 585（0/0）、K_REACH +9,402（证书树 + 证明体入锥）、MODULES +20（证书模块首达）。
+> （与基线 AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 66 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 11（`--- SORRIED ---` 段实测）。
+> 较基线 AF：SORRIED 67→66（清单 diff：closed 恰 `{UAGHHBM_p30}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +83（本体证明体入锥）、MODULES 0。
 > 中间档：`04ab3cac` DAG 切面四刀（cone-neutral 解锁件）、`3cb72c17` TM 18 文件（300 叶证书）；
 > 各节见 map。
 >
@@ -90,7 +89,7 @@
 ---
 
 
-## 1. 在飞（2026-11-13 午后，池 **5** = 编译面 3 + 案头 2；用户裁定「任一车道完成可补巨件/挂起一件」+ 四项冻结件裁决全批）
+## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -261,6 +260,12 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（14:30，续1037）**：**基线 AG 定档（67→66）+ 文档六件全套刷新 + 中断潮当日 16 例**。
+① **仪器实测**（`reachmap_156fabf8.out`，rc=1 良性收尾）：K_REACH 2,097,639（+83）/ **SORRIED 66**（清单 diff：closed 恰 `{UAGHHBM_p30}`、added ∅）/ AXIOM 585（0/0）/ MODULES 5,241（0）/ UNIVERSE 2,110,397（+14）/ COVERAGE 99.3955%（+0.0033pp）；口径 II 35,939 / 66 / 585 / 47,140。根面 md5 逐字节同（落库时已验）。TSV 5,911 行换装 + manifest PASS。
+② **文档六件**：pq 头（AG 全指标）/ map.md 基线 AG 节 / TSV / AGENTS §1（66 = 54 nli* + 1 hLP + 11 Text，基线 AG `156fabf8`）/ README ×2（67→66）/ hf-map 状态更新十九。同批入账 tamelp-door `6a584f6d`（续1035）。
+③ **中断潮第 16 例**（urrcellbody-w5）：S1 kit 已 RC=0 仍被截；w6 接管（WIP 188,884 B 无损）。**当日 16 例零成果丢失**。彻查定性：provider 流中断主因 + resume 僵尸锁次生 bug（wire 无痕、高峰聚集、非寿命非机器）；建议用户走 Kimi.ai 用户反馈上报；运营缓解全链路生效。
+④ **在飞 4**：jlxfdmj-w2（100+ min，2h 限临近）/ urrcellbody-w6 / tmxllipls-w2（TM 窗口批，阶段 1 探针）/ vasw0-w2（W0 已批）。待命：6I1 收口（等 jlxfdmj）、OCBICBY wave3、K4c。
 
 - **2026-11-13（14:05，续1036）**：**一笔真还债落库：uagbody-w3 `156fabf8`（UAGHHBM_p30 本体真证，LA30 +171/−18）——Text 12→11，UAGHHBM 战役两笔收官（K14 kit + 本体）**。
 ① **闸（编排者亲跑全绿）**：删除面 = 本体 sorry 1 行 + NEEDS/状态注释 17 行，定理签名逐字未动，K14 kit 段零改动；岛编 RC=0/0 err/0 sorry warning；拼接探针 `UAGHHBM_p30` = 标准三零 sorryAx；根面 589 逐字节同（md5 `246e952c…`，sorryAx 由其余 65 条在案供给、名单不变）；olean 装池。

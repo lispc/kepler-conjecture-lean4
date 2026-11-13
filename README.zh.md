@@ -74,7 +74,7 @@ make reprove   # 从零重建 + 审计——Definition of Done
 端到端对象 `Kepler.the_kepler_conjecture_e2e` 已立。实时公理面 = **589 行**
 = **585 个 `native_decide` 图枚举 shard 公理**（信任基座，2026-11-09 定格：
 580 shard-range + 5 tri-single-seed，仅 2 种形状）+ `propext` + `Classical.choice` +
-`Quot.sound` + `sorryAx`（锥内 67 条，唯一真债）。
+`Quot.sound` + `sorryAx`（锥内 66 条，唯一真债）。
 
 **终局标准（用户 2026-11-06 裁决，见 `AGENTS.md` §1）**：不比 Flyspeck/Isabelle 更差——
 即 585 条声明信任基座（与 Isabelle `by eval` 同类、同数据）+ 零 `sorryAx` 目标，
