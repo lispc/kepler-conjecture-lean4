@@ -220,6 +220,12 @@
    同 node ⇒ 同 part / 全 r 在面 x」类断言，先写 10 行反例探针再立件（AQ8 W3d/W3f/W3h/W3i
    四个判定件因此省下数百行死路）；③ 已落条件形若前提被证假，**保留件不动**、另立收窄件
    （`aq8w3i_fstHdInjPartsFaceArc` 是范例）。
+21. **shell 文本搜索一律 rg，严禁裸 `grep -rn` 扫仓**（2026-11-13 用户裁定，实测裸 grep
+   扫全仓 444 s——`.lake` 的 olean/二进制 + `reference/` 巨文件 + `_distfiles/` 全被逐字节啃）。
+   本机 rg 在 `~/.kimi-code/bin/rg`（v15），**默认遵守 .gitignore**（本仓 `.lake/`、
+   `*.olean` 已覆盖 ⇒ 自动跳过构建池）；确需兼容 grep 时必须 `-I`（跳二进制）+
+   `--exclude-dir={.lake,.git,reference,_distfiles}`。车道的 Grep/Read 工具不受影响，
+   但任何 shell 兜底检索都按本条执行；工单模板已同步改写。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）

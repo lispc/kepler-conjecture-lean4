@@ -90,7 +90,7 @@
 ---
 
 
-## 1. 在飞（2026-11-13 午后，池 **4/4**；用户裁定「任一车道完成可补巨件/挂起一件」）
+## 1. 在飞（2026-11-13 午后，池 **5** = 编译面 3 + 案头 2；用户裁定「任一车道完成可补巨件/挂起一件」+ 四项冻结件裁决全批）
 
 > 整段交付制；历史 wave 记录见 §8（续990–续1018）与 `history/changelog-archive-2.md`。
 > lean 并发纪律 ≤3：当前 闸(临时)/ox3q1h/urrcell + scout(~0 lean)；biefjhu 为 CPU 车道
@@ -261,6 +261,14 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（13:10，续1032）**：**一笔落库：uagkit-w6 K14 kit `5f7c511a`（LA30 +381/−7，UAGHHBM_p30 两条 inline isScs 缺口补齐）+ 四项冻结件裁决全批执行 + rg 新规入 AGENTS §7.1**。
+① **K14 落库（编排者独立闸全绿）**：岛编 RC=0/0 err（唯一 warning = UAGHHBM_p30:1578 本体 sorry 在案债）；双 private 探针（全限名同模块拼接法）标准三零 sorryAx；根面 589 逐字节同（md5 `246e952c…`）；olean 装池。cone-neutral 零 sorry 删除。
+② **ERRATA（续1030 记法更正）**：「uagkit 五车道修错循环、需 0.5 工作日」**不成立**——23 个 error 是 **w1 初版 patch 的陈旧现场**，w3 把 w1 初版误当 w2 终版修（w4 cmp 实锤），w2 终版早已全修；w6 零编辑、全链亲跑复验 6 分钟收口。`~/c17_backup/gate_uag3.log` 已标注「w1 初版现场，陈旧，勿据此派单」。教训：**工件快照必须带版本身份**（初版/终版混用已烧掉 w3-w5 三条车道 + 编排者一轮亲试）。
+③ **用户四项裁决全批**：① VASYYAU → 先侦察后报预算，**vasrecon-w1 已发（agent-32，案头零编译）**；② TameLp → 便宜门（hNKE 供给件 60–120）排队等槽、B1 不确定性投资缓议；③ UAGHHBM 本体 → **uagbody-w1 已发（agent-31，800–1,300，K14 落库即触发器兑现）**；④ hLP → 维持冻结等 LP 农场窗口。
+④ **中断潮 +2 + 僵尸锁 +3**：agent-27（urrcellbody-w2，34 min，PLAN.md 完整 + S1 kit 写一半）截断，resume 僵尸锁 90s×2 重试无效 → **fresh 接管 urrcellbody-w3（agent-33，工件已抢救：PLAN.md 复制 + WIP 文件 187 KB 含半 written S1）**。今日累计：中断 8 例、僵尸锁 5 例。缓解更新：快照必须可让 fresh 车道冷启动接续（PLAN/WIP 落盘已成标配）。
+⑤ **rg 新规（用户裁定，已入 AGENTS §7.1-21）**：shell 搜索一律 rg（本机 v15，默认跳过 .gitignore 的 .lake/*.olean），严禁裸 `grep -rn` 扫仓（实测 444 s——nextbox-scout 查 `def matan` 踩雷）；工单模板同步改写。
+⑥ **在飞 5 = 编译面 3（jlxfdmj-w2 / uagbody-w1 / urrcellbody-w3）+ 案头 2（nextbox-scout / vasrecon-w1）**；排队：TameLp 便宜门、6I1 收口（等 jlxfdmj）、K4c（LA18）。
 
 - **2026-11-13（午后，续1031）**：**车道池轮换——emptykit-3 wave2 深勘止损交付（无 patch）让槽，uagkit-w6 fresh 发车；agent-24/26 中断僵尸锁二次重试无效，fresh 接管为 jlxfdmj-w2 / nextbox-scout（接管）**。当前在飞 4/4。
 ① **emptykit-3 wave2 交付（agent-11，零 patch 止损）**：`ineq_5691615370_asym` 深勘——HOL `Sphere.ineq` 实为全界蕴涵链（WEAKER_STRIP 不可直搬）；WLOG 的 P 是位置形（rot 实例 `P a b c d e f = P b c d a f e`，2 万随机样本零反例）；hmax 平凡已被 `grind` 闭；**hrot 是真难点**，crux 引理已定型（箱体多项式非线性，需 nlinarith+手工 hints，估 2–4 编迭代）→ wave3 从 quad 4T5 起手（桥引理全绿、线性为主，skeleton 可复用至 4T4）。工件全在 `emptykit-3/`（DELIVERY 附录 A/B/C + ineq 尝试全文）。
