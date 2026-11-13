@@ -2765,6 +2765,417 @@ theorem empty_4T1 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
   ring_nf at hδ hP
   linarith
 
+/-! ## LANE ocbicby-w3 (2026-11-13): quad emptiness `empty_4T4` / `empty_4T5`.
+
+HOL `terminal.hl:3224` (4T4) and `terminal.hl:3331` (4T5) both dispatch
+through `terminal_quad_lemma` (unlike 4T1's Cayley–Menger route): the
+`azim`-sum lower bound comes from `vv_quad_split123` (short-diagonal split
+at corners 1/3), `tau3_taum_40` on the two resulting triangles, and the
+`main_nonlinear_terminal_v11` registries `5405130650` + `3603097872` (4T4)
+resp. `9096461391` + `2445657182` (4T5). The two registry slots line up so
+that the `0.1 * (3.01 - y4)` (4T4) resp. `0.12 * (y1 - 2)` (4T5) weights
+cancel and the conclusions add to `d` exactly. Helper block: the `k = 4`
+injectivity/separation kit (`a`-positivity + periodicity
+`periodic_vv_inj`/`periodic2_mod_reduce` shape), and the `taum` leg
+permutations from `taum_sym2`. -/
+
+private theorem emptykit_hinj4 (vv : ℕ → V3) (a : ℕ → ℕ → ℝ)
+    (ha : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j → 0 < a i j)
+    (hdij : ∀ i j : ℕ, a i j ≤ dist (vv i) (vv j)) :
+    ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j := by
+  intro i j ⟨hi, hj, heq⟩
+  by_contra hne
+  have hpos : 0 < a i j := ha i j ⟨hi, hj, hne⟩
+  have hle : a i j ≤ dist (vv i) (vv j) := hdij i j
+  rw [heq, dist_self] at hle
+  linarith
+
+private theorem emptykit_hsep4 (vv : ℕ → V3) (a : ℕ → ℕ → ℝ) (hper : Periodic vv 4)
+    (hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j)
+    (ha2 : ∀ i j : ℕ, i % 4 ≠ j % 4 → 2 ≤ a i j)
+    (hdij : ∀ i j : ℕ, a i j ≤ dist (vv i) (vv j)) :
+    ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j) := by
+  intro i j hne
+  have hne4 : i % 4 ≠ j % 4 := fun he =>
+    hne ((periodic_vv_inj vv 4 hper (by norm_num) hinj i j).2 he)
+  exact le_trans (ha2 i j hne4) (hdij i j)
+
+/-- `taum` under the leg transposition `(1 2)` (`taum_sym2.1`). -/
+private theorem emptykit_taum_swap12 (a b c d e f : ℝ) :
+    taum a b c d e f = taum b a c e d f :=
+  (taum_sym2 a b c d e f).1
+
+/-- `taum` under the leg transposition `(2 3)` (`taum_sym2.2`). -/
+private theorem emptykit_taum_swap23 (a b c d e f : ℝ) :
+    taum a b c d e f = taum a c b d f e :=
+  (taum_sym2 a b c d e f).2
+
+/-- `taum` under the leg 3-cycle `(L1 L2 L3) -> (L3 L1 L2)` (`taum_sym2` twice each way). -/
+private theorem emptykit_taum_cycle (a b c d e f : ℝ) :
+    taum a b c d e f = taum c a b f d e :=
+  (emptykit_taum_swap12 a b c d e f).trans
+    ((emptykit_taum_swap23 b a c e d f).trans
+      ((emptykit_taum_swap12 b c a e f d).trans (emptykit_taum_swap23 c b a f e d)))
+
+private theorem emptykit_apos_4T4 :
+    ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j →
+      0 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+        ((1, 3), Real.sqrt 8)] 2 4 i j := by
+  intro i j ⟨hi, hj, hne⟩
+  interval_cases i <;> interval_cases j <;>
+    first
+      | exact absurd rfl hne
+      | norm_num [funlistV39, psort, assocdV39, h0]
+
+private theorem emptykit_azim_4T4 (h : main_nonlinear_terminal_v11) :
+    ∀ vv : ℕ → V3, Set.range vv ⊆ ballAnnulus → Periodic vv 4 →
+      (∀ i j : ℕ,
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 i j
+            ≤ dist (vv i) (vv j) ∧
+          dist (vv i) (vv j) ≤
+            funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4 i j) →
+      ConvexLocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) →
+      0.477 ≤ (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+          rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 4) +
+          rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 5) +
+          rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 4) (vv 6) + 0) -
+          (Real.pi + sol0) * (4 - 2) := by
+  intro vv hsub hper hdij hcf
+  -- periodicity: the `vv 4/5/6` slots collapse
+  have h40 : vv 4 = vv 0 := by
+    rw [show (4 : ℕ) = 0 + 4 by norm_num]; exact hper 0
+  have h50 : vv 5 = vv 1 := by
+    rw [show (5 : ℕ) = 1 + 4 by norm_num]; exact hper 1
+  have h62 : vv 6 = vv 2 := by
+    rw [show (6 : ℕ) = 2 + 4 by norm_num]; exact hper 2
+  have hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j :=
+    emptykit_hinj4 vv _ emptykit_apos_4T4 (fun i j => (hdij i j).1)
+  have hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j) := by
+    refine emptykit_hsep4 vv _ hper hinj ?_ (fun i j => (hdij i j).1)
+    intro i j hne4
+    have hred : funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+        ((1, 3), Real.sqrt 8)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+          ((1, 3), Real.sqrt 8)] 2 4 (i % 4) (j % 4) := by
+      simp only [funlistV39, psort, Nat.mod_mod]
+    rw [hred]
+    have hz1 : i % 4 < 4 := Nat.mod_lt i (by norm_num)
+    have hz2 : j % 4 < 4 := Nat.mod_lt j (by norm_num)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      first
+        | exact absurd rfl hne4
+        | (norm_num [funlistV39, psort, assocdV39, h0] <;>
+            linarith [sqrt8_flyspeck_p22.1])
+  -- all six pairwise distances: upper bounds `< 4`, plus lower bounds `≥ 2`
+  have hb01 : dist (vv 0) (vv 1) ≤ Real.sqrt 8 := by
+    have h := (hdij 0 1).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb03 : dist (vv 0) (vv 3) ≤ 2 * h0 := by
+    have h := (hdij 0 3).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb12 : dist (vv 1) (vv 2) ≤ 2 * h0 := by
+    have h := (hdij 1 2).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb13 : dist (vv 1) (vv 3) ≤ cstab := by
+    have h := (hdij 1 3).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb23 : dist (vv 2) (vv 3) ≤ 2 * h0 := by
+    have h := (hdij 2 3).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hlt : 2 * h0 < 4 := by rw [h0_eq_p22]; norm_num
+  have hct : cstab < 4 := by rw [cstab_eq_p22]; norm_num
+  have hd1 : dist (vv 0) (vv 1) < 4 := by linarith [sqrt8_flyspeck_p22.2]
+  have hd2 : dist (vv 0) (vv 3) < 4 := by linarith
+  have hd3 : dist (vv 1) (vv 2) < 4 := by linarith
+  have hd4 : dist (vv 1) (vv 3) < 4 := by linarith
+  have hd5 : dist (vv 2) (vv 3) < 4 := by linarith
+  have hsplit := vv_quad_split123 vv hper hsub hd1 hd2 hd3 hd4 hd5 hsep hcf hinj
+  -- registry instances
+  have h540 : mainEstimate_5405130650 :=
+    h "5405130650" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_5405130650 at h540
+  have h20 : (2.0 : ℝ) = 2 := by norm_num
+  simp only [h20] at h540
+  have h360 : mainEstimate_3603097872 :=
+    h "3603097872" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_3603097872 at h360
+  simp only [h20] at h360
+  -- norm bounds
+  have hn0 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 0))
+  have hn1 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 1))
+  have hn2 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 2))
+  have hn3 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 3))
+  have hn0u : ‖vv 0‖ ≤ (2.52 : ℝ) := by
+    have := hn0.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  have hn1u : ‖vv 1‖ ≤ (2.52 : ℝ) := by
+    have := hn1.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  have hn2u : ‖vv 2‖ ≤ (2.52 : ℝ) := by
+    have := hn2.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  have hn3u : ‖vv 3‖ ≤ (2.52 : ℝ) := by
+    have := hn3.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  -- the special funlist slots
+  have hd01l : (2.52 : ℝ) ≤ dist (vv 0) (vv 1) := by
+    have h := (hdij 0 1).1
+    norm_num [funlistV39, psort, assocdV39, h0] at h
+    linarith
+  have hd13l : Real.sqrt 8 ≤ dist (vv 1) (vv 3) := by
+    have h := (hdij 1 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd13u : dist (vv 1) (vv 3) ≤ (3.01 : ℝ) := by
+    have h := hb13; rw [cstab_eq_p22] at h; linarith
+  have hb03u : dist (vv 0) (vv 3) ≤ (2.52 : ℝ) := by
+    have h := hb03; rw [h0_eq_p22] at h; norm_num at h; linarith
+  have hb12u : dist (vv 1) (vv 2) ≤ (2.52 : ℝ) := by
+    have h := hb12; rw [h0_eq_p22] at h; norm_num at h; linarith
+  have hb23u : dist (vv 2) (vv 3) ≤ (2.52 : ℝ) := by
+    have h := hb23; rw [h0_eq_p22] at h; norm_num at h; linarith
+  have hd13l2 : (2 : ℝ) ≤ dist (vv 1) (vv 3) := by linarith [sqrt8_flyspeck_p22.1]
+  have hd03l : (2 : ℝ) ≤ dist (vv 0) (vv 3) := by
+    have h := (hdij 0 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd30l : (2 : ℝ) ≤ dist (vv 3) (vv 0) := by rw [dist_comm]; exact hd03l
+  have hd31l2 : (2 : ℝ) ≤ dist (vv 3) (vv 1) := by rw [dist_comm]; exact hd13l2
+  have hd30 : dist (vv 3) (vv 0) < 4 := by rw [dist_comm]; exact hd2
+  have hd31 : dist (vv 3) (vv 1) < 4 := by rw [dist_comm]; exact hd4
+  have hd01l2 : (2 : ℝ) ≤ dist (vv 0) (vv 1) := by linarith
+  have hd12l : (2 : ℝ) ≤ dist (vv 1) (vv 2) := by
+    have h := (hdij 1 2).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd23l : (2 : ℝ) ≤ dist (vv 2) (vv 3) := by
+    have h := (hdij 2 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hR1 := h540 ‖vv 0‖ ‖vv 3‖ ‖vv 1‖ (dist (vv 1) (vv 3)) (dist (vv 0) (vv 1))
+    (dist (vv 0) (vv 3)) hn0.1 hn0u hn3.1 hn3u hn1.1 hn1u hd13l hd13u hd01l hb01
+    hd03l hb03u
+  have hR2 := h360 ‖vv 2‖ ‖vv 3‖ ‖vv 1‖ (dist (vv 1) (vv 3)) (dist (vv 1) (vv 2))
+    (dist (vv 2) (vv 3)) hn2.1 hn2u hn3.1 hn3u hn1.1 hn1u hd13l hd13u hd12l hb12u
+    hd23l hb23u
+  -- `delta_y` positivity kills the asymmetric branches
+  have hδ1 : 0 ≤ deltaY ‖vv 0‖ ‖vv 3‖ ‖vv 1‖ (dist (vv 1) (vv 3)) (dist (vv 0) (vv 1))
+      (dist (vv 0) (vv 3)) := by
+    have h := DELTA_Y_POS_4POINTS (0 : V3) (vv 0) (vv 3) (vv 1)
+    rw [dist_zero_left, dist_zero_left, dist_zero_left, dist_comm (vv 3) (vv 1)] at h
+    exact h
+  have hδ2 : 0 ≤ deltaY ‖vv 2‖ ‖vv 3‖ ‖vv 1‖ (dist (vv 1) (vv 3)) (dist (vv 1) (vv 2))
+      (dist (vv 2) (vv 3)) := by
+    have h := DELTA_Y_POS_4POINTS (0 : V3) (vv 2) (vv 3) (vv 1)
+    rw [dist_zero_left, dist_zero_left, dist_zero_left, dist_comm (vv 3) (vv 1),
+      dist_comm (vv 2) (vv 1)] at h
+    exact h
+  rw [h40, h50, h62]
+  have h42 : (4 : ℝ) - 2 = 2 := by norm_num
+  rw [h42, add_zero, hsplit]
+  rw [tau3_taum_40 (vv 1) (vv 2) (vv 3) (hsub (Set.mem_range_self 1))
+      (hsub (Set.mem_range_self 2)) (hsub (Set.mem_range_self 3)) hd12l hd13l2 hd23l
+      hd3 hd4 hd5,
+    tau3_taum_40 (vv 3) (vv 0) (vv 1) (hsub (Set.mem_range_self 3))
+      (hsub (Set.mem_range_self 0)) (hsub (Set.mem_range_self 1)) hd30l hd31l2 hd01l2
+      hd30 hd31 hd1]
+  rw [show dist (vv 3) (vv 1) = dist (vv 1) (vv 3) from dist_comm _ _,
+    show dist (vv 3) (vv 0) = dist (vv 0) (vv 3) from dist_comm _ _]
+  rcases hR1 with hA | hA
+  · rcases hR2 with hB' | hB'
+    · have eA : taum ‖vv 0‖ ‖vv 3‖ ‖vv 1‖ (dist (vv 1) (vv 3)) (dist (vv 0) (vv 1))
+          (dist (vv 0) (vv 3)) = taum ‖vv 3‖ ‖vv 0‖ ‖vv 1‖ (dist (vv 0) (vv 1))
+          (dist (vv 1) (vv 3)) (dist (vv 0) (vv 3)) :=
+        emptykit_taum_swap12 _ _ _ _ _ _
+      have eB : taum ‖vv 2‖ ‖vv 3‖ ‖vv 1‖ (dist (vv 1) (vv 3)) (dist (vv 1) (vv 2))
+          (dist (vv 2) (vv 3)) = taum ‖vv 1‖ ‖vv 2‖ ‖vv 3‖ (dist (vv 2) (vv 3))
+          (dist (vv 1) (vv 3)) (dist (vv 1) (vv 2)) :=
+        (emptykit_taum_swap12 _ _ _ _ _ _).trans
+          ((emptykit_taum_swap23 _ _ _ _ _ _).trans
+            ((emptykit_taum_swap12 _ _ _ _ _ _).trans (emptykit_taum_swap23 _ _ _ _ _ _)))
+      rw [eA] at hA
+      rw [eB] at hB'
+      linarith
+    · linarith
+  · linarith
+
+theorem empty_4T4 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs4T4 vv) : 0 ≤ taustarV39 scs4T4 vv := by
+  unfold scs4T4 at hB ⊢
+  exact terminal_quad_lemma 0.477 _ _ emptykit_apos_4T4 (emptykit_azim_4T4 h) vv hB
+
+
+private theorem emptykit_apos_4T5 :
+    ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j →
+      0 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j := by
+  intro i j ⟨hi, hj, hne⟩
+  interval_cases i <;> interval_cases j <;>
+    first
+      | exact absurd rfl hne
+      | (norm_num [funlistV39, psort, assocdV39, h0, cstab])
+
+private theorem emptykit_azim_4T5 (h : main_nonlinear_terminal_v11) :
+    ∀ vv : ℕ → V3, Set.range vv ⊆ ballAnnulus → Periodic vv 4 →
+      (∀ i j : ℕ,
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j
+            ≤ dist (vv i) (vv j) ∧
+          dist (vv i) (vv j) ≤
+            funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4 i j) →
+      ConvexLocalFan (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+        (Set.range fun i => (vv i, vv (i + 1))) →
+      0.513 ≤ (rhoFun ‖vv 0‖ * azim 0 (vv 0) (vv 1) (vv 3) +
+          rhoFun ‖vv 1‖ * azim 0 (vv 1) (vv 2) (vv 4) +
+          rhoFun ‖vv 2‖ * azim 0 (vv 2) (vv 3) (vv 5) +
+          rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 4) (vv 6) + 0) -
+          (Real.pi + sol0) * (4 - 2) := by
+  intro vv hsub hper hdij hcf
+  have h40 : vv 4 = vv 0 := by
+    rw [show (4 : ℕ) = 0 + 4 by norm_num]; exact hper 0
+  have h50 : vv 5 = vv 1 := by
+    rw [show (5 : ℕ) = 1 + 4 by norm_num]; exact hper 1
+  have h62 : vv 6 = vv 2 := by
+    rw [show (6 : ℕ) = 2 + 4 by norm_num]; exact hper 2
+  have hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j :=
+    emptykit_hinj4 vv _ emptykit_apos_4T5 (fun i j => (hdij i j).1)
+  have hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j) := by
+    refine emptykit_hsep4 vv _ hper hinj ?_ (fun i j => (hdij i j).1)
+    intro i j hne4
+    have hred : funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab),
+          ((1, 3), cstab)] 2 4 (i % 4) (j % 4) := by
+      simp only [funlistV39, psort, Nat.mod_mod]
+    rw [hred]
+    have hz1 : i % 4 < 4 := Nat.mod_lt i (by norm_num)
+    have hz2 : j % 4 < 4 := Nat.mod_lt j (by norm_num)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      first
+        | exact absurd rfl hne4
+        | (norm_num [funlistV39, psort, assocdV39, h0, cstab])
+  have hb01 : dist (vv 0) (vv 1) ≤ cstab := by
+    have h := (hdij 0 1).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb03 : dist (vv 0) (vv 3) ≤ 2 * h0 := by
+    have h := (hdij 0 3).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb12 : dist (vv 1) (vv 2) ≤ 2 * h0 := by
+    have h := (hdij 1 2).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb13 : dist (vv 1) (vv 3) ≤ cstab := by
+    have h := (hdij 1 3).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hb23 : dist (vv 2) (vv 3) ≤ 2 * h0 := by
+    have h := (hdij 2 3).2
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hlt : 2 * h0 < 4 := by rw [h0_eq_p22]; norm_num
+  have hct : cstab < 4 := by rw [cstab_eq_p22]; norm_num
+  have hd1 : dist (vv 0) (vv 1) < 4 := by linarith
+  have hd2 : dist (vv 0) (vv 3) < 4 := by linarith
+  have hd3 : dist (vv 1) (vv 2) < 4 := by linarith
+  have hd4 : dist (vv 1) (vv 3) < 4 := by linarith
+  have hd5 : dist (vv 2) (vv 3) < 4 := by linarith
+  have hsplit := vv_quad_split123 vv hper hsub hd1 hd2 hd3 hd4 hd5 hsep hcf hinj
+  have h909 : mainEstimate_9096461391 :=
+    h "9096461391" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_9096461391 at h909
+  have h244 : mainEstimate_2445657182 :=
+    h "2445657182" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_2445657182 at h244
+  have hn0 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 0))
+  have hn1 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 1))
+  have hn2 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 2))
+  have hn3 := ballAnnulus_norm_bounds (hsub (Set.mem_range_self 3))
+  have hn0u : ‖vv 0‖ ≤ (2.52 : ℝ) := by
+    have := hn0.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  have hn1u : ‖vv 1‖ ≤ (2.52 : ℝ) := by
+    have := hn1.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  have hn2u : ‖vv 2‖ ≤ (2.52 : ℝ) := by
+    have := hn2.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  have hn3u : ‖vv 3‖ ≤ (2.52 : ℝ) := by
+    have := hn3.2; rw [h0_eq_p22] at this; norm_num at this; linarith
+  -- slot facts for the two registry instances
+  have hd01l : (2.52 : ℝ) ≤ dist (vv 0) (vv 1) := by
+    have h := (hdij 0 1).1
+    norm_num [funlistV39, psort, assocdV39, h0] at h
+    linarith
+  have hd01u : dist (vv 0) (vv 1) ≤ (3.01 : ℝ) := by
+    have h := hb01; rw [cstab_eq_p22] at h; linarith
+  have hd03l : (2 : ℝ) ≤ dist (vv 0) (vv 3) := by
+    have h := (hdij 0 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd03u : dist (vv 0) (vv 3) ≤ (2.52 : ℝ) := by
+    have h := hb03; rw [h0_eq_p22] at h; norm_num at h; linarith
+  have hd12l : (2 : ℝ) ≤ dist (vv 1) (vv 2) := by
+    have h := (hdij 1 2).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd12u : dist (vv 1) (vv 2) ≤ (2.52 : ℝ) := by
+    have h := hb12; rw [h0_eq_p22] at h; norm_num at h; linarith
+  have hd23l : (2 : ℝ) ≤ dist (vv 2) (vv 3) := by
+    have h := (hdij 2 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd23u : dist (vv 2) (vv 3) ≤ (2.52 : ℝ) := by
+    have h := hb23; rw [h0_eq_p22] at h; norm_num at h; linarith
+  have hd13eq : dist (vv 1) (vv 3) = cstab := by
+    refine le_antisymm hb13 ?_
+    have h := (hdij 1 3).1
+    norm_num [funlistV39, psort, assocdV39] at h
+    exact h
+  have hd13l : (3.01 : ℝ) ≤ dist (vv 1) (vv 3) := by
+    rw [hd13eq, cstab_eq_p22]
+  have hd13u : dist (vv 1) (vv 3) ≤ (3.01 : ℝ) := by
+    rw [hd13eq, cstab_eq_p22]
+  have hd13l2 : (2 : ℝ) ≤ dist (vv 1) (vv 3) := by linarith
+  have hd30l : (2 : ℝ) ≤ dist (vv 3) (vv 0) := by rw [dist_comm]; exact hd03l
+  have hd31l : (3.01 : ℝ) ≤ dist (vv 3) (vv 1) := by rw [dist_comm]; exact hd13l
+  have hd31u : dist (vv 3) (vv 1) ≤ (3.01 : ℝ) := by rw [dist_comm]; exact hd13u
+  have hd30u : dist (vv 3) (vv 0) ≤ (2.52 : ℝ) := by rw [dist_comm]; exact hd03u
+  have hd31l2 : (2 : ℝ) ≤ dist (vv 3) (vv 1) := by linarith
+  have hd30 : dist (vv 3) (vv 0) < 4 := by rw [dist_comm]; exact hd2
+  have hd31 : dist (vv 3) (vv 1) < 4 := by rw [dist_comm]; exact hd4
+  have hd01l2 : (2 : ℝ) ≤ dist (vv 0) (vv 1) := by linarith
+  have hR1 := h909 ‖vv 1‖ ‖vv 3‖ ‖vv 0‖ (dist (vv 3) (vv 0)) (dist (vv 0) (vv 1))
+    (dist (vv 3) (vv 1)) hn1.1 hn1u hn3.1 hn3u hn0.1 hn0u hd30l hd30u hd01l hd01u
+    hd31l hd31u
+  have hR2 := h244 ‖vv 1‖ ‖vv 3‖ ‖vv 2‖ (dist (vv 2) (vv 3)) (dist (vv 1) (vv 2))
+    (dist (vv 1) (vv 3)) hn1.1 hn1u hn3.1 hn3u hn2.1 hn2u hd23l hd23u hd12l hd12u
+    hd13l hd13u
+  rw [h40, h50, h62]
+  have h42 : (4 : ℝ) - 2 = 2 := by norm_num
+  rw [h42, add_zero, hsplit]
+  rw [tau3_taum_40 (vv 1) (vv 2) (vv 3) (hsub (Set.mem_range_self 1))
+      (hsub (Set.mem_range_self 2)) (hsub (Set.mem_range_self 3)) hd12l hd13l2 hd23l
+      hd3 hd4 hd5,
+    tau3_taum_40 (vv 3) (vv 0) (vv 1) (hsub (Set.mem_range_self 3))
+      (hsub (Set.mem_range_self 0)) (hsub (Set.mem_range_self 1)) hd30l hd31l2 hd01l2
+      hd30 hd31 hd1]
+  have eA : taum ‖vv 1‖ ‖vv 2‖ ‖vv 3‖ (dist (vv 2) (vv 3)) (dist (vv 1) (vv 3))
+      (dist (vv 1) (vv 2)) = taum ‖vv 1‖ ‖vv 3‖ ‖vv 2‖ (dist (vv 2) (vv 3))
+      (dist (vv 1) (vv 2)) (dist (vv 1) (vv 3)) :=
+    emptykit_taum_swap23 _ _ _ _ _ _
+  have eB : taum ‖vv 3‖ ‖vv 0‖ ‖vv 1‖ (dist (vv 0) (vv 1)) (dist (vv 3) (vv 1))
+      (dist (vv 3) (vv 0)) = taum ‖vv 1‖ ‖vv 3‖ ‖vv 0‖ (dist (vv 3) (vv 0))
+      (dist (vv 0) (vv 1)) (dist (vv 3) (vv 1)) :=
+    emptykit_taum_cycle _ _ _ _ _ _
+  rw [← eA] at hR2
+  rw [← eB] at hR1
+  linarith
+
+theorem empty_4T5 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs4T5 vv) : 0 ≤ taustarV39 scs4T5 vv := by
+  unfold scs4T5 at hB ⊢
+  exact terminal_quad_lemma 0.513 _ _ emptykit_apos_4T5 (emptykit_azim_4T5 h) vv hB
+
 /-- HOL `periodic_sum_shift`. NEEDS: `sum_nbij` 旋转双弹幕——注意本 Mathlib
 `Finset.sum_nbij` 的 h₀ 方向是 `f a = f' (g a)`(a ∈ LHS 集, g : LHS→RHS),
 故 g 须取逆向旋转 `fun x => (x + n - j % n) % n`(则 h₀ 化为 `j + g a ≡ a
