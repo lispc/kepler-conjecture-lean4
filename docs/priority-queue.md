@@ -310,6 +310,11 @@
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-13（19:35，续1050）**：**penthex-w1 车道发车（agent-45，用户批 ~1h）——pent_hex 塔基剩余支柱清偿**。
+① 工单：① lemma_5546286427_p19（registry 5546286427 热身）→ ② OWZLKVY4_p19（:447）→ ③ taud_mu_clauses_p19（用已净 taud_ge_flat_term_p19）→ ④ taud_minimizer_terminal_hex_cases_p19（:1262）→ ⑤ 大奖 terminal_hex_234_reduction_p19（仅当①-④全净；HOL :2981-3079）。模板 = 主线程三连（83f026e4/255e44a8）+ SCOUT.md。
+② 硬闸重申：每件探针必须恰标准三才算清；单件 3 轮卡死止损转下件；主仓零改动、1 lean、里程碑落盘。
+③ 主线程今晚净产出合计：N1 双件 + 塔基三件 + 全塔侦察 + 本车道工单；机器全空发车。
+
 - **2026-11-13（19:25，续1049）**：**pent_hex 塔清偿三连：`83f026e4`（edge2_flatD_x1_delta_lemma3_p19）+ `255e44a8`（delta_2_nn_p19 + delta_mono_p19）——主线程亲作，全部探针标准三、根面逐字节同**。
 ① **套路定型（可复用）**：LA19 的 NEEDS-DB 簇 = registry `h "3078028960"` 提取（deltaX1<0 ∨ deltaY>20，后者被 d≤20 假设排除）+ `delta_diff_p19` Cayley 分解 + nlinarith 收尾。三件各 12-22 行，一轮编译过。
 ② **塔况更新**：234-reduction 塔的脏基座从 5 子引理清掉 3（lemma3/delta_2_nn/delta_mono 转净）；仍脏：OWZLKVY4_p19 / taud_minimizer_terminal_hex_cases_p19 / taud_mu_clauses_p19 / 234 本体 + 簇内 flat_term2_*_eval ×2 / delta_*_2h0_le_d ×2 / lemma_5546286427_p19。
