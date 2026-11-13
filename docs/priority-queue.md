@@ -261,6 +261,8 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（15:05，续1040）**：**交接文档 `docs/handoff-2026-11-13.md` 落盘（用户：可能让别的 coding agent 接手）**——基线 AG 盘面 + 配额封盘状态 + 车道恢复表（重置后按序：jlxfdmj resume → vasw0 → urrcellbody-w7 在飞 → tmxllipls ps 预检 → OCBICBY wave3 → K4c）+ 工具链路径地图 + 闸验速查。**当前仅 urrcellbody-w7 一车道在飞 + tmxllipls-w1 无头存活**；其余等配额窗口。待命期间编排侧只维护账本，不派新车道。
+
 - **2026-11-13（14:58，续1039）**：**中断潮根因实锤 = 账户 5h 配额（429）——jlxfdmj-w2 续跑撞硬错误 "You've reached your 5-hour usage limit"（官方 error-reference 原文）⇒ 下午 18 例静默截断 = 配额逼近时的请求丢流症状（时间聚集 12:43–14:54 = 滚向触顶）。编排者早前「引擎过载」定性修正为配额根因（AGENTS §7.1-22 已同步）。**
 ① **当前盘面**：subagent 派发/续跑封（再发即 429 烧额度）——vasw0-w2 resume 暂缓；主会话仍可用（账本/闸照做）；tmxllipls-w1 无头循环下轮要模型时也会 429，其 smoke_seq 脚本不依赖模型可自跑；**等 5h 窗口重置（Console 可查时刻）或用户购加油包/升档**。
 ② **止损盘点（等重置期间零浪费）**：jlxfdmj-w3 接续包齐（段1/2 全绿 + 段3 DevAll3 52.6KB + 错误清单）；vasw0-w2 probes 已救（A 路线实锤止损判死、B 路线 YEBWJNG dev 在案）；urrcellbody-w7 WIP 202.6 KB；tmxllipls-w1 证书链健康（6,512 叶 + tight 改版）。**重置后按序 resume：jlxfdmj → vasw0 → 其余按到期顺序**。
