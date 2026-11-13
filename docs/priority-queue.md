@@ -262,6 +262,13 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（14:05，续1036）**：**一笔真还债落库：uagbody-w3 `156fabf8`（UAGHHBM_p30 本体真证，LA30 +171/−18）——Text 12→11，UAGHHBM 战役两笔收官（K14 kit + 本体）**。
+① **闸（编排者亲跑全绿）**：删除面 = 本体 sorry 1 行 + NEEDS/状态注释 17 行，定理签名逐字未动，K14 kit 段零改动；岛编 RC=0/0 err/0 sorry warning；拼接探针 `UAGHHBM_p30` = 标准三零 sorryAx；根面 589 逐字节同（md5 `246e952c…`，sorryAx 由其余 65 条在案供给、名单不变）；olean 装池。
+② **接管链记功**：w1 实际已完成真证（断于收尾验收），w2/w3 两代 fresh 接管逐字节核对 + 重跑验收——**中断潮 13 例零成果丢失**的正面证据；WIP 工件法（PLAN/b/logs 落盘制）全链路生效。
+③ **重基线**：地图仪器已发（~/c17_backup/reachmap/reachmap_156fabf8.out，预期 SORRIED 67→66、closed 恰 `{UAGHHBM_p30}`）——出数后 TSV/文档六件刷新。
+④ **在飞 4**：jlxfdmj-w2（100+ min 注意 2h 限）/ urrcellbody-w5 / tmxllipls-w1（TM 窗口已批）/ vasw0-w1（W0 已批）。
+⑤ **Text 11 清单（TSV 权威）**：LFLACKU_p23（hNL 保留区）/ MIQMCSN_p32 / NWDGKXH_p32 / YOBIMPP_p32（VASYYAU 闸族 4 件）/ OCBICBY_p22（wave3 待发）/ SCS_4I1_IMP_4I2 + SCS_4I2_IMP_4T1（LA33，等 JLXFDMJ）/ SCS_5M2_IMP_5T1（K4b/K4c 族）/ SCS_6I1_BERAK_BY_CSTAB（等 JLXFDMJ）/ fully_surrounded_perimeter_bound（条件形已落，等 B1）/ URRPHBZ2（w5 在飞）。
+
 - **2026-11-13（13:50，续1035）**：**一笔落库：tamelp-door-w1 `6a584f6d`（LocalFanPerimeterCond 新文件 59 行纯新增，cone-neutral 资产）+ 挂账销账 ERRATA**。
 ① **交付**：`p21_fully_surrounded_perimeter_bound''`——fully_surrounded_perimeter_bound 条件形的 p21 族命名收口（W22dN 已占 `'` 名，新件加撇），一行转发 `pW43_parent_perimeterBound_of_fullySurrounded`。
 ② **ERRATA（销账）**：续996/续478/续1032/续1033 的「便宜门只差 hNKE 供给件 60–120」挂账**陈旧**——供给件本体 `pW42_hNKE_hia`（LocalFanStepW42B:38-60，`ddec2058`）与父件条件形 `pW43_parent_perimeterBound_of_fullySurrounded`（LocalFanPerimeterFinal:54-64，`20506a3a`）**11-10 已在库**（pq 全文 W42|pW43 零命中 = 落库时账本未记名）。「还差 hNKE 供给件」的路线说法从续478 起即过期，今日便宜门车道实为「补 p21 族命名收口」。
