@@ -104,11 +104,12 @@
 > HOL 语义勘误：SCOUT 的 2b 标签反转、入口=2a 内支 `2<a(p+3)p`）；
 > **V3 `448ccff2`**（DEF-FIX 簇下移：LA23 的 14 声明（2 已证 + 12 sorry）逐字节进 `LocalAuto23Vas`，
 > 块 md5 两侧同、全库 sorry 43381 不变、LA23/Vas/LA25 三模块 rc=0/err0、根面逐字节同——**R3 解除**）；
-> **V4 `849bc66d`**（`ab4_assumption_reduction_p23` 真证 +192/−1，标准三；簇内第一笔真还债，11 条 sorry 余）。
-> 四笔均非锥内资产（锥内 SORRIED 仍 62）。
-> **在飞 V5 `vasdas-w5`**：`LocalAuto23Vas` 内真证 `deform_azim_sum_p23`（HOL `JOTSWIX.hl:1084-1170`；
-> NEHXMWH/BZQNDMN/JOTSWIX 里被引 6 次；`CONTINUOUS_PRESERVE_COLLINEAR` / `WNWSHJT_ALT_p21` /
-> `sum3_azim_fan` 已核可用；删除面恰 1 sorry）。
+> **V4 `849bc66d`**（`ab4_assumption_reduction_p23` 真证 +192/−1，标准三；簇内第一笔真还债）；
+> **V5 `7389ff6b`**（`deform_azim_sum_p23` 真证 +92/−1，标准三；NEHXMWH/BZQNDMN/JOTSWIX 实引 6 次）。
+> 五笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→10）。
+> **在飞 V6 `vasnhx-w6`**：`LocalAuto23Vas` 内真证 **`NEHXMWH_p23`**（keystone，HOL `JOTSWIX.hl:1171-1678`；
+> V4 ab4 + V5 deform_azim_sum + `deform_simplex_edge_exists_p21` / `WNWSHJT_p14` /
+> `MMs_minimize_tau_fun_p21` / `tau3_azim_p21` / `tau3_taum_nonplanar_p21` 已核在库；删除面恰 1 sorry）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -285,6 +286,23 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
+- **2026-11-13（22:31，续1074）**：**V5 `vasdas-w5` 落库 `7389ff6b`（`deform_azim_sum_p23` 真证，+92/−1）——簇内第三笔真还债；V6 `vasnhx-w6` 直攻 keystone `NEHXMWH_p23`**。
+① **V5 交付**：HOL `JOTSWIX.hl:1084-1170`——`Deformation` 取 `0∈Ioo`/四点 `ContinuousAt`/`f vᵢ 0=vᵢ` →
+`CONTINUOUS_PRESERVE_COLLINEAR`×3 得三非共线半径 → `hcase` 两支各调 `WNWSHJT_ALT_p21`
+（`(v4,v1,v3, π−azim123)` / `(v3,v1,v2, π−azim134)`）得和 <2π → `epsilon_triple/pair_p21` 合并 →
+`sum3_azim_fan` 收口和恒等。两处等价简化（HOL 首个 WNWSHJT_ALT 产物未被最终步消费；Lean `sum3_azim_fan`
+多 `v≠x` 形参用 `collinear3_of_eq` 反推）已入 DELIVERY「路线差异」。踩坑：`obtain := hdef` 会清原假设，
+改投影 `hdef.1/.2.1/.2.2` 一次过。
+② **编排者闸（亲跑）**：worktree@`71b141f3` apply RC=0；删除面恰 1 sorry；禁项 0/0/0/0；直编 **rc=0/error 0**
+（sorry-decls 11→10）；装池；探针目标件 **标准三**、其余 13 名 axioms 逐行同 HEAD（10 条仍 sorryAx）；
+根面 md5 **`246e952c…` 逐字节同**。commit `7389ff6b`，已 push。
+③ **V6 `vasnhx-w6`（在飞）**：`NEHXMWH_p23`（HOL `JOTSWIX.hl:1171-1678`，508 行）——local_fan 组装 →
+`deform_simplex_edge_exists_p21`（LA21:795）→ V4 ab4 + V5 deform_azim_sum → `WNWSHJT_p14`（LA14:3547）→
+`MMs_minimize_tau_fun_p21`（LA21:4778）+ `tau3_azim_p21`（LA21:4913）/ `tau3_taum_nonplanar_p21`（LA21:4816）
++ `taum_sym2`（LA38:1670）→ 端点二选一。工单要求先 30-80 行侦察探针 + 装债闸（每个依赖 `#print axioms`）。
+④ 口径：V5 为非锥内真还债（锥内 62 不变、非锥内 Text 余债 −1）；簇内 sorry 余 10（V6 后 9）。
+⑤ 下一条：续1075。
+
 - **2026-11-13（22:16，续1072）**：**V4 `vasab4-w4` 落库 `849bc66d`（`ab4_assumption_reduction_p23` 真证，+192/−1）——簇内第一笔真还债；V5 `vasdas-w5` 发车（`deform_azim_sum_p23`）**。
 ① **V4 交付**：HOL `JOTSWIX.hl:476-668` 机械四分类——`hrowA`/`hrowB` 在 p 行按 `MOD_4_CASES_p23` 分四支
 （j≡p 用 `s.a p p=0`；j≡p+1 由 `hab` 空虚；j≡p+2 由 `hdg`+`dist≤4h0` 空虚；j≡p+3 用 `hdist` 等距不变量），
@@ -421,6 +439,8 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-13（22:20，续1073）**：**第三车道发车（用户批）——xrr1553-w1（agent-53：N4 `xrr_le_1553{,_BB}_p29` 双件，LA29:3699/3708，5M2/HIJQAHA 线）**。侦察已备：HOL `HIJQAHA.hl:3517/3559`；LA22 xrr 单调族（`xrr_sym/bounds_2/increasing/decreasing_p22`、`arclength_xrr_p22`，V1 `f8adecea`）可用；import 硬闸 = BFS 验 LA22 闭包不触 LA29（成环则就地证小包络）。文件面 LA29 与在飞 LA21/LA38/LA23 全隔离；在飞 3（本会话 3 条全在树：n2def 编译/patch 前夜、t4crux probe2 迭代、xrr1553 侦察）。机器 pressure 1，lean 槽 guard_wait 自节流。
 
 - **2026-11-13（21:58，续1071）**：**ERRATA（续1070 判词作废）：t4crux-w1 未死、n2def-w1 亦未死——双车道均存活，harness 今夜双向误报（假 completed + 假 failed）**。
 ① **用户指正 + 编排者复核（wire.jsonl 铁证）**：t4crux-w1（agent-52）completed 通知为**假完成**——wire.jsonl 21:56 仍在写（step 12，实编 probe_crux 迭代 HMul 错误），21:48–21:56 连续产出 sym2/opt/symgroup/probe_crux；n2def-w1（agent-51）failed 通知（turn ended without final message）**同为假失败**——wire.jsonl 21:57 仍在写（turn 1 step 2 推进中），/tmp 侧 21:55-56 落 compile/make_patch/gate 三脚本，临近编译+patch 相位。当时 ps 查无进程只因两 lane 均处非编译相位。
