@@ -5234,28 +5234,119 @@ theorem SCS_6M1_IMP_SCS_6T1 (hmn : main_nonlinear_terminal_v11) :
     ∀ v : ℕ → V3, v ∈ MMsV39 scs6M1 →
       (∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)) →
       v ∈ MMsV39 scs6T1 := by
-  sorry
-  -- NEEDS: the mnt11 lane, all proof-pending in LocalAuto1: RRCWNSJ_concl
-  -- (appendix.hl:1321), JCYFMRP_concl (:1329), JLXFDMJ_concl (:1357),
-  -- MXQTIED_concl (:1288), plus Nuxcoea.MMS_IMP_BBS /
-  -- CHANGE_W_IN_BBS_MOD_IS_SCS and SCS_6M1_IS_SCS / SCS_6T1_IS_SCS (here).
+  -- DISCHARGES (2026-11-13, lane sc6i1close-w1): HOL hexagons.hl:1740-1810 --
+  -- `MMS_IMP_BBS_p28` -> `RRCWNSJ_p26` (generic) -> `JCYFMRP_p27` (seed edge)
+  -- -> `JLXFDMJ_ge4_p27` (all-edge propagation, `scsM scs6M1 = ∅` makes the
+  -- mod premise vacuous) -> `MXQTIED_concl` (6M1 -> 6T1 transfer; the 6T1
+  -- upper edge bound `b = 2` is exactly the propagated `dist = 2`).
+  intro v hv hdiag
+  have hBB : BBsV39 scs6M1 v := MMS_IMP_BBS_p28 scs6M1 v hv
+  have hdiagC : ∀ i j, scsDiag 6 i j →
+      scs6M1.a i j ≤ cstab ∧ cstab < dist (v i) (v j) :=
+    fun i j hd => ⟨h0_LT_B_SCS_6M1.2 i j hd, hdiag i j hd⟩
+  have hk3 : 3 < scs6M1.k := by rw [K_SCS_6M1.1]; norm_num
+  have hgen : scsGeneric v :=
+    RRCWNSJ_p26 hmn scs6M1 v SCS_6M1_IS_SCS SCS_6M1_BASIC hv hk3
+      h0_LT_B_SCS_6M1.1 hdiagC B_LE_CSTAB_6M1.1
+  obtain ⟨i0, hi0⟩ :=
+    JCYFMRP_p27 hmn scs6M1 v hk3 SCS_6M1_IS_SCS hv hgen SCS_6M1_BASIC
+      h0_LT_B_SCS_6M1.1 CARD_SCS_M_6M1 B_LE_CSTAB_6M1.2.2.2 hdiagC
+  have ha2 : scs6M1.a i0 (i0 + 1) = 2 := a_edge_6M1_p20 i0
+  have hble : scs6M1.b i0 (i0 + 1) ≤ 2 * h0 := by rw [b_edge_6M1_p20 i0]
+  have hlt : ∀ i, scs6M1.a i (i + 1) < scs6M1.b i (i + 1) := fun i => by
+    rw [a_edge_6M1_p20 i, b_edge_6M1_p20 i]
+    exact two_lt_two_h0_p20
+  have hnotmem : ∀ j, j % 6 ∉ scsM scs6M1 := by
+    intro j hj
+    rw [SCS_M_6M1] at hj
+    exact hj
+  have hall0 : ∀ j, j % 6 ∉ scsM scs6M1 → dist (v j) (v (j + 1)) = 2 :=
+    JLXFDMJ_ge4_p27 hmn scs6M1 v i0 hk3 SCS_6M1_IS_SCS hv hgen SCS_6M1_BASIC hi0
+      h0_LT_B_SCS_6M1.1 CARD_SCS_M_6M1 hdiagC hlt ha2 hble
+  have hall : ∀ j, dist (v j) (v (j + 1)) = 2 := fun j => hall0 j (hnotmem j)
+  have hBB' : BBsV39 scs6T1 v := by
+    have h1 := hBB.1
+    have h2 := hBB.2.1
+    have h3 := hBB.2.2.1
+    have h4 := hBB.2.2.2
+    refine ⟨h1, h2, ?_, ?_⟩
+    · intro i j
+      refine ⟨(h3 i j).1, ?_⟩
+      show dist (v i) (v j) ≤ csAdj 6 2 6 i j
+      unfold csAdj
+      split_ifs with hsame hadj
+      · have hvij : v i = v j :=
+          (BB_VV_FUN_EQ_p26 scs6M1 v SCS_6M1_IS_SCS hBB i j).mpr hsame
+        rw [hvij]
+        simp
+      · rcases hadj with h | h
+        · have hvij : v j = v (i + 1) :=
+            (BB_VV_FUN_EQ_p26 scs6M1 v SCS_6M1_IS_SCS hBB j (i + 1)).mpr h
+          rw [hvij, hall i]
+        · have hvji : v i = v (j + 1) :=
+            (BB_VV_FUN_EQ_p26 scs6M1 v SCS_6M1_IS_SCS hBB i (j + 1)).mpr h.symm
+          rw [hvji, dist_comm, hall j]
+      · have hle : dist (v i) (v j) ≤ csAdj 6 (2 * h0) 6 i j := (h3 i j).2
+        simp only [csAdj] at hle
+        rw [if_neg hsame, if_neg hadj] at hle
+        exact hle
+    · exact h4
+  exact MXQTIED_concl scs6M1 scs6T1 v SCS_6M1_IS_SCS SCS_6T1_IS_SCS
+    SCS_6M1_BASIC SCS_6T1_BASIC (by rw [SCS_M_6M1, SCS_M_6T1]) rfl hv hBB' rfl
+    (fun i => rfl)
+    (fun i j => ⟨le_refl _,
+      csAdj_le_p20 6 2 (2 * h0) 6 6 i j (le_of_lt two_lt_two_h0_p20) (le_refl 6)⟩)
 
 /-- HOL `SCS_6I1_IMP_SCS_6T1` (hexagons.hl:1812). -/
 theorem SCS_6I1_IMP_SCS_6T1 (hmn : main_nonlinear_terminal_v11) :
     ∀ v : ℕ → V3, v ∈ MMsV39 scs6I1 →
       (∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)) →
       v ∈ MMsV39 scs6T1 := by
-  sorry
-  -- NEEDS: SCS_6M1_IMP_SCS_6T1 above (mnt11 lane) plus PEDSLGV2 (LocalAuto1,
-  -- proof pending); the isScs half closes via STAB_6I1_SCS + SCS_6T1_IS_SCS.
+  -- DISCHARGES (2026-11-13, lane sc6i1close-w1): HOL hexagons.hl:1812-1827 --
+  -- `PEDSLGV2_concl` lifts the `scs_6I1` realisation to `scs_6M1` (the strict
+  -- diagonal bound gives the non-strict one), then the 6M1 chain upshifts.
+  intro v hv hdiag
+  have hM1 : v ∈ MMsV39 scs6M1 :=
+    PEDSLGV2_concl v hv (fun i j hd => le_of_lt (hdiag i j hd))
+  exact SCS_6M1_IMP_SCS_6T1 hmn v hM1 hdiag
 
 /-- HOL `SCS_6I1_BERAK_BY_CSTAB` (hexagons.hl:1831). -/
 theorem SCS_6I1_BERAK_BY_CSTAB (hmn : main_nonlinear_terminal_v11) :
     scsArrowV39 {scs6I1}
       ({scs6T1} ∪ {x | ∃ i j, scsDiag 6 i j ∧ x = scsStabDiagV39 scs6I1 i j}) := by
-  sorry
-  -- DISCHARGES: hexagons.hl; arrow combining SCS_6I1_IMP_SCS_6T1 with the
-  -- diag-stabilisation destinations.
+  -- DISCHARGES (2026-11-13, lane sc6i1close-w1): HOL hexagons.hl:1831-1888 --
+  -- right-set `isScs` half: `SCS_6T1_IS_SCS` + `STAB_IS_SCS_p17` (the `a`
+  -- bound on diagonals is `h0_LT_B_SCS_6I1`); non-emptiness half: if
+  -- `MMs scs6I1 = ∅` the left disjunct holds, else a realisation `v` either
+  -- satisfies the strict diagonal bound globally (`SCS_6I1_IMP_SCS_6T1`
+  -- lands in `scs6T1`) or has a diagonal pair with `dist ≤ cstab`
+  -- (`PEDSLGV1_concl` lands in that `scs_stab_diag`).
+  have hk6 : 3 < scs6I1.k := by rw [K_SCS_6I1]; norm_num
+  refine ⟨?_, ?_⟩
+  · intro s hs
+    rw [Set.mem_union] at hs
+    rcases hs with h6 | hstab
+    · rw [Set.mem_singleton_iff] at h6
+      rw [h6]
+      exact SCS_6T1_IS_SCS
+    · obtain ⟨i, j, hd, rfl⟩ := hstab
+      exact STAB_IS_SCS_p17 scs6I1 i j SCS_6I1_IS_SCS SCS_6I1_BASIC hk6
+        hd (h0_LT_B_SCS_6I1.2 i j hd)
+  · by_cases hM : MMsV39 scs6I1 = ∅
+    · exact Or.inl (fun s hs => by
+        rw [Set.mem_singleton_iff] at hs
+        rw [hs]
+        exact hM)
+    · right
+      obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hM
+      by_cases hdiag : ∀ i j, scsDiag 6 i j → cstab < dist (v i) (v j)
+      · exact ⟨scs6T1, Or.inl rfl,
+          Set.nonempty_iff_ne_empty.mp ⟨v, SCS_6I1_IMP_SCS_6T1 hmn v hv hdiag⟩⟩
+      · push_neg at hdiag
+        obtain ⟨i, j, hd, hlt⟩ := hdiag
+        refine ⟨scsStabDiagV39 scs6I1 i j, Or.inr ⟨i, j, hd, rfl⟩, ?_⟩
+        exact Set.nonempty_iff_ne_empty.mp
+          ⟨v, PEDSLGV1_concl v i j hv hd hlt⟩
 
 /-- HOL `OEHDBEN_PRIME` (hexagons.hl:2117). `FZIOTEF_TRANS` through
 `{scs_6T1} ∪ {stab i j | diag}`, the two arrows being
