@@ -44,6 +44,7 @@ import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto28
 import Kepler.Text.LocalAuto33
 import Kepler.Text.LocalAuto34
+import Kepler.Text.VasTuaKit
 import Mathlib
 
 set_option maxHeartbeats 6000000
@@ -179,5 +180,30 @@ theorem WKZZEEH_kit (h : main_nonlinear_terminal_v11) :
     hlt | hlt
   · linarith
   · linarith
+
+/-- HOL `TUAPYYU` (VASYYAU.hl:524-646) — downstream kit version of the
+LocalAuto1 registry twin `TUAPYYU_concl` (statement verbatim, same
+`h : main_nonlinear_terminal_v11` premise and quantifier order).  Assembly
+per HOL :640-646: `TUAPYYU1` (`VasTuaKit.TUAPYYU1_vaskit`, the `(p+3)`
+block → `NEHXMWH1`, the `(p+2)` block → `NEHXMWH`) fed with `BZQNDMN_p23`
+(the `(p+3)` endpoint lemma) and `NEHXMWH_p23` (the `(p+2)` one). -/
+theorem TUAPYYU_kit (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+    scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+    (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j) →
+    (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
+    ¬scsIsStr s v p → ¬scsIsStr s v (p + 1) →
+    dist (v p) (v (p + 1)) = s.a p (p + 1) ∨
+      dist (v p) (v (p + 1)) = s.b p (p + 1) := by
+  have hN1 : NEHXMWH1_concl_p25 := fun h' s FF v p hFF his hk hv hbasic hgen hdiag hang =>
+    BZQNDMN_p23 h' s FF v p (by simpa only [Set.image_univ] using hFF)
+      his hk hv hbasic hgen hdiag hang
+  have hN2 : NEHXMWH_concl_p25 := fun h' s FF v p hFF his hk hv hbasic hgen hdiag hang =>
+    NEHXMWH_p23 h' s FF v p (by simpa only [Set.image_univ] using hFF)
+      his hk hv hbasic hgen hdiag hang
+  intro s v p his hbasic hk hv hdiag hval h1 h2
+  exact TUAPYYU1_vaskit hN1 hN2 h s v p his hbasic hk hv hdiag hval h1 h2
 
 end Kepler.Text
