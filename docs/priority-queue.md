@@ -105,11 +105,14 @@
 > **V3 `448ccff2`**（DEF-FIX 簇下移：LA23 的 14 声明（2 已证 + 12 sorry）逐字节进 `LocalAuto23Vas`，
 > 块 md5 两侧同、全库 sorry 43381 不变、LA23/Vas/LA25 三模块 rc=0/err0、根面逐字节同——**R3 解除**）；
 > **V4 `849bc66d`**（`ab4_assumption_reduction_p23` 真证 +192/−1，标准三；簇内第一笔真还债）；
-> **V5 `7389ff6b`**（`deform_azim_sum_p23` 真证 +92/−1，标准三；NEHXMWH/BZQNDMN/JOTSWIX 实引 6 次）。
-> 五笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→10）。
-> **在飞 V6 `vasnhx-w6`**：`LocalAuto23Vas` 内真证 **`NEHXMWH_p23`**（keystone，HOL `JOTSWIX.hl:1171-1678`；
-> V4 ab4 + V5 deform_azim_sum + `deform_simplex_edge_exists_p21` / `WNWSHJT_p14` /
-> `MMs_minimize_tau_fun_p21` / `tau3_azim_p21` / `tau3_taum_nonplanar_p21` 已核在库；删除面恰 1 sorry）。
+> **V5 `7389ff6b`**（`deform_azim_sum_p23` 真证 +92/−1，标准三；NEHXMWH/BZQNDMN/JOTSWIX 实引 6 次）；
+> **V6 `e2d0ad27`**（**keystone `NEHXMWH_p23` 真证 +605/−1**，标准三；31 依赖件零 sorryAx；
+> HOL 508 行 giant：MMs→BBs + deform_simplex_edge_exists + ab4 + 2×deform_azim_sum + WNWSHJT +
+> 7ε min + LEMMA_1834976363 + MMs_minimize_tau_fun + tau3 三件 + 端点反证）。
+> 六笔均非锥内资产（锥内 SORRIED 仍 62；簇内 sorry 12→9）。
+> **在飞 V7 `vasab4b-w7`**：`ab4_assumption_reduction2_p23` + `ab4_assumption_reduction_sym_p23`
+> （HOL `JOTSWIX.hl:693-900` / `:900-1084`；BZQNDMN/JOTSWIX 的最后两块前置；复用 V4 骨架；
+> 删除面恰 2 sorry，若超 450 先交 `_sym`）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -285,6 +288,31 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-13（23:35，续1080）**：**V7 `vasab4b-w7` 发车——`ab4_assumption_reduction2_p23` + `ab4_assumption_reduction_sym_p23`（BZQNDMN/JOTSWIX 的最后两块前置）**。
+① 目标：`LocalAuto23Vas.lean` 内真证两变体（HOL `JOTSWIX.hl:693-900` / `:900-1084`）；复用 V4 的
+substrate（BBs_inj/periodic2_MOD/MOD_4_CASES 四分类/三支装配）；`_2` 的 b 侧靠 `hb3`、`_sym` 固定点换
+`v(p+1)`。删除面恰 2 sorry；若合计超 450 行先交 `_sym`（BZQNDMN 直需）。
+② 验证：两目标件标准三 + 其余 12 名 axioms 逐行同 HEAD（7 条仍 sorryAx）；若重构 private helper，
+必须重探 V4 `ab4_assumption_reduction_p23` 仍标准三。
+③ 之后：V8 = `BZQNDMN_p23`（`_sym` + deform_azim_sum 就位）→ V9 = `JOTSWIX_p23`（`_2`）→ `TUAPYYU` 可收。
+④ 下一条：续1081。
+
+- **2026-11-13（23:34，续1079）**：**V6 `vasnhx-w6` 落库 `e2d0ad27`（keystone `NEHXMWH_p23` 真证，+605/−1）——TUAPYYU 链最大单件过**。
+① **交付**：HOL `JOTSWIX.hl:1171-1678`（508 行 giant）逐步搬入：`MMsV39` 直降 BBs（定义即 `BBprime2 ∧ …`，
+不需要 unadorned 桥）→ local-fan/azim 形态（`INTERIOR_ANGLE1_AZIM_p22`/`LOCAL_FAN_AZIM_POS_p22`/
+`vv_split_azim_alt_p21`）→ `deform_simplex_edge_exists_p21`（v(p+3) 形变）→ `ab4_assumption_reduction_p23`
++ `deformation_BBs_ALT_p21` → 2×`deform_azim_sum_p23` + `WNWSHJT_p14` + 7 重 ε min →
+`LEMMA_1834976363_p22`（xrr_simple 区间 + g482w3 deltaY/upsX 证 `hsub`）→
+`MMs_minimize_tau_fun_p21` + `periodic_sum` 四项展开（A123/A312 消去）→
+`tau3_azim_p21`/`tau3_taum_nonplanar_p21`/`g482w3_taum_cyc` → 端点二选一反证（1834 严格下降 vs 最小化）。
+② **编排者闸（亲跑）**：worktree@`0fa46c92` apply RC=0；删除面恰 1 sorry；禁项 0/0/0/0；直编 **rc=0/error 0**
+（sorry-decls 10→9）；装池；探针目标件 **标准三**、其余 13 名 axioms 逐行同 HEAD（9 条仍 sorryAx）；
+**31 个消费依赖全部零 sorryAx**（`ax_deps.log`）；根面 md5 **`246e952c…` 逐字节同**。commit `e2d0ad27`，已 push。
+③ ERRATA（对工单）：任务表里的 terminal registry `5541487347` 是 `TAUM_STD_POS_p23` 用的，**不是**本件输入；
+本件实际消费 `1834976363`（`LEMMA_1834976363_p22`，已证标准三）。
+④ 口径：非锥内（锥内 62 不变）；簇内 sorry 9 余（ab4_2/_sym/BZQNDMN/JOTSWIX/PWE1-4/LINDIH_11）。
+⑤ 下一条：续1080。
 
 - **2026-11-13（22:31，续1074）**：**V5 `vasdas-w5` 落库 `7389ff6b`（`deform_azim_sum_p23` 真证，+92/−1）——簇内第三笔真还债；V6 `vasnhx-w6` 直攻 keystone `NEHXMWH_p23`**。
 ① **V5 交付**：HOL `JOTSWIX.hl:1084-1170`——`Deformation` 取 `0∈Ioo`/四点 `ContinuousAt`/`f vᵢ 0=vᵢ` →
