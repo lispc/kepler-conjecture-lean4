@@ -241,6 +241,12 @@
    WIP 续，绝不从 HEAD 重来；④ 里程碑落盘制（每轮编译/每段收口覆盖写快照）是生死线；
    ⑤ resume 撞锁等 90s 重试 ≤2 次即转 fresh，不三试。每次中断记 pq §8，
    假失败变体曾修正既有彻查结论（续1037 → 续1038 ERRATA 式更新）。
+   **假失败处置协议（续1055 增补，案例：tmxllipls-w1 / penthex-w1/w2 均「failed」
+   后无头跑完全程交付）**：收到 failed/截断通知后——① ps 预检进程；② **查快照目录
+   有无 DELIVERY.md/patch（有 = 交付已发生，直接进闸流程落库，绝不派接管）**；
+   ③ 进程活着且快照无交付 → 不派接管，留 ORCHESTRATOR_NOTE 收束任务面，登记
+   「无头在飞」清单，下次 orchestrator 回合必复查其快照；④ 进程死且无交付才 fresh
+   接管。根因是 harness 通知通道丢包（agent 循环未死），本地只能以快照为准管理。
 
 23. **交付泄漏（2026-11-13 pick 审计，用户令；jlxfdmj-w1 / vasw0-w1 / k4cprep-w3 三例）**：
    ① 车道**晚交付**——jlxfdmj-w1 被通知 failed/零工件、编排者已发 fresh w2，1.5h 后它又产出
