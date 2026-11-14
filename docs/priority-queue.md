@@ -857,6 +857,8 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（13:15，续1125）**：**OCBICBY 战役交接文档 `docs/handoff-2026-11-14.md` 落盘（用户令：移交他人负责）**——自含：14 支状态表 / 已落库资产 commit 索引 / 剩余工单按依赖序（5T1 帽石无解冻依赖可立刻施工；6T1 差 ht4nn 箱、4T3 差 LP wrapper 银行——两 LP 解冻动作已列明形状与证据）/ lane 快照工件索引（7 链 12 快照）/ 闸与车道纪律速查 / 建议开工序。接手人零上下文可开工。本会话 OCBICBY 线自此转维护态（新指令前不主动发车）。
+
 - **2026-11-14（13:00，续1124）**：**🏁 hextop-w2 收线落库 `f1466ece`（hex 塔顶收口，LA19 纯追加 +834，error 轨迹 101→1→0，18/18 探针标准三）——hex 塔全链绿，6T1 装配面齐备**。
 ① 末叶 S3 case-树直证（六置换帧 0-3 hop；勘误并修正 w1 工单 R 映射两处笔误）；patch byte-identical + §7.1-26 头合规（重写头三行+cmp 姿势入档）。雷区五条补遗（rw 名单不混用/hop 实参=目标帧/组合 C 槽映射全表）。
 ② **6T1 装配面全齐**：塔顶 ✓ + 塔基 ✓（1115058e）+ 桥 ✓（6f4d4492）+ side-case/ht4nn_ge200 ✓（362ab04e）——**只剩箱型 ht4nn**（LP 解冻后 by_cases 两半拼合）⇒ empty_6T1_p22 → OCBICBY_6T1_p22。
