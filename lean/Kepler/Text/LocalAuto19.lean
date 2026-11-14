@@ -2544,7 +2544,13 @@ theorem terminal_pent_tau126_delta20_p19 (h : mainNonlinearTerminalV11_p18)
 
   · exact (ht htau).elim
 
-/-- HOL `terminal_pent_taum` (pent_hex.hl:2223). NEEDS-DB. -/
+/-- HOL `terminal_pent_taum` (pent_hex.hl:2223). DISCHARGED 2026-11-14 (lane
+ocbicby5t1-w1): the `y126`-slot minimizer at `d = 20`
+(`taud_minimizer_terminal_pent_cases_p19`) splits four ways, and each branch is
+one of the four cap lemmas (`terminal_pent_tau126_2` / `_2h0` / `_delta20` /
+`_taum126_012`), which all give `0.616 < taud z1 + taum(y1..y6) + taud y135`.
+`OWZLKVY4_p19` at `y126` and at `y135` upgrades both `taud` to `taum`, while
+the minimizer inequality `hmin` transfers `taud z1 <= taud y126`. -/
 theorem terminal_pent_taum_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h126 : 20 ≤ deltaY y126 y1 y2 y6 2 2)
@@ -2553,7 +2559,38 @@ theorem terminal_pent_taum_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taum y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taum y135 y1 y3 y5 2 2
+  have hcstab : cstab = (3.01:ℝ) := rfl
+  -- the slotted-cell minimizer on the `y126` configuration at `d = 20`.
+  have hmem : y126 ∈ Set.Icc 2 (2 * h0) ∩ {q : ℝ | (20:ℝ) ≤ deltaY q y1 y2 y6 2 2} :=
+    ⟨⟨c7.1, c7.2⟩, h126⟩
+  obtain ⟨z1, hz1, hmin, hcases⟩ := taud_minimizer_terminal_pent_cases_p19 h 20 y126 y1 y2 y6 2 2
+    hmem c1.1 c1.2 c2.1 c2.2 c6.1 c6.2 rfl rfl (by norm_num)
+  have hz1l : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1u : z1 ≤ 2 * h0 := hz1.1.2
+  have hz1d : (0:ℝ) ≤ deltaY z1 y1 y2 y6 2 2 := le_trans (by norm_num) hz1.2
+  have hz1box : (2:ℝ) ≤ z1 ∧ z1 ≤ 2 * h0 := ⟨hz1l, hz1u⟩
+  -- the four cap lemmas, all stated with `y126 := z1`.
+  have hEnough : (0.616:ℝ) < taudP19 z1 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
+      + taudP19 y135 y1 y3 y5 2 2 := by
+    rcases hcases with hz12 | hz12h0 | hd20 | htau
+    · exact terminal_pent_tau126_2_p19 h y1 y2 y3 y4 y5 y6 z1 y135 hz12 hz1d h135
+        c1 c2 c3 c4 c5 c6 hz1box c8
+    · exact terminal_pent_tau126_2h0_p19 h y1 y2 y3 y4 y5 y6 z1 y135 hz12h0 hz1.2 h135
+        c1 c2 c3 c4 c5 c6 hz1box c8
+    · exact terminal_pent_tau126_delta20_p19 h y1 y2 y3 y4 y5 y6 z1 y135 hd20.symm h135
+        c1 c2 c3 c4 c5 c6 hz1box c8
+    · exact terminal_pent_taum126_012_p19 h y1 y2 y3 y4 y5 y6 z1 y135 htau h135
+        c1 c2 c3 c4 c5 c6 hz1box c8
+  -- `taud <= taum` at both ears (`OWZLKVY4`), plus `taud z1 <= taud y126`.
+  have hO126 : taudP19 y126 y1 y2 y6 2 2 ≤ taum y126 y1 y2 y6 2 2 :=
+    OWZLKVY4_p19 h y126 y1 y2 y6 2 2 c7.1 c7.2 c1.1 c1.2 c2.1 c2.2 (hcstab ▸ c6.1)
+      (by linarith [c6.2]) rfl rfl (le_trans (by norm_num) h126)
+  have hO135 : taudP19 y135 y1 y3 y5 2 2 ≤ taum y135 y1 y3 y5 2 2 :=
+    OWZLKVY4_p19 h y135 y1 y3 y5 2 2 c8.1 c8.2 c1.1 c1.2 c3.1 c3.2 (hcstab ▸ c5.1)
+      (by linarith [c5.2]) rfl rfl h135
+  linarith
 
 /-- HOL `taud_minimizer_terminal_hex_cases` (pent_hex.hl:2288).
 DISCHARGED 2026-11-14 (lane hex51-w2): the slotted-cell minimizer

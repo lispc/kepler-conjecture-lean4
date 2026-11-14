@@ -4972,16 +4972,165 @@ private theorem empty6T1_hex_bridge_p22 (h : main_nonlinear_terminal_v11)
   exact (not_lt_of_ge hres) ht0
 
 
+/-- `dih_y` is invariant under swapping the 2nd/3rd (and 5th/6th) slots — the
+same dihedral edge with the other two vertices exchanged.  Local copy of the
+`dih_y_sym` component (HOL `Merge_ineq.delta_y_sym`'s `dih` twin; the proof is
+LA19's `dihY_swap23_p19` template: `delta_x`/`delta_x4` are `ring`-symmetric
+under the (2 3)(5 6) leg swap, and `dih_x` only sees them through the `atn2`
+shell). -/
+private theorem ocb_dihY_swap23 (a b c d e f : ℝ) :
+    dihY a b c d e f = dihY a c b d f e := by
+  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
+    by simp only [deltaX]; ring
+  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
+    by simp only [deltaX4]; ring
+  show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)
+      = dihXf (a * a) (c * c) (b * b) (d * d) (f * f) (e * e)
+  unfold dihXf
+  rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f),
+    hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)]
+
+/-- Taylor upper envelope for `arctan` (local re-proof of the numeric input
+behind HOL's `c110186`): `arctan t ≤ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9` on
+`[0, ∞)`.  The error `S₉ - arctan` has derivative `+u¹⁰/(1+u²) ≥ 0` and
+vanishes at `0` (FTC from `0`). -/
+private theorem ocb_arctan_le_taylor9 (t : ℝ) (ht : 0 ≤ t) :
+    Real.arctan t ≤ t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 := by
+  have h3 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 3 / 3) (u ^ 2) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 3).div_const 3
+  have h5 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 5 / 5) (u ^ 4) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 5).div_const 5
+  have h7 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 7 / 7) (u ^ 6) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 7).div_const 7
+  have h9 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 9 / 9) (u ^ 8) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 9).div_const 9
+  have hpoly : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5
+      - v ^ 7 / 7 + v ^ 9 / 9) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) u := by
+    intro u
+    have s1 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3) (1 - u ^ 2) u :=
+      (hasDerivAt_id u).sub (h3 u)
+    have s2 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5)
+        (1 - u ^ 2 + u ^ 4) u := s1.add (h5 u)
+    have s3 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7)
+        (1 - u ^ 2 + u ^ 4 - u ^ 6) u := s2.sub (h7 u)
+    exact s3.add (h9 u)
+  have hf' : deriv (fun u => (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)
+      - Real.arctan u) = fun u => u ^ 10 / (1 + u ^ 2) := by
+    funext u
+    have hd : HasDerivAt (fun v : ℝ => (v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7 + v ^ 9 / 9)
+        - Real.arctan v) ((1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) - 1 / (1 + u ^ 2)) u :=
+      HasDerivAt.sub (hpoly u) (Real.hasDerivAt_arctan u)
+    rw [hd.deriv]
+    field_simp
+    ring
+  have hdiff : ∀ x ∈ uIcc (0:ℝ) t, DifferentiableAt ℝ (fun u => (u - u ^ 3 / 3 + u ^ 5 / 5
+      - u ^ 7 / 7 + u ^ 9 / 9) - Real.arctan u) x := by
+    intro x _
+    exact DifferentiableAt.sub (by fun_prop) (Real.differentiableAt_arctan x)
+  have hcont : Continuous (fun u : ℝ => u ^ 10 / (1 + u ^ 2)) :=
+    Continuous.div (by fun_prop) (by fun_prop)
+      (fun u => ne_of_gt (by positivity : (0:ℝ) < 1 + u ^ 2))
+  have hftc := intervalIntegral.integral_deriv_eq_sub'
+    (fun u => (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9) - Real.arctan u) hf' hdiff
+    hcont.continuousOn
+  have hint : ∫ y in (0:ℝ)..t, y ^ 10 / (1 + y ^ 2)
+      = (t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9) - Real.arctan t := by
+    have hzero : (fun u => (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)
+        - Real.arctan u) (0:ℝ) = 0 := by
+      simp [Real.arctan_zero]
+    simpa [hzero] using hftc
+  have hnonneg : (0:ℝ) ≤ ∫ y in (0:ℝ)..t, y ^ 10 / (1 + y ^ 2) :=
+    intervalIntegral.integral_nonneg ht
+      (fun y (hy : y ∈ Icc (0:ℝ) t) => div_nonneg (pow_nonneg hy.1 10) (by positivity))
+  linarith
+
+/-- `arctan (√0.110186) < 0.3205` — the Lean re-proof of HOL's `c110186`
+(`Flyspeck_constants.calc`).  With `q = 0.110186` and the exact rational
+`A = 1 - q/3 + q²/5 - q³/7 + q⁴/9`, `√q · A = S₉(√q) ≥ arctan (√q)`;
+`√q ≤ 0.331943` (because `0.331943² > q`) and `0.331943 · A < 0.3205`. -/
+private theorem ocb_atan_sqrt_0110186_lt : Real.arctan (Real.sqrt 0.110186) < 0.3205 := by
+  have hq0 : (0:ℝ) ≤ 0.110186 := by norm_num
+  have hx0 : 0 ≤ Real.sqrt 0.110186 := Real.sqrt_nonneg _
+  have hsq : Real.sqrt 0.110186 * Real.sqrt 0.110186 = 0.110186 :=
+    Real.mul_self_sqrt hq0
+  have hle := ocb_arctan_le_taylor9 (Real.sqrt 0.110186) hx0
+  have hfact : Real.sqrt 0.110186 - Real.sqrt 0.110186 ^ 3 / 3
+      + Real.sqrt 0.110186 ^ 5 / 5 - Real.sqrt 0.110186 ^ 7 / 7
+      + Real.sqrt 0.110186 ^ 9 / 9
+      = Real.sqrt 0.110186 * (1 - (0.110186:ℝ) / 3 + (0.110186:ℝ) ^ 2 / 5
+          - (0.110186:ℝ) ^ 3 / 7 + (0.110186:ℝ) ^ 4 / 9) := by
+    have h1 : Real.sqrt 0.110186 - Real.sqrt 0.110186 ^ 3 / 3
+        + Real.sqrt 0.110186 ^ 5 / 5 - Real.sqrt 0.110186 ^ 7 / 7
+        + Real.sqrt 0.110186 ^ 9 / 9
+        = Real.sqrt 0.110186 * (1 - (Real.sqrt 0.110186 * Real.sqrt 0.110186) / 3
+            + (Real.sqrt 0.110186 * Real.sqrt 0.110186) ^ 2 / 5
+            - (Real.sqrt 0.110186 * Real.sqrt 0.110186) ^ 3 / 7
+            + (Real.sqrt 0.110186 * Real.sqrt 0.110186) ^ 4 / 9) := by ring
+    simpa only [hsq] using h1
+  have hA0 : (0:ℝ) < 1 - (0.110186:ℝ) / 3 + (0.110186:ℝ) ^ 2 / 5
+      - (0.110186:ℝ) ^ 3 / 7 + (0.110186:ℝ) ^ 4 / 9 := by norm_num
+  have hxub : Real.sqrt 0.110186 ≤ (0.331943:ℝ) := by
+    have h2 : (0.110186:ℝ) ≤ (0.331943:ℝ) ^ 2 := by norm_num
+    calc Real.sqrt 0.110186 ≤ Real.sqrt ((0.331943:ℝ) ^ 2) := Real.sqrt_le_sqrt h2
+      _ = 0.331943 := Real.sqrt_sq (by norm_num)
+  have hnum : (0.331943:ℝ) * (1 - (0.110186:ℝ) / 3 + (0.110186:ℝ) ^ 2 / 5
+      - (0.110186:ℝ) ^ 3 / 7 + (0.110186:ℝ) ^ 4 / 9) < 0.3205 := by norm_num
+  have hS : Real.sqrt 0.110186 - Real.sqrt 0.110186 ^ 3 / 3
+      + Real.sqrt 0.110186 ^ 5 / 5 - Real.sqrt 0.110186 ^ 7 / 7
+      + Real.sqrt 0.110186 ^ 9 / 9 < 0.3205 := by
+    rw [hfact]
+    exact lt_of_le_of_lt (mul_le_mul_of_nonneg_right hxub hA0.le) hnum
+  linarith
+
 /-- HOL `LEMMA_7175074394` (numeric; `c110186` records
-`atn (sqrt 0.110186) < 0.3205` in HOL). -/
+`atn (sqrt 0.110186) < 0.3205` in HOL).  DISCHARGED 2026-11-14 (lane
+ocbicby5t1-w1): registry `2485876245a` gives `0 < delta4_y`, registry
+`7175074394` (`delta_y > 20` arm killed by `hd.1`) gives
+`4·x1Δy < 0.110186·Δ₄y²`, the `lindih` bridge
+`lindihpi_lt_y_small_p11` (HOL `Merge_ineq.lindih_lt`-y) turns that into
+`dih_y < arctan (√0.110186)`, and `ocb_atan_sqrt_0110186_lt` closes the
+numeric tail. -/
 theorem LEMMA_7175074394_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
     (hbox : ineqP22 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (2, y4, 2),
       (3.01, y5, 3.237), (2, y6, 2)] True)
     (hd : deltaY y1 y2 y3 y4 y5 y6 ≤ 20 ∧ 0 ≤ deltaY y1 y2 y3 y4 y5 y6) :
     dihY y1 y2 y3 y4 y5 y6 < 0.3205 := by
-  sorry
+  obtain ⟨hy1l, hy1u, hy2l, hy2u, hy3l, hy3u, hy4l, hy4u, hy5l, hy5u, hy6l, hy6u, _⟩ := hbox
+  -- `0 < delta4_y` from registry `2485876245a`.
+  have h248 : mainEstimate_2485876245a :=
+    h "2485876245a" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h4pos : 0 < delta4Y y1 y2 y3 y4 y5 y6 :=
+    h248 y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy4l (by linarith)
+      (by linarith) (by linarith) hy6l (by linarith)
+  -- `4·x1Δy < 0.110186·Δ₄y²` from registry `7175074394`.
+  have h717 : mainEstimate_7175074394 :=
+    h "7175074394" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h717' := h717 y1 y2 y3 y4 y5 y6 hy1l hy1u hy2l hy2u hy3l hy3u hy4l hy4u
+    hy5l hy5u hy6l hy6u
+  have hlt : 4 * x1DeltaY_t11 y1 y2 y3 y4 y5 y6
+      < 0.110186 * delta4SquaredY_t11 y1 y2 y3 y4 y5 y6 := by
+    rcases h717' with hbig | hsmall
+    · linarith [hd.1]
+    · exact hsmall
+  -- the `lindih` bridge at `u = atn (√0.110186)`.
+  have hbridge := lindihpi_lt_y_small_p11 (b := (0.110186:ℝ)) (y1 := y1) (y2 := y2)
+    (y3 := y3) (y4 := y4) (y5 := y5) (y6 := y6)
+    (by linarith) (by norm_num) hd.2 h4pos
+  have hsmall : 4 * x1DeltaY_p11 y1 y2 y3 y4 y5 y6
+      < 0.110186 * delta4SquaredY_p11 y1 y2 y3 y4 y5 y6 := by
+    simpa only [x1DeltaY_p11, x1DeltaY_t11, delta4SquaredY_p11, delta4SquaredY_t11]
+      using hlt
+  exact lt_trans (hbridge.mp hsmall) ocb_atan_sqrt_0110186_lt
 
-/-- HOL `angle_sum_5T1`. -/
+/-- HOL `angle_sum_5T1`.  DISCHARGED 2026-11-14 (lane ocbicby5t1-w1):
+contradiction from `4887115291` (`1.75 < dih_y(y1,y126,y135,cstab,2,2)`),
+`6789182745` (`dih_y(y1..y6) < 1.109`) and the two `LEMMA_7175074394`
+instances (`dih_y(y1,y126,y2,2,y6,2), dih_y(y1,y135,y3,2,y5,2) < 0.3205`,
+the `delta_y` slots transported by `emptykit_delta_swap23`, the `dih_y`
+slots by `ocb_dihY_swap23`): `1.75 = 1.109 + 0.3205 + 0.3205` against the
+subadditivity hypothesis `hsub`. -/
 theorem angle_sum_5T1_p22 (h : main_nonlinear_terminal_v11)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (hbox : ineqP22 [(2, y1, 2 * h0), (2, y2, 2 * h0), (2, y3, 2 * h0),
@@ -4992,7 +5141,59 @@ theorem angle_sum_5T1_p22 (h : main_nonlinear_terminal_v11)
           dihY y1 y3 y135 2 2 y5)
     (hd1 : 0 ≤ deltaY y1 y2 y126 2 2 y6) (hd2 : 0 ≤ deltaY y1 y3 y135 2 2 y5) :
     20 ≤ deltaY y1 y2 y126 2 2 y6 ∨ 20 ≤ deltaY y1 y3 y135 2 2 y5 := by
-  sorry
+  obtain ⟨hy1l, hy1u, hy2l, hy2u, hy3l, hy3u, hy126l, hy126u, hy135l, hy135u,
+    hy4l, hy4u, hy5l, hy5u, hy6l, hy6u, _⟩ := hbox
+  by_contra hcon
+  push_neg at hcon
+  obtain ⟨hlt1, hlt2⟩ := hcon
+  have h252 : (2:ℝ) * h0 = 2.52 := by rw [h0_eq_p22]; norm_num
+  have hy1u52 : y1 ≤ 2.52 := by rw [← h252]; exact hy1u
+  have hy2u52 : y2 ≤ 2.52 := by rw [← h252]; exact hy2u
+  have hy3u52 : y3 ≤ 2.52 := by rw [← h252]; exact hy3u
+  have hy126u52 : y126 ≤ 2.52 := by rw [← h252]; exact hy126u
+  have hy135u52 : y135 ≤ 2.52 := by rw [← h252]; exact hy135u
+  have hy5l301 : (3.01:ℝ) ≤ y5 := by rw [← cstab_eq_p22]; exact hy5l
+  have hy6l301 : (3.01:ℝ) ≤ y6 := by rw [← cstab_eq_p22]; exact hy6l
+  -- registry `6789182745`: `dih_y(y1..y6) < 1.109`.
+  have h678 : mainEstimate_6789182745 :=
+    h "6789182745" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have hd678 := h678 y1 y2 y3 y4 y5 y6 hy1l hy1u52 hy2l hy2u52 hy3l hy3u52
+    hy4l hy4u hy5l301 hy5u hy6l301 hy6u
+  -- registry `4887115291`: `1.75 < dih_y(y1,y126,y135,cstab,2,2)`.
+  have h488 : mainEstimate_4887115291 :=
+    h "4887115291" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have hd488 := h488 y1 y126 y135 cstab 2 2 hy1l hy1u52 hy126l hy126u52
+    hy135l hy135u52 (le_of_eq cstab_eq_p22.symm) (le_of_eq cstab_eq_p22)
+    (le_refl 2) (le_refl 2) (le_refl 2) (le_refl 2)
+  -- `LEMMA_7175074394` at `(y1, y126, y2, 2, y6, 2)`.
+  have hsw1 : deltaY y1 y2 y126 2 2 y6 = deltaY y1 y126 y2 2 y6 2 :=
+    emptykit_delta_swap23 y1 y2 y126 2 2 y6
+  have hd1' : deltaY y1 y126 y2 2 y6 2 ≤ 20 ∧ 0 ≤ deltaY y1 y126 y2 2 y6 2 := by
+    rw [← hsw1]
+    exact ⟨le_of_lt hlt1, hd1⟩
+  have hboxL1 : ineqP22 [(2, y1, 2.52), (2, y126, 2.52), (2, y2, 2.52), (2, (2:ℝ), 2),
+      (3.01, y6, 3.237), (2, (2:ℝ), 2)] True :=
+    ⟨hy1l, hy1u52, hy126l, hy126u52, hy2l, hy2u52, le_refl 2, le_refl 2,
+      hy6l301, hy6u, le_refl 2, le_refl 2, trivial⟩
+  have hL1 := LEMMA_7175074394_p22 h y1 y126 y2 2 y6 2 hboxL1 hd1'
+  have hL1' : dihY y1 y2 y126 2 2 y6 < 0.3205 := by
+    rw [ocb_dihY_swap23 y1 y2 y126 2 2 y6]
+    exact hL1
+  -- `LEMMA_7175074394` at `(y1, y135, y3, 2, y5, 2)`.
+  have hsw2 : deltaY y1 y3 y135 2 2 y5 = deltaY y1 y135 y3 2 y5 2 :=
+    emptykit_delta_swap23 y1 y3 y135 2 2 y5
+  have hd2' : deltaY y1 y135 y3 2 y5 2 ≤ 20 ∧ 0 ≤ deltaY y1 y135 y3 2 y5 2 := by
+    rw [← hsw2]
+    exact ⟨le_of_lt hlt2, hd2⟩
+  have hboxL2 : ineqP22 [(2, y1, 2.52), (2, y135, 2.52), (2, y3, 2.52), (2, (2:ℝ), 2),
+      (3.01, y5, 3.237), (2, (2:ℝ), 2)] True :=
+    ⟨hy1l, hy1u52, hy135l, hy135u52, hy3l, hy3u52, le_refl 2, le_refl 2,
+      hy5l301, hy5u, le_refl 2, le_refl 2, trivial⟩
+  have hL2 := LEMMA_7175074394_p22 h y1 y135 y3 2 y5 2 hboxL2 hd2'
+  have hL2' : dihY y1 y3 y135 2 2 y5 < 0.3205 := by
+    rw [ocb_dihY_swap23 y1 y3 y135 2 2 y5]
+    exact hL2
+  linarith [hd488, hsub, hd678, hL1', hL2']
 
 /-- HOL `terminal_pent_taum2`. -/
 theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
