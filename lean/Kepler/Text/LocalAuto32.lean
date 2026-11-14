@@ -527,13 +527,116 @@ theorem SCS_4T3_IS_SCS_p32 : isScsV39 scs4T3 := by
 
 /-- HOL `SCS_4M8_02_IS_SCS` (MIQMCSN.hl:320). -/
 theorem SCS_4M8_02_IS_SCS_p32 : isScsV39 scs4M8_02 := by
-  sorry
-  -- NEEDS: SCS_TAC expansion of `is_scs_v39 scs_4M8_02` (as above).
+  refine la32isScs_mkFunlist (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 3.62),
+      ((1, 3), 6)] 2 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (fun i j => ⟨la32funlist_symm _ _ _ _ _, la32funlist_symm _ _ _ _ _⟩)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 3.62),
+          ((1, 3), 6)] 2 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hsub : {i | i < 4 ∧ (2 * h0 <
+            funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 3.62),
+              ((1, 3), 6)] 2 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab),
+            ((1, 3), cstab)] 2 4 i (i + 1))} ⊆ ({0, 2} : Set ℕ) := by
+        intro i hi
+        obtain ⟨h4, hc⟩ := hi
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        interval_cases i
+        · exact Or.inl rfl
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+        · exact Or.inr rfl
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+      have hfin : ({0, 2} : Set ℕ).Finite := Set.toFinite _
+      have hle := Set.ncard_le_ncard hsub hfin
+      have hc2 : ({0, 2} : Set ℕ).ncard = 2 := by
+        have h0mem : (0 : ℕ) ∉ ({2} : Set ℕ) := by simp
+        rw [show ({0, 2} : Set ℕ) = insert 0 {2} from rfl,
+          Set.ncard_insert_of_notMem h0mem, Set.ncard_singleton]
+      omega)
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `la32isScs_mkFunlist` skeleton
+  -- (`k = 4`, `d = 0.513`) + 16-cell table sweeps + card set `{0, 2}`
+  -- (`ncard + 4 ≤ 6`).
 
 /-- HOL `SCS_4M8_13_IS_SCS` (MIQMCSN.hl:434). -/
 theorem SCS_4M8_13_IS_SCS_p32 : isScsV39 scs4M8_13 := by
-  sorry
-  -- NEEDS: SCS_TAC expansion of `is_scs_v39 scs_4M8_13` (as above).
+  refine la32isScs_mkFunlist (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6),
+      ((1, 3), 3.62)] 2 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (fun i j => ⟨la32funlist_symm _ _ _ _ _, la32funlist_symm _ _ _ _ _⟩)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6),
+          ((1, 3), 3.62)] 2 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hsub : {i | i < 4 ∧ (2 * h0 <
+            funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6),
+              ((1, 3), 3.62)] 2 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab),
+            ((1, 3), cstab)] 2 4 i (i + 1))} ⊆ ({0, 2} : Set ℕ) := by
+        intro i hi
+        obtain ⟨h4, hc⟩ := hi
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        interval_cases i
+        · exact Or.inl rfl
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+        · exact Or.inr rfl
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+      have hfin : ({0, 2} : Set ℕ).Finite := Set.toFinite _
+      have hle := Set.ncard_le_ncard hsub hfin
+      have hc2 : ({0, 2} : Set ℕ).ncard = 2 := by
+        have h0mem : (0 : ℕ) ∉ ({2} : Set ℕ) := by simp
+        rw [show ({0, 2} : Set ℕ) = insert 0 {2} from rfl,
+          Set.ncard_insert_of_notMem h0mem, Set.ncard_singleton]
+      omega)
+  -- DISCHARGED (k8slice-w1, 2026-11-14): same skeleton, `3.62` in the
+  -- `(1, 3)` slot instead of the `(0, 2)` slot.
 
 /-- HOL `SCS_3T4_prime2_IS_SCS` (MIQMCSN.hl:549). -/
 theorem SCS_3T4_prime2_IS_SCS_p32 : isScsV39 scs3T4Prime2 :=
@@ -553,8 +656,39 @@ theorem SCS_3M1_prime_IS_SCS_p32 : isScsV39 scs3M1Prime :=
 
 /-- HOL `SCS_3T7_IS_SCS` (MIQMCSN.hl:766). -/
 theorem SCS_3T7_IS_SCS_p32 : isScsV39 scs3T7 := by
-  sorry
-  -- NEEDS: SCS_TAC expansion of `is_scs_v39 scs_3T7` (as above).
+  refine la32isScs_mkFunlist (k := 3) (d := 0.2565)
+    (a := funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 2), 2)] 2 3)
+    (b := funlistV39 [((0, 1), 3.62), ((0, 2), cstab), ((1, 2), 2)] 2 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (la32funlist3_symm _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), 3.62), ((0, 2), cstab), ((1, 2), 2)] 2 3
+          i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 3 1]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (by
+      apply la32ncard3
+      intro i hi
+      exact hi.1)
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `la32isScs_mkFunlist` skeleton
+  -- (`k = 3`, `d = 0.2565`) + 9-cell table sweeps; `3.62` edge sits in the
+  -- `b (i (i+1)) < 4` residue sweep; card bound is `la32ncard3`.
 
 /-! ## Section 3: BASIC / K / J kit (MIQMCSN.hl:841-916) -/
 
@@ -1541,38 +1675,171 @@ theorem PROP_OPP_DIAG_4M8_13_p32 :
 /-- HOL `STAB_4M8_02_ARROW_4M8_13` (MIQMCSN.hl:1637). -/
 theorem STAB_4M8_02_ARROW_4M8_13_p32 :
     scsArrowV39 {scsStabDiagV39 scs4M8 0 2} {scsStabDiagV39 scs4M8 1 3} := by
-  sorry
-  -- NEEDS: PROP_OPP_DIAG_4M8_13_p32 + YXIONXL2 (opp arrow) +
-  -- YXIONXL3/OPP_IS_SCS.
+  have hs02 : isScsV39 (scsStabDiagV39 scs4M8 0 2) :=
+    (STAB_4M8_SCS_p33 0 2 SCS_DIAG_SCS_4M8_02_p33).1
+  have hk : 3 < (scsStabDiagV39 scs4M8 0 2).k := by
+    show 3 < scs4M8.k
+    rw [K_SCS_4M8_p33]; norm_num
+  have h1 : scsArrowV39 {scsStabDiagV39 scs4M8 0 2}
+      {scsOppV39 (scsStabDiagV39 scs4M8 0 2)} :=
+    YXIONXL2_p33 _ hs02 hk
+  have h2 : scsArrowV39 {scsOppV39 (scsStabDiagV39 scs4M8 0 2)}
+      {scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M8 0 2)) 2} :=
+    YXIONXL3 _ 2 (OPP_IS_SCS_p33 _ hs02)
+  rw [← PROP_OPP_DIAG_4M8_13_p32] at h2
+  exact FZIOTEF_TRANS _ _ _ h1 h2
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `YXIONXL2_p33` (opp arrow) +
+  -- `YXIONXL3` (prop-equ arrow) composed by `FZIOTEF_TRANS`, with the
+  -- middle record rewritten by `PROP_OPP_DIAG_4M8_13_p32`.
+
+/-! ### k8slice-w1 substrate: `scsStabDiagV39 scs4M8 1 3` half-slice records -/
+
+private theorem la32slice13s_cA (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M8 1 3) 1 3 0.2759 False).a i j
+      = scs3T4Prime2.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8, scs3T4Prime2]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), 2), ((0, 2), cstab)] (2 * h0) 3 i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13s_cB (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M8 1 3) 1 3 0.2759 False).b i j
+      = scs3T4Prime2.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8, scs3T4Prime2]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), 2 * h0)] cstab 3 i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13s_cAhi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M8 1 3) 3 1 0.2759 False).a i j
+      = scs3T4Prime2.a i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8, scs3T4Prime2]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), 2), ((0, 2), cstab)] (2 * h0) 3 i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13s_cBhi (i j : ℕ) :
+    (scsHalfSliceV39 (scsStabDiagV39 scs4M8 1 3) 3 1 0.2759 False).b i j
+      = scs3T4Prime2.b i j := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8, scs3T4Prime2]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), 2 * h0)] cstab 3 i j (by omega)]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13s_half_lo :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M8 1 3) 1 3 0.2759 False
+      = scs3T4Prime2 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8, scs3T4Prime2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la32slice13s_cA i j
+  · funext i j; exact la32slice13s_cA i j
+  · funext i j; exact la32slice13s_cB i j
+  · funext i j; exact la32slice13s_cB i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la32slice13s_half_hi :
+    scsHalfSliceV39 (scsStabDiagV39 scs4M8 1 3) 3 1 0.2759 False
+      = scs3T4Prime2 := by
+  simp only [scsHalfSliceV39, scsStabDiagV39, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs4M8, scs3T4Prime2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la32slice13s_cAhi i j
+  · funext i j; exact la32slice13s_cAhi i j
+  · funext i j; exact la32slice13s_cBhi i j
+  · funext i j; exact la32slice13s_cBhi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
 
 /-- HOL `SCS_4M8_SLICE_13` (MIQMCSN.hl:1655). -/
 theorem SCS_4M8_SLICE_13_p32 :
     scsArrowV39 {scsStabDiagV39 scs4M8 1 3} {scs3T4Prime2} := by
-  sorry
-  -- NEEDS: Lkgrqui.LKGRQUI + SCS_DIAG_SCS_4M8_13 +
-  -- STAB_4M8_SCS (hexagons) + is_scs_slice_v39 unfolding.
+  have mkjF : scs3T4Prime2.J 0 (scs3T4Prime2.k - 1) = False := rfl
+  have hsl : isScsSliceV39 (scsStabDiagV39 scs4M8 1 3) scs3T4Prime2
+      scs3T4Prime2 1 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la32slice13s_half_lo.symm, la32slice13s_half_hi.symm⟩
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.2759 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.2759 + 0.2759
+      norm_num
+    · show cstab < 4
+      norm_num [cstab]
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  have h := LKGRQUI_p27 (scsStabDiagV39 scs4M8 1 3) scs3T4Prime2 scs3T4Prime2
+    1 3 0.2759 0.2759 False
+    (STAB_4M8_SCS_p33 1 3 SCS_DIAG_SCS_4M8_13_p33).1 SCS_DIAG_SCS_4M8_13_p33 hsl
+  rw [show ({scs3T4Prime2} : Set ScsV39) = {scs3T4Prime2, scs3T4Prime2}
+      from by ext x; simp]
+  exact h
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `LKGRQUI_p27` at (p, q) = (1, 3) on
+  -- the stab system; both halves fold to `scs_3T4_prime2` (the stab's extra
+  -- `cstab` strut at `(1, 3)` is exactly the half-slice seam `bm 1 3`).
 
 /-- HOL `SCS_4M8_SLICE_13_ARROW_3T4` (MIQMCSN.hl:1784). -/
 theorem SCS_4M8_SLICE_13_ARROW_3T4_p32 :
     scsArrowV39 {scsStabDiagV39 scs4M8 1 3} {scs3T4} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via {scs_3T4_prime2} + SCS_4M8_SLICE_13_p32 +
-  -- SCS_3T4_prime2_ARROW_MM_3T4_p32.
+  exact FZIOTEF_TRANS _ _ _ SCS_4M8_SLICE_13_p32 la32ARROW_3T4_prime2
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `FZIOTEF_TRANS` via
+  -- `{scs_3T4_prime2}` + the prime-to-standard arrow.
 
 /-- HOL `SCS_4M8_SLICE_02_ARROW_3T4` (MIQMCSN.hl:1792). -/
 theorem SCS_4M8_SLICE_02_ARROW_3T4_p32 :
     scsArrowV39 {scsStabDiagV39 scs4M8 0 2} {scs3T4} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via {scs_stab_diag_v39 scs_4M8 1 3} +
-  -- STAB_4M8_02_ARROW_4M8_13_p32 + SCS_4M8_SLICE_13_ARROW_3T4_p32.
+  exact FZIOTEF_TRANS _ _ _ STAB_4M8_02_ARROW_4M8_13_p32 SCS_4M8_SLICE_13_ARROW_3T4_p32
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `FZIOTEF_TRANS` via
+  -- `{scs_stab_diag_v39 scs_4M8 1 3}`.
 
 /-- HOL `SET_STAB_4M8_ARROW_3T4` (MIQMCSN.hl:1799). -/
 theorem SET_STAB_4M8_ARROW_3T4_p32 :
     scsArrowV39 {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j}
       {scs3T4} := by
-  sorry
-  -- NEEDS: SET_EQ_DIAG_STAB_4M8_p32 + FZIOTEF_UNION +
-  -- SCS_4M8_SLICE_13_ARROW_3T4_p32 + SCS_4M8_SLICE_02_ARROW_3T4_p32.
+  have hU : scsArrowV39
+      ({scsStabDiagV39 scs4M8 0 2} ∪ {scsStabDiagV39 scs4M8 1 3})
+      ({scs3T4} ∪ {scs3T4} : Set ScsV39) :=
+    FZIOTEF_UNION _ _ _ _ SCS_4M8_SLICE_02_ARROW_3T4_p32
+      SCS_4M8_SLICE_13_ARROW_3T4_p32
+  have e1 : ({scsStabDiagV39 scs4M8 0 2} ∪ {scsStabDiagV39 scs4M8 1 3} :
+      Set ScsV39) = {scsStabDiagV39 scs4M8 0 2, scsStabDiagV39 scs4M8 1 3} := by
+    ext t
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff, or_comm,
+      or_left_comm, or_assoc]
+  have e2 : (({scs3T4} ∪ {scs3T4}) : Set ScsV39) = {scs3T4} := by
+    ext t; simp
+  rw [e1, e2] at hU
+  exact FZIOTEF_TRANS _ _ _ SET_EQ_DIAG_STAB_4M8_p32 hU
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `SET_EQ_DIAG_STAB_4M8_p32` +
+  -- `FZIOTEF_UNION` of the two slice arrows (set reassociation).
 
 /-! ## Section 6: the 4M6 dichotomy (MIQMCSN.hl:1812-2130) -/
 
@@ -2522,20 +2789,36 @@ theorem SCS_DIAG_SCS_4M8_02_13_p32 : scsDiag scs4M8_02.k 1 3 := by
 theorem SCS_DIAG_SCS_4M8_13_13_p32 : scsDiag scs4M8_13.k 1 3 := by
   unfold scsDiag; decide
 
+/-- Diagonal `a`-table value of `scs_4M8_02` (both diagonal classes). -/
+private theorem la32a_diag_4M8_02 (i j : ℕ) (h : scsDiag 4 i j) :
+    scs4M8_02.a i j = cstab := by
+  rcases diag_pair_cases_p33 i j h with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩
+  all_goals simp [scs4M8_02, mkUnadornedV39, funlistV39, psort, assocdV39, r1, r2, h.1]
+
+/-- Diagonal `a`-table value of `scs_4M8_13` (both diagonal classes). -/
+private theorem la32a_diag_4M8_13 (i j : ℕ) (h : scsDiag 4 i j) :
+    scs4M8_13.a i j = cstab := by
+  rcases diag_pair_cases_p33 i j h with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩
+  all_goals simp [scs4M8_13, mkUnadornedV39, funlistV39, psort, assocdV39, r1, r2, h.1]
+
 /-- HOL `STAB_4M8_02_SCS` (MIQMCSN.hl:3029). -/
 theorem STAB_4M8_02_SCS_p32 (i j : ℕ) (h : scsDiag scs4M8_02.k i j) :
     isScsV39 (scsStabDiagV39 scs4M8_02 i j) ∧
     scsBasicV39 (scsStabDiagV39 scs4M8_02 i j) := by
-  sorry
-  -- NEEDS: Yrtafyh.YRTAFYH (stability kit: is_scs + basic preserved by
-  -- scs_stab_diag_v39 on a diagonal of an is_scs system).
+  exact STAB_SCS_p33 scs4M8_02 SCS_4M8_02_IS_SCS_p32 SCS_4M8_02_BASIC_p32 K_SCS_4M8_02_p32
+    (fun i' j' hd => by rw [la32a_diag_4M8_02 i' j' hd]) i j
+    (show scsDiag 4 i j from h)
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `YRTAFYH_p17` instantiation via
+  -- `STAB_SCS_p33`; diagonal `a = cstab` from the 4-class `diag_pair_cases`.
 
 /-- HOL `STAB_4M8_13_SCS` (MIQMCSN.hl:3042). -/
 theorem STAB_4M8_13_SCS_p32 (i j : ℕ) (h : scsDiag scs4M8_13.k i j) :
     isScsV39 (scsStabDiagV39 scs4M8_13 i j) ∧
     scsBasicV39 (scsStabDiagV39 scs4M8_13 i j) := by
-  sorry
-  -- NEEDS: Yrtafyh.YRTAFYH (as above, for scs_4M8_13).
+  exact STAB_SCS_p33 scs4M8_13 SCS_4M8_13_IS_SCS_p32 SCS_4M8_13_BASIC_p32 K_SCS_4M8_13_p32
+    (fun i' j' hd => by rw [la32a_diag_4M8_13 i' j' hd]) i j
+    (show scsDiag 4 i j from h)
+  -- DISCHARGED (k8slice-w1, 2026-11-14): as above, for `scs_4M8_13`.
 
 /-- HOL `BASIC_HALF_SLICE` (MIQMCSN.hl:3054). -/
 theorem BASIC_HALF_SLICE_p32 (s : ScsV39) (p q : ℕ) (d' : ℝ)
@@ -2559,19 +2842,249 @@ theorem J_SCS_3T7_OPP_p32 (i1 j : ℕ) :
 
 /-! ## Section 10: the 3T7 chain and MIQMCSN (MIQMCSN.hl:3075-3469) -/
 
+/-! ### k8slice-w1 substrate: 4M8 half-slice table records (`SLICE_02`/`SLICE_13`) -/
+
+private theorem la32slice02M8_cA (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_02 0 2 0.2565 False).a i j
+      = (scsPropEquV39 (scsOppV39 scs3T7) 2).a i j := by
+  simp only [scsHalfSliceV39, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39,
+    peropp2, Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [Nat.add_mod 2 i 3, Nat.add_mod 2 j 3]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s]
+
+private theorem la32slice02M8_cB (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_02 0 2 0.2565 False).b i j
+      = (scsPropEquV39 (scsOppV39 scs3T7) 2).b i j := by
+  simp only [scsHalfSliceV39, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39,
+    peropp2, Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [Nat.add_mod 2 i 3, Nat.add_mod 2 j 3]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice02M8_cAhi (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_02 2 0 0.2565 False).a i j
+      = (scsPropEquV39 (scsOppV39 scs3T7) 2).a i j := by
+  simp only [scsHalfSliceV39, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39,
+    peropp2, Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [Nat.add_mod 2 i 3, Nat.add_mod 2 j 3]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice02M8_cBhi (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_02 2 0 0.2565 False).b i j
+      = (scsPropEquV39 (scsOppV39 scs3T7) 2).b i j := by
+  simp only [scsHalfSliceV39, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39,
+    peropp2, Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [Nat.add_mod 2 i 3, Nat.add_mod 2 j 3]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice02M8_half_lo :
+    scsHalfSliceV39 scs4M8_02 0 2 0.2565 False
+      = scsPropEquV39 (scsOppV39 scs3T7) 2 := by
+  simp only [scsHalfSliceV39, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39,
+    peropp2, Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la32slice02M8_cA i j
+  · funext i j; exact la32slice02M8_cA i j
+  · funext i j; exact la32slice02M8_cB i j
+  · funext i j; exact la32slice02M8_cB i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la32slice02M8_half_hi :
+    scsHalfSliceV39 scs4M8_02 2 0 0.2565 False
+      = scsPropEquV39 (scsOppV39 scs3T7) 2 := by
+  simp only [scsHalfSliceV39, scs4M8_02, mkUnadornedV39, scsPropEquV39, scsOppV39,
+    peropp2, Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la32slice02M8_cAhi i j
+  · funext i j; exact la32slice02M8_cAhi i j
+  · funext i j; exact la32slice02M8_cBhi i j
+  · funext i j; exact la32slice02M8_cBhi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
 /-- HOL `SCS_4M8_02_SLICE_02` (MIQMCSN.hl:3075). -/
 theorem SCS_4M8_02_SLICE_02_p32 :
     scsArrowV39 {scs4M8_02} {scsPropEquV39 (scsOppV39 scs3T7) 2} := by
-  sorry
-  -- NEEDS: Lkgrqui.LKGRQUI + SCS_DIAG_SCS_4M8_02_02/_13_p32 +
-  -- STAB_4M8_02_SCS_p32 + is_scs_slice_v39 unfolding.
+  have mkjF : (scsPropEquV39 (scsOppV39 scs3T7) 2).J 0
+      ((scsPropEquV39 (scsOppV39 scs3T7) 2).k - 1) = False := rfl
+  have hsl : isScsSliceV39 scs4M8_02
+      (scsPropEquV39 (scsOppV39 scs3T7) 2)
+      (scsPropEquV39 (scsOppV39 scs3T7) 2) 0 2 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la32slice02M8_half_lo.symm, la32slice02M8_half_hi.symm⟩
+    · show (0.2565 : ℝ) < 0.9
+      norm_num
+    · show (0.2565 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.2565 + 0.2565
+      norm_num
+    · show (3.62 : ℝ) < 4
+      norm_num
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  have h := LKGRQUI_p27 scs4M8_02 (scsPropEquV39 (scsOppV39 scs3T7) 2)
+    (scsPropEquV39 (scsOppV39 scs3T7) 2) 0 2 0.2565 0.2565 False
+    SCS_4M8_02_IS_SCS_p32 SCS_DIAG_SCS_4M8_02_02_p32 hsl
+  rw [show ({scsPropEquV39 (scsOppV39 scs3T7) 2} : Set ScsV39)
+      = {scsPropEquV39 (scsOppV39 scs3T7) 2, scsPropEquV39 (scsOppV39 scs3T7) 2}
+      from by ext x; simp]
+  exact h
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `LKGRQUI_p27` at (p, q) = (0, 2)
+  -- with both halves folded to `pe (opp scs_3T7) 2` (identical targets, so
+  -- the HOL `{t} ↦ {t, t}` duplication collapses the pair arrow).
+
+private theorem la32slice13M8_cA (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_13 1 3 0.2565 False).a i j
+      = (scsPropEquV39 scs3T7 1).a i j := by
+  simp only [scsHalfSliceV39, scs4M8_13, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), cstab), ((1, 2), 2)] 2 3
+      (1 + i) (1 + j) (by omega)]
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13M8_cB (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_13 1 3 0.2565 False).b i j
+      = (scsPropEquV39 scs3T7 1).b i j := by
+  simp only [scsHalfSliceV39, scs4M8_13, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), 3.62), ((0, 2), cstab), ((1, 2), 2)] 2 3
+      (1 + i) (1 + j) (by omega)]
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13M8_cAhi (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_13 3 1 0.2565 False).a i j
+      = (scsPropEquV39 scs3T7 1).a i j := by
+  simp only [scsHalfSliceV39, scs4M8_13, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), cstab), ((1, 2), 2)] 2 3
+      (1 + i) (1 + j) (by omega)]
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13M8_cBhi (i j : ℕ) :
+    (scsHalfSliceV39 scs4M8_13 3 1 0.2565 False).b i j
+      = (scsPropEquV39 scs3T7 1).b i j := by
+  simp only [scsHalfSliceV39, scs4M8_13, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  have hi3 : i % 3 < 3 := Nat.mod_lt i (by omega)
+  have hj3 : j % 3 < 3 := Nat.mod_lt j (by omega)
+  rw [← funlist_mod_p20 [((0, 1), 3.62), ((0, 2), cstab), ((1, 2), 2)] 2 3
+      (1 + i) (1 + j) (by omega)]
+  have e1 : (1 + i) % 3 = (i % 3 + 1) % 3 := by omega
+  have e2 : (1 + j) % 3 = (j % 3 + 1) % 3 := by omega
+  rw [e1, e2]
+  interval_cases i % 3 <;> interval_cases j % 3 <;>
+    simp [funlistV39, psort, assocdV39, la32set02, la32set02s] <;>
+    norm_num [h0, cstab]
+
+private theorem la32slice13M8_half_lo :
+    scsHalfSliceV39 scs4M8_13 1 3 0.2565 False
+      = scsPropEquV39 scs3T7 1 := by
+  simp only [scsHalfSliceV39, scs4M8_13, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la32slice13M8_cA i j
+  · funext i j; exact la32slice13M8_cA i j
+  · funext i j; exact la32slice13M8_cB i j
+  · funext i j; exact la32slice13M8_cB i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
+
+private theorem la32slice13M8_half_hi :
+    scsHalfSliceV39 scs4M8_13 3 1 0.2565 False
+      = scsPropEquV39 scs3T7 1 := by
+  simp only [scsHalfSliceV39, scs4M8_13, mkUnadornedV39, scsPropEquV39,
+    Nat.reduceMod, Nat.reduceSub, Nat.reduceAdd, scs3T7]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · funext i j; exact la32slice13M8_cAhi i j
+  · funext i j; exact la32slice13M8_cAhi i j
+  · funext i j; exact la32slice13M8_cBhi i j
+  · funext i j; exact la32slice13M8_cBhi i j
+  · funext i j; split <;> rfl
+  · rfl
+  · rfl
+  · rfl
 
 /-- HOL `SCS_4M8_13_SLICE_13` (MIQMCSN.hl:3207). -/
 theorem SCS_4M8_13_SLICE_13_p32 :
     scsArrowV39 {scs4M8_13} {scsPropEquV39 scs3T7 1} := by
-  sorry
-  -- NEEDS: Lkgrqui.LKGRQUI + SCS_DIAG_SCS_4M8_13_13_p32 +
-  -- STAB_4M8_13_SCS_p32 + is_scs_slice_v39 unfolding.
+  have mkjF : (scsPropEquV39 scs3T7 1).J 0 ((scsPropEquV39 scs3T7 1).k - 1) = False := rfl
+  have hsl : isScsSliceV39 scs4M8_13 (scsPropEquV39 scs3T7 1)
+      (scsPropEquV39 scs3T7 1) 1 3 := by
+    simp only [isScsSliceV39]
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp only [scsSliceV39, Prod.mk.injEq, mkjF]
+      exact ⟨la32slice13M8_half_lo.symm, la32slice13M8_half_hi.symm⟩
+    · show (0.2565 : ℝ) < 0.9
+      norm_num
+    · show (0.2565 : ℝ) < 0.9
+      norm_num
+    · show (0.513 : ℝ) ≤ 0.2565 + 0.2565
+      norm_num
+    · show (3.62 : ℝ) < 4
+      norm_num
+    · left
+      rfl
+    · rw [mkjF]
+      exact fun hc => False.elim hc
+  have h := LKGRQUI_p27 scs4M8_13 (scsPropEquV39 scs3T7 1) (scsPropEquV39 scs3T7 1)
+    1 3 0.2565 0.2565 False
+    SCS_4M8_13_IS_SCS_p32 SCS_DIAG_SCS_4M8_13_13_p32 hsl
+  rw [show ({scsPropEquV39 scs3T7 1} : Set ScsV39)
+      = {scsPropEquV39 scs3T7 1, scsPropEquV39 scs3T7 1}
+      from by ext x; simp]
+  exact h
+  -- DISCHARGED (k8slice-w1, 2026-11-14): `LKGRQUI_p27` at (p, q) = (1, 3)
+  -- with the `3.62` b-slot; both halves fold to `pe scs_3T7 1`.
 
 /-- HOL `SCS_4M8_13_ARROW_3T7` (MIQMCSN.hl:3336). -/
 theorem SCS_4M8_13_ARROW_3T7_p32 :
