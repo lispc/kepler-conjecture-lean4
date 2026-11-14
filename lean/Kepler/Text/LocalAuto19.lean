@@ -67,10 +67,12 @@ ENCODING NOTES
     `Kepler.Text.SphereKit`; the `b ^ 2` spelling of the `b * b` body —
     definitionally equal);
     `abc_of_quadratic f` = `abcOfQuadratic_p19 f`.
-  - `taum_sym_cases2_p19` needs the dihedral-angle symmetry kit of sphere.hl
-    (`dih_y` symmetries via `atn2`), which is not yet ported on this side:
-    sorry + NEEDS. The r755 transfers `r755_ikj_p19`/`r755_jik_p19` consume
-    it (their proofs are otherwise mechanical slot transports).
+  - `taum_sym_cases2_p19` DISCHARGED 2026-11-14 (hexsym-w1): the
+    dihedral-angle symmetry kit is `dihY_swap23_p19` (HOL `dih_y_sym`
+    route, twin of LocalAuto38's `dihY_swap23_p38` and PackingAuto25's
+    `dihY_sym23P25`). The r755 transfers `r755_ikj_p19`/`r755_jik_p19`
+    are discharged on it plus the per-slot shuffle helpers
+    (`r755*_shuffle_{ikj,jik}_p19`, `deltaX_sym13_p19`).
   - Theorems marked NEEDS-DB consume single conjuncts of the opaque
     `main_nonlinear_terminal_v11` conjunction (`Terminal.get_main_nonlinear`
     entries "3078028960", "5546286427", "7550003505 ..." etc.); they are
@@ -2163,15 +2165,45 @@ theorem delta_y_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 a : ℝ) :
       deltaY a y2 y1 y6 2 2 = deltaY a y1 y2 y6 2 2 := by
   unfold deltaY deltaX <;> ring <;> trivial
 
+/-- Helper: `dih_y` is invariant under swapping the 2nd/3rd (and 5th/6th)
+slots — the same dihedral edge with the other two vertices exchanged
+(HOL `dih_y_sym` route through `dih_x`/`atn2`; twins:
+LocalAuto38's `dihY_swap23_p38`, PackingAuto25's `dihY_sym23P25` — the
+proof below is the latter's verbatim template). DISCHARGED 2026-11-14
+(hexsym-w1). -/
+theorem dihY_swap23_p19 (a b c d e f : ℝ) :
+    dihY a b c d e f = dihY a c b d f e := by
+  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
+    by simp only [deltaX]; ring
+  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
+    by simp only [deltaX4]; ring
+  show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)
+      = dihXf (a * a) (c * c) (b * b) (d * d) (f * f) (e * e)
+  unfold dihXf
+  rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f),
+    hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)]
+
 /-- HOL `taum_sym_cases2` (pent_hex.hl:2414): the four S3 symmetries of
-`taum`. NEEDS: the dihedral-angle symmetry kit of sphere.hl (`dih_y`
-symmetries through `atn2`), unported on this side. -/
+`taum`. DISCHARGED 2026-11-14 (hexsym-w1): `taum` is the `solY`-weighted
+sum of the three `lnazim` (= `ly i * dihY`) edges from the origin; each
+S3 permutation permutes those three terms, and each permuted `dihY` is
+related to the original by `dihY_swap23_p19` (the LA38 `taum_sym2`
+route, two-conjunct core composed here by rewrites). -/
 theorem taum_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
     taum y2 y1 y3 y5 y4 y6 = taum y1 y2 y3 y4 y5 y6 ∧
       taum y1 y3 y2 y4 y6 y5 = taum y1 y2 y3 y4 y5 y6 ∧
       taum y3 y1 y2 y6 y4 y5 = taum y1 y2 y3 y4 y5 y6 ∧
       taum y3 y2 y1 y6 y5 y4 = taum y1 y2 y3 y4 y5 y6 := by
-  sorry
+  have e1 : dihY y2 y1 y3 y5 y4 y6 = dihY y2 y3 y1 y5 y6 y4 :=
+    dihY_swap23_p19 _ _ _ _ _ _
+  have e2 : dihY y1 y3 y2 y4 y6 y5 = dihY y1 y2 y3 y4 y5 y6 :=
+    dihY_swap23_p19 _ _ _ _ _ _
+  have e3 : dihY y3 y2 y1 y6 y5 y4 = dihY y3 y1 y2 y6 y4 y5 :=
+    dihY_swap23_p19 _ _ _ _ _ _
+  refine ⟨?_, ?_, ?_, ?_⟩ <;>
+    simp only [taum, solY, lnazim, e1, e2, e3] <;> ring
 
 /-- HOL `edge2_flatD_sym` (pent_hex.hl:2425; via `Merge_ineq.delta_x_sym`). -/
 theorem edge2_flatD_sym_p19 (d y1 y2 y3 a : ℝ) :
@@ -2362,6 +2394,24 @@ theorem ineq_sym_s2_abb_p19 {y5 y6 : ℝ} {p : List (ℝ × ℝ × ℝ)} {r : Pr
 theorem deltaX_swap_p19 (a b c d e f : ℝ) : deltaX a b c d e f = deltaX a c b d f e := by
   unfold deltaX; ring
 
+/-- Ring symmetry of the Cayley determinant under the simultaneous 1↔3,
+4↔6 slot swap (the vertex transposition v1↔v3 of the simplex; the
+`r755_jik` (13)(46) conjugation's delta transport). -/
+theorem deltaX_sym13_p19 (a b c d e f : ℝ) : deltaX a b c d e f = deltaX c b a f e d := by
+  unfold deltaX; ring
+
+/-- The `ikj` slot rotation `(2 3)(5 6)` of `taum` (conjunct of
+`taum_sym_cases2_p19`). -/
+theorem taum_sym_ikj_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y1 y3 y2 y4 y6 y5 = taum y1 y2 y3 y4 y5 y6 :=
+  (taum_sym_cases2_p19 y1 y2 y3 y4 y5 y6).2.1
+
+/-- The `jik` slot transposition `(1 3)(4 6)` of `taum` (conjunct of
+`taum_sym_cases2_p19`). -/
+theorem taum_sym_jik_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y3 y2 y1 y6 y5 y4 = taum y1 y2 y3 y4 y5 y6 :=
+  (taum_sym_cases2_p19 y1 y2 y3 y4 y5 y6).2.2.2
+
 /-! Slot transports for the r755 transfers. -/
 
 theorem r755D234_shuffle_ikj_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
@@ -2406,21 +2456,121 @@ theorem r755C135_shuffle_ikj_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
     r755C135_p19 i y1 y3 y2 y4 y6 y5 = r755C126_p19 i y1 y2 y3 y4 y5 y6 := by
   cases i <;> simp only [r755C126_p19, r755C135_p19]
 
+/-- The `jik` slot transposition `(1 3)(4 6)` conjugation swaps the 234/126
+face roles (the face diagonals of the simplex's vertex transposition v1↔v3,
+`deltaX_sym13_p19`/`edge2_flatD_sym_cases`) and preserves the 135 face.
+DISCHARGED 2026-11-14 (hexsym-w1) for the `r755_jik_p19` transport. -/
+
+theorem r755D234_shuffle_jik_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755D234_p19 i y3 y2 y1 y6 y5 y4 = r755D126_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755D234_p19, r755D126_p19, yOfX, flatTerm2_234x_p19, flatTerm2_126x_p19,
+      mud234xV1_p19, mud126xV1_p19, mudLs234x_p19, mudLs126x_p19, mu6X_p19, delta234x_p19,
+      delta126x_p19]
+  · rw [edge2_flatD_sym_p19]
+  · rw [mu_y_sym_p19, deltaX_sym13_p19]
+  · rw [show Real.sqrt (2 * 2) = 2 from by norm_num, mu_y_sym_p19, deltaX_sym13_p19]
+
+theorem r755D126_shuffle_jik_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755D126_p19 i y3 y2 y1 y6 y5 y4 = r755D234_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755D234_p19, r755D126_p19, yOfX, flatTerm2_234x_p19, flatTerm2_126x_p19,
+      mud234xV1_p19, mud126xV1_p19, mudLs234x_p19, mudLs126x_p19, mu6X_p19, delta234x_p19,
+      delta126x_p19]
+  · rw [edge2_flatD_sym_p19]
+  · rw [mu_y_sym_p19, deltaX_sym13_p19]
+  · rw [show Real.sqrt (2 * 2) = 2 from by norm_num, mu_y_sym_p19, deltaX_sym13_p19]
+
+theorem r755D135_shuffle_jik_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755D135_p19 i y3 y2 y1 y6 y5 y4 = r755D135_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755D135_p19, yOfX, flatTerm2_135x_p19, mud135xV1_p19, mudLs135x_p19,
+      mu6X_p19, delta135x_p19]
+  · rw [edge2_flatD_sym_p19]
+  · rw [mu_y_sym_p19, deltaX_sym13_p19]
+  · rw [show Real.sqrt (2 * 2) = 2 from by norm_num, mu_y_sym_p19, deltaX_sym13_p19]
+
+theorem r755C234_shuffle_jik_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755C234_p19 i y3 y2 y1 y6 y5 y4 = r755C126_p19 i y1 y2 y3 y4 y5 y6 := by
+  cases i <;> simp only [r755C234_p19, r755C126_p19] <;> first
+    | rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).2.2,
+        (delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2.52).2.2]
+    | rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).2.2]
+
+theorem r755C126_shuffle_jik_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755C126_p19 i y3 y2 y1 y6 y5 y4 = r755C234_p19 i y1 y2 y3 y4 y5 y6 := by
+  cases i <;> simp only [r755C126_p19, r755C234_p19] <;> first
+    | rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).2.1,
+        (delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2.52).2.1]
+    | rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).2.1]
+
+theorem r755C135_shuffle_jik_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755C135_p19 i y3 y2 y1 y6 y5 y4 = r755C135_p19 i y1 y2 y3 y4 y5 y6 := by
+  cases i <;> simp only [r755C135_p19] <;> first
+    | rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).1,
+        (delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2.52).1]
+    | rw [(delta_y_sym_cases2_p19 y1 y2 y3 y4 y5 y6 2).1]
+
 /-- HOL `r755_ikj` (pent_hex.hl:2840): a database entry transfers along the
-`ikj` slot rotation, modulo the S3 symmetry kit. NEEDS: the `taum`
-symmetry kit (`taum_sym_cases2_p19`, sorry'd above) closes the transport;
-the D/C-slot transports are available as proved helpers above. -/
+`ikj` slot rotation, modulo the S3 symmetry kit. DISCHARGED 2026-11-14
+(hexsym-w1): the source entry is instantiated at the `(2 3)(5 6)`-permuted
+arguments; `taum_sym_cases2_p19` (ikj conjunct) and the D/C-slot
+`ikj` shuffles above close the transport. -/
 theorem r755_ikj_p19 (i j k : ℕ) (f1 f2 : ℝ) (b1 b2 s45 s56 : Prop)
     (hsrc : r755Ineq_p19 i k j f1 f2 b1 b2 s45 s56) :
     r755Ineq_p19 i j k f1 f2 b1 b2 s45 s56 := by
-  sorry
+  intro y1 y2 y3 y4 y5 y6
+  intro h1 h2 h3 h4 h5 h6
+  have h := hsrc y1 y3 y2 y4 y6 y5 h1 h3 h2 h4 h6 h5
+  rw [r755Body_p19, taum_sym_ikj_p19,
+    (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.2,
+    r755D234_shuffle_ikj_p19 i y1 y2 y3 y4 y5 y6,
+    r755D126_shuffle_ikj_p19 k y1 y2 y3 y4 y5 y6,
+    r755D135_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6,
+    r755C234_shuffle_ikj_p19 i y1 y2 y3 y4 y5 y6,
+    r755C126_shuffle_ikj_p19 k y1 y2 y3 y4 y5 y6,
+    r755C135_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6] at h
+  show r755Body_p19 i j k f1 f2 b1 b2 s45 s56 y1 y2 y3 y4 y5 y6
+  rw [r755Body_p19]
+  rcases h with h | h | h | h | h | h | h | h
+  · exact Or.inl (by linarith)
+  · exact Or.inr (Or.inl h)
+  · exact Or.inr (Or.inr (Or.inl h))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inl h)))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h)))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h))))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr h))))))
 
-/-- HOL `r755_jik` (pent_hex.hl:2878): the `jik` slot-rotation transfer.
-NEEDS: as `r755_ikj_p19` (the `taum` symmetry kit). -/
+/-- HOL `r755_jik` (pent_hex.hl:2878): the `jik` slot-transposition transfer.
+DISCHARGED 2026-11-14 (hexsym-w1): same route as `r755_ikj_p19` at the
+`(1 3)(4 6)`-permuted arguments (the 234/126 face roles swap, the 135 face
+is preserved; see the `jik` shuffle lemmas above). -/
 theorem r755_jik_p19 (i j k : ℕ) (f1 f2 : ℝ) (b1 b2 s45 s56 : Prop)
     (hsrc : r755Ineq_p19 j i k f1 f2 b1 b2 s45 s56) :
     r755Ineq_p19 i j k f1 f2 b1 b2 s45 s56 := by
-  sorry
+  intro y1 y2 y3 y4 y5 y6
+  intro h1 h2 h3 h4 h5 h6
+  have h := hsrc y3 y2 y1 y6 y5 y4 h3 h2 h1 h6 h5 h4
+  rw [r755Body_p19, taum_sym_jik_p19,
+    (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.1,
+    r755D234_shuffle_jik_p19 j y1 y2 y3 y4 y5 y6,
+    r755D126_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+    r755D135_shuffle_jik_p19 k y1 y2 y3 y4 y5 y6,
+    r755C234_shuffle_jik_p19 j y1 y2 y3 y4 y5 y6,
+    r755C126_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+    r755C135_shuffle_jik_p19 k y1 y2 y3 y4 y5 y6] at h
+  show r755Body_p19 i j k f1 f2 b1 b2 s45 s56 y1 y2 y3 y4 y5 y6
+  rw [r755Body_p19]
+  rcases h with h | h | h | h | h | h | h | h
+  · exact Or.inl (by linarith)
+  · exact Or.inr (Or.inl h)
+  · exact Or.inr (Or.inr (Or.inr (Or.inl h)))
+  · exact Or.inr (Or.inr (Or.inl h))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h)))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h))))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr h))))))
 
 /-! ## Wlog lemmas -/
 
