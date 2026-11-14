@@ -285,6 +285,14 @@
    ⇒ 对任何「def 写反了/实参序看反了」的勘正冲动：① 先查该 def 的直接消费者是谁
    （目标件可能用的是孪生 def）；② HOL 同文件有多个版本定理时，锚序必须对上**对应的那个
    版本**；③ 改动私 def = 改动所有消费者定理的语义，视同陈述改动，走 SF/DEF-FIX 级审慎。
+26. **`git apply` 前必查 patch 头（diff --git 的 a/b 双侧路径）**（2026-11-14 hexsym-w1
+   闸面事故实证）：车道若在 `/tmp` 工作区内 `git diff <repo文件> /tmp/<lane>/成品` 生成
+   patch，b 侧路径会是 `/tmp/...`——`git apply` 把它判为 **rename**（**apply --check 照样
+   PASS**），应用后 repo 目标文件被删、成品落到 `tmp/` 下。⇒ 硬纪律：apply 前 `head -5
+   patch.diff` 看 `diff --git` 行双侧都必须是 `a/lean/... b/lean/...`；b 侧异常时用
+   `sed 's| b/tmp/...| b/lean/...|'` 修正后再 apply；apply 后 `git status` 必查（出现
+   ` D <目标文件>` + 未跟踪 `tmp/` = 本事故签名），修复 = 还原目标文件 + 删 stray tmp/ +
+   修正 patch 重应用 + `cmp` 工作文件与车道成品逐字节比对。
 
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）

@@ -823,6 +823,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（10:05，续1115）**：**hexsym-w1 收线落库 `ddf5c0a7`（塔顶 blocker 清除，LA19 +165/−15，sorry 净 −3）——hex 塔全链通 + §7.1-26 patch 头雷区入册**。
+① 三真证：`taum_sym_cases2_p19`（LA38 taum_sym2 同路线 LA19 侧落地，新 `dihY_swap23_p19`）+ `r755_ikj/jik`（DB 置换实例化 + 9 连 rw + 8 支注入）。塔顶 `terminal_hex_taum`（=135_reduction∘r755 束）装配路线已备（DELIVERY §6），下一棒按 HOL pent_hex.hl:3180 立声明组装。
+② ⚠️ **闸面事故与修正（入 §7.1-26）**：车道 patch 的 b 侧路径误为 `/tmp/...`（车道在 /tmp 内 git diff 生成）——`git apply --check` 照样 PASS，应用即判 rename 险删 LA19（编排者 git status 抓到 ` D` + stray `tmp/` 签名）；修正 = 还原 + 修路径头 + cmp 车道成品逐字节比对后重应用，全绿。
+③ 闸（亲跑）：直编 RC=0/err0（12.7 s）+ 三探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。
+④ 在飞 1：hex6t1prep-w1（agent-67）；用户 K6/K7 双收（NWDGKXH `ecb95f82` + YOBIMPP `6174e197`，**终极三目标 2/3**，仅余 MIQMCSN）+ K8 在飞。
+⑤ OCBICBY 支状态：4T2 ✓ / 4T3 几何全闭（LP wrapper 冻结）/ 6T1 = hex51-w1 桥 ✓ + 塔基 ✓ + 塔顶 blocker ✓ 本笔——**待 terminal_hex_taum 装配 + ht4nn/side-case（在飞）即可收口 6T1** / 5T1 待 pent 塔四子件。
+
 - **2026-11-14（09:40，续1111）**：**enclosed4-final-w1 收线落库 `e76b7855`（集群收官 3/3，LA38 +725/−8，sorry 38→36）——4T3 收口供料全链闭合**。
 ① 三件：`CAYLEYR_5POINTS`（新件，HOL collect_geom2.hl:210-265 忠实复刻：span4 分支 + CM 消失 + 三置换恒等式 + WLOG）/ `enclosed4_lemma`（**cayleytr 整体 inline 绕过**——β=q(1)−q(0)−α 纯恒等式，cayleytrP38 桩不必解冻；反射造严格小根）/ `vv_enclosed4`（周期 inj + chi_msb dichotomy 双楔路线）。新 import 3（PA12/PA18/LA21Kit，环检验+四合一探针双验）。
 ② 预算判词：+725 超 450 软预算——13 私 helper 自洽重建 HOL 散件机件，三件一次全通，如实记。
