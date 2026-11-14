@@ -106,6 +106,7 @@ import Kepler.Text.LocalAuto21
 import Kepler.Text.LocalAuto22
 import Kepler.Text.LocalAuto22Close
 import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto23Jotswix
 import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto27
 import Kepler.Text.LocalAuto28
@@ -493,7 +494,7 @@ theorem JEJTVGB_case_breakdown_p16 (h : main_nonlinear_terminal_v11)
   · exact (scs_arrow_sing_empty_p22 scs6I1).1 e6I1
   · exact (scs_arrow_sing_empty_p22 scs5I1).1 e5I1
   · exact (scs_arrow_sing_empty_p22 scs4I1).1 e4I1
-  · exact (scs_arrow_sing_empty_p22 scs3I1).1 (LFLACKU_p23 h)
+  · exact (scs_arrow_sing_empty_p22 scs3I1).1 (LFLACKU_p23' h)
   · exact (scs_arrow_sing_empty_p22 scs5I2).1 e5I2
   · exact (scs_arrow_sing_empty_p22 scs4I2).1 e4I2
   · exact (scs_arrow_sing_empty_p22 scs5I3).1 e5I3
