@@ -357,24 +357,21 @@ theorem empty_5T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
   exact (not_lt_of_ge (empty5T1_pent_bridge_p22 h vv hB j hj hdj2 hdj3
     (ocb_pent_taum2_instance h vv hB j hj hdj2 hdj3 hle))) hle
 
-/-- HOL `terminal_pent_taum2`.  STILL SORRY (2026-11-14): the ported conclusion
-`ineqP22 [8 boxes] concl` is unsatisfiable — `ineqP22` builds a conjunction
-(so the goal demands `2 ≤ y1` for the universally quantified `y1`), while HOL
-`ineq` is the box *implication*.  Proof is ready as
-`ocb_terminal_pent_taum2_core`; the public statement needs the SF
-(`(hbox : ineqP22 [boxes] True)` premise) — see `DELIVERY_D2.md`. -/
+/-- HOL `terminal_pent_taum2` (OCBICBY.hl:3357-3402).  **SF-109 修正**（2026-11-14：
+`ineqP22` 结论壳 → `hbox` 前提 + 展平结论；原壳把合取放结论、陈述层不可满足）：
+`angle_sum_5T1` 的 20-析取 + `terminal_pent_taum_p19` 两支装配，证明体 =
+`ocb_terminal_pent_taum2_core`。 -/
 theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
+    (hbox : ineqP22 [(2, y1, 2 * h0), (2, y2, 2 * h0), (2, y3, 2 * h0), (2, y4, 2),
+      (3.01, y5, 3.237), (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)] True)
     (hd1 : 0 ≤ deltaY y126 y1 y2 y6 2 2)
     (hd2 : 0 ≤ deltaY y135 y1 y3 y5 2 2)
     (hsub : dihY y1 y126 y135 cstab 2 2 ≤
         dihY y1 y2 y3 y4 y5 y6 + dihY y1 y2 y126 2 2 y6 +
           dihY y1 y3 y135 2 2 y5) :
-    ineqP22 [(2, y1, 2 * h0), (2, y2, 2 * h0), (2, y3, 2 * h0), (2, y4, 2),
-      (3.01, y5, 3.237), (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
-      (0.616 < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 +
-        taum y135 y1 y3 y5 2 2) := by
-  sorry
+    0.616 < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taum y135 y1 y3 y5 2 2 := by
+  exact ocb_terminal_pent_taum2_core h y1 y2 y3 y4 y5 y6 y126 y135 hbox hd1 hd2 hsub
 
 /-- HOL `OCBICBY` 5T1 branch (OCBICBY.hl:4761), discharged via the
 `arrow_rewrite_list` glue: `MMsV39 scs5T1 = ∅` since `BBprimeV39` needs
