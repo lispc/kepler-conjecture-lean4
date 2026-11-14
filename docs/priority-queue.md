@@ -741,6 +741,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（08:20，续1104）**：**taugen-w1 收线落库 `5c71d830`（C1+C4 双件，LA19 +236/−3、LA38 +193/−3，双件同批）——C 件 4/6 落地 + hex51-w2 补位发车（agent-65）**。
+① 路线：合并桥 `taugen_dih_bridge`（HOL 两分支按 delta_x4 符号合一）+ delta=0 角延拓 ⇒ 主定理零 case-split；末桥由 π·const1=sol0 收口。预算判词：净 +429 超工单 300 ~123——双文件硬约束致桥/末桥同构复制，每文件远低于 450 止损线，复核采信。
+② 闸（亲跑）：apply--check@911ff037 PASS（用户 V21 未触双文件）；删除面恰 2 sorry+2 docstring；添加行禁词 0；双拼接探针编 RC=0/err0（7.9+14.2 s）+ 双探针恰标准三；根面 md5 246e952c 逐字节同；双新 olean 装池。
+③ **tau_x 解锁波全账**：C1/C3/C4/C6 四件全收（`5c71d830`+`1dcbe0cd`）+ enclosed sym×2（`5b56bcc1`）+ 9 桩真身化（`7beae732`）——OWZLKVY4/hex/pent 塔的 tau_x 侧锁清零；C2/C5/C7/C8 仍 NEEDS-DB（LP 冻结）。
+④ hex51-w2 工单要点：第一行动 = 探针实测塔基 `terminal_hex_234_reduction_p19` 与 OWZLKVY4 家族现态（tau_x 真身化后理论上已解锁，但 DB 面仍可能挡）；诚实止损纪律照旧。
+⑤ 在飞 2：enclosed4-final-w1（agent-64）+ hex51-w2（agent-65）；用户 V22（PWEIWBZ norm≠2 两叶）第三。
+
 - **2026-11-14（08:00，续1102）**：**第三车 enclosed4-final-w1 发车（agent-64：enclosed 集群收官三件套 CAYLEYR_5POINTS→enclosed4_lemma→vv_enclosed4，3/5→5/5）**——用户从两候选（enclosed 收官 vs hex51-w2）中选定确定性更高的收官线；hex51-w2 顺延至 taugen-w1 收线后的空位（6T1+5T1 杠杆更大但有 OWZLKVY4 家族 DB 墙风险）。
 ① 工单要点：CAYLEYR_5POINTS（HOL collect_geom2.hl:61-，树内零命中）是 enclosed4_lemma 唯一缺口；vv_enclosed4 装配线叶件 rg 已核全在树内零 LP（~150-300 行）；收齐全链 ⇒ 4T3 几何全闭（只差 LP wrapper 冻结项）。
 ② 在飞 2：taugen-w1（agent-62，wire 07:42 静默 8 min 后本笔记时未复——编译/思考相位待定）+ enclosed4-final-w1（agent-64）；用户 V21（PWEIWBZ a12≠2 组）第三。
