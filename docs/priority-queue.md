@@ -859,6 +859,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（20:35，续1140）**：**TSKAJXY-XLLIPLS 单盒 TM pilot 发车 `tskajxy-tm-w1`（用户明批：给 nli* 流水线定标）**。
+① **授权边界**：单盒 certtm 专项（BIEFJHU-a 后第二例，AGENTS §4 续批注记）；**TM3 量产扫全库 / Mono\* / D 证书层仍 hold**，pilot 结束即回 hold。
+② **目标**：`nliTskXLLIPLS`（`Assembly.lean:980`，`bank_TSKAJXYXLLIPLS`）；盒 `[2hplus,√8]×[2,2.01]²×[2hplus,2.8]×[2,2.01]²`、`0 < gamma4fgcy y1..y6 lmfun`——严格/无析取/全数值 dyadic/无哑元；case JSON 在库（`pipeline/interval/out/cases/TSKAJXY-XLLIPLS.json`，498 ops / 60 ite）；原始格 ≈1,826 → TM 估 3k–8k 叶（BIEFJHU ×1.85 标定）。
+③ **路线**：Phase 0 RUNBOOK+微探针（实测叶数/s/叶/内存/guard 密度）→ Phase 1 glue（`gamma4fgcy` IExpr + `evalReal` bridge，300–600 行，**先 bridge 后全量**）→ Phase 2 `bb_arb` 全量 + emit 分片 → Phase 3 有界内核重放（**6h 墙钟预算**）→ Phase 4 收口 `nliTskXLLIPLS`（删除面恰 1 sorry）或交条件收口件 + 工时外推 → Phase 5 定标报告（成本模型 + 下一盒建议）。
+④ **资产**：`bb_arb`（`~/c17_backup/tools/prep-p2/bb_arb`，BIEFJHU 旗标 `--ite-hull2 --tm-div2`）、`pipeline/interval/emit_lean.py`、分片模板 `Interval/Cases/C1965189142aHull*`、glue 模板 `Text/PackingAuto22PackIneqBiefjhu`/`PackIneqBiefjhuClose`、w2 全链快照 `~/c17_backup/lane_snapshots/biefjhu-tm-w2/`。
+⑤ **预期**：重放若 >6h 则交条件件 + 实测 s/叶外推，由编排者排多窗口；certtm 若 60-guard 尾部爆炸（>3 轮细分/全档 NEG）→ 切候选 B `QZECFIC wt0`。与在飞 `ocbicby6t4-w1` 文件零交集（本单碰 Assembly/新 glue 模块/pipeline 输出）。
+⑥ 下一条：续1141。
 - **2026-11-14（20:05，续1139）**：**LFLACKU 收线落库 `e1e52ad6` + 基线 AL——SORRIED 57→56（Text 2→1）**。
 ① 交付（`lflacku-w1`）：新模块 `LocalAuto23Jotswix` **+551/−0**（import LA1+SphereKit+LA22+LA21+LA38；19 private kit + 3 公开孪生 `TAUM_EXTREMAL_p23'`/`TAUM_STD_POS_p23'`/`LFLACKU_p23'`，陈述与 LA23 name-normalized 逐字节同）+ `LocalAuto16` **+2/−1**（+1 import、`:497` `LFLACKU_p23 h`→`LFLACKU_p23' h`）。LA23 原四条 0 diff、成孤儿。
 ② 闸（亲跑 @`23d95994`）：apply-check PASS、头 `a/lean…b/lean…`、`+551/−0` 与 `+2/−1`、新增行禁项 0、只碰 2 文件；Jotswix 直编 **rc=0/err0**；LA16 直编 **rc=0/err0**；装池（LA16 旧件备份）→ 探针三孪生**全标准三**、`LFLACKU_p23` 原件仍 sorryAx（未动）、`JEJTVGB_case_breakdown_p16` = 标准三 + sorryAx（其余 22 箭头，预期）；根面 md5 **`246e952c…` 逐字节同**。

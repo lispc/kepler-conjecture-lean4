@@ -89,6 +89,9 @@
 - 用户保留项：certtm 的 TM3 / Mono* hold；D 证书层解冻 hold。不要单方面动。
   **专项解冻（2026-11-11 用户明批，仅此一项）**：BIEFJHU-a 的 TM 证书 pilot 可动 certtm；
   **TM3 量产扫全库、Mono\* 进 universe、D 证书层解冻仍然 hold**，跑完本 pilot 即回到 hold 态。
+  **续批专项（2026-11-14 用户明批）**：`TSKAJXY-XLLIPLS` 单盒 TM pilot（车道 `tskajxy-tm-w1`，
+  给 nli* 流水线定标）可动 certtm / `bb_arb`；**TM3 量产扫全库、Mono\*、D 证书层仍然 hold**，
+  本 pilot 结束即回 hold 态。
 
 ## 5. 落库流程
 
