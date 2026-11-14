@@ -152,6 +152,10 @@
 > `a=2` → PWEIWBZ+NUXCOEA 双件、`2<a` → SCS_A_2 分裂 + `vasArcKit_2b`；加 1 行 `import VasArcKit` 无环。**四 master 4/4**）。
 > **在飞 V25 `vasyyau-disch-w25`**：LocalConcl 四 discharge（`TUAPYYU/WKZZEEH/PWEIWBZ/VASYYAU_discharged`）接线到 `_kit`；
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
+> **在飞 k7slice-w1（第二车道，用户 09:0x 批）**：K7 `YOBIMPP` ladder 底部 11 件——`BB/MM_{3T4_prime2,3T3_prime,3M1_prime}` 六孪生 +
+> `SCS_4M7_SLICE_13/02` + 两条 `SLICE_ARROW` + `STAB_SCS_4M7_ARROW_3T3_3M1_3T4`；加 1 行 `import LocalAuto33`（无环）；
+> 前置 `LKGRQUI_p27`/`SLICE_IS_UNADORNED_p27`/`SCS_DIAG_SCS_4M7_*_p33`/`STAB_4M7_SCS_p33` 均已探针标准三。
+> 两车道同改 LA32 但行段分离（373-700 vs 993+），import 插入点不同；先到先落。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
 > **DAG 死锁解（已落地）**：反切 `LA22→LA23` 不便宜（`JKQEWGV2/3_p23` 有 ~30 条私有 helper 闭包）；
@@ -327,6 +331,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（09:05，续1108）**：**双车道编排（用户批准第二车道）——V25 `vasyyau-disch-w25`（LocalConcl 四 discharge 接线）+ `k7slice-w1`（K7 `YOBIMPP` ladder 底部 11 件）同时在飞**。
+① **k7slice-w1 派单范围**（LA32:373-700，HOL `MIQMCSN.hl:931-1484`）：`BB_3T4_prime2_IMP_scs_3T4`/`MM_3T4_prime2_IMP_MM_3T4`/`BB_3T3_prime_IMP_scs_3T3`/`MM_3T3_prime_IMP_MM_3T3`/`BB_3M1_prime_IMP_scs_3M1`/`MM_3M1_prime_IMP_MM_3M1` 六孪生 + `SCS_4M7_SLICE_13`/`SCS_4M7_SLICE_02` + `SCS_4M7_SLICE_13_ARROW_3T4`/`SCS_4M7_SLICE_02_ARROW_3T3_3M1` + `STAB_SCS_4M7_ARROW_3T3_3M1_3T4`；加 1 行 `import Kepler.Text.LocalAuto33`（无环：全树仅 LocalConcl import LA32）。
+② **前置探针（编排者亲跑）**：`LKGRQUI_p27`（LA27:3453）/ `SLICE_IS_UNADORNED_p27` = 标准三；`SCS_DIAG_SCS_4M7_02/13_p33`、`STAB_4M7_SCS_p33`（LA33:3983/4044/4048）、`PRO_EQU_ID1`/`YXIONXL3`（LA12）、`FZIOTEF_UNION`（LA20:1383）、`SET_EQ_DIAG_STAB_4M7_p32`（LA32:597）均在库。
+③ **并行冲突评估**：两车道同改 LA32，但 k7slice 集中 :373-700、V26（K6 EXTREMAL）在 :993+；import 插入点不同（`LocalAuto33` vs `LocalAuto16`/`VasMasterKit`）⇒ 非重叠 hunk，先到先落，后者 gate 用 `git apply -3` 兜底。
+④ **资源口径**：总车道 4（本会话 2 + kimi code 2）；guard 仍按 lean ≤2 / RSS ≤20GB 串行；5h 配额是硬约束，若见 429/截断潮先撤第二车道。
+⑤ 下一条：续1109。
 
 - **2026-11-14（08:54，续1107）**：**V24 `vasyyau-w24` 落库 `46beba4f`（VASYYAU 第八笔 +140/−0）——公共 `VASYYAU_kit` 收线，陈述与 LA1 `VASYYAU_concl` 逐字节同形；**LA1 四 master 4/4 全部真证**（闸族核心完成）；V25 `vasyyau-disch-w25` 发车（LocalConcl 四 discharge 接线）**。
 ① **V24 交付**：公共 `VASYYAU_kit`（VasMasterKit:1703，+140/−0，含 **1 行 `import Kepler.Text.VasArcKit`**，无环：全树 0 文件 import VasMasterKit）。分支：`a(p,p+1)=2` → `PWEIWBZ_kit@p` 第一等式 + `NUXCOEAv2_p28@(l=p,j=p+1)` 第二等式（HOL :2469）；`2<a(p,p+1)` → `SCS_A_2_p27@(p+3)` + `Periodic2 s.a 4` 得 `2≤a(p+3)p`，`=2` 子支由 `PWEIWBZ_kit@p+3` + `NUXCOEAv2_p28@p+3` 一次给出两等式（HOL :2494-2558），`2<` 子支由 `A_NOT_EQ2_IMP_B@p+3 → PRO_ADD_NOT_IN_SCS_M@{p,p+3} → B_LE_2h0_2_SCS_M_4_pair_p25 → B_LE_2h0_IMP_B@{p+1,p+2} → YEBWJNG_kit@{p+1,p+2}` 出 `h12/h23` 后 **`vasArcKit_2b` 收线**（HOL :2594-2844）；`hnc/haff/hlunar` 统一复用 `pweiwbz_str_arc`，¬str 全走 `pweiwbz_str_uniq`+omega，零装债件消费。
