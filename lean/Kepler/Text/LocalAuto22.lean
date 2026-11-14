@@ -109,6 +109,16 @@ import Kepler.Geom.Azim
 -- The local `derived_form_dih_x_wrt_x*_p22` twins remain unproved for
 -- their own (untouched) consumers.
 import Kepler.Text.Gamma4Deriv2
+-- LANE hex6t1prep-w1 (2026-11-14): the 6T1 side-case kit consumes the Euler
+-- anchors — `ea4_euler_triangle` (EULER_TRIANGLE), `ea4_eulerP`/`ea1_eulerAX`
+-- (the real `euler_p`/`eulerA_x` bodies for the `_p22` stubs below),
+-- `ea4_sol_x_sol_euler_x` + `ea1_atn2_pos`/`ea1_atn2_breakdown` (EAR_SOL_NN),
+-- `ea1_sol_euler_x_sqrtdelta`'s siblings.  Acyclic: EulerAssembly's closure
+-- (SphereKit/IneqClosureDefs/EulerAtn2Kit/EulerSimplexGeom/EulerDerivCore/
+-- Geom.LuneVolume, +PA2/PA5) was grep-verified on HEAD `6f4d4492` to not
+-- reach LA22 or any LA22 importer (LA16/20/21/33, VasArcKit, VasMasterKit,
+-- LocalConcl, LocalAuto23Vas, XwitccnKernel).
+import Kepler.Text.EulerAssembly
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -143,13 +153,20 @@ noncomputable def deltaX6_p22 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
 from SphereKit's `const1` (`solY 2 2 2 2 2 2 / π`); not a verbatim twin. -/
 noncomputable def const1_p22 : ℝ := sol0 / Real.pi
 
-/-- NEEDS: Sphere.hl `euler_p` (solid angle of a tetrahedron); opaque
-registry signature. -/
-noncomputable def eulerP_p22 (v0 v1 v2 v3 : V3) : ℝ := sorry
+/-- HOL `euler_p` (sphere.hl:394): the polar-moment solid-angle numerator.
+Real body 2026-11-14 (lane `hex6t1prep-w1`): the literal application of
+`ea4_eulerP` (EulerAssembly:215, itself the HOL-faithful body), replacing
+the old opaque `sorry` stub so that `euler_p_eulerA_x_p22` and its
+consumers (`DIH_IMP_EULER_A_POS_p22`) no longer carry `sorryAx`. -/
+noncomputable def eulerP_p22 (v0 v1 v2 v3 : V3) : ℝ := ea4_eulerP v0 v1 v2 v3
 
-/-- NEEDS: Sphere.hl `eulerA_x` (solid angle in x-space); opaque registry
-signature. -/
-noncomputable def eulerAX_p22 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
+/-- HOL `eulerA_x` (sphere.hl:831): `euler_p` in squared lengths.  Real
+body 2026-11-14 (lane `hex6t1prep-w1`): the literal application of
+`ea1_eulerAX` (EulerAtn2Kit, verbatim sphere.hl:830-833) ≡ `eulerAX_t11`
+(LA1:1210), so the `main_nonlinear_terminal_v11` registry discharges apply
+up to defeq. -/
+noncomputable def eulerAX_p22 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  ea1_eulerAX x1 x2 x3 x4 x5 x6
 
 /-- Flyspeck `acs` = `Real.arccos`. -/
 noncomputable def acsP22 (x : ℝ) : ℝ := Real.arccos x
@@ -190,13 +207,14 @@ theorem derived_form_b_p22 (b : Prop) (f : ℝ → ℝ) (f' x : ℝ) (s : Set �
 
 /-! ## Section B: euler / coplanar statements and the derivative kit -/
 
-/-- HOL `euler_p_eulerA_x` (`euler_p` is `eulerA_x` in the distance-squared
-coordinates; both signatures are opaque `_p22` copies). -/
+/-- HOL `euler_p_eulerA_x` (OCBICBY.hl:46-64 / merge_ineq.hl:899-916): the
+`_p22` signatures now carry the real `ea4_eulerP`/`ea1_eulerAX` bodies, so
+the bridge is the already-proved `ea4_euler_p_eulerAX` up to defeq. -/
 theorem euler_p_eulerA_x_p22 (v0 v1 v2 v3 : V3) :
     eulerP_p22 v0 v1 v2 v3 =
       eulerAX_p22 (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
-        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
-  sorry
+        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) :=
+  ea4_euler_p_eulerAX v0 v1 v2 v3
 
 /-- HOL `COPLANAR_IMP_DIH_PI` (was `DELTA_IMP_DIH_PI`): coplanar + negative
 `delta4_y` forces the straight dihedral angle. -/
@@ -208,6 +226,61 @@ theorem COPLANAR_IMP_DIH_PI_p22 (v0 v1 v2 v3 : V3)
       (dist v2 v3) (dist v1 v3) (dist v1 v2) < 0) :
     dihV v0 v1 v2 v3 = Real.pi := by
   sorry
+
+/-- Helper: the (1 2 3)(4 5 6) vertex-cycle of `delta_y` — a
+Cayley–Menger `ring` identity (`emptykit_delta_swap12/swap23` family).
+Transports the permuted-tetrahedron `delta_y` values back to the main one
+in `DIH_IMP_EULER_A_POS_p22`/`EAR_SOL_NN_p22`. -/
+private theorem hex6t1_deltaY_cycle (a b c d e f : ℝ) :
+    deltaY a b c d e f = deltaY b c a e f d := by
+  unfold deltaY deltaX
+  ring
+
+/-- Helper: the same vertex-cycle for `eulerA_x` — the `sqrt` atoms commute,
+so `ring` closes after the unfold. -/
+private theorem hex6t1_eulerAX_cycle (a b c d e f : ℝ) :
+    eulerAX_p22 a b c d e f = eulerAX_p22 b c a e f d := by
+  simp only [eulerAX_p22, ea1_eulerAX]
+  ring
+
+/-- Helper: the flat-tetrahedron special case of HOL
+`COPLANAR_IMP_DIH_PI` (OCBICBY.hl:70-110) — `delta_y = 0` and
+`delta_x4 < 0` force the straight angle.  No coplanarity premise is
+needed: `DIHV_EQ_DIH_Y_4PT` turns `dihV` into the `atn2` form, `delta_y = 0`
+collapses the sqrt argument to `0`, and `ATN2_BREAKDOWN` evaluates
+`atn2 0 (positive)` to `π/2`. -/
+private theorem hex6t1_dihV_eq_pi (v0 v1 v2 v3 : V3)
+    (hc12 : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+    (hc13 : ¬ Collinear ℝ ({v0, v1, v3} : Set V3))
+    (hd0 : deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+      (dist v1 v3) (dist v1 v2) = 0)
+    (hd4 : yOfX deltaX4 (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+      (dist v1 v3) (dist v1 v2) < 0) :
+    dihV v0 v1 v2 v3 = Real.pi := by
+  rw [DIHV_EQ_DIH_Y_4PT v0 v1 v2 v3 hc12 hc13]
+  have h0 : deltaX (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+      (dist v0 v3 * dist v0 v3) (dist v2 v3 * dist v2 v3)
+      (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2) = 0 := hd0
+  have hneg : 0 < -(deltaX4 (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+      (dist v0 v3 * dist v0 v3) (dist v2 v3 * dist v2 v3)
+      (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2)) := by
+    have h4 : deltaX4 (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+        (dist v0 v3 * dist v0 v3) (dist v2 v3 * dist v2 v3)
+        (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2) < 0 := hd4
+    linarith
+  show Real.pi / 2 + atn2 (Real.sqrt (4 * (dist v0 v1 * dist v0 v1)
+        * deltaX (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+          (dist v0 v3 * dist v0 v3) (dist v2 v3 * dist v2 v3)
+          (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2)))
+      (-(deltaX4 (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+          (dist v0 v3 * dist v0 v3) (dist v2 v3 * dist v2 v3)
+          (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2))) = Real.pi
+  rw [h0, mul_zero, Real.sqrt_zero,
+    (ea1_atn2_breakdown 0 (-(deltaX4 (dist v0 v1 * dist v0 v1)
+        (dist v0 v2 * dist v0 v2) (dist v0 v3 * dist v0 v3)
+        (dist v2 v3 * dist v2 v3) (dist v1 v3 * dist v1 v3)
+        (dist v1 v2 * dist v1 v2)))).2.1 hneg, zero_div, Real.arctan_zero]
+  ring
 
 /-- HOL `DIH_IMP_EULER_A_POS`. -/
 theorem DIH_IMP_EULER_A_POS_p22 (h : main_nonlinear_terminal_v11)
@@ -224,7 +297,133 @@ theorem DIH_IMP_EULER_A_POS_p22 (h : main_nonlinear_terminal_v11)
     (hy6 : 3.01 ≤ dist v1 v2 ∧ dist v1 v2 ≤ 3.915) :
     yOfX (eulerAX_p22) (dist v0 v1) (dist v0 v2) (dist v0 v3)
       (dist v2 v3) (dist v1 v3) (dist v1 v2) > 0 := by
-  sorry
+  have h743 : mainEstimate_7439076204 :=
+    h "7439076204" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_7439076204 at h743
+  have e252 : (2:ℝ) * h0 = 2.52 := by norm_num [h0]
+  have hu1 : dist v0 v1 ≤ (2.52 : ℝ) := by rw [← e252]; exact hy1.2
+  have hu2 : dist v0 v2 ≤ (2.52 : ℝ) := by rw [← e252]; exact hy2.2
+  have hu3 : dist v0 v3 ≤ (2.52 : ℝ) := by rw [← e252]; exact hy3.2
+  -- the permuted-slot non-collinearity facts (set-equality reorderings)
+  have hc21 : ¬ Collinear ℝ ({v0, v2, v1} : Set V3) := by
+    have e : ({v0, v2, v1} : Set V3) = {v0, v1, v2} := by
+      ext x; simp [Set.insert_comm, or_comm, or_left_comm, or_assoc]
+    rwa [e]
+  have hc32 : ¬ Collinear ℝ ({v0, v3, v2} : Set V3) := by
+    have e : ({v0, v3, v2} : Set V3) = {v0, v2, v3} := by
+      ext x; simp [Set.insert_comm, or_comm, or_left_comm, or_assoc]
+    rwa [e]
+  have hc31 : ¬ Collinear ℝ ({v0, v3, v1} : Set V3) := by
+    have e : ({v0, v3, v1} : Set V3) = {v0, v1, v3} := by
+      ext x; simp [Set.insert_comm, or_comm, or_left_comm, or_assoc]
+    rwa [e]
+  by_cases hdlt : 0 < deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3)
+      (dist v2 v3) (dist v1 v3) (dist v1 v2)
+  · -- δ > 0: EULER_TRIANGLE (HOL case 1, OCBICBY.hl:145-166)
+    have hdx : 0 < deltaX (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+      simp only [pow_two]
+      exact hdlt
+    have htri := ea4_euler_triangle v0 v1 v2 v3 hdx
+    have hroot : 0 < Real.sqrt (deltaX (dist v0 v1 ^ 2) (dist v0 v2 ^ 2)
+        (dist v0 v3 ^ 2) (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2)) :=
+      Real.sqrt_pos.mpr hdx
+    have hstep : 0 < atn2 (Real.sqrt (deltaX (dist v0 v1 ^ 2)
+          (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) (dist v2 v3 ^ 2) (dist v1 v3 ^ 2)
+          (dist v1 v2 ^ 2))) (2 * ea4_eulerP v0 v1 v2 v3) := by
+      have h2 : 0 < 2 * atn2 (Real.sqrt (deltaX (dist v0 v1 ^ 2)
+            (dist v0 v2 ^ 2) (dist v0 v3 ^ 2) (dist v2 v3 ^ 2)
+            (dist v1 v3 ^ 2) (dist v1 v2 ^ 2))) (2 * ea4_eulerP v0 v1 v2 v3) := by
+        linarith
+      linarith
+    have hpos := (ea1_atn2_pos _ _ hroot).mp hstep
+    have heP : 0 < ea4_eulerP v0 v1 v2 v3 := by linarith
+    have ebr : eulerP_p22 v0 v1 v2 v3 = eulerAX_p22 (dist v0 v1 * dist v0 v1)
+        (dist v0 v2 * dist v0 v2) (dist v0 v3 * dist v0 v3)
+        (dist v2 v3 * dist v2 v3) (dist v1 v3 * dist v1 v3)
+        (dist v1 v2 * dist v1 v2) := by
+      have e := euler_p_eulerA_x_p22 v0 v1 v2 v3
+      simpa only [pow_two] using e
+    show 0 < eulerAX_p22 (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+      (dist v0 v3 * dist v0 v3) (dist v2 v3 * dist v2 v3)
+      (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2)
+    rw [← ebr]
+    exact heP
+  · -- δ = 0: coplanar; three registry applications + dihV = π ×3
+    -- (HOL case 2, OCBICBY.hl:167-190)
+    have hd0 : deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+        (dist v1 v3) (dist v1 v2) = 0 :=
+      le_antisymm (le_of_not_gt hdlt) (DELTA_Y_POS_4POINTS v0 v1 v2 v3)
+    by_contra hcon
+    push_neg at hcon
+    have hcon' : eulerAX_p22 (dist v0 v1 * dist v0 v1)
+        (dist v0 v2 * dist v0 v2) (dist v0 v3 * dist v0 v3)
+        (dist v2 v3 * dist v2 v3) (dist v1 v3 * dist v1 v3)
+        (dist v1 v2 * dist v1 v2) ≤ 0 := hcon
+    -- slot 1 (main)
+    have hd41 : yOfX deltaX4 (dist v0 v1) (dist v0 v2) (dist v0 v3)
+        (dist v2 v3) (dist v1 v3) (dist v1 v2) < 0 := by
+      have hs := h743 (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+        (dist v1 v3) (dist v1 v2) hy1.1 hu1 hy2.1 hu2 hy3.1 hu3 hy4.1 hy4.2
+        hy5.1 hy5.2 hy6.1 hy6.2
+      rcases hs with h1 | h2
+      · exact h1
+      · exfalso; exact absurd h2 (not_lt.mpr hcon')
+    have hdih1 : dihV v0 v1 v2 v3 = Real.pi :=
+      hex6t1_dihV_eq_pi v0 v1 v2 v3 hc12 hc13 hd0 hd41
+    -- slot 2 (v0,v2,v3,v1)
+    have hd02 : deltaY (dist v0 v2) (dist v0 v3) (dist v0 v1) (dist v3 v1)
+        (dist v2 v1) (dist v2 v3) = 0 := by
+      rw [hex6t1_deltaY_cycle, dist_comm (v1 : V3) v3, dist_comm (v1 : V3) v2] at hd0
+      exact hd0
+    have hd42 : yOfX deltaX4 (dist v0 v2) (dist v0 v3) (dist v0 v1)
+        (dist v3 v1) (dist v2 v1) (dist v2 v3) < 0 := by
+      have hs := h743 (dist v0 v2) (dist v0 v3) (dist v0 v1) (dist v3 v1)
+        (dist v2 v1) (dist v2 v3) hy2.1 hu2 hy3.1 hu3 hy1.1 hu1
+        (by rw [dist_comm]; exact hy5.1) (by rw [dist_comm]; exact hy5.2)
+        (by rw [dist_comm]; exact hy6.1) (by rw [dist_comm]; exact hy6.2)
+        hy4.1 hy4.2
+      rcases hs with h1 | h2
+      · exact h1
+      · exfalso
+        have e1 : dist v3 v1 = dist v1 v3 := dist_comm _ _
+        have e2 : dist v2 v1 = dist v1 v2 := dist_comm _ _
+        rw [e1, e2] at h2
+        have h2' : 0 < eulerAX_p22 (dist v0 v2 * dist v0 v2)
+            (dist v0 v3 * dist v0 v3) (dist v0 v1 * dist v0 v1)
+            (dist v1 v3 * dist v1 v3) (dist v1 v2 * dist v1 v2)
+            (dist v2 v3 * dist v2 v3) := h2
+        rw [hex6t1_eulerAX_cycle, hex6t1_eulerAX_cycle] at h2'
+        exact absurd h2' (not_lt.mpr hcon')
+    have hdih2 : dihV v0 v2 v3 v1 = Real.pi :=
+      hex6t1_dihV_eq_pi v0 v2 v3 v1 hc23 hc21 hd02 hd42
+    -- slot 3 (v0,v3,v1,v2)
+    have hd03 : deltaY (dist v0 v3) (dist v0 v1) (dist v0 v2) (dist v1 v2)
+        (dist v3 v2) (dist v3 v1) = 0 := by
+      rw [hex6t1_deltaY_cycle, hex6t1_deltaY_cycle, dist_comm (v2 : V3) v3,
+        dist_comm (v1 : V3) v3] at hd0
+      exact hd0
+    have hd43 : yOfX deltaX4 (dist v0 v3) (dist v0 v1) (dist v0 v2)
+        (dist v1 v2) (dist v3 v2) (dist v3 v1) < 0 := by
+      have hs := h743 (dist v0 v3) (dist v0 v1) (dist v0 v2) (dist v1 v2)
+        (dist v3 v2) (dist v3 v1) hy3.1 hu3 hy1.1 hu1 hy2.1 hu2 hy6.1 hy6.2
+        (by rw [dist_comm]; exact hy4.1) (by rw [dist_comm]; exact hy4.2)
+        (by rw [dist_comm]; exact hy5.1) (by rw [dist_comm]; exact hy5.2)
+      rcases hs with h1 | h2
+      · exact h1
+      · exfalso
+        have e1 : dist v3 v2 = dist v2 v3 := dist_comm _ _
+        have e2 : dist v3 v1 = dist v1 v3 := dist_comm _ _
+        rw [e1, e2] at h2
+        have h2' : 0 < eulerAX_p22 (dist v0 v3 * dist v0 v3)
+            (dist v0 v1 * dist v0 v1) (dist v0 v2 * dist v0 v2)
+            (dist v1 v2 * dist v1 v2) (dist v2 v3 * dist v2 v3)
+            (dist v1 v3 * dist v1 v3) := h2
+        rw [hex6t1_eulerAX_cycle] at h2'
+        exact absurd h2' (not_lt.mpr hcon')
+    have hdih3 : dihV v0 v3 v1 v2 = Real.pi :=
+      hex6t1_dihV_eq_pi v0 v3 v1 v2 hc31 hc32 hd03 hd43
+    linarith [Real.pi_pos]
 
 /-- One-variable quadratic derivative inside a set (workhorse for the
 `derived_form` polynomial laws). -/
@@ -2575,13 +2774,129 @@ theorem RRCWNS_WEAK_p22 (h : main_nonlinear_terminal_v11) (s : ScsV39) (vv : ℕ
   · exact absurd ⟨v, w, by
       simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hlun3⟩ hnoLunar
 
+/-- Helper: the `dih_y = π` flat-ear special case of HOL
+`EAR_DIH1_DELTA_0` (terminal.hl:2316-2333), proved without the LA38 LP
+stub: `delta_y = 0` collapses the `atn2` first argument to `0` and
+`ATN2_BREAKDOWN` evaluates `atn2 0 (positive)` to `π/2`. -/
+private theorem hex6t1_dihY_eq_pi (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hd0 : deltaY y1 y2 y3 y4 y5 y6 = 0)
+    (hd4 : deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+      (y6 * y6) < 0) :
+    dihY y1 y2 y3 y4 y5 y6 = Real.pi := by
+  have h0 : deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+      (y6 * y6) = 0 := hd0
+  have hneg : 0 < -(deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (y5 * y5) (y6 * y6)) := by linarith
+  show Real.pi / 2 + atn2 (Real.sqrt (4 * (y1 * y1)
+        * deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
+      (-(deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+        (y6 * y6))) = Real.pi
+  rw [h0, mul_zero, Real.sqrt_zero,
+    (ea1_atn2_breakdown 0 (-(deltaX4 (y1 * y1) (y2 * y2) (y3 * y3)
+        (y4 * y4) (y5 * y5) (y6 * y6)))).2.1 hneg, zero_div, Real.arctan_zero]
+  ring
+
 /-- HOL `EAR_SOL_NN`. -/
 theorem EAR_SOL_NN_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
     (hy1 : 2 ≤ y1 ∧ y1 ≤ 2 * h0) (hy2 : 2 ≤ y2 ∧ y2 ≤ 2 * h0)
     (hy3 : 2 ≤ y3 ∧ y3 ≤ 2 * h0) (hy4 : cstab ≤ y4 ∧ y4 ≤ 3.915)
     (hy5 : y5 = 2) (hy6 : y6 = 2) (hd : 0 ≤ deltaY y1 y2 y3 y4 y5 y6) :
     0 ≤ solY y1 y2 y3 y4 y5 y6 := by
-  sorry
+  have h834 : mainEstimate_8346775862 :=
+    h "8346775862" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_8346775862 at h834
+  have h482 : mainEstimate_4821120729 :=
+    h "4821120729" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_4821120729 at h482
+  rw [hy5, hy6] at hd ⊢
+  have h1l : (2 : ℝ) ≤ y1 := hy1.1
+  have h2l : (2 : ℝ) ≤ y2 := hy2.1
+  have h3l : (2 : ℝ) ≤ y3 := hy3.1
+  have h4l : (3.01 : ℝ) ≤ y4 := hy4.1
+  have h4u : y4 ≤ (3.915 : ℝ) := hy4.2
+  by_cases hd0 : deltaY y1 y2 y3 y4 2 2 = 0
+  · -- δ = 0 (HOL EAR_DIH1_DELTA_0 branch, OCBICBY.hl:2733-2745)
+    have hd4 : deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (2 * 2)
+        (2 * 2) < 0 := by
+      have hs := h834 y1 y2 y3 y4 2 2 h1l hy1.2 h2l hy2.2 h3l hy3.2 h4l h4u
+        (le_refl (2 : ℝ)) (le_refl (2 : ℝ)) (le_refl (2 : ℝ))
+        (le_refl (2 : ℝ))
+      rcases hs with h1 | h2
+      · exfalso; linarith
+      · exact h2
+    have hdih : dihY y1 y2 y3 y4 2 2 = Real.pi :=
+      hex6t1_dihY_eq_pi y1 y2 y3 y4 2 2 hd0 hd4
+    have hd2 : 0 ≤ dihY y2 y3 y1 2 2 y4 := by
+      refine DIH_Y_NN y2 y3 y1 2 2 y4 (by linarith) ?_
+      have e : deltaY y2 y3 y1 2 2 y4 = deltaY y1 y2 y3 y4 2 2 :=
+        (hex6t1_deltaY_cycle y1 y2 y3 y4 2 2).symm
+      rw [e]
+      exact le_of_eq hd0.symm
+    have hd3 : 0 ≤ dihY y3 y1 y2 2 y4 2 := by
+      refine DIH_Y_NN y3 y1 y2 2 y4 2 (by linarith) ?_
+      have e : deltaY y3 y1 y2 2 y4 2 = deltaY y1 y2 y3 y4 2 2 :=
+        (hex6t1_deltaY_cycle y2 y3 y1 2 2 y4).symm.trans
+          (hex6t1_deltaY_cycle y1 y2 y3 y4 2 2).symm
+      rw [e]
+      exact le_of_eq hd0.symm
+    show 0 ≤ dihY y1 y2 y3 y4 2 2 + dihY y2 y3 y1 2 2 y4
+      + dihY y3 y1 y2 2 y4 2 - Real.pi
+    rw [hdih]
+    linarith
+  · -- δ > 0 (HOL sol_x_nn branch, OCBICBY.hl:2746-2761)
+    have hdpos : 0 < deltaY y1 y2 y3 y4 2 2 :=
+      lt_of_le_of_ne hd (fun h => hd0 h.symm)
+    have e252 : (2 : ℝ) * h0 = 2.52 := by norm_num [h0]
+    have h1u52 : y1 ≤ (2.52 : ℝ) := by rw [← e252]; exact hy1.2
+    have h2u52 : y2 ≤ (2.52 : ℝ) := by rw [← e252]; exact hy2.2
+    have h3u52 : y3 ≤ (2.52 : ℝ) := by rw [← e252]; exact hy3.2
+    have heA : 0 < ea1_eulerAX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+        (2 * 2) (2 * 2) := by
+      have e20 : (2.0 : ℝ) = (2 : ℝ) := by norm_num
+      have h2l' : (2.0 : ℝ) ≤ y2 := by rw [e20]; exact h2l
+      have h3l' : (2.0 : ℝ) ≤ y3 := by rw [e20]; exact h3l
+      exact h482 y1 y2 y3 y4 2 2 h1l hy1.2 h2l' hy2.2 h3l' hy3.2 h4l h4u
+        (le_refl (2 : ℝ)) (le_refl (2 : ℝ)) (le_refl (2 : ℝ))
+        (le_refl (2 : ℝ))
+    have hu1 : 0 < upsX (y1 * y1) (y2 * y2) (2 * 2) := by
+      have hf : upsX (y1 * y1) (y2 * y2) (2 * 2)
+          = (2 - (y1 - y2)) * (2 + (y1 - y2)) * ((y1 + y2) - 2) * ((y1 + y2) + 2) := by
+        simp only [upsX]; ring
+      rw [hf]
+      have hdif : -0.52 ≤ y1 - y2 ∧ y1 - y2 ≤ 0.52 := ⟨by linarith, by linarith⟩
+      exact mul_pos (mul_pos (mul_pos (by linarith) (by linarith))
+        (by linarith)) (by linarith)
+    have hu2 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4) := by
+      have hf : upsX (y2 * y2) (y3 * y3) (y4 * y4)
+          = (y4 - (y2 - y3)) * (y4 + (y2 - y3)) * ((y2 + y3) - y4)
+            * ((y2 + y3) + y4) := by
+        simp only [upsX]; ring
+      rw [hf]
+      have hdif : -0.52 ≤ y2 - y3 ∧ y2 - y3 ≤ 0.52 := ⟨by linarith, by linarith⟩
+      exact mul_pos (mul_pos (mul_pos (by linarith) (by linarith))
+        (by linarith)) (by linarith)
+    have hu3 : 0 < upsX (y1 * y1) (y3 * y3) (2 * 2) := by
+      have hf : upsX (y1 * y1) (y3 * y3) (2 * 2)
+          = (2 - (y1 - y3)) * (2 + (y1 - y3)) * ((y1 + y3) - 2) * ((y1 + y3) + 2) := by
+        simp only [upsX]; ring
+      rw [hf]
+      have hdif : -0.52 ≤ y1 - y3 ∧ y1 - y3 ≤ 0.52 := ⟨by linarith, by linarith⟩
+      exact mul_pos (mul_pos (mul_pos (by linarith) (by linarith))
+        (by linarith)) (by linarith)
+    have key := ea4_sol_x_sol_euler_x (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (2 * 2) (2 * 2) (mul_pos (by linarith) (by linarith)) hu1 hu2 hu3 heA hdpos
+    have hsol : solY y1 y2 y3 y4 2 2 = solX (y1 * y1) (y2 * y2) (y3 * y3)
+        (y4 * y4) (2 * 2) (2 * 2) := rfl
+    rw [hsol, key]
+    have h2a : 0 < 2 * ea1_eulerAX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+        (2 * 2) (2 * 2) := by linarith
+    have hsd : 0 < Real.sqrt (deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+        (2 * 2) (2 * 2)) := Real.sqrt_pos.mpr hdpos
+    have hpos : 0 < atn2 (2 * ea1_eulerAX (y1 * y1) (y2 * y2) (y3 * y3)
+        (y4 * y4) (2 * 2) (2 * 2))
+        (Real.sqrt (deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (2 * 2)
+          (2 * 2))) := (ea1_atn2_pos _ _ h2a).mpr hsd
+    linarith
 
 /-- HOL `scs_6T1_props`. -/
 -- PROVED 2026-11-12 (lane `la22emptykit-w1`).
@@ -2788,6 +3103,38 @@ private theorem emptykit_delta_rev (y1 y2 y3 y4 y5 y6 : ℝ) :
   (emptykit_delta_swap12 y1 y2 y3 y4 y5 y6).trans
     ((emptykit_delta_swap23 y2 y1 y3 y5 y4 y6).trans
       (emptykit_delta_swap12 y2 y3 y1 y5 y6 y4))
+
+/-- HOL `empty_6T1` case-1 fourth ear, `200 ≤ delta_y` half
+(OCBICBY.hl:3078-3122 = OWZLKVY0's branch): registry `6762190381`
+transported across `taum_sym2`/`emptykit_delta_swap12`.  HOL's fourth
+`tau3(vv2,vv3,vv4)` is free from the REAL_ARITH alien-atom convention
+(realarith.ml:460-466).  BRIDGE GAP (lane verdict, hex6t1prep-w1
+DELIVERY.md §4): the box-only `ht4nn` the bridge consumes is numerically
+true (box min ≈ 1.07, logs/taum_min2.out) but has NO registry cover —
+the missing DB box is `∀ y1 y2 y3 y5 ∈ [2,2.52]²×[3.01,3.915],
+0 ≤ taum y1 y2 y3 2 y5 2` (one LP-verified inequality, covering
+`delta_y < 200` incl. the `delta_y < 0` corners).  Assembly: `by_cases`
+on `200 ≤ deltaY …`; this lemma closes the `≥ 200` half, the `< 200`
+half stays blocked pending that inequality. -/
+theorem ht4nn_ge200 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : 2 ≤ y1 ∧ y1 ≤ 2 * h0) (hy2 : 2 ≤ y2 ∧ y2 ≤ 2 * h0)
+    (hy3 : 2 ≤ y3 ∧ y3 ≤ 2 * h0) (hy4 : y4 = 2) (hy5 : 3.01 ≤ y5 ∧ y5 ≤ 3.915)
+    (hy6 : y6 = 2) (hd2 : 200 ≤ deltaY y1 y2 y3 y4 y5 y6) :
+    0 ≤ taum y1 y2 y3 y4 y5 y6 := by
+  have h676 : mainEstimate_6762190381 :=
+    h "6762190381" (by simp [mainNonlinearTerminalV11Ids_t11])
+  unfold mainEstimate_6762190381 at h676
+  rw [(taum_sym2 y1 y2 y3 y4 y5 y6).1, hy4, hy6]
+  -- goal: 0 ≤ taum y2 y1 y3 y5 2 2 (slot-4 diagonal shape)
+  have hd2' : (200 : ℝ) ≤ deltaY y2 y1 y3 y5 2 2 := by
+    rw [hy4, hy6] at hd2
+    rw [← emptykit_delta_swap12 y1 y2 y3 2 y5 2]
+    exact hd2
+  rcases h676 y2 y1 y3 y5 2 2 hy2.1 hy2.2 hy1.1 hy1.2 hy3.1 hy3.2
+    hy5.1 hy5.2 (le_refl (2 : ℝ)) (le_refl (2 : ℝ)) (le_refl (2 : ℝ))
+    (le_refl (2 : ℝ)) with h1 | h2
+  · exfalso; linarith
+  · linarith
 
 /-- HOL `empty_3T3` (terminal.hl:2598). DISCHARGED 2026-11-12 (lane
 `emptykit-3`): `taustar_taum` + registry `4010906068`; the registry instance
