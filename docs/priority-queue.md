@@ -148,7 +148,9 @@
 > ERRATA：未消费 `vasArcKit_2b_norm_ne`（异 norm 分裂），直接 `IMJXPHRv2_p28`）。
 > **V23 `131e6f3a`**（PWEIWBZ 第七笔 +49/−0：公共 **`PWEIWBZ_kit`**——陈述与 LA1 `PWEIWBZ_concl` 逐字节同形
 > （编排者 name-normalized diff = STMT_IDENTICAL）；三分法 dispatch 至 10 个已闭叶件。**PWEIWBZ master 收线**）。
-> **在飞 V24 `vasyyau-w24`**：`VASYYAU_concl` 收线 → 公共 `VASYYAU_kit`（LA1 四 master 最后一根）；
+> **V24 `46beba4f`**（VASYYAU 第八笔 +140/−0：公共 **`VASYYAU_kit`**——陈述与 LA1 `VASYYAU_concl` 逐字节同形；
+> `a=2` → PWEIWBZ+NUXCOEA 双件、`2<a` → SCS_A_2 分裂 + `vasArcKit_2b`；加 1 行 `import VasArcKit` 无环。**四 master 4/4**）。
+> **在飞 V25 `vasyyau-disch-w25`**：LocalConcl 四 discharge（`TUAPYYU/WKZZEEH/PWEIWBZ/VASYYAU_discharged`）接线到 `_kit`；
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
@@ -325,6 +327,14 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（08:54，续1107）**：**V24 `vasyyau-w24` 落库 `46beba4f`（VASYYAU 第八笔 +140/−0）——公共 `VASYYAU_kit` 收线，陈述与 LA1 `VASYYAU_concl` 逐字节同形；**LA1 四 master 4/4 全部真证**（闸族核心完成）；V25 `vasyyau-disch-w25` 发车（LocalConcl 四 discharge 接线）**。
+① **V24 交付**：公共 `VASYYAU_kit`（VasMasterKit:1703，+140/−0，含 **1 行 `import Kepler.Text.VasArcKit`**，无环：全树 0 文件 import VasMasterKit）。分支：`a(p,p+1)=2` → `PWEIWBZ_kit@p` 第一等式 + `NUXCOEAv2_p28@(l=p,j=p+1)` 第二等式（HOL :2469）；`2<a(p,p+1)` → `SCS_A_2_p27@(p+3)` + `Periodic2 s.a 4` 得 `2≤a(p+3)p`，`=2` 子支由 `PWEIWBZ_kit@p+3` + `NUXCOEAv2_p28@p+3` 一次给出两等式（HOL :2494-2558），`2<` 子支由 `A_NOT_EQ2_IMP_B@p+3 → PRO_ADD_NOT_IN_SCS_M@{p,p+3} → B_LE_2h0_2_SCS_M_4_pair_p25 → B_LE_2h0_IMP_B@{p+1,p+2} → YEBWJNG_kit@{p+1,p+2}` 出 `h12/h23` 后 **`vasArcKit_2b` 收线**（HOL :2594-2844）；`hnc/haff/hlunar` 统一复用 `pweiwbz_str_arc`，¬str 全走 `pweiwbz_str_uniq`+omega，零装债件消费。
+② **编排者闸（亲跑）**：worktree@`63fbaa99` apply RC=0；numstat 恰 **+140/−0**、删除面 0、禁项 0/0/0/0；import delta 恰 1 行 `+import Kepler.Text.VasArcKit`（cycle-check 0）；
+**陈述同形脚本核** = `STMT_IDENTICAL`；直编 **rc=0/error 0/sorry-decls=0**；装池；四 master kit（`VASYYAU_kit`/`PWEIWBZ_kit`/`WKZZEEH_kit`/`TUAPYYU_kit`）in-file + 主仓公共探针 **全标准三**；根面 md5 **`246e952c…` 逐字节同**。commit `46beba4f`，已 push。
+③ **口径**：二十四笔均非锥内（锥内 SORRIED 61 不变）；**LA1 四 master（`VASYYAU_concl`/`TUAPYYU_concl`/`WKZZEEH_concl`/`PWEIWBZ_concl`）= 4/4 真证 kit**。
+④ **V25 `vasyyau-disch-w25`（在飞）**：`LocalConcl.lean` 接线——加 `import Kepler.Text.VasMasterKit`，把 `TUAPYYU_discharged`/`WKZZEEH_discharged`/`PWEIWBZ_discharged`/`VASYYAU_discharged` 四个 `sorry` 体替换为对应 `_kit` 调用（删除面恰 4 sorry）；验证：LocalConcl 直编 rc=0/err0、四件探针标准三、根面 md5 不变、无环。
+⑤ 下一条：续1108。
 
 - **2026-11-14（08:25，续1106）**：**V23 `pweiwbz-w23` 落库 `131e6f3a`（PWEIWBZ 第七笔 +49/−0）——公共 `PWEIWBZ_kit` 组装完成，陈述与 LA1 `PWEIWBZ_concl` 逐字节同形；LA1 四 master 3/4（余 `VASYYAU_concl`，V24 发车）**。
 ① **V23 交付**：公共 `PWEIWBZ_kit`（VasMasterKit:1645，+49/−0、零 import 变化）——三分法 dispatch：双非 str → `YEBWJNG_kit@p`；`str p` → `pweiwbz_str_uniq`+omega sift 出 ¬str(p+1)/¬str(p+3)，再 norm/a30 分裂 → `pweiwbz_B_a30eq2/_B_a30ne2/_B_norm_ne`；`str(p+1)` → `norm≠2 → C_norm_ne`、`norm=2 → a30=2 → C1`、`a30≠2 → a12=2/≠2 → C_a12/_C_a12ne2`；`str p ∧ str(p+1)` 矛盾已并入 by_cases 结构。
