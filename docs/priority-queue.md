@@ -158,7 +158,9 @@
 > **`NWDGKXH_p32` 真证（终极三目标 1/3）**；LA32 sorry 41→37）。
 > **K7 收线 `6174e197`**（+270/−19：`MIN_NOT_STAND_4M7` + BB/MM_4M7 四孪生 + `SCS_4M7_ARROW_STAB_4M7_4M6` +
 > **`YOBIMPP_p32` 真证（终极三目标 2/3）**；LA32 sorry 37→30）。
-> **在飞 k8slice-w1**（K8 底部 IS_SCS/STAB/SLICE 机械件）；**仅余 `MIQMCSN_p32` 一条目标**。
+> **K8 底部 `eaa72287`**（+545/−32，12 件：IS_SCS 三 + STAB/SLICE 四 + 4M8 slice/arrow 五；LA32 sorry 30→18）。
+> **在飞 K8 双车道**：`k8-body-w1`（dichotomy 10 件）+ `k8-arrow-w1`（3T7 链 6 件 + `MM_4M7_IMP_STAB` :964 回填）；
+> **仅余 `MIQMCSN_p32` 一条目标**（18 条 sorry 全在 K8 链）。
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
 > 两车道同改 LA32 但行段分离（373-700 vs 993+），import 插入点不同；先到先落。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
@@ -336,6 +338,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（10:55，续1117）**：**K8 底部 `eaa72287`（+545/−32，12 件）——LA32 sorry 30→18；K8 双车道发车（k8-body-w1 dichotomy 10 件 / k8-arrow-w1 3T7 链 6 件+回填）**。
+① **k8slice-w1 交付**（12/12 标准三）：IS_SCS 三件（`SCS_4M8_02/13_IS_SCS`、`SCS_3T7_IS_SCS`——`la32isScs_mkFunlist` 骨架 + 16/16/9 格扫描）、STAB/SLICE 四件（`STAB_4M8_02/13_SCS` = `STAB_SCS_p33`+`a_diag` 4 类扫描；`SCS_4M8_02_SLICE_02`/`13_SLICE_13` = `LKGRQUI_p27` @ (0,2)/(1,3)，两半折叠 `pe (opp scs3T7) 2`/`pe scs3T7 1`）、4M8 slice/arrow 五件（`STAB_4M8_02_ARROW_4M8_13` = `YXIONXL2_p33∘YXIONXL3`+`PROP_OPP_DIAG` 改写；`SCS_4M8_SLICE_13` + 三条 `FZIOTEF_TRANS/UNION` 链件）；新增私有引理 16 条。
+② **编排者闸（亲跑）**：worktree@`4f4703aa` apply RC=0（K7 净增行 offset +251，无重叠）；numstat **+545/−32**、删除面恰 **12** sorry、禁项 0、import 零变化；直编 rc=0/err0/sorry-decls **30→18**；12 件 + 21 消费件 **33/33 标准三**；根面 md5 **`246e952c…` 逐字节同**。commit `eaa72287`，已 push。
+③ **口径**：LA32 余 **18** 条 sorry，全部在 K8 链：`MM_4M7_IMP_STAB_4M7`（:964 回填）、`MM_4M8_IMP_STAB_4M8`（:1505）、`BB/MM_4M8_IMP_4M6_{23,01}`×4（:2602-2635）、`MIN_NOT_STAND_4M8`（:2716）、`BB/MM_4M8_IMP_scs_4M8_{02,13}`×4（:2727-2765）、`SCS_4M8_ARROW_STEP_ONE`（:2769）、3T7 链 5（:3090-3165）、`MIQMCSN_p32`（:3172）。
+④ **K8 双车道（在飞）**：`k8-body-w1` = dichotomy 区 10 件（`MIN_NOT_STAND_4M8` 模板 = 已落 4M7 版；`BB/MM_4M8_IMP_4M6_{23,01}`；`BB/MM_4M8_IMP_scs_4M8_{02,13}`；`MM_4M8_IMP_STAB_4M8`）；`k8-arrow-w1` = 3T7 链 6 件（`SCS_3T7_OPP_IS_SCS` → `SCS_4M8_13_ARROW_3T7{,_OPP}` → `SCS_4M8_02_ARROW_4M8_13` → `SCS_4M8_02_ARROW_3T7`）+ `MM_4M7_IMP_STAB_4M7` :964 回填。两车道行段分离（:1505/:2590-2770 vs :964/:3080-3170）。
+⑤ 下一条：续1118。
 
 - **2026-11-14（10:35，续1114）**：**K7 收线 `6174e197`（+270/−19）——`YOBIMPP_p32` 真证（终极三目标 2/3）；LA32 sorry 37→30；仅余 K8 `MIQMCSN` 一条目标**。
 ① **K7 交付**（k7-finish-w1，7/7）：`MIN_NOT_STAND_4M7_p32`（`scs_is_str` 0/1/2 三级分裂：`VASYYAU_kit@0/1/2`（@2 取 (p+3) 槽 + `v 5 = v 1`）+ 双非 `TUAPYYU_kit@1/@0` + `WKZZEEH_kit@1` 判死双 b 支）、`BB_4M7_IMP_4M6_12`/`MM_4M7_IMP_MM_4M6_12`（16 格残类扫描 + pin `dist(v1,v2)=2h0` + `XWNHLMD_MM_p33`）、`BB_4M7_IMP_4M6_01`/`MM_4M7_IMP_MM_4M6_01`（反射表 `pe (opp 4M6′) 1`：a 被 4M7 支配、b 仅 `{0,1}` 槽差）、`SCS_4M7_ARROW_STAB_4M7_4M6`（arrow 展开 + MIN_NOT_STAND 二分 + stab 支私有孪生 `la32MM_4M7_IMP_STAB`）、**`YOBIMPP_p32`**（`FZIOTEF_TRANS`(#6→中间集) + 两层 `FZIOTEF_UNION`：`FZIOTEF_REFL`/`YXIONXL3_p33`+`PRO_EQU_ID1_p33`+`YXIONXL2_p33`+`SCS_OPP_REFL_fb`/`STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32`）。
