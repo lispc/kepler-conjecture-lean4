@@ -97,7 +97,12 @@
 ---
 
 
-## 1. 在飞（2026-11-15：2 条 —— `nli-triage-w1` + `tmparams-w1`）
+## 1. 在飞（2026-11-15：1 条 —— `tmparams-w1`；`nli-triage-w1` 已收线 `a09ad494`）
+
+> **2026-11-15 07:08 收线（`a09ad494`）**：`nli-triage-w1` 落库——`nliPackIneqDefA` 纯接线真闭合
+> （Assembly +14/−2；6/6 探针标准三；Assembly 岛编 rc=0/0 err；根面 md5 `246e952c…` 同）；
+> 锥内 nli* **54→53**（SORRIED 55→54，基线 AN 待仪器）。审计：0 假陈述/0 空盒；3 条锥外影子
+> `*Ids` VACUOUS；rad2 便宜路线已用尽，下一个最便宜 = `nliRestQITNPEA4003532128a`。
 
 > **2026-11-15 双车道发车（用户令「都发」）**：`nli-triage-w1`（55 债分诊 + 资产盘点 + 便宜路线）
 > + `tmparams-w1`（外部精确复刻直产 `TMParams`，目标把 333 s/叶镜像打掉）。两条均零农场/低算力，
@@ -870,6 +875,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（07:08，续1152）**：**`nli-triage-w1` 落库 `a09ad494`——`nliPackIneqDefA` 纯接线真闭合（锥内 nli* 54→53）；审计 0 假陈述 / 3 条锥外影子 VACUOUS；基线 AN 待跑**。
+① 交付：`Assembly.lean` +14/−2（1 import `PackingAuto22PackIneqA` + 1 body；陈述逐字未动、零新增公理）。三合取项组件全在库真证：UKBRPFE（`nliRest6096597438b/a`）、WAZLDCD（`packIneqAWAZLDCD`）、BIEFJHU（`nliRest1965189142a/x34`）。
+② 闸（亲跑 @`320e4cbf`）：apply-check PASS；Assembly 岛编 **rc=0/0 err**（60 个 `:= sorry`，闭件 warning 消失）；6/6 探针 = `[propext, Classical.choice, Quot.sound]`；根面 589 行 md5 **`246e952c…`** 逐字节同（585 native + sorryAx）。
+③ 分诊：54+1 全对账（61 正则 / 59 显式 / 60 sorry 体 / 55 锥内 / 54 nli* 口径闭合）；路线 **WIRE 1（已闭）+ MATH 5 + MATH-FARM 13 + FARM-CERT 1 + FARM 34 + LP 1**。**rad2 望远镜路线已用尽**（39 rest 债带 rad2 支的 min rad2 1.674–1.944 < 2）；下一个最便宜 = `nliRestQITNPEA4003532128a`（纯代数 3 变量，余量 0.819）。
+④ 审计（`AUDIT.md`）：**0 假陈述 / 0 空盒**；3 条锥外影子 `*Ids` 为 VACUOUS（`nliOx3q1hIds` 230/230、`nliPackIneqDefAIds` 5/5、`nliMainNonlinearTerminalV11Ids` 100/109），**必须从接线主波工单剔除**；`nliLpIneqsIds` 127/127 与 `nliKcblrqcIneqDefIds` 28/28 是真债。SUSPECT-1：`get_main_nonlinear` 109 vs 108 需对表；SUSPECT-2：ZTGIJCF4 `betaBumpLb=-0.005`（数值仍真、建议 SF 记档）。
+⑤ 下一条：续1153。`tmparams-w1` 仍在飞（外部复刻直产 TMParams）。
 - **2026-11-15（06:36，续1151）**：**双车道发车（用户令「都发」）——`nli-triage-w1`（55 债分诊/资产盘点/便宜路线）+ `tmparams-w1`（外部复刻直产 `TMParams`）**。
 ① **`nli-triage-w1`**：把 54 `nli*` + hLP 对账成 `NLI_MAP.md`（声明/bank/HOL 行/盒形/已有资产/叶数/路线 `WIRE|MATH|SMALL-CERT|FARM|LP`）；资产盘点（`NliBanks*` 已证组件、`Interval/Cases` 已生成证书、`Gamma4*` 单调性套件）；陈述审计（空盒/退化盒/析取恒真/`else True`，ht4nn 先例）；至少尝试闭环 1 条（先例：`nliTskRIBCYXUsharp` 单调性、`nliTskdx4` 区间算术、`nliTskGXSA`/`TADIAMB` 用 `NliBanks`）。零农场、只读为主。
 ② **`tmparams-w1`**：把 `nli-precision-w1` 的逐位同构复刻（`b/tm.py`，两叶差 ≤3.5e−15）扩成 `tools/emit_params.py`，直接产出 `TMParams.sqrtCerts`（triples 遍历序）；用叶 0/657 回归 + 另选 1–2 叶内核 `decide` 验收（≤6 次）；目标每叶 **333+26 s → 26 s**（6,512 叶 650→47 CPU·h；10⁶ 叶 10⁵→7×10³ CPU·h）。
