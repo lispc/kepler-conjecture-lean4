@@ -17,18 +17,19 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AI @`f5f96b8b`（2026-11-13，四车道批次：6I1 / LA33 / LA18 / OCBICBY-kit）**
-> cone `K_REACH 2,098,014` / **SORRIED 62** / **`K_AXIOM 585`** / MODULES 5,241 /
-> UNIVERSE 2,110,736 / COVERAGE **99.3973%**；口径 II 36,314 / 62 / 585 / 47,479。
-> `docs/e2e-reachability-map.tsv` 已按基线 AI 重写（5,907 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AJ @`4750bc3f`（2026-11-14，VASYYAU 闸族收线：四 master 4/4 + 三目标 3/3）**
+> cone `K_REACH 2,099,226` / **SORRIED 58** / **`K_AXIOM 585`** / MODULES 5,246 /
+> UNIVERSE 2,111,615 / COVERAGE **99.4133%**；口径 II 37,526 / 58 / 585 / 48,358。
+> `docs/e2e-reachability-map.tsv` 已按基线 AJ 重写（5,908 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 62 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 7（`--- SORRIED ---` 段实测）。
-> 较基线 AH：SORRIED 65→62（清单 diff：closed 恰
-> `{SCS_4I1_IMP_SCS_4I2_p33, SCS_4I2_IMP_SCS_4T1_p33, SCS_6I1_BERAK_BY_CSTAB}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +268、UNIVERSE +51、MODULES 0。
-> 同批非锥内资产：`23c16896` LA18 三件（azim_dih_y/planar_deform_dist/ARCV_ADD_AFF_GE）、
-> `f5f96b8b` LA22 `empty_4T4`/`empty_4T5`（OCBICBY 14 前提 10 已证）。
+> （与基线 AI/AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 58 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 3（`--- SORRIED ---` 段实测：
+> `LFLACKU_p23` / `OCBICBY_p22` / `fully_surrounded_perimeter_bound`）。
+> 较基线 AI：SORRIED 62→58（清单 diff：closed 恰
+> `{SCS_5M2_IMP_SCS_5T1_p29, NWDGKXH_p32, YOBIMPP_p32, MIQMCSN_p32}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +1,212、UNIVERSE +879、MODULES +5。
+> 同批非锥内资产：LA1 四 master kit 4/4（陈述逐字节同形）、`LocalAuto23Vas` 簇 14/14 零 sorry、
+> LocalConcl 四 discharge 转标准三、`LocalAuto32` sorry 60→0（K6/K7/K8 ladder 33 笔过闸）。
 > 中间档：`04ab3cac` DAG 切面四刀（cone-neutral 解锁件）、`3cb72c17` TM 18 文件（300 叶证书）；
 > 各节见 map。
 >
@@ -341,6 +342,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（11:55，续1121）**：**地图仪器落地——基线 AJ：SORRIED 62→58（Text 7→3）、K_REACH 2,099,226、K_AXIOM 585 不变；closed 恰 4 件（含我们三目标）、added ∅（零装债）；文档六件 + TSV 已刷，manifest PASS**。
+① **实测（`reachmap_4750bc3f.out`，仪器原样换装）**：`K_REACH 2,099,226`（+1,212）/ **SORRIED 58** / `K_AXIOM 585`（0/0）/ MODULES 5,246（+5）/ `K_UNIVERSE 2,111,615`（+879）/ COVERAGE **99.4133%**；口径 II 37,526 / 58 / 585 / 48,358。TSV **5,908 行**（+1）。
+② **SORRIED 清单 diff（vs 基线 AI）**：closed = `{SCS_5M2_IMP_SCS_5T1_p29, NWDGKXH_p32, YOBIMPP_p32, MIQMCSN_p32}`、**added = ∅**（零装债）；余 **58** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 3**（`LFLACKU_p23` / `OCBICBY_p22` / `fully_surrounded_perimeter_bound`）。
+③ **文档六件（已刷）**：`docs/e2e-reachability-map.md` 新增「基线 AJ」节（逐指标 Δ + 清单 diff + 判读）；`docs/e2e-reachability-map.tsv` 换装；账本头（§0 指标 + 构成 + diff）；`AGENTS.md` §1（58 = 54+1+3）；`README.md` / `README.zh.md` 状态节（58）；`docs/hf-proof-map.md` 状态更新第 20 条。manifest `--check` **PASS**；根面 589 逐字节同（md5 `246e952c…`）。
+④ **判读**：Text 7→3，三条 p32 链证明体入锥；K_UNIVERSE +879 与 reach +1,212 的差 = 私有 kit 不可达。VASYYAU 闸族战役（33 笔）全部兑现为锥内真还债。
+⑤ 下一条：续1122。
 
 - **2026-11-14（11:50，续1120）**：**🎯 战役收线——终局车道 `miqmcsn-w1` 落库 `4750bc3f`（+112/−8）：`MIQMCSN_p32` 真证，终极三目标 3/3 全收；`LocalAuto32.lean` sorry 2→0（零 sorry）；VASYYAU 闸族「四 master + 三目标」全部真证**。
 ① **两件真证**：`SCS_4M8_ARROW_STEP_ONE_p32`（arrow 两面：is_scs 五叶 = `SCS_4M6_IS_SCS`/`OPP_IS_SCS_p33`/`SCS_4M8_02_IS_SCS`/`SCS_4M8_13_IS_SCS`/`STAB_4M8_SCS`；MMs 二分 = `MIN_NOT_STAND_4M8` 三合取 → `MM_4M8_IMP_MM_4M6_23`/`_4M6_01`/（`quad_diag_362_p16` 在 `(v1,v2,v3,v0)` 取 `dist(v1,v3)≤3.62 ∨ dist(v2,v0)≤3.62` 两分支）→ `MM_4M8_IMP_MM_4M8_13`/`_02`，非严格叶 → `MM_4M8_IMP_STAB_4M8`）+ **`MIQMCSN_p32`**（`FZIOTEF_TRANS` 过 STEP_ONE 中间集五片入 `{4M6',3T7,3T4}`：`FZIOTEF_REFL`/`YXIONXL2`+`SCS_OPP_REFL_fb`/`SCS_4M8_{02,13}_ARROW_3T7`/`SET_STAB_4M8_ARROW_3T4`，`FZIOTEF_BOTH_p33`+`SING_PAD_p33` 归并）。

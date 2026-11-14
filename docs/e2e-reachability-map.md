@@ -797,6 +797,34 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AJ：VASYYAU 闸族收线（四 master 4/4 + 三目标 3/3）@ `4750bc3f`（2026-11-14）
+
+> 触发：VASYYAU 闸族战役（V1–V25 + K6/K7/K8 ladder 共 33 笔落库，编排者 = ZCode 主会话；详见 pq 续1120）。
+> 锥内清偿三件：`NWDGKXH_p32`（`ecb95f82`，K6 收线）、`YOBIMPP_p32`（`6174e197`，K7 收线）、
+> `MIQMCSN_p32`（`4750bc3f`，K8 终局）。同批非锥内资产：LA1 四 master kit 4/4（陈述逐字节同形）、
+> `LocalAuto23Vas` 簇 14/14 零 sorry、LocalConcl 四 discharge 转标准三、`LocalAuto32` sorry 60→0。
+> kimi code 侧 `SCS_5M2_IMP_SCS_5T1_p29` 已证（5M2 批次）亦在本基线内。
+> 仪器原样换装（**5,908 行**，+1）；manifest `--check` PASS。
+
+| 指标 | 基线 AJ | 基线 AI | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,099,226** | 2,098,014 | +1,212 |
+| SORRIED | **58** | 62 | **−4** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,246 | 5,241 | +5 |
+| K_UNIVERSE | 2,111,615 | 2,110,736 | +879 |
+| COVERAGE | 99.4133% | 99.3973% | +0.0160pp |
+| 口径 II（ex-Cases） | K_REACH **37,526** / SORRIED **58** / AXIOM **585** / UNIVERSE **48,358** | 36,314 / 62 / 585 / 47,479 | +1,212 / −4 / 0 / +879 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.SCS_5M2_IMP_SCS_5T1_p29`, `Kepler.Text.NWDGKXH_p32`,
+`Kepler.Text.YOBIMPP_p32`, `Kepler.Text.MIQMCSN_p32`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：Text 7→3。三条 p32 链的证明体入锥（K6 4M6 ladder + K7 4M7 ladder + K8 4M8 ladder），
+K_UNIVERSE +879 与 reach +1,212 的差额 = 私有 kit（不可达）。**零装债**：closed 之外 added = ∅。
+剩余 **58** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 3**
+（`LFLACKU_p23` / `OCBICBY_p22` / `fully_surrounded_perimeter_bound`）。
+
 ### 基线 AI：四车道批次（6I1 / LA33 / LA18 / OCBICBY-kit）@ `f5f96b8b`（2026-11-13）
 
 > 触发：`a7e699d1`（sc6i1close-w1：LocalConcl 三件，+102/−11）+ `24725045`（la33keys-w1：
