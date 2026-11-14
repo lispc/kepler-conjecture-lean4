@@ -58,6 +58,7 @@ import Kepler.Text.LocalConcl
 import Kepler.Text.PackingConcl
 import Kepler.Text.PackIneqBiefjhuClose
 import Kepler.Text.TameLp
+import Kepler.Text.TameLpPerimeter
 import Kepler.Assembly.GoodListDefs
 import Kepler.Assembly.GoodListAll
 -- T1 自上而下第一波（2026-10-08）：六 ID 清单数据（P6-E 生成件，零依赖）+
@@ -2454,7 +2455,7 @@ private theorem b3_tamePlanarHypermap {α : Type*} [DecidableEq α] {H : Hyperma
 theorem mqmsmabWired (V : Set V3) (hkcblrqc : TameLp.KcblrqcIneqDef)
     (hmain : lp_main_estimate) (hfan : FAN 0 V (ESTD V)) (hc : Contravening V) :
     TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) := by
-  have htl := TameLp.MQMSMAB V hc hfan hmain hkcblrqc
+  have htl := TameLp.MQMSMAB' V hc hfan hmain hkcblrqc
   obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩ := htl
   have htc : TameLp.TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) :=
     ⟨b4_tame1 V (ESTD V) hfan h1, b4_tame2 V (ESTD V) hfan h2,
