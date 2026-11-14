@@ -3347,3 +3347,837 @@ theorem terminal_hex_135_reduction_p19 (h : mainNonlinearTerminalV11_p18)
     (fun _ _ _ _ _ _ _ => by simpa using h3c c1 c2 c3 c4 c5 c6 c7 c8)
     (fun _ _ _ _ _ _ _ => by simpa using h4c c1 c2 c3 c4 c5 c6 c7 c8)
   refine Or.imp_left (by simp) (h c2 c1 c3 c5 c4 c6 c9)
+
+/-! ## Hex tower top (`terminal_hex_taum`, HOL pent_hex.hl:3180) -/
+
+/-- D-slot bridge (234 family): the `t11` registry selector agrees with the
+`p19` selector definitionally (composite twins reduce identically). -/
+theorem r755D234_t11_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755D234_t11 i y1 y2 y3 y4 y5 y6 = r755D234_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755D234_t11, r755D234_p19, yOfX] <;> rfl
+
+/-- D-slot bridge (126 family). -/
+theorem r755D126_t11_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755D126_t11 i y1 y2 y3 y4 y5 y6 = r755D126_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755D126_t11, r755D126_p19, yOfX] <;> rfl
+
+/-- D-slot bridge (135 family). -/
+theorem r755D135_t11_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755D135_t11 i y1 y2 y3 y4 y5 y6 = r755D135_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755D135_t11, r755D135_p19, yOfX] <;> rfl
+
+/-- C-slot bridge (234 family): the `4 = 2 * 2` numeral identification
+(the 234-face delta already sits in slots 2 3 4). -/
+theorem r755C234_t11_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755C234_t11 i y1 y2 y3 y4 y5 y6 = r755C234_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755C234_t11, r755C234_p19, yOfX, delta234x_t11]
+  · have e0 : deltaX (4 : ℝ) (y2 * y2) (y3 * y3) (y4 * y4) 4 4
+        = deltaY 2 y2 y3 y4 2 2 := by
+      rw [deltaY]; norm_num
+    have e1 : deltaX (2.52 ^ 2 : ℝ) (y2 * y2) (y3 * y3) (y4 * y4) 4 4
+        = deltaY 2.52 y2 y3 y4 2 2 := by
+      rw [deltaY, pow_two]; norm_num
+    rw [e0, e1]
+  · have e0 : deltaX (4 : ℝ) (y2 * y2) (y3 * y3) (y4 * y4) 4 4
+        = deltaY 2 y2 y3 y4 2 2 := by
+      rw [deltaY]; norm_num
+    rw [e0]
+  · have e0 : deltaX (4 : ℝ) (y2 * y2) (y3 * y3) (y4 * y4) 4 4
+        = deltaY 2 y2 y3 y4 2 2 := by
+      rw [deltaY]; norm_num
+    rw [e0]
+  · have e0 : deltaX (4 : ℝ) (y2 * y2) (y3 * y3) (y4 * y4) 4 4
+        = deltaY 2 y2 y3 y4 2 2 := by
+      rw [deltaY]; norm_num
+    rw [e0]
+  · have e0 : deltaX (4 : ℝ) (y2 * y2) (y3 * y3) (y4 * y4) 4 4
+        = deltaY 2 y2 y3 y4 2 2 := by
+      rw [deltaY]; norm_num
+    rw [e0]
+
+/-- C-slot bridge (126 family): Cayley permutation plus numerals. -/
+theorem r755C126_t11_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755C126_t11 i y1 y2 y3 y4 y5 y6 = r755C126_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755C126_t11, r755C126_p19, yOfX, delta126x_t11]
+  · have e0 : deltaX (y1 * y1) (y2 * y2) (4 : ℝ) 4 4 (y6 * y6)
+        = deltaY 2 y1 y2 y6 2 2 := by
+      rw [deltaY, deltaX_perm_p19]; norm_num
+    have e1 : deltaX (y1 * y1) (y2 * y2) (2.52 ^ 2 : ℝ) 4 4 (y6 * y6)
+        = deltaY 2.52 y1 y2 y6 2 2 := by
+      rw [deltaY, deltaX_perm_p19, pow_two]; norm_num
+    rw [e0, e1]
+  · have e0 : deltaX (y1 * y1) (y2 * y2) (4 : ℝ) 4 4 (y6 * y6)
+        = deltaY 2 y1 y2 y6 2 2 := by
+      rw [deltaY, deltaX_perm_p19]; norm_num
+    rw [e0]
+  · have e0 : deltaX (y1 * y1) (y2 * y2) (4 : ℝ) 4 4 (y6 * y6)
+        = deltaY 2 y1 y2 y6 2 2 := by
+      rw [deltaY, deltaX_perm_p19]; norm_num
+    rw [e0]
+  · have e0 : deltaX (y1 * y1) (y2 * y2) (4 : ℝ) 4 4 (y6 * y6)
+        = deltaY 2 y1 y2 y6 2 2 := by
+      rw [deltaY, deltaX_perm_p19]; norm_num
+    rw [e0]
+  · have e0 : deltaX (y1 * y1) (y2 * y2) (4 : ℝ) 4 4 (y6 * y6)
+        = deltaY 2 y1 y2 y6 2 2 := by
+      rw [deltaY, deltaX_perm_p19]; norm_num
+    rw [e0]
+
+/-- C-slot bridge (135 family): Cayley vertex swap plus numerals. -/
+theorem r755C135_t11_p19 (i : ℕ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    r755C135_t11 i y1 y2 y3 y4 y5 y6 = r755C135_p19 i y1 y2 y3 y4 y5 y6 := by
+  rcases i with _ | _ | _ | _ | _ | n <;>
+    simp only [r755C135_t11, r755C135_p19, yOfX, delta135x_t11]
+  · have e0 : deltaX (y1 * y1) (4 : ℝ) (y3 * y3) 4 (y5 * y5) 4
+        = deltaY 2 y1 y3 y5 2 2 := by
+      rw [deltaY, deltaX_vert12_p19]; norm_num
+    have e1 : deltaX (y1 * y1) (2.52 ^ 2 : ℝ) (y3 * y3) 4 (y5 * y5) 4
+        = deltaY 2.52 y1 y3 y5 2 2 := by
+      rw [deltaY, deltaX_vert12_p19, pow_two]; norm_num
+    rw [e0, e1]
+  · have e0 : deltaX (y1 * y1) (4 : ℝ) (y3 * y3) 4 (y5 * y5) 4
+        = deltaY 2 y1 y3 y5 2 2 := by
+      rw [deltaY, deltaX_vert12_p19]; norm_num
+    rw [e0]
+  · have e0 : deltaX (y1 * y1) (4 : ℝ) (y3 * y3) 4 (y5 * y5) 4
+        = deltaY 2 y1 y3 y5 2 2 := by
+      rw [deltaY, deltaX_vert12_p19]; norm_num
+    rw [e0]
+  · have e0 : deltaX (y1 * y1) (4 : ℝ) (y3 * y3) 4 (y5 * y5) 4
+        = deltaY 2 y1 y3 y5 2 2 := by
+      rw [deltaY, deltaX_vert12_p19]; norm_num
+    rw [e0]
+  · have e0 : deltaX (y1 * y1) (4 : ℝ) (y3 * y3) 4 (y5 * y5) 4
+        = deltaY 2 y1 y3 y5 2 2 := by
+      rw [deltaY, deltaX_vert12_p19]; norm_num
+    rw [e0]
+
+/-- Bridge: a registry `r755Ineq_t11` entry (raw `template_hex`, no f1/f2
+wrapper) gives the `r755Body_p19` shell at f1 = f2 = 0 with the s-flags
+spelled as the template's if-then-else. -/
+theorem r755_bridge_t11_p19 {i j k : ℕ} (hreg : r755Ineq_t11 i j k) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j k 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) (if i = j then y6 < y4 else False)
+          (if j = k then y5 < y6 else False) y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  have h := hreg y1 y2 y3 y4 y5 y6 c1.1 c1.2 c2.1 c2.2 c3.1 c3.2 c4.1 c4.2 c5.1 c5.2 c6.1 c6.2
+  rw [r755Body_t11] at h
+  rw [r755Body_p19]
+  rcases h with hP | he | h234 | h126 | h135 | hs45 | hs56
+  · rw [r755D234_t11_p19, r755D126_t11_p19, r755D135_t11_p19] at hP
+    simp only [zero_add, add_zero] at hP ⊢
+    exact Or.inl hP
+  · exact Or.inr (Or.inl he)
+  · rw [r755C234_t11_p19] at h234
+    exact Or.inr (Or.inr (Or.inl h234))
+  · rw [r755C126_t11_p19] at h126
+    exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+  · rw [r755C135_t11_p19] at h135
+    exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hs45)))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hs56))))))
+
+/-- If-resolution wrapper, clean case (i ≠ j and j ≠ k): both side disjuncts
+are vacuous. -/
+theorem r755_res_clean_p19 {i j k : ℕ} (hij : i ≠ j) (hjk : j ≠ k)
+    (hreg : r755Ineq_t11 i j k) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j k 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) False False y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6
+  have h := r755_bridge_t11_p19 hreg y1 y2 y3 y4 y5 y6
+  have e1 : ¬(i : ℕ) = j := fun e => hij e
+  have e2 : ¬(j : ℕ) = k := fun e => hjk e
+  simp only [e1, e2, if_false] at h
+  exact h
+
+/-- If-resolution wrapper, s45 case (i ≠ k): keeps the `y6 < y4` disjunct. -/
+theorem r755_res_s45_p19 {i k : ℕ} (hik : i ≠ k)
+    (hreg : r755Ineq_t11 i i k) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i i k 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) (y6 < y4) False y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6
+  have h := r755_bridge_t11_p19 hreg y1 y2 y3 y4 y5 y6
+  have e2 : ¬(i : ℕ) = k := fun e => hik e
+  simp only [if_true, e2, if_false] at h
+  exact h
+
+/-- If-resolution wrapper, s56 case (i ≠ j): keeps the `y5 < y6` disjunct. -/
+theorem r755_res_s56_p19 {i j : ℕ} (hij : i ≠ j)
+    (hreg : r755Ineq_t11 i j j) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j j 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) False (y5 < y6) y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6
+  have h := r755_bridge_t11_p19 hreg y1 y2 y3 y4 y5 y6
+  have e1 : ¬(i : ℕ) = j := fun e => hij e
+  simp only [e1, if_false, if_true] at h
+  exact h
+
+/-- If-resolution wrapper, (i,i,i): both side disjuncts kept. -/
+theorem r755_res_both_p19 {i : ℕ} (hreg : r755Ineq_t11 i i i) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i i i 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) (y6 < y4) (y5 < y6) y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6
+  have h := r755_bridge_t11_p19 hreg y1 y2 y3 y4 y5 y6
+  simp only [if_true] at h
+  exact h
+
+/-- Body-level `ikj` transfer (HOL `r755_ikj`): the source entry at the
+`(y1,y3,y2,y4,y6,y5)` frame transports to the target frame. -/
+theorem r755_body_ikj_p19 {i j k : ℕ} {f1 f2 : ℝ} {b1 s45 s56 : Prop}
+    (hsrc : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i k j f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) s45 s56 y1 y2 y3 y4 y5 y6)) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j k f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) s45 s56 y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  have h := hsrc y1 y3 y2 y4 y6 y5 c1 c3 c2 c4 c6 c5
+  rw [r755Body_p19] at h ⊢
+  rw [taum_sym_ikj_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.2,
+    r755D234_shuffle_ikj_p19 i y1 y2 y3 y4 y5 y6,
+    r755D126_shuffle_ikj_p19 k y1 y2 y3 y4 y5 y6,
+    r755D135_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6,
+    r755C234_shuffle_ikj_p19 i y1 y2 y3 y4 y5 y6,
+    r755C126_shuffle_ikj_p19 k y1 y2 y3 y4 y5 y6,
+    r755C135_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6] at h
+  rcases h with hP | he | h234 | h126 | h135 | hs45 | hs56 | hb2
+  · exact Or.inl (by linarith)
+  · exact Or.inr (Or.inl he)
+  · exact Or.inr (Or.inr (Or.inl h234))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h126))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inl h135)))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hs45)))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hs56))))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+
+/-- Body-level `jik` transfer (HOL `r755_jik`): the source entry at the
+`(y3,y2,y1,y6,y5,y4)` frame (the aab simplex swap) transports to the target
+frame.  The 234/126 C-slots cross: source disjunct 3 lands in slot 4 and
+vice versa. -/
+theorem r755_body_jik_p19 {i j k : ℕ} {f1 f2 : ℝ} {b1 s45 s56 : Prop}
+    (hsrc : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 j i k f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) s45 s56 y1 y2 y3 y4 y5 y6)) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j k f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) s45 s56 y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  have h := hsrc y3 y2 y1 y6 y5 y4 c3 c2 c1 c6 c5 c4
+  rw [r755Body_p19] at h ⊢
+  rw [taum_sym_jik_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.1,
+    r755D234_shuffle_jik_p19 j y1 y2 y3 y4 y5 y6,
+    r755D126_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+    r755D135_shuffle_jik_p19 k y1 y2 y3 y4 y5 y6,
+    r755C234_shuffle_jik_p19 j y1 y2 y3 y4 y5 y6,
+    r755C126_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+    r755C135_shuffle_jik_p19 k y1 y2 y3 y4 y5 y6] at h
+  rcases h with hP | he | h3 | h4 | h135 | hs45 | hs56 | hb2
+  · exact Or.inl (by linarith)
+  · exact Or.inr (Or.inl he)
+  · exact Or.inr (Or.inr (Or.inr (Or.inl h3)))
+  · exact Or.inr (Or.inr (Or.inl h4))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hs45)))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hs56))))))
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+
+/-- s45-discharge (HOL `ineq_sym_s2_aab`/`r755_aab` route): on the `(i,i,k)`
+family the `y6 < y4` side disjunct is removable — the bad case `y6 < y4` is
+covered by the source at the `(y3,y2,y1,y6,y5,y4)` frame, whose own s45
+disjunct `y4 < y6` contradicts `y6 ≤ y4`.  The 234/126 C-slots cross. -/
+theorem r755_noS45_p19 {i k : ℕ} {f1 f2 : ℝ} {b1 s56 : Prop}
+    (hraw : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i i k f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) (y6 < y4) s56 y1 y2 y3 y4 y5 y6)) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i i k f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) False s56 y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  rcases lt_trichotomy y6 y4 with h64 | heq | h46
+  · -- y6 < y4: source at the swapped frame
+    have h := hraw y3 y2 y1 y6 y5 y4 c3 c2 c1 c6 c5 c4
+    rw [r755Body_p19] at h ⊢
+    rw [taum_sym_jik_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.1,
+      r755D234_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+      r755D126_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+      r755D135_shuffle_jik_p19 k y1 y2 y3 y4 y5 y6,
+      r755C234_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+      r755C126_shuffle_jik_p19 i y1 y2 y3 y4 y5 y6,
+      r755C135_shuffle_jik_p19 k y1 y2 y3 y4 y5 y6] at h
+    rcases h with hP | he | h3 | h4 | h135 | hs | hf2 | hb2
+    · exact Or.inl (by linarith)
+    · exact Or.inr (Or.inl he)
+    · exact Or.inr (Or.inr (Or.inr (Or.inl h3)))
+    · exact Or.inr (Or.inr (Or.inl h4))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+    · exact absurd hs (by linarith)
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hf2))))))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+  · -- y6 = y4: the s45 disjunct is impossible
+    have h := hraw y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+    rw [r755Body_p19] at h ⊢
+    rcases h with hP | he | h234 | h126 | h135 | hs | hf2 | hb2
+    · exact Or.inl hP
+    · exact Or.inr (Or.inl he)
+    · exact Or.inr (Or.inr (Or.inl h234))
+    · exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+    · exact absurd hs (by linarith)
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hf2))))))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+  · -- y4 < y6: the s45 disjunct is impossible
+    have h := hraw y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+    rw [r755Body_p19] at h ⊢
+    rcases h with hP | he | h234 | h126 | h135 | hs | hf2 | hb2
+    · exact Or.inl hP
+    · exact Or.inr (Or.inl he)
+    · exact Or.inr (Or.inr (Or.inl h234))
+    · exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+    · exact absurd hs (by linarith)
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hf2))))))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+
+/-- s56-discharge (HOL `ineq_sym_s2_abb`/`r755_abb` route): on the `(i,j,j)`
+family the `y5 < y6` side disjunct is removable — the bad case `y5 < y6` is
+covered by the source at the `(y1,y3,y2,y4,y6,y5)` frame, whose own s56
+disjunct `y6 < y5` contradicts `y5 ≤ y6`.  The 126/135 C-slots cross. -/
+theorem r755_noS56_p19 {i j : ℕ} {f1 f2 : ℝ} {b1 s45 : Prop}
+    (hraw : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j j f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) s45 (y5 < y6) y1 y2 y3 y4 y5 y6)) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 i j j f1 f2 b1 (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) s45 False y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  rcases lt_trichotomy y5 y6 with h56 | heq | h65
+  · -- y5 < y6: source at the swapped frame
+    have h := hraw y1 y3 y2 y4 y6 y5 c1 c3 c2 c4 c6 c5
+    rw [r755Body_p19] at h ⊢
+    rw [taum_sym_ikj_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.2,
+      r755D234_shuffle_ikj_p19 i y1 y2 y3 y4 y5 y6,
+      r755D126_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6,
+      r755D135_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6,
+      r755C234_shuffle_ikj_p19 i y1 y2 y3 y4 y5 y6,
+      r755C126_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6,
+      r755C135_shuffle_ikj_p19 j y1 y2 y3 y4 y5 y6] at h
+    rcases h with hP | he | h234 | h4 | h5 | hf1 | hs | hb2
+    · exact Or.inl (by linarith)
+    · exact Or.inr (Or.inl he)
+    · exact Or.inr (Or.inr (Or.inl h234))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h4))))
+    · exact Or.inr (Or.inr (Or.inr (Or.inl h5)))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hf1)))))
+    · exact absurd hs (by linarith)
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+  · -- y5 = y6: the s56 disjunct is impossible
+    have h := hraw y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+    rw [r755Body_p19] at h ⊢
+    rcases h with hP | he | h234 | h126 | h135 | hf1 | hs | hb2
+    · exact Or.inl hP
+    · exact Or.inr (Or.inl he)
+    · exact Or.inr (Or.inr (Or.inl h234))
+    · exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hf1)))))
+    · exact absurd hs (by linarith)
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+  · -- y6 < y5: the s56 disjunct is impossible
+    have h := hraw y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+    rw [r755Body_p19] at h ⊢
+    rcases h with hP | he | h234 | h126 | h135 | hf1 | hs | hb2
+    · exact Or.inl hP
+    · exact Or.inr (Or.inl he)
+    · exact Or.inr (Or.inr (Or.inl h234))
+    · exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hf1)))))
+    · exact absurd hs (by linarith)
+    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+
+/-- The (i,i,i) combined discharge, specialized to i = 1 (the only diagonal
+entry the tower consumes, `7550003505 1 1 1`): both side disjuncts removed.
+The cascade of the two single discharges would hit the pass-through
+metavariable escape (DELIVERY hextop-w1 雷区 4), so the six S3 permuted
+frames are used directly: in every order domain of (y4, y5, y6) at least one
+of the six frames has both of its own side disjuncts false, and the source
+applied there transports back through the slot-shuffle kit (one to three
+hops).  With u = y4, v = y5, w = y6 the case tree is:
+w < u:  u ≤ v → σ frame (y3,y2,y1,y6,y5,y4);  v ≤ u ∧ w ≤ v → ρσ frame
+  (y3,y1,y2,y6,y4,y5);  v ≤ w → τ frame (y2,y1,y3,y5,y4,y6).
+w = u:  w ≤ v → the frame itself;  v ≤ w → τ frame.
+w > u:  w ≤ v → the frame itself;  v ≤ w ∧ u ≤ v → ρ frame
+  (y1,y3,y2,y4,y6,y5);  v ≤ u → σρ frame (y2,y3,y1,y5,y6,y4). -/
+theorem r755_noS45S56_1_p19
+    (hraw : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 1 1 1 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+          (y6 < y4) (y5 < y6) y1 y2 y3 y4 y5 y6)) :
+    ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 1 1 1 0 0 True (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+          False False y1 y2 y3 y4 y5 y6) := by
+  intro y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  rw [r755Body_p19]
+  rcases lt_trichotomy y6 y4 with h64 | he64 | h46
+  · -- w < u
+    rcases le_total y4 y5 with h45l | h54l
+    · -- u ≤ v: the σ frame (y3,y2,y1,y6,y5,y4); both side disjuncts false
+      have h := hraw y3 y2 y1 y6 y5 y4 c3 c2 c1 c6 c5 c4
+      rw [r755Body_p19, taum_sym_jik_p19,
+        (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.1,
+        r755D234_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+        r755D126_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+        r755D135_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+        r755C234_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+        r755C126_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+        r755C135_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6] at h
+      rcases h with hP | he | h3 | h4 | h135 | hs | hf2 | hb2
+      · exact Or.inl (by linarith)
+      · exact Or.inr (Or.inl he)
+      · exact Or.inr (Or.inr (Or.inr (Or.inl h3)))
+      · exact Or.inr (Or.inr (Or.inl h4))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+      · exact absurd hs (by linarith)
+      · exact absurd hf2 (by linarith)
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+    · rcases le_total y6 y5 with h65l | h56l
+      · -- v ≤ u ∧ w ≤ v: the ρσ frame (y3,y1,y2,y6,y4,y5); two hops
+        have h := hraw y3 y1 y2 y6 y4 y5 c3 c1 c2 c6 c4 c5
+        rw [r755Body_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.1,
+          taum_sym_ikj_p19 y3 y2 y1 y6 y5 y4,
+          r755D234_shuffle_ikj_p19 1 y3 y2 y1 y6 y5 y4,
+          r755D126_shuffle_ikj_p19 1 y3 y2 y1 y6 y5 y4,
+          r755D135_shuffle_ikj_p19 1 y3 y2 y1 y6 y5 y4,
+          r755C234_shuffle_ikj_p19 1 y3 y2 y1 y6 y5 y4,
+          r755C126_shuffle_ikj_p19 1 y3 y2 y1 y6 y5 y4,
+          r755C135_shuffle_ikj_p19 1 y3 y2 y1 y6 y5 y4,
+          taum_sym_jik_p19,
+          r755D234_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D126_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D135_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C234_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C126_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C135_shuffle_jik_p19 1 y1 y2 y3 y4 y5 y6] at h
+        rcases h with hP | he | h3 | h4 | h135 | hs | hf2 | hb2
+        · exact Or.inl (by linarith)
+        · exact Or.inr (Or.inl he)
+        · exact Or.inr (Or.inr (Or.inr (Or.inl h3)))
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h4))))
+        · exact Or.inr (Or.inr (Or.inl h135))
+        · exact absurd hs (by linarith)
+        · exact absurd hf2 (by linarith)
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+      · -- v ≤ u ∧ v ≤ w: the τ frame (y2,y1,y3,y5,y4,y6); three hops
+        have h := hraw y2 y1 y3 y5 y4 y6 c2 c1 c3 c5 c4 c6
+        rw [r755Body_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).1,
+          taum_sym_ikj_p19 y2 y3 y1 y5 y6 y4,
+          r755D234_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+          r755D126_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+          r755D135_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+          r755C234_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+          r755C126_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+          r755C135_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+          taum_sym_jik_p19 y1 y3 y2 y4 y6 y5,
+          r755D234_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755D126_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755D135_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755C234_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755C126_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755C135_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          taum_sym_ikj_p19,
+          r755D234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6] at h
+        rcases h with hP | he | h3 | h4 | h135 | hs | hf2 | hb2
+        · exact Or.inl (by linarith)
+        · exact Or.inr (Or.inl he)
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3))))
+        · exact Or.inr (Or.inr (Or.inr (Or.inl h4)))
+        · exact Or.inr (Or.inr (Or.inl h135))
+        · exact absurd hs (by linarith)
+        · exact absurd hf2 (by linarith)
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+  · -- w = u
+    rcases le_total y6 y5 with h65l | h56l
+    · -- w ≤ v: the frame itself; both side disjuncts false
+      have h := hraw y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+      rw [r755Body_p19] at h
+      rcases h with hP | he | h234 | h126 | h135 | hs | hf2 | hb2
+      · exact Or.inl hP
+      · exact Or.inr (Or.inl he)
+      · exact Or.inr (Or.inr (Or.inl h234))
+      · exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+      · exact absurd hs (by linarith)
+      · exact absurd hf2 (by linarith)
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+    · -- v ≤ w: the τ frame (y2,y1,y3,y5,y4,y6); three hops
+      have h := hraw y2 y1 y3 y5 y4 y6 c2 c1 c3 c5 c4 c6
+      rw [r755Body_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).1,
+        taum_sym_ikj_p19 y2 y3 y1 y5 y6 y4,
+        r755D234_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+        r755D126_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+        r755D135_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+        r755C234_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+        r755C126_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+        r755C135_shuffle_ikj_p19 1 y2 y3 y1 y5 y6 y4,
+        taum_sym_jik_p19 y1 y3 y2 y4 y6 y5,
+        r755D234_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+        r755D126_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+        r755D135_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+        r755C234_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+        r755C126_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+        r755C135_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+        taum_sym_ikj_p19,
+        r755D234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+        r755D126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+        r755D135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+        r755C234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+        r755C126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+        r755C135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6] at h
+      rcases h with hP | he | h3 | h4 | h135 | hs | hf2 | hb2
+      · exact Or.inl (by linarith)
+      · exact Or.inr (Or.inl he)
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3))))
+      · exact Or.inr (Or.inr (Or.inr (Or.inl h4)))
+      · exact Or.inr (Or.inr (Or.inl h135))
+      · exact absurd hs (by linarith)
+      · exact absurd hf2 (by linarith)
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+  · -- w > u
+    rcases le_total y6 y5 with h65l | h56l
+    · -- w ≤ v: the frame itself; both side disjuncts false
+      have h := hraw y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+      rw [r755Body_p19] at h
+      rcases h with hP | he | h234 | h126 | h135 | hs | hf2 | hb2
+      · exact Or.inl hP
+      · exact Or.inr (Or.inl he)
+      · exact Or.inr (Or.inr (Or.inl h234))
+      · exact Or.inr (Or.inr (Or.inr (Or.inl h126)))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h135))))
+      · exact absurd hs (by linarith)
+      · exact absurd hf2 (by linarith)
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+    · rcases le_total y4 y5 with h45l | h54l
+      · -- u ≤ v ∧ v ≤ w: the ρ frame (y1,y3,y2,y4,y6,y5); both false
+        have h := hraw y1 y3 y2 y4 y6 y5 c1 c3 c2 c4 c6 c5
+        rw [r755Body_p19, taum_sym_ikj_p19,
+          (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.2,
+          r755D234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6] at h
+        rcases h with hP | he | h234 | h126 | h135 | hs | hf2 | hb2
+        · exact Or.inl (by linarith)
+        · exact Or.inr (Or.inl he)
+        · exact Or.inr (Or.inr (Or.inl h234))
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h126))))
+        · exact Or.inr (Or.inr (Or.inr (Or.inl h135)))
+        · exact absurd hs (by linarith)
+        · exact absurd hf2 (by linarith)
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+      · -- v ≤ u ∧ v ≤ w: the σρ frame (y2,y3,y1,y5,y6,y4); two hops
+        have h := hraw y2 y3 y1 y5 y6 y4 c2 c3 c1 c5 c6 c4
+        rw [r755Body_p19,
+          taum_sym_jik_p19 y1 y3 y2 y4 y6 y5,
+          (eulerA_x_sym_cases_p19 y1 y3 y2 y4 y6 y5).2.2.1,
+          r755D234_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755D126_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755D135_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755C234_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755C126_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          r755C135_shuffle_jik_p19 1 y1 y3 y2 y4 y6 y5,
+          taum_sym_ikj_p19, (eulerA_x_sym_cases_p19 y1 y2 y3 y4 y5 y6).2.2.2,
+          r755D234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755D135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C234_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C126_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6,
+          r755C135_shuffle_ikj_p19 1 y1 y2 y3 y4 y5 y6] at h
+        rcases h with hP | he | h3 | h4 | h135 | hs | hf2 | hb2
+        · exact Or.inl (by linarith)
+        · exact Or.inr (Or.inl he)
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3))))
+        · exact Or.inr (Or.inr (Or.inl h4))
+        · exact Or.inr (Or.inr (Or.inr (Or.inl h135)))
+        · exact absurd hs (by linarith)
+        · exact absurd hf2 (by linarith)
+        · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hb2))))))
+
+/-- Feeder: the cleaned (i234 = 1) r755 entry at the tower frame discharges
+the 126-reduction antecedent (HOL `mk_25`'s hypothesis at f2 := 0).  The
+last disjunct is the tower's `b2` = `δ234 < 0 ∨ eulerA < 0`, which absorbs
+the database's eulerA side disjunct. -/
+theorem r755_clean_feed_p19 {j k : ℕ}
+    (hclean : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915)]
+        (r755Body_p19 1 j k 0 0 True
+          (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+          False False y1 y2 y3 y4 y5 y6)) :
+    ∀ y1 y2 y3 y4 y5 y6 y234 : ℝ,
+      ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+          (3.01, y5, 3.915), (3.01, y6, 3.915), (2, y234, 2.52)]
+        ((taum y1 y2 y3 y4 y5 y6 + r755D135_p19 k y1 y2 y3 y4 y5 y6) +
+            r755D126_p19 j y1 y2 y3 y4 y5 y6 + 0 > 0.712 ∨
+          r755C135_p19 k y1 y2 y3 y4 y5 y6 ∨ r755C126_p19 j y1 y2 y3 y4 y5 y6 ∨
+          (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)) := by
+  intro y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 _c7
+  have h := hclean y1 y2 y3 y4 y5 y6 c1 c2 c3 c4 c5 c6
+  rw [r755Body_p19] at h
+  rcases h with hP | he | h234 | h126 | h135 | hf1 | hf2 | hb2
+  · simp only [r755D234_p19] at hP
+    exact Or.inl (by linarith)
+  · exact Or.inr (Or.inr (Or.inr (Or.inr he)))
+  · simp only [r755C234_p19] at h234
+  · exact Or.inr (Or.inr (Or.inl h126))
+  · exact Or.inr (Or.inl h135)
+  · exact absurd hf1 id
+  · exact absurd hf2 id
+  · exact Or.inr (Or.inr (Or.inr (Or.inr hb2)))
+
+/-- HOL `terminal_hex_taum` (pent_hex.hl:3180): the assembled hex tower top.
+HOL's script instantiates the three reductions' shared `f1, b1, b2` by
+matching; here the consumed instance is stated explicitly: f1 = C126 + τ
+(the 126-cell plus the full-frame taum, which the OCBICBY consumer splits
+into the remaining ears' tau3 sums), b1 = δ126 < 0, b2 = δ234 < 0 ∨
+eulerA < 0 (the five final cases of OCBICBY.hl:3088-3111).  The five
+135-antecedents are discharged by 126-conclusion instances whose own
+antecedents are fed by the cleaned r755 database entries (i234 = 1 column,
+HOL `mk_25` at f2 := 0); the diagonal entries' `y6 < y4` / `y5 < y6` side
+disjuncts are removed by the aab/abb WLOG route (`r755_noS45_p19`/
+`r755_noS56_p19` on top of the `r755_body_ikj/jik_p19` transports). -/
+theorem terminal_hex_taum_p19 (h : mainNonlinearTerminalV11_p18)
+    (y1 y2 y3 y4 y5 y6 y234 y126 y135 : ℝ) :
+    ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+        (3.01, y5, 3.915), (3.01, y6, 3.915), (2, y234, 2.52), (2, y126, 2.52),
+        (2, y135, 2.52)]
+      ((taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taum y135 y1 y3 y5 2 2) > 0.712 ∨
+        (deltaY y135 y1 y3 y5 2 2 < 0 ∨ deltaY y126 y1 y2 y6 2 2 < 0) ∨
+        (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)) := by
+  have nmud126 : mud126xV1_p19 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (y5 * y5) (y6 * y6)
+    = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2))
+        * Real.sqrt (deltaY 2 y1 y2 y6 2 2) := by
+    have h2 := nonfunctional_mud_126_p19 2 2 2 y1 y2 y3 y4 y5 y6
+    rw [yOfX] at h2
+    exact h2
+  have nmud135 : mud135xV1_p19 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (y5 * y5) (y6 * y6)
+    = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3))
+        * Real.sqrt (deltaY 2 y1 y3 y5 2 2) := by
+    have h2 := nonfunctional_mud_135_p19 2 2 2 y1 y2 y3 y4 y5 y6
+    rw [yOfX] at h2
+    exact h2
+  have nmudLs126 : mudLs126x_p19 4 10 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (y5 * y5) (y6 * y6)
+    = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2))
+        * (1 / 14 * (deltaY 2 y1 y2 y6 2 2 - 16) + 2 * 2) := by
+    rw [nonfunctional_mudLs_126_p19, show (4 : ℝ) = 2 * 2 from by norm_num]
+  have nmudLs135 : mudLs135x_p19 4 10 2 2 2 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+      (y5 * y5) (y6 * y6)
+    = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3))
+        * (1 / 14 * (deltaY 2 y1 y3 y5 2 2 - 16) + 2 * 2) := by
+    rw [nonfunctional_mudLs_135_p19, show (4 : ℝ) = 2 * 2 from by norm_num]
+  -- the cleaned r755 entries (i234 = 1 column) at the tower frame
+  have hdb : ∀ j k : ℕ, j ≤ 4 → k ≤ 4 →
+      (∀ y1 y2 y3 y4 y5 y6 : ℝ,
+        ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
+            (3.01, y5, 3.915), (3.01, y6, 3.915)]
+          (r755Body_p19 1 j k 0 0 True
+            (yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+            False False y1 y2 y3 y4 y5 y6)) := by
+    intro j k hj hk
+    interval_cases j <;> interval_cases k
+    · exact r755_body_jik_p19 (r755_body_ikj_p19 (r755_noS45_p19
+        (r755_res_s45_p19 (i := 0) (k := 1) (by norm_num)
+          (h "7550003505 0 0 1" (by simp [mainNonlinearTerminalV11Ids_t11])))))
+    · exact r755_body_jik_p19 (r755_noS56_p19
+        (r755_res_s56_p19 (i := 0) (j := 1) (by norm_num)
+          (h "7550003505 0 1 1" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_body_jik_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 0 1 2" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_body_jik_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 0 1 3" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_body_jik_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 0 1 4" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_body_ikj_p19 (r755_body_jik_p19 (r755_noS56_p19
+        (r755_res_s56_p19 (i := 0) (j := 1) (by norm_num)
+          (h "7550003505 0 1 1" (by simp [mainNonlinearTerminalV11Ids_t11])))))
+    · exact r755_noS45S56_1_p19
+        (r755_res_both_p19 (i := 1)
+          (h "7550003505 1 1 1" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_noS45_p19
+        (r755_res_s45_p19 (i := 1) (k := 2) (by norm_num)
+          (h "7550003505 1 1 2" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_noS45_p19
+        (r755_res_s45_p19 (i := 1) (k := 3) (by norm_num)
+          (h "7550003505 1 1 3" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_noS45_p19
+        (r755_res_s45_p19 (i := 1) (k := 4) (by norm_num)
+          (h "7550003505 1 1 4" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_body_ikj_p19 (r755_body_jik_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 0 1 2" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_body_ikj_p19 (r755_noS45_p19
+        (r755_res_s45_p19 (i := 1) (k := 2) (by norm_num)
+          (h "7550003505 1 1 2" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_noS56_p19
+        (r755_res_s56_p19 (i := 1) (j := 2) (by norm_num)
+          (h "7550003505 1 2 2" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 1 2 3" (by simp [mainNonlinearTerminalV11Ids_t11]))
+    · exact r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 1 2 4" (by simp [mainNonlinearTerminalV11Ids_t11]))
+    · exact r755_body_ikj_p19 (r755_body_jik_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 0 1 3" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_body_ikj_p19 (r755_noS45_p19
+        (r755_res_s45_p19 (i := 1) (k := 3) (by norm_num)
+          (h "7550003505 1 1 3" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_body_ikj_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 1 2 3" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_noS56_p19
+        (r755_res_s56_p19 (i := 1) (j := 3) (by norm_num)
+          (h "7550003505 1 3 3" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 1 3 4" (by simp [mainNonlinearTerminalV11Ids_t11]))
+    · exact r755_body_ikj_p19 (r755_body_jik_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 0 1 4" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_body_ikj_p19 (r755_noS45_p19
+        (r755_res_s45_p19 (i := 1) (k := 4) (by norm_num)
+          (h "7550003505 1 1 4" (by simp [mainNonlinearTerminalV11Ids_t11]))))
+    · exact r755_body_ikj_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 1 2 4" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_body_ikj_p19
+        (r755_res_clean_p19 (by norm_num) (by norm_num)
+          (h "7550003505 1 3 4" (by simp [mainNonlinearTerminalV11Ids_t11])))
+    · exact r755_noS56_p19
+        (r755_res_s56_p19 (i := 1) (j := 4) (by norm_num)
+          (h "7550003505 1 4 4" (by simp [mainNonlinearTerminalV11Ids_t11])))
+  refine terminal_hex_135_reduction_p19 h y1 y2 y3 y4 y5 y6 y234 y126 y135
+    (taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6)
+    (deltaY y126 y1 y2 y6 2 2 < 0)
+    (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0) ?_ ?_ ?_ ?_ ?_
+  · -- h0c: d135_0 = flatTerm135
+    have hh := terminal_hex_126_reduction_p19 h y1 y2 y3 y4 y5 y6 y234 y126
+      (taum y1 y2 y3 y4 y5 y6 + flatTerm_p19 (Real.sqrt (edge2FlatDX1_p19 0 (y1 * y1) (y3 * y3) (y5 * y5) 4 4)))
+      0 (deltaY 2 y1 y3 y5 2 2 < 0 ∨ deltaY 2.52 y1 y3 y5 2 2 > 0)
+      (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 0 0 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 1 0 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 2 0 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud126] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 3 0 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs126] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 4 0 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+    intro c1 c2 c3 c4 c5 c6 c7 c8
+    rcases hh c1 c2 c3 c4 c5 c6 c7 c8 with hP | h2 | hb2
+    · exact Or.inl (by linarith)
+    · rcases h2 with h | h
+      · exact Or.inr (Or.inl h)
+      · exact Or.inr (Or.inr (Or.inl h))
+    · exact Or.inr (Or.inr (Or.inr hb2))
+  · -- h1c: d135_1 = 0
+    have hh := terminal_hex_126_reduction_p19 h y1 y2 y3 y4 y5 y6 y234 y126
+      (taum y1 y2 y3 y4 y5 y6 + 0)
+      0 False
+      (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 0 1 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 1 1 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 2 1 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud126] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 3 1 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs126] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 4 1 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+    intro c1 c2 c3 c4 c5 c6 c7 c8
+    rcases hh c1 c2 c3 c4 c5 c6 c7 c8 with hP | h2 | hb2
+    · exact Or.inl (by linarith)
+    · rcases h2 with h | h
+      · exact Or.inr (Or.inl h)
+      · exact absurd h id
+    · exact Or.inr (Or.inr (Or.inr hb2))
+  · -- h2c: d135_2 = muY sqrt-form
+    have hh := terminal_hex_126_reduction_p19 h y1 y2 y3 y4 y5 y6 y234 y126
+      (taum y1 y2 y3 y4 y5 y6 + (muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3)) * Real.sqrt (deltaY 2 y1 y3 y5 2 2) - sol0))
+      0 (deltaY 2 y1 y3 y5 2 2 < 100)
+      (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 0 2 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 1 2 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 2 2 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud126, nmud135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 3 2 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs126, nmud135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 4 2 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud135] at hf; exact hf)
+    intro c1 c2 c3 c4 c5 c6 c7 c8
+    rcases hh c1 c2 c3 c4 c5 c6 c7 c8 with hP | h2 | hb2
+    · exact Or.inl (by linarith)
+    · rcases h2 with h | h
+      · exact Or.inr (Or.inl h)
+      · exact Or.inr (Or.inr (Or.inl h))
+    · exact Or.inr (Or.inr (Or.inr hb2))
+  · -- h3c: d135_3 = muY linear-form
+    have hh := terminal_hex_126_reduction_p19 h y1 y2 y3 y4 y5 y6 y234 y126
+      (taum y1 y2 y3 y4 y5 y6 + (muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3)) * (1 / 14 * (deltaY 2 y1 y3 y5 2 2 - 16) + 2 * 2) - sol0))
+      0 (deltaY 2 y1 y3 y5 2 2 < 16 ∨ deltaY 2 y1 y3 y5 2 2 > 100)
+      (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 0 3 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 1 3 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 2 3 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud126, nmudLs135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 3 3 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs126, nmudLs135] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 4 3 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs135] at hf; exact hf)
+    intro c1 c2 c3 c4 c5 c6 c7 c8
+    rcases hh c1 c2 c3 c4 c5 c6 c7 c8 with hP | h2 | hb2
+    · exact Or.inl (by linarith)
+    · rcases h2 with h | h
+      · exact Or.inr (Or.inl h)
+      · exact Or.inr (Or.inr (Or.inl h))
+    · exact Or.inr (Or.inr (Or.inr hb2))
+  · -- h4c: d135_4 = -sol0
+    have hh := terminal_hex_126_reduction_p19 h y1 y2 y3 y4 y5 y6 y234 y126
+      (taum y1 y2 y3 y4 y5 y6 + (0 - sol0))
+      0 (deltaY 2 y1 y3 y5 2 2 < 0 ∨ deltaY 2 y1 y3 y5 2 2 > 16)
+      (deltaY y234 y2 y3 y4 2 2 < 0 ∨ yOfX eulerAx_p19 y1 y2 y3 y4 y5 y6 < 0)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 0 4 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 1 4 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 2 4 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmud126] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 3 4 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; rw [nmudLs126] at hf; exact hf)
+      (by intro c1 c2 c3 c4 c5 c6 c7; have hf := r755_clean_feed_p19 (hdb 4 4 (by norm_num) (by norm_num)) y1 y2 y3 y4 y5 y6 y234 c1 c2 c3 c4 c5 c6 c7; simp only [r755D126_p19, r755D135_p19, yOfX] at hf; exact hf)
+    intro c1 c2 c3 c4 c5 c6 c7 c8
+    rcases hh c1 c2 c3 c4 c5 c6 c7 c8 with hP | h2 | hb2
+    · exact Or.inl (by linarith)
+    · rcases h2 with h | h
+      · exact Or.inr (Or.inl h)
+      · exact Or.inr (Or.inr (Or.inl h))
+    · exact Or.inr (Or.inr (Or.inr hb2))
