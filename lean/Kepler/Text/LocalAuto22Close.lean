@@ -7,6 +7,7 @@ LocalAuto22（donor HEAD 393405f3），无陈述/证明改动。
 
 import Kepler.Text.LocalAuto22
 import Kepler.Text.LocalAuto19
+import Kepler.Text.LocalAuto19Euler
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -1758,6 +1759,35 @@ theorem OCBICBY_6T1_p22_of_ht4nn (h : main_nonlinear_terminal_v11) :
   intro hv
   obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
   exact (not_le.mpr hneg) (empty_6T1_p22_of_ht4nn h vv hbb (hE vv hbb) (ht4nn vv hbb))
+
+/-- `empty_6T1_p22` on the **single** remaining numeric input `ht4nn`: the
+Euler-`A` input is discharged by `hE_6T1` (lane `he6t1-w1`,
+`LocalAuto19Euler.lean`) in the `taustar < 0` branch — the shape HOL's
+`empty_6T1` proof uses (`PROOF_BY_CONTR_TAC`; the unconditional `hE` form is
+false, see the lane's `RECON.md` counterexample). -/
+theorem empty_6T1_p22_of_ht4nn_only (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
+    (hB : BBsV39 scs6T1 vv)
+    (ht4nn : 0 ≤ taum ‖vv 2‖ ‖vv 3‖ ‖vv 4‖ (dist (vv 3) (vv 4))
+      (dist (vv 2) (vv 4)) (dist (vv 2) (vv 3))) :
+    0 ≤ taustarV39 scs6T1 vv := by
+  by_contra h0
+  have hlt : taustarV39 scs6T1 vv < 0 := not_le.mp h0
+  exact h0 (empty_6T1_p22_of_ht4nn h vv hB (hE_6T1 h vv hB hlt) ht4nn)
+
+/-- `OCBICBY` 6T1 branch on the **single** numeric input `ht4nn` (template of
+`OCBICBY_6T1_p22_of_ht4nn`, with `hE` discharged by `hE_6T1` in the
+`taustar < 0` branch). -/
+theorem OCBICBY_6T1_p22_of_ht4nn_only (h : main_nonlinear_terminal_v11)
+    (ht4nn : ∀ vv : ℕ → V3, BBsV39 scs6T1 vv → 0 ≤ taum ‖vv 2‖ ‖vv 3‖ ‖vv 4‖
+      (dist (vv 3) (vv 4)) (dist (vv 2) (vv 4)) (dist (vv 2) (vv 3))) :
+    scsArrowV39 {scs6T1} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg)
+    (empty_6T1_p22_of_ht4nn h vv hbb (hE_6T1 h vv hbb hneg) (ht4nn vv hbb))
 
 /-- HOL `empty_5T1` (giant).  DISCHARGED 2026-11-14 (lane ocbicby5t1-w1): the
 `VPWSHTO_PRIME` pentagon window `j` (`empty5T1_vpwshto_p22`) plus the analytic
