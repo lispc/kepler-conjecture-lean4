@@ -97,7 +97,12 @@
 ---
 
 
-## 1. 在飞（2026-11-13 午后，池 **4** = 编译面 4（+TM CPU 车道）；用户已批 TM 窗口 + VASYYAU W0）
+## 1. 在飞（2026-11-14 22:48：**空**；上一波 `nli-precision-w1` 已收线 `2fd799ff`）
+
+> **2026-11-14 22:47 收线（`2fd799ff`）**：`nli-precision-w1` 落库——TSKAJXY 两 pilot 叶内核 PASS
+> （叶 0 +8.75e−4 / 叶 657 +2.82e−3，原 −0.0239/−0.0189）；真因 = closed `atan 1` 的 `arctanI`
+> 包络（非 `mul` 外层抵消）；全盒复刻 0/6512 → **5012/6512**；余 1500 叶中 100 叶一次二分即闭、
+> 1400 叶需 guard 超平面切分。无在飞车道；下一步等用户两项裁决（计算窗口 / 信任口径）+ 战役图。
 
 > **2026-11-13 17:20 四车道批次收官**：`a7e699d1`（L1 6I1 三件，锥内 −1）、`24725045`（L2 LA33 两件 + ARDBZYE，−2）、`23c16896`（L4 LA18 三件，非锥内）、`f5f96b8b`（L3 `empty_4T4/4T5`，非锥内）——**SORRIED 65→62，基线 AI**。5M2/OCBICBY 判 BLOCKED（缺口与配方见 §8 续1047）；下一批建议 N1 `vv_split_azim_generic` / N2 `deform_planar_p21` / N3 `coplanar_cross_reduction_p18`。详见 §8 续1047。
 >
@@ -861,6 +866,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（22:47，续1150）**：**`nli-precision-w1` 收线落库 `2fd799ff`——TSKAJXY 两 pilot 叶经 `atan1_box` 内核 PASS；归因推翻工单三假设（真因 = closed `atan 1` 的 `arctanI` 包络）；全盒复刻 0→5012/6512**。（时间按 commit 实取；续1149 手写 02:55 为车道侧时区，偏 +5.5h，本条目起校正。）
+① 交付：`emit_lean.py` `hull_expr` 加 opt-in `atan1_box=False`（默认字节不变，+11/−3）+ 新增 `TskXLLIPLSAtan1{Base,Leaf0,Leaf657}.lean`（24/95/95，合计 **+225/−3**）。`TKind.atan1K`/`pi4D`/`transOn`/`valid_trans` 分支基线已在库，零新数学、零新公理；`CertTM`/`CertTMDiv2`/`checkPosTMHullC` 字节未动。
+② 精度：叶 0 **−0.02393747527508621106 → +0.00087508603573064651024**；叶 657 **−0.01891693053906524711 → +0.002822432042080472253717**。内核 `decide` 26.0/26.1 s、10.07/10.06 GB 每叶；Base 直编 7.4 s/5.75 GB。
+③ **ER（推翻续1148③/④的"外层抵消"归因）**：缺口不在 `mul` 外层——71 个 closed `atan 1` 节点各垫 `±1/4097≈2.44e-4`（不对称）把根 `fB.lo` 压 0.02353；叶 0 的 `iteHullTM2` guard 跳变走 **0 次**、div2 `salv=0`、单节点最大 err 增益 0.0187、`LExpr` 共享零收益（逐项实测排除）。全盒复刻扫描（0.17 s/叶，两实测叶与 Lean 差 ≤3.5e−15）：现状 **0/6512** → `.atan1K` 后 **5012/6512（77.0%）**；余 1500 = 族 A 100 叶（最宽维二分一次 **100/100 PASS**）+ 族 B 1400 叶（`ite-hull` 3–6 个/叶、`fB` 宽 0.098–0.187；6 维×4 叶 24/24 仍 straddle ⇒ 轴对齐无效，需 guard 超平面切分/分支一致性引理，≥1–2 天）。可达上限 **5112/6512（78.5%）**。
+④ 闸（亲跑 @`24631329`）：apply-check PASS；四文件与车道 `b/` 成品逐字节同；删除面恰 3 行（签名/注释/调用）、禁词 0；合并探针四声明 = `[propext,Quot.sound]`×2（check）/ 标准三×2（pos），0 error、0 sorryAx；根面 589 行 md5 **`246e952cde4498a802ca0aabe6842d79`** 逐字节同（585 native + sorryAx）。**编排者修正（唯一）**：leaf 模块 `Inhabited DInterval` 实例 `instance → private`（实测 `local` 仍写入 olean，两叶同 import 报环境重名；`private` 每模块改名后合并 import PASS），定理陈述/证书参数零改动；落地版 `patch.landed.diff` 存车道快照 + `ORCHESTRATOR_NOTE.md` 记全程。
+⑤ 下一条：续1151。后续：① 族 B guard 超平面切分车道（唯一剩余杠杆）；② `docs/nli-campaign.md`（54+1 战役图）；③ 回放并行化（8–16k 叶分片）；④ 计算窗口 / 信任口径两项用户裁决待定。
 - **2026-11-15（02:55，续1149）**：**`nli-precision-w1` 发车（用户令「同意，发」）——TSKAJXY 叶级 0.024 缺口 sound 化**。
 ① 目标：叶 0（真 loBound **−0.02393747527508621106**）或叶 657（**−0.01891693053906524711974**）做到 **PASS**；缺口来自**外层抵消**（S6 项 5.6% 相对误差），不是 atan rung（N=128→256 根级前 22 位相同）。
 ② 方向：Phase 0 逐节点误差归因（mirror tracing/二分切片）；Phase 1 `div` 节点逐节点择优（div2 vs 区间回落，取 loBound 大者；sound、近零成本）+ guard 切叶最小验证；Phase 2 `mul` err 的 Schwarz/Hessian 收紧（opt-in 新规则 + soundness；目标 +0.024）；Phase 3 `LExpr` 子表达式共享 / `--gsplit2` 型 guard 定号叶。

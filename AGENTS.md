@@ -96,6 +96,9 @@
   **续批 2（2026-11-14 用户明批「按你建议走吧」）**：`ht4nn` 单盒 TM **有界微探针**
   （车道 `ht4nn-probe-w1`：4h 墙钟、root box + ≤400 叶 + 1–3 叶 checker 探针，不做量产）
   可动 certtm / `bb_arb`；**TM3 量产扫全库、Mono\*、D 证书层仍然 hold**，探针结束即回 hold。
+  **续批 3（2026-11-15 用户明批「同意，发」）**：`nli-precision-w1` 精度车道（TSKAJXY 叶级
+  `atan1_box`/检查器精度，可动 certtm / `bb_arb` 仅叶级）；**已收线 `2fd799ff`**（两 pilot 叶
+  内核 PASS，+225/−3，全盒复刻 0→5012/6512），certtm 回 hold；TM3/Mono\*/D 仍 hold。
 
 ## 5. 落库流程
 
