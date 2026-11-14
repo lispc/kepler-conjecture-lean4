@@ -86,8 +86,8 @@ in `PLAN.md` §5. Pure Lean compilation work runs on the baseline laptop.
 The end-to-end object `Kepler.the_kepler_conjecture_e2e` stands. Its live axiom
 face is **589 lines** = **585 `native_decide` graph shard axioms** (the declared
 trust base, frozen 2026-11-09: 580 shard-range + 5 tri-single-seed, two shapes
-only) + `propext` + `Classical.choice` + `Quot.sound` + `sorryAx` (57 cone
-sorries — the only real debt; baseline AK `dc998142`, 2026-11-14).
+only) + `propext` + `Classical.choice` + `Quot.sound` + `sorryAx` (56 cone
+sorries — the only real debt; baseline AL `e1e52ad6`, 2026-11-14).
 
 **Terminal standard (user ruling 2026-11-06, `AGENTS.md` §1)**: no worse than
 Flyspeck/Isabelle — i.e. the 585 declared shard axioms (same class and same

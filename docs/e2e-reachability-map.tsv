@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2100351
-K_SORRIED 57
+K_REACH 2100373
+K_SORRIED 56
 K_AXIOM 585
-K_MODULES 5310
-K_UNIVERSE 2112558
-COVERAGE 2100351 / 2112558
-K_UNIVERSE_XCASES 49301
-K_REACH_XCASES 38651
-K_SORRIED_XCASES 57
+K_MODULES 5311
+K_UNIVERSE 2112607
+COVERAGE 2100373 / 2112607
+K_UNIVERSE_XCASES 49350
+K_REACH_XCASES 38673
+K_SORRIED_XCASES 56
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2099666
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2099666
-SORRIED 57
+TOTAL_VALUE_DECLS 2099688
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2099688
+SORRIED 56
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -69,7 +69,6 @@ Kepler.Assembly	Kepler.Assembly.nliTskIYOUOBFsym	parent=Kepler.Assembly.nliTskBa
 Kepler.Assembly	Kepler.Assembly.nliTskRIBCYXUsym	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskWKGUESBsym	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskXLLIPLS	parent=Kepler.Assembly.nliTskBank
-Kepler.Text.LocalAuto23	Kepler.Text.LFLACKU_p23	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 Kepler.Text.LocalAuto22Close	Kepler.Text.OCBICBY_p22	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 --- AXIOMS ---
 Kepler.Graphs.CertShards.Hex.K001	Kepler.Graphs.hex_shard_100._native.native_decide.ax_1_1
@@ -3129,9 +3128,9 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 491	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2159
 491	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard2198
 491	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard286
-491	Kepler.Text.LocalAuto23
 490	Kepler.Interval.Cases.CFWGKMBZ.Shard286
 490	Kepler.Interval.Cases.CFWGKMBZ.Shard441
+490	Kepler.Text.LocalAuto23
 489	Kepler.Interval.Cases.CFWGKMBZ.Shard535
 489	Kepler.Interval.Cases.CFWGKMBZ.Shard547
 488	Kepler.Interval.Cases.CFWGKMBZ.Shard25
@@ -4056,7 +4055,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 210	Kepler.Interval.Cases.CFWGKMBZ.Shard409
 209	Kepler.Interval.Cases.CFWGKMBZ.Shard90
 209	Kepler.Text.LocalAuto13
-207	Kepler.Text.LocalAuto38
+208	Kepler.Text.LocalAuto38
 201	Kepler.Interval.Cases.CFWGKMBZ.Shard170
 200	Kepler.Interval.Cases.CFWGKMBZ.Shard494
 200	Kepler.Text.PackingAuto4
@@ -4263,6 +4262,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 23	Kepler.Text.TameSpine.TameList19
 22	Kepler.Graphs.ListAux
 22	Kepler.Text.ConformingAuto8
+22	Kepler.Text.LocalAuto23Jotswix
 22	Kepler.Text.PlanarityAuto15
 22	Kepler.Text.Reduction3Thm6D2
 22	Kepler.Text.TameSpine.Reduction3KbwpbhqYtransConst

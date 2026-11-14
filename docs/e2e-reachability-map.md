@@ -797,6 +797,39 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AL：LFLACKU 收线（Text 2→1）@ `e1e52ad6`（2026-11-14）
+
+> 触发：`lflacku-w1` 交付——`LFLACKU_p23` 出锥（`e1e52ad6`：新模块 `LocalAuto23Jotswix`
+> +551/−0，把 LA23 Section A 的 3 件以**逐字节同陈述、加撇新名**真证：
+> `TAUM_EXTREMAL_p23'` / `TAUM_STD_POS_p23'` / `LFLACKU_p23'`（全标准三；含私有 HOL 箱形
+> `taum_attains_inf_box_jx`，机器见证 LA23 原 `taum_attains_inf_p23` 陈述缺 HOL 六箱、
+> y4 槽不连续）；`LocalAuto16` +2/−1 改道（`:497` `LFLACKU_p23 h` → `LFLACKU_p23' h`）。
+> LA23 原四条一行不动、成文件级孤儿。仪器原样换装（**5,971 行**）；manifest `--check` PASS。
+
+| 指标 | 基线 AL | 基线 AK | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,100,373** | 2,100,351 | +22 |
+| SORRIED | **56** | 57 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,311 | 5,310 | +1 |
+| K_UNIVERSE | 2,112,607 | 2,112,558 | +49 |
+| COVERAGE | 99.4209% | 99.4222% | −0.0013pp |
+| 口径 II（ex-Cases） | K_REACH **38,673** / SORRIED **56** / AXIOM **585** / UNIVERSE **49,350** | 38,651 / 57 / 585 / 49,301 | +22 / −1 / 0 / +49 |
+| TOTAL_VALUE_DECLS | 2,099,688 | 2,099,666 | +22 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.LFLACKU_p23`}**，added = ∅。
+**Axiom 名单 diff = 0/0**（585/585 逐行同）。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：Text 2→1（余 `OCBICBY_p22`）。K_MODULES +1 = `LocalAuto23Jotswix`；K_REACH +22 = 该模块
+22 条声明（3 公开孪生 + 19 private kit）全部经 `LFLACKU_p23'` 进入锥；K_UNIVERSE +49 = 上述 22 +
+自 AK 以来 cone-neutral 的 Close/LA22 新声明（D2 `5251d592`、D4 `a3a41000` 的支产品等，入 env
+但不可达）⇒ COVERAGE −0.0013pp 为分母增长快于分子的算术效应。
+**孤儿记账**：LA23 四条（`taum_attains_inf_p23` / `TAUM_EXTREMAL_p23` / `TAUM_STD_POS_p23` /
+`LFLACKU_p23`）文件级 sorry 仍在（锥外、不删不改）。若将来做文件级清零：`taum_attains_inf_p23`
+按 HOL `JOTSWIX.hl:9` 走 SF 补六条箱约束（约 40 行，复用 `taum_attains_inf_box_jx`）。
+**注**：`LocalAuto16.JEJTVGB_case_breakdown_p16` 仍带 `sorryAx`（其余 22 支 terminal 箭头，含
+`OCBICBY_p22`），与基线 AK 同；OCBICBY 14 支中 12 支产品已在库（cone-neutral）。
+
 ### 基线 AK：perimeter 收线（Text 3→2）@ `dc998142`（2026-11-14）
 
 > 触发：`perimb1-w1` 交付——`fully_surrounded_perimeter_bound` 出锥（`dc998142`：W44
