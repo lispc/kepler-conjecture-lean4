@@ -1512,13 +1512,20 @@ theorem BB_4M8_IMP_BB_STAN_4M8_p32 (v : ℕ → V3) (i j : ℕ)
     BBsV39 (scsStabDiagV39 scs4M8 i j) v :=
   la32stabBB4 scs4M8 v i j rfl h1 h3
 
-/-- HOL `MM_4M8_IMP_STAB_4M8` (MIQMCSN.hl:1521). -/
+/-- HOL `MM_4M8_IMP_STAB_4M8` (MIQMCSN.hl:1521). In-region twin of the
+`la32MM_4M7_IMP_STAB` skeleton on `scs_4M8`: `XWNHLMD_MM` on
+`s' = scsStabDiagV39 scs4M8 i j` over `BB_4M8_IMP_BB_STAN_4M8_p32`. -/
 theorem MM_4M8_IMP_STAB_4M8_p32 (v : ℕ → V3) (i j : ℕ)
     (h1 : v ∈ MMsV39 scs4M8) (h2 : scsDiag 4 i j)
     (h3 : dist (v i) (v j) ≤ cstab) :
     MMsV39 (scsStabDiagV39 scs4M8 i j) ≠ ∅ := by
-  sorry
-  -- NEEDS: XWNHLMD_MM + MMS_IMP_BBS + BB_4M8_IMP_BB_STAN_4M8_p32.
+  have hk4 : scs4M8.k = 4 := rfl
+  have hd' : scsDiag scs4M8.k i j := by rw [hk4]; exact h2
+  exact XWNHLMD_MM_p33 scs4M8 (scsStabDiagV39 scs4M8 i j) v
+    SCS_4M8_IS_SCS_p29 (STAB_4M8_SCS_p33 i j hd').1 SCS_4M8_BASIC_p29
+    (STAB_4M8_SCS_p33 i j hd').2 rfl h1
+    (BB_4M8_IMP_BB_STAN_4M8_p32 v i j (MMS_IMP_BBS_p28 scs4M8 v h1) h2 h3)
+    (le_refl _)
 
 /-- HOL `SET_STAB_4M8` (MIQMCSN.hl:1539). -/
 theorem SET_STAB_4M8_p32 :
@@ -2609,39 +2616,138 @@ theorem YOBIMPP_p32 :
 
 /-! ## Section 8: the 4M8 dichotomy (MIQMCSN.hl:2491-3053) -/
 
-/-- HOL `BB_4M8_IMP_4M6_23` (MIQMCSN.hl:2491). -/
+/-- HOL `BB_4M8_IMP_4M6_23` (MIQMCSN.hl:2491). As `BB_4M7_IMP_4M6_12_p32`:
+the tables agree except on the class `{2,3}`, where `4M6'.b = 2*h0` and the
+pin `dist(v2,v3) = 2*h0` supplies the upper bound. -/
 theorem BB_4M8_IMP_4M6_23_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 2) (v 3) = 2 * h0 → BBsV39 scs4M6' v := by
-  sorry
-  -- NEEDS: VASYYAU / main_nonlinear_terminal_v11 + BBs_v39 pointwise
-  -- table match (4M8 → 4M6' via the 23-edge rotation).
+  intro h v hv hdist h23
+  have hBB : BBsV39 scs4M8 v := MMS_IMP_BBS_p28 scs4M8 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [show scs4M8.k = 4 from rfl] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  have h23' : dist (v 3) (v 2) = 2 * h0 := by rw [dist_comm]; exact h23
+  -- pointwise target bounds: the tables agree except on the class `{2,3}`,
+  -- where `4M6'.b = 2*h0` and the pin `h23` supplies the upper bound
+  have hpt : ∀ i j, scs4M6'.a i j ≤ dist (v i) (v j) ∧
+      dist (v i) (v j) ≤ scs4M6'.b i j := by
+    intro i j
+    have hA8 : scs4M8.a i j = scs4M8.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB8 : scs4M8.b i j = scs4M8.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+        ((1, 3), 6)] (2 * h0) 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hA6 : scs4M6'.a i j = scs4M6'.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4)
+          (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB6 : scs4M6'.b i j = scs4M6'.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4)
+          (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hd : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    have h7 := hBB.2.2.1 i j
+    rw [hA8, hB8, hd] at h7
+    rw [hA6, hB6, hd]
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      norm_num [scs4M6', scs4M8, mkUnadornedV39, funlistV39, psort, assocdV39, h0]
+        at h7 ⊢ <;>
+      first
+        | exact h7
+        | (rw [h23]; norm_num [h0])
+        | (rw [h23']; norm_num [h0])
+        | linarith
+  exact la32BB_of_pt (s := scs4M6') (t := scs4M8) rfl hpt hBB
 
 /-- HOL `MM_4M8_IMP_MM_4M6_23` (MIQMCSN.hl:2527). -/
 theorem MM_4M8_IMP_MM_4M6_23_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 2) (v 3) = 2 * h0 → MMsV39 scs4M6' ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M8_IMP_4M6_23_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdist h23
+  exact XWNHLMD_MM_p33 scs4M8 scs4M6' v SCS_4M8_IS_SCS_p29 SCS_4M6_IS_SCS_p29
+    SCS_4M8_BASIC_p29 SCS_4M6_BASIC rfl hv
+    (BB_4M8_IMP_4M6_23_p32 h v hv hdist h23) (le_refl _)
 
-/-- HOL `BB_4M8_IMP_4M6_01` (MIQMCSN.hl:2548). -/
+/-- HOL `BB_4M8_IMP_4M6_01` (MIQMCSN.hl:2548). As `BB_4M7_IMP_4M6_01_p32`
+on the plain `opp 4M6'` table (`peropp2` reflection): the reflected tables
+agree with the `scs_4M8` ones except on the class `{0,1}`, where
+`(opp 4M6').b = 2*h0` and the pin `dist(v0,v1) = 2*h0` supplies the upper
+bound. -/
 theorem BB_4M8_IMP_4M6_01_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 0) (v 1) = 2 * h0 → BBsV39 (scsOppV39 scs4M6') v := by
-  sorry
-  -- NEEDS: VASYYAU / main_nonlinear_terminal_v11 + BBs_v39 through
-  -- scs_opp_v39 (peropp2 re-index).
+  intro h v hv hdist h01
+  have hBB : BBsV39 scs4M8 v := MMS_IMP_BBS_p28 scs4M8 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [show scs4M8.k = 4 from rfl] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  have h01' : dist (v 1) (v 0) = 2 * h0 := by rw [dist_comm]; exact h01
+  -- mod-4 invariance of the reflected table (`peropp2` is periodic)
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpb, -⟩ := SCS_4M6_OPP_IS_SCS_p32
+  have hpa4 : Periodic2 (scsOppV39 scs4M6').a 4 := hpa
+  have hpb4 : Periodic2 (scsOppV39 scs4M6').b 4 := hpb
+  have hA01 := fun i j => periodic2_mod_eq_p26 (by omega : 0 < 4) hpa4 i j
+  have hB01 := fun i j => periodic2_mod_eq_p26 (by omega : 0 < 4) hpb4 i j
+  -- pointwise target bounds: the reflected `a`-table is dominated by the
+  -- `scs_4M8` one, the `b`-table agrees except on `{0,1}`, where `h01` pins
+  have hpt : ∀ i j, (scsOppV39 scs4M6').a i j ≤ dist (v i) (v j) ∧
+      dist (v i) (v j) ≤ (scsOppV39 scs4M6').b i j := by
+    intro i j
+    have hA8 : scs4M8.a i j = scs4M8.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB8 : scs4M8.b i j = scs4M8.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+        ((1, 3), 6)] (2 * h0) 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hd : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    have h7 := hBB.2.2.1 i j
+    rw [hA8, hB8, hd] at h7
+    rw [hA01 i j, hB01 i j, hd]
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      norm_num [scsOppV39, peropp2, scs4M6', scs4M8, mkUnadornedV39, funlistV39,
+        psort, assocdV39, h0] at h7 ⊢ <;>
+      first
+        | exact h7
+        | (rw [h01]; norm_num [h0])
+        | (rw [h01']; norm_num [h0])
+        | (norm_num [h0] at h7 ⊢; linarith)
+  exact la32BB_of_pt (s := scsOppV39 scs4M6') (t := scs4M8) rfl hpt hBB
 
 /-- HOL `MM_4M8_IMP_MM_4M6_01` (MIQMCSN.hl:2594). -/
 theorem MM_4M8_IMP_MM_4M6_01_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 0) (v 1) = 2 * h0 → MMsV39 (scsOppV39 scs4M6') ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M8_IMP_4M6_01_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdist h01
+  exact XWNHLMD_MM_p33 scs4M8 (scsOppV39 scs4M6') v
+    SCS_4M8_IS_SCS_p29 SCS_4M6_OPP_IS_SCS_p32 SCS_4M8_BASIC_p29
+    (BASIC_OPP_p16 scs4M6' SCS_4M6_IS_SCS_p29 SCS_4M6_BASIC) rfl hv
+    (BB_4M8_IMP_4M6_01_p32 h v hv hdist h01) (le_refl _)
 
 /-- HOL `h0_LT_B_SCS_4M8` (MIQMCSN.hl:2627). -/
 theorem h0_LT_B_SCS_4M8_p32 :
@@ -2723,27 +2829,148 @@ theorem SCS_4M8_STAND_p32 :
     scs4M8.a 3 6 = 2 * h0 := by
   simp [scs4M8, mkUnadornedV39, funlistV39, psort, assocdV39]
 
-/-- HOL `MIN_NOT_STAND_4M8` (MIQMCSN.hl:2669). -/
+/-- HOL `MIN_NOT_STAND_4M8` (MIQMCSN.hl:2669). As `MIN_NOT_STAND_4M7_p32`
+on `scs_4M8`: `VASYYAU` at the straight index for the four straight leaves;
+the all-non-straight leaf splits on `TUAPYYU @ 0` / `@ 2` (the `2*h0` branch
+lands in the first two disjuncts, the two `cstab` branches in the third) with
+the two remaining unit edges supplied by `YEBWJNG @ 1` / `@ 3`. -/
 theorem MIN_NOT_STAND_4M8_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 2) (v 3) = 2 * h0 ∨ dist (v 0) (v 1) = 2 * h0 ∨
     (dist (v 0) (v 1) = cstab ∧ dist (v 1) (v 2) = 2 ∧
       dist (v 2) (v 3) = cstab ∧ dist (v 3) (v 0) = 2) := by
-  sorry
-  -- NEEDS: main_nonlinear_terminal_v11 + MMS_IMP_BBS + BB_VV_FUN_EQ +
-  -- SCS_4M8_STAND_OR_PRO_p32 + SCS_4M8_STAND_p32 + VASYYAU.
+  intro h v hv hdist
+  have his : isScsV39 scs4M8 := SCS_4M8_IS_SCS_p29
+  have hbas : scsBasicV39 scs4M8 := SCS_4M8_BASIC_p29
+  have hk : scs4M8.k = 4 := rfl
+  have hBB : BBsV39 scs4M8 v := MMS_IMP_BBS_p28 scs4M8 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [hk] at hp
+    exact hp
+  have hv4 : v 4 = v 0 := by
+    have hp := hper 0
+    simpa using hp
+  have hv6 : v 6 = v 2 := by
+    have hp := hper 2
+    simpa using hp
+  have hdiag : ∀ i j, scsDiag 4 i j → scs4M8.a i j ≤ cstab ∧
+      cstab < dist (v i) (v j) ∧ 4 * h0 < scs4M8.b i j := by
+    intro i j hd
+    exact ⟨(h0_LT_B_SCS_4M8_p32).2 i j hd, hdist i j hd, (h0_LT_B_SCS_4M8_p32).1 i j hd⟩
+  have hval := SCS_4M8_STAND_OR_PRO_p32
+  obtain ⟨ha01, ha12, ha25, hb12, hb01, ha23, ha34, hb23, ha14, ha36⟩ :=
+    SCS_4M8_STAND_p32
+  by_cases hs0 : scsIsStr scs4M8 v 0
+  · -- `str 0`: `VASYYAU @ 0` pins `dist(v0,v1) = a 0 1 = 2*h0`
+    obtain ⟨hd01, -⟩ := VASYYAU_kit h scs4M8 v 0 his hbas hk hv hdiag hval hs0
+    exact Or.inr (Or.inl (hd01.trans ha01))
+  · by_cases hs2 : scsIsStr scs4M8 v 2
+    · -- `str 2`: `VASYYAU @ 2` pins `dist(v2,v3) = a 2 3 = 2*h0`
+      obtain ⟨hd23, -⟩ := VASYYAU_kit h scs4M8 v 2 his hbas hk hv hdiag hval hs2
+      exact Or.inl (hd23.trans ha23)
+    · by_cases hs1 : scsIsStr scs4M8 v 1
+      · -- `str 1`: `VASYYAU @ 1` pins `dist(v1,v4) = a 1 4 = 2*h0`; `v 4 = v 0`
+        obtain ⟨-, hd14⟩ := VASYYAU_kit h scs4M8 v 1 his hbas hk hv hdiag hval hs1
+        rw [show 1 + 3 = 4 by norm_num, ha14, hv4, dist_comm] at hd14
+        exact Or.inr (Or.inl hd14)
+      · by_cases hs3 : scsIsStr scs4M8 v 3
+        · -- `str 3`: `VASYYAU @ 3` pins `dist(v3,v6) = a 3 6 = 2*h0`; `v 6 = v 2`
+          obtain ⟨-, hd36⟩ := VASYYAU_kit h scs4M8 v 3 his hbas hk hv hdiag hval hs3
+          rw [show 3 + 3 = 6 by norm_num, ha36, hv6, dist_comm] at hd36
+          exact Or.inl hd36
+        · -- `~str 0/1/2/3`: `TUAPYYU @ 0`/`@ 2` split `a` vs `b`; the two
+          -- `b` branches (`cstab`) are the protruding configuration, whose
+          -- unit edges come from `YEBWJNG @ 1`/`@ 3`
+          have hs4 : ¬scsIsStr scs4M8 v 4 := by
+            intro h4
+            exact hs0 (by simpa using (STR_MOD_EQ_p25 scs4M8 v 4 his hk hv 4).mpr h4)
+          obtain hd01 | hd01 := TUAPYYU_kit h scs4M8 v 0 his hbas hk hv hdiag hval hs0 hs1
+          · exact Or.inr (Or.inl (hd01.trans ha01))
+          · obtain hd23 | hd23 := TUAPYYU_kit h scs4M8 v 2 his hbas hk hv hdiag hval hs2 hs3
+            · exact Or.inl (hd23.trans ha23)
+            · have h12 : dist (v 1) (v 2) = 2 := by
+                simpa using YEBWJNG_kit h scs4M8 v 1 his hbas hk hv hdiag hval hs1 hs2 ha12
+              have h30 : dist (v 3) (v 0) = 2 := by
+                have h34 : dist (v 3) (v 4) = 2 := by
+                  simpa using
+                    YEBWJNG_kit h scs4M8 v 3 his hbas hk hv hdiag hval hs3 hs4 ha34
+                rwa [hv4] at h34
+              exact Or.inr (Or.inr ⟨hd01.trans hb01, h12, hd23.trans hb23, h30⟩)
 
-/-- HOL `BB_4M8_IMP_scs_4M8_02` (MIQMCSN.hl:2757). -/
+/-- HOL `BB_4M8_IMP_scs_4M8_02` (MIQMCSN.hl:2757). The `scs_4M8_02` tables
+differ from the `scs_4M8` ones on the classes `{0,1}`/`{2,3}` (higher `a`,
+pinned by the two `cstab` edges), `{0,3}`/`{1,2}` (lower `b = 2`, pinned by
+the two unit edges) and `{0,2}` (lower `b = 3.62`, the given bound). -/
 theorem BB_4M8_IMP_scs_4M8_02_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 0) (v 1) = cstab → dist (v 1) (v 2) = 2 →
     dist (v 2) (v 3) = cstab → dist (v 3) (v 0) = 2 →
     dist (v 0) (v 2) ≤ 3.62 → BBsV39 scs4M8_02 v := by
-  sorry
-  -- NEEDS: MIN_NOT_STAND_4M8_p32 + BBs_v39 pointwise table match
-  -- (FUNLIST_EXPLICIT on scs_4M8_02).
+  intro h v hv hdist h01 h12 h23 h30 h02le
+  have hBB : BBsV39 scs4M8 v := MMS_IMP_BBS_p28 scs4M8 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [show scs4M8.k = 4 from rfl] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  have h01' : dist (v 1) (v 0) = cstab := by rw [dist_comm]; exact h01
+  have h23' : dist (v 3) (v 2) = cstab := by rw [dist_comm]; exact h23
+  have h21 : dist (v 2) (v 1) = 2 := by rw [dist_comm]; exact h12
+  have h03 : dist (v 0) (v 3) = 2 := by rw [dist_comm]; exact h30
+  have h20le : dist (v 2) (v 0) ≤ 3.62 := by rw [dist_comm]; exact h02le
+  have hpt : ∀ i j, scs4M8_02.a i j ≤ dist (v i) (v j) ∧
+      dist (v i) (v j) ≤ scs4M8_02.b i j := by
+    intro i j
+    have hA8 : scs4M8.a i j = scs4M8.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB8 : scs4M8.b i j = scs4M8.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+        ((1, 3), 6)] (2 * h0) 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hA2 : scs4M8_02.a i j = scs4M8_02.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB2 : scs4M8_02.b i j = scs4M8_02.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 3.62),
+        ((1, 3), 6)] 2 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), 3.62), ((1, 3), 6)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hd : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    have h7 := hBB.2.2.1 i j
+    rw [hA8, hB8, hd] at h7
+    rw [hA2, hB2, hd]
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      norm_num [scs4M8_02, scs4M8, mkUnadornedV39, funlistV39, psort, assocdV39, h0,
+        cstab] at h7 ⊢ <;>
+      first
+        | exact h7
+        | (rw [h01]; norm_num [h0, cstab])
+        | (rw [h01']; norm_num [h0, cstab])
+        | (rw [h23]; norm_num [h0, cstab])
+        | (rw [h23']; norm_num [h0, cstab])
+        | (rw [h12]; norm_num [h0, cstab])
+        | (rw [h21]; norm_num [h0, cstab])
+        | (rw [h30]; norm_num [h0, cstab])
+        | (rw [h03]; norm_num [h0, cstab])
+        | exact h02le
+        | exact h20le
+        | (exact ⟨h7.1, by linarith⟩)
+        | exact h7.1
+        | exact h7.2
+        | linarith
+  exact la32BB_of_pt (s := scs4M8_02) (t := scs4M8) rfl hpt hBB
 
 /-- HOL `MM_4M8_IMP_MM_4M8_02` (MIQMCSN.hl:2796). -/
 theorem MM_4M8_IMP_MM_4M8_02_p32 :
@@ -2752,19 +2979,81 @@ theorem MM_4M8_IMP_MM_4M8_02_p32 :
     dist (v 0) (v 1) = cstab → dist (v 1) (v 2) = 2 →
     dist (v 2) (v 3) = cstab → dist (v 3) (v 0) = 2 →
     dist (v 0) (v 2) ≤ 3.62 → MMsV39 scs4M8_02 ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M8_IMP_scs_4M8_02_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdist h01 h12 h23 h30 h02le
+  exact XWNHLMD_MM_p33 scs4M8 scs4M8_02 v SCS_4M8_IS_SCS_p29
+    SCS_4M8_02_IS_SCS_p32 SCS_4M8_BASIC_p29 SCS_4M8_02_BASIC_p32 rfl hv
+    (BB_4M8_IMP_scs_4M8_02_p32 h v hv hdist h01 h12 h23 h30 h02le) (le_refl _)
 
-/-- HOL `BB_4M8_IMP_scs_4M8_13` (MIQMCSN.hl:2814). -/
+/-- HOL `BB_4M8_IMP_scs_4M8_13` (MIQMCSN.hl:2814). As the `_02` twin with the
+`{1,3}` `b`-slot lowered to `3.62` (given bound) instead of `{0,2}`. -/
 theorem BB_4M8_IMP_scs_4M8_13_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M8 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 0) (v 1) = cstab → dist (v 1) (v 2) = 2 →
     dist (v 2) (v 3) = cstab → dist (v 3) (v 0) = 2 →
     dist (v 1) (v 3) ≤ 3.62 → BBsV39 scs4M8_13 v := by
-  sorry
-  -- NEEDS: MIN_NOT_STAND_4M8_p32 + BBs_v39 pointwise table match
-  -- (FUNLIST_EXPLICIT on scs_4M8_13).
+  intro h v hv hdist h01 h12 h23 h30 h13le
+  have hBB : BBsV39 scs4M8 v := MMS_IMP_BBS_p28 scs4M8 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [show scs4M8.k = 4 from rfl] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  have h01' : dist (v 1) (v 0) = cstab := by rw [dist_comm]; exact h01
+  have h23' : dist (v 3) (v 2) = cstab := by rw [dist_comm]; exact h23
+  have h21 : dist (v 2) (v 1) = 2 := by rw [dist_comm]; exact h12
+  have h03 : dist (v 0) (v 3) = 2 := by rw [dist_comm]; exact h30
+  have h31le : dist (v 3) (v 1) ≤ 3.62 := by rw [dist_comm]; exact h13le
+  have hpt : ∀ i j, scs4M8_13.a i j ≤ dist (v i) (v j) ∧
+      dist (v i) (v j) ≤ scs4M8_13.b i j := by
+    intro i j
+    have hA8 : scs4M8.a i j = scs4M8.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB8 : scs4M8.b i j = scs4M8.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+        ((1, 3), 6)] (2 * h0) 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hA2 : scs4M8_13.a i j = scs4M8_13.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB2 : scs4M8_13.b i j = scs4M8_13.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6),
+        ((1, 3), 3.62)] 2 4 i j = funlistV39 [((0, 1), cstab), ((2, 3), cstab),
+        ((0, 2), 6), ((1, 3), 3.62)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hd : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    have h7 := hBB.2.2.1 i j
+    rw [hA8, hB8, hd] at h7
+    rw [hA2, hB2, hd]
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      norm_num [scs4M8_13, scs4M8, mkUnadornedV39, funlistV39, psort, assocdV39, h0,
+        cstab] at h7 ⊢ <;>
+      first
+        | exact h7
+        | (rw [h01]; norm_num [h0, cstab])
+        | (rw [h01']; norm_num [h0, cstab])
+        | (rw [h23]; norm_num [h0, cstab])
+        | (rw [h23']; norm_num [h0, cstab])
+        | (rw [h12]; norm_num [h0, cstab])
+        | (rw [h21]; norm_num [h0, cstab])
+        | (rw [h30]; norm_num [h0, cstab])
+        | (rw [h03]; norm_num [h0, cstab])
+        | exact h13le
+        | exact h31le
+        | (exact ⟨h7.1, by linarith⟩)
+        | exact h7.1
+        | exact h7.2
+        | linarith
+  exact la32BB_of_pt (s := scs4M8_13) (t := scs4M8) rfl hpt hBB
 
 /-- HOL `MM_4M8_IMP_MM_4M8_13` (MIQMCSN.hl:2853). -/
 theorem MM_4M8_IMP_MM_4M8_13_p32 :
@@ -2773,8 +3062,10 @@ theorem MM_4M8_IMP_MM_4M8_13_p32 :
     dist (v 0) (v 1) = cstab → dist (v 1) (v 2) = 2 →
     dist (v 2) (v 3) = cstab → dist (v 3) (v 0) = 2 →
     dist (v 1) (v 3) ≤ 3.62 → MMsV39 scs4M8_13 ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M8_IMP_scs_4M8_13_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdist h01 h12 h23 h30 h13le
+  exact XWNHLMD_MM_p33 scs4M8 scs4M8_13 v SCS_4M8_IS_SCS_p29
+    SCS_4M8_13_IS_SCS_p32 SCS_4M8_BASIC_p29 SCS_4M8_13_BASIC_p32 rfl hv
+    (BB_4M8_IMP_scs_4M8_13_p32 h v hv hdist h01 h12 h23 h30 h13le) (le_refl _)
 
 /-- HOL `SCS_4M8_ARROW_STEP_ONE` (MIQMCSN.hl:2874). -/
 theorem SCS_4M8_ARROW_STEP_ONE_p32 :
