@@ -161,7 +161,9 @@
 > **K8 底部 `eaa72287`**（+545/−32，12 件：IS_SCS 三 + STAB/SLICE 四 + 4M8 slice/arrow 五；LA32 sorry 30→18）。
 > **K8 3T7 链 `ba7af457`**（+65/−19，6 件：`MM_4M7_IMP_STAB` 回填 + 3T7 链五件；LA32 sorry 18→12）。
 > **K8 主体 `d490e099`**（+324/−33，10 件：`MIN_NOT_STAND_4M8` + BB/MM_4M8 八件孪生 + `MM_4M8_IMP_STAB_4M8`；LA32 sorry 12→2）。
-> **在飞终局车道 `miqmcsn-w1`**：`SCS_4M8_ARROW_STEP_ONE_p32` + **`MIQMCSN_p32`（最后一件目标）**；全绿即 LA32 零 sorry。
+> **终局 `4750bc3f`**（+112/−8：`SCS_4M8_ARROW_STEP_ONE_p32` + **`MIQMCSN_p32` 真证——终极三目标 3/3 全收**；
+> **LA32 sorry 2→0**；46/46 探针标准三、根面 md5 逐字节同）。**VASYYAU 闸族战役收线**。
+> 地图仪器复测中（预期 SORRIED 61→58，Text 6→3）。
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
 > 两车道同改 LA32 但行段分离（373-700 vs 993+），import 插入点不同；先到先落。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
@@ -339,6 +341,13 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（11:50，续1120）**：**🎯 战役收线——终局车道 `miqmcsn-w1` 落库 `4750bc3f`（+112/−8）：`MIQMCSN_p32` 真证，终极三目标 3/3 全收；`LocalAuto32.lean` sorry 2→0（零 sorry）；VASYYAU 闸族「四 master + 三目标」全部真证**。
+① **两件真证**：`SCS_4M8_ARROW_STEP_ONE_p32`（arrow 两面：is_scs 五叶 = `SCS_4M6_IS_SCS`/`OPP_IS_SCS_p33`/`SCS_4M8_02_IS_SCS`/`SCS_4M8_13_IS_SCS`/`STAB_4M8_SCS`；MMs 二分 = `MIN_NOT_STAND_4M8` 三合取 → `MM_4M8_IMP_MM_4M6_23`/`_4M6_01`/（`quad_diag_362_p16` 在 `(v1,v2,v3,v0)` 取 `dist(v1,v3)≤3.62 ∨ dist(v2,v0)≤3.62` 两分支）→ `MM_4M8_IMP_MM_4M8_13`/`_02`，非严格叶 → `MM_4M8_IMP_STAB_4M8`）+ **`MIQMCSN_p32`**（`FZIOTEF_TRANS` 过 STEP_ONE 中间集五片入 `{4M6',3T7,3T4}`：`FZIOTEF_REFL`/`YXIONXL2`+`SCS_OPP_REFL_fb`/`SCS_4M8_{02,13}_ARROW_3T7`/`SET_STAB_4M8_ARROW_3T4`，`FZIOTEF_BOTH_p33`+`SING_PAD_p33` 归并）。
+② **编排者闸（亲跑）**：worktree@`945709ce` apply RC=0；numstat **+112/−8**、删除面恰 **2** sorry、禁项 0/0/0/0、import 零变化；直编 **rc=0/error 0/sorry-decls=0**（16.3 s / 6.39 GB）；**46/46 探针标准三**；根面 md5 **`246e952c…` 逐字节同**。commit `4750bc3f`，已 push。
+③ **战役总账（VASYYAU 闸族，2026-11-13 20:35 → 11-14 11:50）**：25 笔 V 系列（V1-V25）+ 8 笔 K 系列（K6/K7/K8 ladder）全部过闸落库；四 master（`VASYYAU/TUAPYYU/WKZZEEH/PWEIWBZ_kit`）4/4、终极三目标（`NWDGKXH_p32`/`YOBIMPP_p32`/`MIQMCSN_p32`）3/3；LA32 sorry **60→0**、簇 `LocalAuto23Vas` 14/14 零 sorry、LocalConcl 四 discharge 转标准三；全程零装债消费、根面 md5 始终 `246e952c…`。
+④ **待办**：地图仪器已启动（`reachmap_4750bc3f.out`，~19 min）——预期 SORRIED **61→58**（Text 6→3）、TSV 刷新；随后文档六件（账本/AGENTS §1/README×2/hf-map/入口层）与 handoff 定稿。
+⑤ 下一条：续1121。
 
 - **2026-11-14（11:25，续1118）**：**K8 双车道同批落库——3T7 链 `ba7af457`（+65/−19，6 件）+ 主体 `d490e099`（+324/−33，10 件）；LA32 sorry 18→2，**只剩 `SCS_4M8_ARROW_STEP_ONE` + `MIQMCSN`（终极最后两件）；终局车道 `miqmcsn-w1` 发车**。
 ① **k8-arrow-w1（6/6）**：`MM_4M7_IMP_STAB_4M7_p32` 回填（`XWNHLMD_MM_p33`+`BB_4M7_IMP_BB_STAN`；私有孪生 :2429 保留待一行化——公开 :964 在孪生上方、Lean 无前向引用，故重述 8 行体）、`SCS_3T7_OPP_IS_SCS`（`OPP_IS_SCS_p33` 泛型 peropp）、`SCS_4M8_13_ARROW_3T7{,_OPP}`（`FZIOTEF_TRANS` via `{pe 3T7 1}`/`{pe (opp 3T7) 2}` + `PRO_EQU_ID1` 折叠；**ERRATA：`YXIONXL2` 对 k=3 不适用且不需要**）、`SCS_4M8_02_ARROW_4M8_13`（`YXIONXL2`(k=4)+`YXIONXL3`@2 vs `OPP_IS_SCS`+`PROP_OPP_4M8_13`）、`SCS_4M8_02_ARROW_3T7`（`FZIOTEF_TRANS` via `{4M8_13}`）。
