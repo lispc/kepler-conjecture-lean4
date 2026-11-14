@@ -104,6 +104,7 @@ import Kepler.Text.LocalAuto21
 -- LocalAuto21; LA16 keeps using it (LA16:1349) and `#print axioms`
 -- (LA16:1843) through this import. Acyclic: LA21 no longer imports LA16.
 import Kepler.Text.LocalAuto22
+import Kepler.Text.LocalAuto22Close
 import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto27

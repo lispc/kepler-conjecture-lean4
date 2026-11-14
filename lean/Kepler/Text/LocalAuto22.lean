@@ -3045,15 +3045,7 @@ theorem vv_split_azim_generic_p22 (vv : ℕ → V3) (k i j j' : ℕ)
     (w2 := vv (i + j')) hne0i hcol1 hcolj hcolj' hle
 
 
-/-- HOL `empty_6T1` (giant; the analytic core of the terminal emptiness). -/
-theorem empty_6T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
-    (hB : BBsV39 scs6T1 vv) : 0 ≤ taustarV39 scs6T1 vv := by
-  sorry
 
-/-- HOL `empty_5T1` (giant). -/
-theorem empty_5T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
-    (hB : BBsV39 scs5T1 vv) : 0 ≤ taustarV39 scs5T1 vv := by
-  sorry
 
 /-! ## LANE emptykit-3 (2026-11-12): the `OCBICBY_p22` `empty_*` kit.
 
@@ -4271,7 +4263,7 @@ private theorem empty5T1_setSum5 (g : ℕ → ℝ) :
 `1 + sqrt 5`.  HOL `VPWSHTO_PRIME` is `VPWSHTO_PRIME_p15` (LA15, proved);
 the packing/distinctness/edge hypotheses are discharged from `BBsV39 scs5T1`
 + `vv_inj_lemma_p22` exactly as in HOL. -/
-private theorem empty5T1_vpwshto_p22 (vv : ℕ → V3) (hB : BBsV39 scs5T1 vv) :
+theorem empty5T1_vpwshto_p22 (vv : ℕ → V3) (hB : BBsV39 scs5T1 vv) :
     ∃ j : ℕ, j < 5 ∧ dist (vv j) (vv (j + 2)) ≤ 1 + Real.sqrt 5 ∧
       dist (vv j) (vv (j + 3)) ≤ 1 + Real.sqrt 5 := by
   have hsub0 : Set.range vv ⊆ ballAnnulus := hB.1
@@ -4344,7 +4336,7 @@ conclusion of `terminal_pent_taum2_p22` at `j`) implies
 `AZIM_DIHV_SAME_STRONG`, `tau_fun_azim`, `dsv_unadorned`,
 `periodic_sum_shift_p22`, `tau3_taum_40`, `taum_sym2`, `azim_nonneg` —
 see DELIVERY.md for the (separate, still open) numeric closure. -/
-private theorem empty5T1_pent_bridge_p22 (h : main_nonlinear_terminal_v11)
+theorem empty5T1_pent_bridge_p22 (h : main_nonlinear_terminal_v11)
     (vv : ℕ → V3) (hB : BBsV39 scs5T1 vv) (j : ℕ) (hj : j < 5)
     (hdj2 : dist (vv j) (vv (j + 2)) ≤ 1 + Real.sqrt 5)
     (hdj3 : dist (vv j) (vv (j + 3)) ≤ 1 + Real.sqrt 5)
@@ -4645,7 +4637,7 @@ private theorem empty5T1_pent_bridge_p22 (h : main_nonlinear_terminal_v11)
 /-- LANE hex51-w1 (2026-11-14): helper for the `empty_6T1` taustar
 expansion — the `{i | i < 6}` set-sum rendered as a `Finset.range 6` sum
 (twin of `empty5T1_setSum5`, HOL OCBICBY.hl:3000-3010 sum expansion). -/
-private theorem empty6T1_setSum6 (g : ℕ → ℝ) :
+theorem empty6T1_setSum6 (g : ℕ → ℝ) :
     setSum {i | i < 6} g = ∑ i ∈ Finset.range 6, g i := by
   have hf : ({i | i < 6} : Set ℕ).Finite := (Set.finite_Iio 6).subset (fun _ h => h)
   rw [setSum, dif_pos hf]
@@ -4675,7 +4667,7 @@ discharge (see DELIVERY.md).  Consumes only the clean kit:
 `PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14`, `AZIM_DIHV_SAME_STRONG`,
 `tau_fun_azim`, `dsv_unadorned`, `tau3_taum_40`, `taum_sym2`,
 `azim_nonneg`, registry `6459846571` and `DELTA_Y_POS_4POINTS`. -/
-private theorem empty6T1_hex_bridge_p22 (h : main_nonlinear_terminal_v11)
+theorem empty6T1_hex_bridge_p22 (h : main_nonlinear_terminal_v11)
     (vv : ℕ → V3) (hB : BBsV39 scs6T1 vv)
     (hnum : 0.712 < taum ‖vv 1‖ ‖vv 0‖ ‖vv 2‖ (dist (vv 0) (vv 2)) 2 2
       + taum ‖vv 0‖ ‖vv 2‖ ‖vv 4‖ (dist (vv 2) (vv 4)) (dist (vv 0) (vv 4))
@@ -5195,19 +5187,6 @@ theorem angle_sum_5T1_p22 (h : main_nonlinear_terminal_v11)
     exact hL2
   linarith [hd488, hsub, hd678, hL1', hL2']
 
-/-- HOL `terminal_pent_taum2`. -/
-theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
-    (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
-    (hd1 : 0 ≤ deltaY y126 y1 y2 y6 2 2)
-    (hd2 : 0 ≤ deltaY y135 y1 y3 y5 2 2)
-    (hsub : dihY y1 y126 y135 cstab 2 2 ≤
-        dihY y1 y2 y3 y4 y5 y6 + dihY y1 y2 y126 2 2 y6 +
-          dihY y1 y3 y135 2 2 y5) :
-    ineqP22 [(2, y1, 2 * h0), (2, y2, 2 * h0), (2, y3, 2 * h0), (2, y4, 2),
-      (3.01, y5, 3.237), (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
-      (0.616 < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 +
-        taum y135 y1 y3 y5 2 2) := by
-  sorry
 
 /-! ## `dih_y_mono` kit: `dihY` monotone in its 4th slot
 
@@ -6759,15 +6738,5 @@ theorem OCBICBY_4T2_p22 (h : main_nonlinear_terminal_v11) :
   obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
   exact (not_le.mpr hneg) (empty_4T2 h _ hbb)
 
-/-- HOL `OCBICBY`: the 14 T-row arrows to the empty system (giant; discharges
-LocalAuto16's `JEJTVGB_case_breakdown_p16` NEEDS marker when the `empty_*`
-lane lands). -/
-theorem OCBICBY_p22 (h : main_nonlinear_terminal_v11) :
-    scsArrowV39 {scs6T1} ∅ ∧ scsArrowV39 {scs5T1} ∅ ∧ scsArrowV39 {scs4T1} ∅ ∧
-      scsArrowV39 {scs4T2} ∅ ∧ scsArrowV39 {scs4T3} ∅ ∧ scsArrowV39 {scs4T4} ∅ ∧
-      scsArrowV39 {scs4T5} ∅ ∧ scsArrowV39 {scs3T1} ∅ ∧ scsArrowV39 {scs3T2} ∅ ∧
-      scsArrowV39 {scs3T3} ∅ ∧ scsArrowV39 {scs3T4} ∅ ∧ scsArrowV39 {scs3T5} ∅ ∧
-      scsArrowV39 {scs3T6'} ∅ ∧ scsArrowV39 {scs3T7} ∅ := by
-  sorry
 
 end Kepler.Text
