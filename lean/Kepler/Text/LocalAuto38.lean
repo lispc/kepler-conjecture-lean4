@@ -131,6 +131,9 @@ import Kepler.Text.TopologyFan
 import Kepler.Text.AzimBridge
 import Kepler.Text.LocalAuto5
 import Kepler.Text.IneqClosureDefs
+import Kepler.Text.PackingAuto12
+import Kepler.Text.PackingAuto18
+import Kepler.Text.LocalAuto21Kit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -2708,6 +2711,410 @@ theorem vv_split_azim_generic (vv : ℕ → V3) (k i j j' : ℕ)
   -- BLOCKED: needs EGHNAVX1_ALT + sum4_azim_fan (TopologyFan lane).
     -- sum4_azim_fan (TopologyFan lane)
 
+/-! ### The 5-point Cayley–Menger identity (HOL `CAYLEYR_5POINTS`,
+collect_geom2.hl:210-265, the Nov 14 2014 redo) and the `enclosed` quadratic
+machinery (`LTCTBAN`/`GJWYYPS`/`DISCRIMINANT_OF_CAY` inlined without
+`cayleytr`: the linear coefficient is recovered from the values at `0`, `1`).
+DISCHARGED 2026-11-14 (enclosed4-final-w1). -/
+
+/-- HOL `LTCTBAN` (collect_geom.hl:1981-1985) with the `cayleytr` coefficient
+inlined: `cayleyR` is quadratic in its last argument with leading coefficient
+`ups_x x12 x13 x23` (polynomial identity). -/
+private theorem p38_cayleyR_quadratic (x12 x13 x14 x15 x23 x24 x25 x34 x35 t : ℝ) :
+    cayleyR x12 x13 x14 x15 x23 x24 x25 x34 x35 t =
+      upsX x12 x13 x23 * t ^ 2
+        + (cayleyR x12 x13 x14 x15 x23 x24 x25 x34 x35 1
+          - cayleyR x12 x13 x14 x15 x23 x24 x25 x34 x35 0 - upsX x12 x13 x23) * t
+        + cayleyR x12 x13 x14 x15 x23 x24 x25 x34 x35 0 := by
+  set_option maxRecDepth 65536 in
+  unfold cayleyR upsX
+  ring
+
+/-- HOL `GJWYYPS`/`DISCRIMINANT_OF_CAY` (collect_geom.hl:2284-2344) with the
+`cayleytr` coefficient inlined (HOL: `cayleytr(...,0)^2 - 4 * ups_x x12 x13 x23
+* cayleyR(...,0) = 16 * delta .. * delta ..`; the two factors are
+`delta_x12 x13 x14 x23 x24 x34` and `delta_x12 x13 x15 x23 x25 x35`, rendered
+here in `delta_y`-form at the square roots). Polynomial identity. -/
+private theorem p38_cayleyR_disc5 (y12 y13 y14 y15 y23 y24 y25 y34 y35 : ℝ) :
+    (cayleyR (y12 * y12) (y13 * y13) (y14 * y14) (y15 * y15) (y23 * y23)
+          (y24 * y24) (y25 * y25) (y34 * y34) (y35 * y35) 1
+        - cayleyR (y12 * y12) (y13 * y13) (y14 * y14) (y15 * y15) (y23 * y23)
+          (y24 * y24) (y25 * y25) (y34 * y34) (y35 * y35) 0
+        - upsX (y12 * y12) (y13 * y13) (y23 * y23)) ^ 2
+    - 4 * upsX (y12 * y12) (y13 * y13) (y23 * y23)
+        * cayleyR (y12 * y12) (y13 * y13) (y14 * y14) (y15 * y15) (y23 * y23)
+          (y24 * y24) (y25 * y25) (y34 * y34) (y35 * y35) 0
+      = 16 * deltaY y12 y13 y14 y34 y24 y23 * deltaY y12 y13 y15 y35 y25 y23 := by
+  set_option maxRecDepth 65536 in
+  unfold cayleyR upsX deltaY deltaX
+  ring
+
+/-- HOL `quadratic_root_plus_disc0_eq` (Tame_lemmas): the root at vanishing
+discriminant. -/
+private theorem p38_quadRootPlus_disc0 {a b c x : ℝ} (ha : a ≠ 0)
+    (hD : b ^ 2 - 4 * a * c = 0) (hx : a * x ^ 2 + b * x + c = 0) :
+    quadraticRootPlus a b c = x := by
+  have h1 : (2 * a * x + b) ^ 2 = 0 := by
+    linear_combination (norm := ring_nf) 4 * a * hx + hD
+  have h2 : 2 * a * x + b = 0 := sq_eq_zero_iff.1 h1
+  have hxv : x = -b / (2 * a) :=
+    ((div_eq_iff (mul_ne_zero two_ne_zero ha)).2 (by linarith)).symm
+  rw [show quadraticRootPlus a b c = (-b + Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a) from rfl,
+    hD, Real.sqrt_zero, add_zero, hxv]
+
+/-- HOL `quadratic_root_plus_gt_eq` (Tame_lemmas): `quadraticRootPlus` is the
+larger root, given a strictly smaller second root of the quadratic. -/
+private theorem p38_quadRootPlus_gt {a b c x y : ℝ} (ha : 0 < a)
+    (hD : 0 ≤ b ^ 2 - 4 * a * c) (hx : a * x ^ 2 + b * x + c = 0)
+    (hy : a * y ^ 2 + b * y + c = 0) (hlt : y < x) :
+    quadraticRootPlus a b c = x := by
+  have hkey : ∀ z : ℝ, a * z ^ 2 + b * z + c = 0 →
+      z = (-b + Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a) ∨
+        z = (-b - Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a) := by
+    intro z hz
+    have h1 : (2 * a * z + b) ^ 2 = b ^ 2 - 4 * a * c := by
+      linear_combination (norm := ring_nf) 4 * a * hz
+    have h2 : Real.sqrt (b ^ 2 - 4 * a * c) = |2 * a * z + b| := by
+      rw [← h1, Real.sqrt_sq_eq_abs]
+    rw [h2]
+    rcases abs_cases (2 * a * z + b) with ⟨habs, -⟩ | ⟨habs, -⟩
+    · left
+      rw [habs]
+      field_simp
+      ring
+    · right
+      rw [habs]
+      field_simp
+      ring
+  rcases hkey x hx with hrx | hrx <;> rcases hkey y hy with hry | hry
+  · rw [show quadraticRootPlus a b c = (-b + Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a) from rfl,
+      hrx]
+  · rw [show quadraticRootPlus a b c = (-b + Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a) from rfl,
+      hrx]
+  · rw [hrx, hry] at hlt
+    have hs : 0 ≤ Real.sqrt (b ^ 2 - 4 * a * c) := Real.sqrt_nonneg _
+    have hle : (-b - Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a)
+        ≤ (-b + Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a) :=
+      div_le_div_of_nonneg_right (by linarith) (by positivity)
+    linarith
+  · rw [hrx, hry] at hlt
+    exact absurd hlt (lt_irrefl _)
+
+/-- `ups_x` at the three Gram values is `4 * |u ⨯₃ v|^2` (HOL
+`NORM_CROSS_PRODUCT_UPS_X`, collect_geom2.hl:925). Componentwise identity. -/
+private theorem p38_upsX_dot (u v : Fin 3 → ℝ) :
+    upsX (u ⬝ᵥ u) (v ⬝ᵥ v) ((v - u) ⬝ᵥ (v - u))
+      = 4 * ((crossProduct u) v ⬝ᵥ (crossProduct u) v) := by
+  rw [cross_apply]
+  simp only [upsX, dotProduct_sub, sub_dotProduct, dotProduct, Fin.sum_univ_three,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.head_cons,
+    Matrix.tail_cons, Pi.sub_apply]
+  ring
+
+/-- `chi_msb [0, a, b] v` rendered as a dot product with the cross product of
+the stem (HOL `chi_msb` at the stem `[0; a; b]`, leaf_cell.hl:781-782). -/
+private theorem p38_chi_dot (a b v : V3) :
+    chiMsb [0, a, b] v
+      = v ⬝ᵥ (WithLp.toLp 2 (crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ)) : V3) := by
+  simp only [chiMsb, List.getElem!_cons_succ, List.getElem!_cons_zero, sub_zero]
+  exact dotProduct_comm _ _
+
+/-- HOL `reflection` (tame_lemmas): reflection in the plane through `0`
+normal to `n`. -/
+private noncomputable def p38_reflection (n x : V3) : V3 :=
+  x - (2 * (x ⬝ᵥ n) / (n ⬝ᵥ n)) • n
+
+/-- HOL `reflection_dot` (tame_lemmas): `(reflection n x) dot n = --(x dot n)`. -/
+private theorem p38_reflection_dot {n x : V3} (hn : n ≠ 0) :
+    p38_reflection n x ⬝ᵥ n = -(x ⬝ᵥ n) := by
+  have hs : n.ofLp ⬝ᵥ n.ofLp ≠ 0 := by
+    have h : ‖n‖ ^ 2 ≠ 0 := pow_ne_zero 2 (norm_pos_iff.mpr hn).ne'
+    rwa [Kepler.Geom.norm_sq_eq_dot] at h
+  unfold p38_reflection
+  simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct,
+    smul_eq_mul, div_mul_cancel₀ _ hs]
+  ring
+
+/-- HOL `dist_reflection_special` (tame_lemmas): points of the mirror plane
+keep their distance. -/
+private theorem p38_dist_reflection_special {n x y : V3} (hy : y ⬝ᵥ n = 0) :
+    dist (p38_reflection n x) y = dist x y := by
+  by_cases hs : n ⬝ᵥ n = 0
+  · have hn0 : n = 0 := by
+      by_contra h
+      have hnn : n ⬝ᵥ n ≠ 0 := by
+        have h2 : ‖n‖ ^ 2 ≠ 0 := pow_ne_zero 2 (norm_pos_iff.mpr h).ne'
+        rwa [Kepler.Geom.norm_sq_eq_dot] at h2
+      exact hnn hs
+    rw [hn0]
+    simp [p38_reflection]
+  · have hs' : n.ofLp ⬝ᵥ n.ofLp ≠ 0 := hs
+    calc dist (p38_reflection n x) y
+        = Real.sqrt (dist (p38_reflection n x) y ^ 2) := (Real.sqrt_sq dist_nonneg).symm
+      _ = Real.sqrt (dist x y ^ 2) := by
+        congr 1
+        rw [dist_eq_norm, dist_eq_norm, Kepler.Geom.norm_sq_eq_dot,
+          Kepler.Geom.norm_sq_eq_dot]
+        unfold p38_reflection
+        simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, dotProduct_sub,
+          smul_dotProduct, dotProduct_smul, smul_eq_mul]
+        rw [hy, dotProduct_comm n.ofLp y.ofLp, hy, dotProduct_comm n.ofLp x.ofLp]
+        field_simp
+        ring
+      _ = dist x y := Real.sqrt_sq dist_nonneg
+
+/-- HOL `dist_reflection_lemma` (tame_lemmas): the squared distance after
+reflection. -/
+private theorem p38_dist_reflection_lemma {n x y : V3} (hn : n ≠ 0) :
+    dist (p38_reflection n x) y ^ 2
+      = dist x y ^ 2 + 4 * (y ⬝ᵥ n) * (x ⬝ᵥ n) / (n ⬝ᵥ n) := by
+  have hs : n.ofLp ⬝ᵥ n.ofLp ≠ 0 := by
+    have h : ‖n‖ ^ 2 ≠ 0 := pow_ne_zero 2 (norm_pos_iff.mpr hn).ne'
+    rwa [Kepler.Geom.norm_sq_eq_dot] at h
+  rw [dist_eq_norm, dist_eq_norm, Kepler.Geom.norm_sq_eq_dot,
+    Kepler.Geom.norm_sq_eq_dot]
+  unfold p38_reflection
+  simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, dotProduct_sub,
+    smul_dotProduct, dotProduct_smul, smul_eq_mul]
+  rw [dotProduct_comm n.ofLp y.ofLp, dotProduct_comm n.ofLp x.ofLp]
+  field_simp
+  ring
+
+/-- HOL `coplanar_delta_y_zero` forward direction (IUNBUIG.hl:144): coplanar
+points have vanishing `delta_y`. Private re-proof (LocalAuto21's
+`coplanar_delta_y_zero_p18` is unimportable here: cycle). -/
+private theorem p38_coplanar_deltaY_zero (u₀ u₁ u₂ u₃ : V3)
+    (hc : Coplanar ({u₀, u₁, u₂, u₃} : Set V3)) :
+    deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃) (dist u₂ u₃) (dist u₁ u₃)
+        (dist u₁ u₂) = 0 := by
+  have hdelta : deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃) (dist u₂ u₃)
+        (dist u₁ u₃) (dist u₁ u₂)
+      = deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+          (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
+    simp only [deltaY, pow_two, delta_delta_x]
+  have hnn : 0 ≤ deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+      (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
+    rw [← hdelta]
+    exact DELTA_Y_POS_4POINTS u₀ u₁ u₂ u₃
+  have hpos := POS_EQ_NOT_COPLANANR u₀ u₁ u₂ u₃
+  have hnlt : ¬ 0 < deltaP (dist u₀ u₁ ^ 2) (dist u₀ u₂ ^ 2) (dist u₀ u₃ ^ 2)
+      (dist u₁ u₂ ^ 2) (dist u₁ u₃ ^ 2) (dist u₂ u₃ ^ 2) := by
+    intro hp
+    exact (hpos.mp hp) (coplanar_eq_coplanar_alt.mp hc)
+  rw [hdelta]
+  linarith
+
+/-- HOL `lemma_span4_cases` (collect_geom2.hl:118-136): among four points of
+`V3` one is a linear combination of the other three (generic case from
+`finrank V3 = 3`; degenerate cases by explicit coefficients). -/
+private theorem p38_span4_cases (a b c d : V3) :
+    (∃ u v w : ℝ, a = u • b + v • c + w • d) ∨
+    (∃ u v w : ℝ, b = u • c + v • d + w • a) ∨
+    (∃ u v w : ℝ, c = u • d + v • a + w • b) ∨
+    (∃ u v w : ℝ, d = u • a + v • b + w • c) := by
+  by_cases h : a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d
+  · have hli : ¬ LinearIndependent ℝ ![a, b, c, d] := by
+      intro hli
+      have hle := hli.fintype_card_le_finrank
+      have hrk : Module.finrank ℝ V3 = 3 := by
+        rw [finrank_euclideanSpace]; simp
+      rw [show Fintype.card (Fin 4) = 4 from rfl, hrk] at hle
+      exact absurd hle (by norm_num)
+    obtain ⟨f, g, hfg, ⟨i₀, hi₀⟩⟩ := Fintype.not_linearIndependent_iffₛ.1 hli
+    set c' := f - g with hc'def
+    have hcne : c' i₀ ≠ 0 := sub_ne_zero.mpr hi₀
+    have hsum : (∑ i, c' i • ![a, b, c, d] i) = 0 := by
+      have e1 : (∑ i, c' i • ![a, b, c, d] i)
+          = (∑ i, f i • ![a, b, c, d] i) - ∑ i, g i • ![a, b, c, d] i := by
+        rw [← Finset.sum_sub_distrib]
+        exact Finset.sum_congr rfl fun i _ => sub_smul _ _ _
+      rw [e1, hfg, sub_self]
+    have hunfold : c' 0 • a + c' 1 • b + c' 2 • c + c' 3 • d = 0 := by
+      rw [Fin.sum_univ_four] at hsum
+      simpa only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.cons_val_three, Matrix.head_cons, Matrix.tail_cons] using hsum
+    fin_cases i₀
+    · have hcne0 : c' 0 ≠ 0 := hcne
+      refine Or.inl ⟨-((c' 0)⁻¹ * c' 1), -((c' 0)⁻¹ * c' 2), -((c' 0)⁻¹ * c' 3), ?_⟩
+      have e1 : c' 0 • a + (c' 1 • b + (c' 2 • c + c' 3 • d)) = 0 := by
+        rw [show c' 0 • a + (c' 1 • b + (c' 2 • c + c' 3 • d)) = c' 0 • a + c' 1 • b + c' 2 • c + c' 3 • d from by module]
+        exact hunfold
+      have h3 : a = (c' 0)⁻¹ • (c' 0 • a) := (inv_smul_smul₀ hcne0 a).symm
+      rw [(add_eq_zero_iff_eq_neg).1 e1] at h3
+      rw [h3]
+      simp only [smul_neg, smul_add, smul_smul, neg_add, neg_smul]
+      module
+    · have hcne0 : c' 1 ≠ 0 := hcne
+      refine Or.inr (Or.inl ⟨-((c' 1)⁻¹ * c' 2), -((c' 1)⁻¹ * c' 3),
+        -((c' 1)⁻¹ * c' 0), ?_⟩)
+      have e1 : c' 1 • b + (c' 2 • c + (c' 3 • d + c' 0 • a)) = 0 := by
+        rw [show c' 1 • b + (c' 2 • c + (c' 3 • d + c' 0 • a)) = c' 0 • a + c' 1 • b + c' 2 • c + c' 3 • d from by module]
+        exact hunfold
+      have h3 : b = (c' 1)⁻¹ • (c' 1 • b) := (inv_smul_smul₀ hcne0 b).symm
+      rw [(add_eq_zero_iff_eq_neg).1 e1] at h3
+      rw [h3]
+      simp only [smul_neg, smul_add, smul_smul, neg_add, neg_smul]
+      module
+    · have hcne0 : c' 2 ≠ 0 := hcne
+      refine Or.inr (Or.inr (Or.inl ⟨-((c' 2)⁻¹ * c' 3), -((c' 2)⁻¹ * c' 0),
+        -((c' 2)⁻¹ * c' 1), ?_⟩))
+      have e1 : c' 2 • c + (c' 3 • d + (c' 0 • a + c' 1 • b)) = 0 := by
+        rw [show c' 2 • c + (c' 3 • d + (c' 0 • a + c' 1 • b)) = c' 0 • a + c' 1 • b + c' 2 • c + c' 3 • d from by module]
+        exact hunfold
+      have h3 : c = (c' 2)⁻¹ • (c' 2 • c) := (inv_smul_smul₀ hcne0 c).symm
+      rw [(add_eq_zero_iff_eq_neg).1 e1] at h3
+      rw [h3]
+      simp only [smul_neg, smul_add, smul_smul, neg_add, neg_smul]
+      module
+    · have hcne0 : c' 3 ≠ 0 := hcne
+      refine Or.inr (Or.inr (Or.inr ⟨-((c' 3)⁻¹ * c' 0), -((c' 3)⁻¹ * c' 1),
+        -((c' 3)⁻¹ * c' 2), ?_⟩))
+      have e1 : c' 3 • d + (c' 0 • a + (c' 1 • b + c' 2 • c)) = 0 := by
+        rw [show c' 3 • d + (c' 0 • a + (c' 1 • b + c' 2 • c)) = c' 0 • a + c' 1 • b + c' 2 • c + c' 3 • d from by module]
+        exact hunfold
+      have h3 : d = (c' 3)⁻¹ • (c' 3 • d) := (inv_smul_smul₀ hcne0 d).symm
+      rw [(add_eq_zero_iff_eq_neg).1 e1] at h3
+      rw [h3]
+      simp only [smul_neg, smul_add, smul_smul, neg_add, neg_smul]
+      module
+  · by_cases hab : a = b
+    · exact Or.inr (Or.inl ⟨0, 0, 1, by rw [hab]; simp⟩)
+    by_cases hac : a = c
+    · exact Or.inr (Or.inr (Or.inl ⟨0, 1, 0, by rw [hac]; simp⟩))
+    by_cases had : a = d
+    · exact Or.inr (Or.inr (Or.inr ⟨1, 0, 0, by rw [had]; simp⟩))
+    by_cases hbc : b = c
+    · exact Or.inr (Or.inr (Or.inl ⟨0, 0, 1, by rw [hbc]; simp⟩))
+    by_cases hbd : b = d
+    · exact Or.inr (Or.inr (Or.inr ⟨0, 1, 0, by rw [hbd]; simp⟩))
+    by_cases hcd : c = d
+    · exact Or.inr (Or.inr (Or.inr ⟨0, 0, 1, by rw [hcd]; simp⟩))
+    · exact absurd ⟨hab, hac, had, hbc, hbd, hcd⟩ h
+
+/-- HOL `CAYLEYR_5POINTS_SIMPLE` (collect_geom2.hl:176-206): the determinant
+vanishes when the fifth point is a linear combination of the other three
+measured from the origin (pure polynomial identity after rendering every
+squared distance as a dot product). -/
+private theorem p38_cayleyR_5points_simple (x2 x3 x4 : V3) (t2 t3 t4 : ℝ) :
+    cayleyR (dist 0 x2 ^ 2) (dist 0 x3 ^ 2) (dist 0 x4 ^ 2)
+      (dist 0 (t2 • x2 + t3 • x3 + t4 • x4) ^ 2) (dist x2 x3 ^ 2) (dist x2 x4 ^ 2)
+      (dist x2 (t2 • x2 + t3 • x3 + t4 • x4) ^ 2) (dist x3 x4 ^ 2)
+      (dist x3 (t2 • x2 + t3 • x3 + t4 • x4) ^ 2)
+      (dist x4 (t2 • x2 + t3 • x3 + t4 • x4) ^ 2) = 0 := by
+  have e0 : ∀ u : V3, dist 0 u ^ 2 = ((u : V3) : Fin 3 → ℝ) ⬝ᵥ ((u : V3) : Fin 3 → ℝ) := by
+    intro u
+    rw [dist_zero_left, Kepler.Geom.norm_sq_eq_dot]
+  have euv : ∀ u v : V3, dist u v ^ 2 =
+      ((((u : V3) : Fin 3 → ℝ) - ((v : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        (((u : V3) : Fin 3 → ℝ) - ((v : V3) : Fin 3 → ℝ))) := by
+    intro u v
+    rw [dist_eq_norm, Kepler.Geom.norm_sq_eq_dot, WithLp.ofLp_sub]
+  rw [e0, e0, e0, e0, euv, euv, euv, euv, euv, euv,
+    show (((t2 • x2 + t3 • x3 + t4 • x4 : V3) : Fin 3 → ℝ))
+        = t2 • ((x2 : V3) : Fin 3 → ℝ) + t3 • ((x3 : V3) : Fin 3 → ℝ)
+          + t4 • ((x4 : V3) : Fin 3 → ℝ) from by
+      rw [WithLp.ofLp_add, WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul,
+        WithLp.ofLp_smul]]
+  simp only [dotProduct_sub, sub_dotProduct, dotProduct_add, add_dotProduct,
+    dotProduct_smul, smul_dotProduct]
+  rw [dotProduct_comm ((x3 : V3) : Fin 3 → ℝ) ((x2 : V3) : Fin 3 → ℝ),
+    dotProduct_comm ((x4 : V3) : Fin 3 → ℝ) ((x2 : V3) : Fin 3 → ℝ),
+    dotProduct_comm ((x4 : V3) : Fin 3 → ℝ) ((x3 : V3) : Fin 3 → ℝ)]
+  set_option maxRecDepth 65536 in
+  unfold cayleyR
+  ring
+
+/-- The three cyclic slot permutations of `cayleyR` used by
+`CAYLEYR_5POINTS` (HOL `TYPIFY_GOAL_THEN` steps, collect_geom2.hl:238-262);
+polynomial identities. -/
+private theorem p38_cayleyR_perm2 (x20 x30 x40 x50 x23 x24 x25 x34 x35 x45 : ℝ) :
+    cayleyR x20 x30 x40 x50 x23 x24 x25 x34 x35 x45
+      = cayleyR x30 x40 x50 x20 x34 x35 x23 x45 x24 x25 := by
+  set_option maxRecDepth 65536 in
+  unfold cayleyR
+  ring
+
+private theorem p38_cayleyR_perm3 (x20 x30 x40 x50 x23 x24 x25 x34 x35 x45 : ℝ) :
+    cayleyR x20 x30 x40 x50 x23 x24 x25 x34 x35 x45
+      = cayleyR x40 x50 x20 x30 x45 x24 x34 x25 x35 x23 := by
+  set_option maxRecDepth 65536 in
+  unfold cayleyR
+  ring
+
+private theorem p38_cayleyR_perm4 (x20 x30 x40 x50 x23 x24 x25 x34 x35 x45 : ℝ) :
+    cayleyR x20 x30 x40 x50 x23 x24 x25 x34 x35 x45
+      = cayleyR x50 x20 x30 x40 x25 x35 x45 x23 x24 x34 := by
+  set_option maxRecDepth 65536 in
+  unfold cayleyR
+  ring
+
+/-- HOL `CAYLEYR_5POINTS` (collect_geom2.hl:210-265, the Nov 14 2014 redo):
+the 5-vertex Cayley–Menger determinant vanishes at the ten pairwise squared
+distances of any five points of `V3`. Route: translate the base point to the
+origin (HOL `CAYLEYR_5POINTS_WLOG_0`), the span-4 case split (HOL
+`lemma_span4_cases`), the polynomial core (HOL `CAYLEYR_5POINTS_SIMPLE`), and
+the three cyclic permutation identities to line the slots up. -/
+theorem CAYLEYR_5POINTS (x1 x2 x3 x4 x5 : V3) :
+    cayleyR (dist x1 x2 ^ 2) (dist x1 x3 ^ 2) (dist x1 x4 ^ 2) (dist x1 x5 ^ 2)
+      (dist x2 x3 ^ 2) (dist x2 x4 ^ 2) (dist x2 x5 ^ 2) (dist x3 x4 ^ 2)
+      (dist x3 x5 ^ 2) (dist x4 x5 ^ 2) = 0 := by
+  have hdist : ∀ a b : V3, dist (a - x1) (b - x1) ^ 2 = dist a b ^ 2 := by
+    intro a b
+    rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]
+  have h0 : ∀ a : V3, dist 0 (a - x1) ^ 2 = dist x1 a ^ 2 := by
+    intro a
+    rw [dist_zero_left, dist_eq_norm, norm_sub_rev]
+  have hkey : ∀ a b c d : V3,
+      cayleyR (dist 0 a ^ 2) (dist 0 b ^ 2) (dist 0 c ^ 2) (dist 0 d ^ 2)
+        (dist a b ^ 2) (dist a c ^ 2) (dist a d ^ 2) (dist b c ^ 2)
+        (dist b d ^ 2) (dist c d ^ 2) = 0 := by
+    intro a b c d
+    rcases p38_span4_cases a b c d with (⟨u, v, w, hd⟩ | ⟨u, v, w, hd⟩ | ⟨u, v, w, hd⟩ | ⟨u, v, w, hd⟩)
+    · -- a = u • b + v • c + w • d: apply the core at (b, c, d), permute
+      rw [p38_cayleyR_perm2]
+      have hs := p38_cayleyR_5points_simple b c d u v w
+      rw [← hd] at hs
+      rw [dist_comm b a, dist_comm c a, dist_comm d a] at hs
+      exact hs
+    · -- b = u • c + v • d + w • a: apply the core at (c, d, a), permute
+      rw [p38_cayleyR_perm3]
+      have hs := p38_cayleyR_5points_simple c d a u v w
+      rw [← hd] at hs
+      rw [dist_comm c a, dist_comm c b, dist_comm d a, dist_comm d b] at hs
+      exact hs
+    · -- c = u • d + v • a + w • b: apply the core at (d, a, b), permute
+      rw [p38_cayleyR_perm4]
+      have hs := p38_cayleyR_5points_simple d a b u v w
+      rw [← hd] at hs
+      rw [dist_comm d a, dist_comm d b, dist_comm d c] at hs
+      exact hs
+    · -- d = u • a + v • b + w • c: apply the core at (a, b, c) directly
+      rw [hd]
+      exact p38_cayleyR_5points_simple a b c u v w
+  have h := hkey (x2 - x1) (x3 - x1) (x4 - x1) (x5 - x1)
+  rw [hdist, hdist, hdist, hdist, hdist, hdist, h0, h0, h0, h0] at h
+  exact h
+
+/-- `th3a` (fan.hl:368): non-collinearity gives `Disjoint {x, v} {u}`.
+Private copy (LocalFanStepW36 is unimportable here: cycle). -/
+private theorem p38_th3a {x v u : V3} (h : ¬ Collinear3 x v u) :
+    Disjoint ({x, v} : Set V3) {u} := by
+  have hux : u ≠ x := fun he => h (by
+    rw [he]
+    show Collinear ℝ ({x, v, x} : Set V3)
+    have hset : ({x, v, x} : Set V3) = {x, v} := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair ℝ x v)
+  have huv : u ≠ v := fun he => h (by
+    rw [he]
+    show Collinear ℝ ({x, v, v} : Set V3)
+    have hset : ({x, v, v} : Set V3) = {x, v} := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair ℝ x v)
+  rw [Set.disjoint_singleton_right]
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+  exact ⟨hux, huv⟩
+
 /-- HOL `muR_ALT` (terminal.hl:1610): `rfl` by the `muRP38` definition. -/
 theorem muR_ALT (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
     muRP38 y1 y2 y3 y4 y5 y6 y7 y8 y9 =
@@ -2715,16 +3122,180 @@ theorem muR_ALT (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
         (y8 * y8) (y3 * y3) (y9 * y9) :=
   rfl
 
-/-- HOL `enclosed4_lemma` (terminal.hl:1623). -/
+/-- HOL `enclosed4_lemma` (terminal.hl:1623-1740). DISCHARGED 2026-11-14:
+`muR` is a quadratic in the squared `dist v1 v3` with leading coefficient
+`ups_x (‖v0‖²) (‖v2‖²) (dist v0 v2²)` (HOL `LTCTBAN`, coefficient inlined
+via the values at `0` and `1` — the tree has no `cayleytr` body);
+`CAYLEYR_5POINTS` at `(0, v0, v2, v1, v3)` makes `dist v1 v3 ^ 2` a root;
+the discriminant is `16 * delta_y * delta_y` (HOL `DISCRIMINANT_OF_CAY`)
+with both factors nonnegative (HOL `delta_y_pos`); at discriminant zero
+`quadratic_root_plus_disc0_eq` applies directly, else the reflection
+`v1'` of `v1` in the plane `span{v0, v2}` (HOL `reflection`,
+`dist_reflection_special`, `dist_reflection_lemma`) supplies a strictly
+smaller second root (`chi_msb` signs, HOL `CHI_MSB_COPLANAR` direction via
+`coplanar_delta_y_zero`) and `quadratic_root_plus_gt_eq` pins the larger
+root to `dist v1 v3 ^ 2`. -/
 theorem enclosed4_lemma (v0 v1 v2 v3 : V3) :
     0 < upsX (‖v0‖ * ‖v0‖) (‖v2‖ * ‖v2‖) (dist v0 v2 * dist v0 v2) →
       chiMsb [0, v0, v2] v1 * chiMsb [0, v0, v2] v3 ≤ 0 →
       dist v1 v3 =
         enclosedP38 ‖v1‖ (dist v0 v1) (dist v1 v2) (dist v0 v2) ‖v2‖ ‖v0‖
           ‖v3‖ (dist v0 v3) (dist v2 v3) := by
-  intro _ _
-  sorry -- DISCHARGES: chi_msb sign dichotomy (the enclosing-arc dichotomy)
-  -- BLOCKED: enclosedP38 stub + the chi_msb branch identity (unported).
+  set_option maxRecDepth 65536 in
+  intro h1 h2
+  set a := upsX (‖v0‖ * ‖v0‖) (‖v2‖ * ‖v2‖) (dist v0 v2 * dist v0 v2) with hadef
+  set c := cayleyR (‖v0‖ * ‖v0‖) (‖v2‖ * ‖v2‖) (‖v1‖ * ‖v1‖) (‖v3‖ * ‖v3‖)
+      (dist v0 v2 * dist v0 v2) (dist v0 v1 * dist v0 v1) (dist v0 v3 * dist v0 v3)
+      (dist v1 v2 * dist v1 v2) (dist v2 v3 * dist v2 v3) 0 with hcdef
+  set L := cayleyR (‖v0‖ * ‖v0‖) (‖v2‖ * ‖v2‖) (‖v1‖ * ‖v1‖) (‖v3‖ * ‖v3‖)
+      (dist v0 v2 * dist v0 v2) (dist v0 v1 * dist v0 v1) (dist v0 v3 * dist v0 v3)
+      (dist v1 v2 * dist v1 v2) (dist v2 v3 * dist v2 v3) 1 - c - a with hLdef
+  set x45v := dist v1 v3 * dist v1 v3 with hx45def
+  have ha_pos : 0 < a := h1
+  have hquad : ∀ t : ℝ, muRP38 ‖v1‖ (dist v0 v1) (dist v1 v2) (dist v0 v2) ‖v2‖
+      ‖v0‖ ‖v3‖ (dist v0 v3) (dist v2 v3) t = a * t ^ 2 + L * t + c := by
+    intro t
+    exact p38_cayleyR_quadratic _ _ _ _ _ _ _ _ _ t
+  have hcm := CAYLEYR_5POINTS 0 v0 v2 v1 v3
+  rw [dist_zero_left, dist_zero_left, dist_zero_left, dist_zero_left, pow_two,
+    pow_two, pow_two, pow_two, pow_two, pow_two, pow_two, pow_two, pow_two,
+    pow_two, dist_comm v2 v1] at hcm
+  have ht0 : a * x45v ^ 2 + L * x45v + c = 0 := by
+    rw [← hquad x45v]
+    exact hcm
+  have habc : abcOfQuadraticP38 (muRP38 ‖v1‖ (dist v0 v1) (dist v1 v2)
+      (dist v0 v2) ‖v2‖ ‖v0‖ ‖v3‖ (dist v0 v3) (dist v2 v3)) = (a, L, c) := by
+    unfold abcOfQuadraticP38
+    rw [hquad 1, hquad (-1), hquad 0]
+    simp only [Prod.mk.injEq]
+    exact ⟨by ring, by ring, by ring⟩
+  have hdisc : L ^ 2 - 4 * a * c
+      = 16 * deltaY ‖v0‖ ‖v2‖ ‖v1‖ (dist v1 v2) (dist v0 v1) (dist v0 v2)
+        * deltaY ‖v0‖ ‖v2‖ ‖v3‖ (dist v2 v3) (dist v0 v3) (dist v0 v2) := by
+    rw [hLdef, hcdef, hadef]
+    exact p38_cayleyR_disc5 ‖v0‖ ‖v2‖ ‖v1‖ ‖v3‖ (dist v0 v2) (dist v0 v1)
+      (dist v0 v3) (dist v1 v2) (dist v2 v3)
+  have hd1v : 0 ≤ deltaY ‖v0‖ ‖v2‖ ‖v1‖ (dist v1 v2) (dist v0 v1) (dist v0 v2) := by
+    have h := DELTA_Y_POS_4POINTS 0 v0 v2 v1
+    rwa [dist_zero_left, dist_zero_left, dist_zero_left, dist_comm v2 v1] at h
+  have hd2v : 0 ≤ deltaY ‖v0‖ ‖v2‖ ‖v3‖ (dist v2 v3) (dist v0 v3) (dist v0 v2) := by
+    have h := DELTA_Y_POS_4POINTS 0 v0 v2 v3
+    rwa [dist_zero_left, dist_zero_left, dist_zero_left] at h
+  have hdisc_nn : 0 ≤ L ^ 2 - 4 * a * c := by
+    rw [hdisc]
+    exact mul_nonneg (mul_nonneg (by norm_num) hd1v) hd2v
+  by_cases hd0 : L ^ 2 - 4 * a * c = 0
+  · have hroot : quadraticRootPlus a L c = x45v :=
+      p38_quadRootPlus_disc0 (ne_of_gt ha_pos) hd0 ht0
+    unfold enclosedP38
+    simp only [habc]
+    rw [hroot, Real.sqrt_mul_self dist_nonneg]
+  · have hdpos : 0 < L ^ 2 - 4 * a * c := lt_of_le_of_ne hdisc_nn (Ne.symm hd0)
+    have hprod0 : chiMsb [0, v0, v2] v1 * chiMsb [0, v0, v2] v3 ≠ 0 := by
+      intro hz
+      rcases mul_eq_zero.mp hz with h1z | h3z
+      · have hcop : Coplanar ({0, v0, v2, v1} : Set V3) :=
+          (CHI_MSB_COPLANAR 0 v0 v2 v1).mpr h1z
+        have hdz := p38_coplanar_deltaY_zero 0 v0 v2 v1 hcop
+        rw [dist_zero_left, dist_zero_left, dist_zero_left, dist_comm v2 v1] at hdz
+        rw [hdisc] at hd0
+        have hz16 : (16:ℝ) * deltaY ‖v0‖ ‖v2‖ ‖v1‖ (dist v1 v2) (dist v0 v1)
+            (dist v0 v2) * deltaY ‖v0‖ ‖v2‖ ‖v3‖ (dist v2 v3) (dist v0 v3)
+            (dist v0 v2) = 0 := by
+          rw [hdz, mul_zero, zero_mul]
+        exact absurd hz16 hd0
+      · have hcop : Coplanar ({0, v0, v2, v3} : Set V3) :=
+          (CHI_MSB_COPLANAR 0 v0 v2 v3).mpr h3z
+        have hdz := p38_coplanar_deltaY_zero 0 v0 v2 v3 hcop
+        rw [dist_zero_left, dist_zero_left, dist_zero_left] at hdz
+        rw [hdisc] at hd0
+        exact absurd (mul_eq_zero.mpr (Or.inr hdz)) hd0
+    have hprod_neg : (v1 ⬝ᵥ (WithLp.toLp 2
+          (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3))
+        * (v3 ⬝ᵥ (WithLp.toLp 2
+          (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) < 0 := by
+      rw [← p38_chi_dot v0 v2 v3, ← p38_chi_dot v0 v2 v1]
+      exact lt_of_le_of_ne h2 hprod0
+    have hn0 : (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+          ((v2 : V3) : Fin 3 → ℝ)) : V3) ≠ 0 := by
+      intro hz
+      have e1 : (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ
+          (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) = a / 4 := by
+        have e0 : ‖v0‖ * ‖v0‖ = ((v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v0 : V3) : Fin 3 → ℝ) := by
+          rw [← pow_two, Kepler.Geom.norm_sq_eq_dot]
+        have e2 : ‖v2‖ * ‖v2‖ = ((v2 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 : V3) : Fin 3 → ℝ) := by
+          rw [← pow_two, Kepler.Geom.norm_sq_eq_dot]
+        have e3 : dist v0 v2 * dist v0 v2
+            = (((v2 : V3) : Fin 3 → ℝ) - ((v0 : V3) : Fin 3 → ℝ)) ⬝ᵥ
+              (((v2 : V3) : Fin 3 → ℝ) - ((v0 : V3) : Fin 3 → ℝ)) := by
+          rw [← pow_two, dist_eq_norm, norm_sub_rev, Kepler.Geom.norm_sq_eq_dot,
+            WithLp.ofLp_sub]
+        rw [hadef, e0, e2, e3, coe_toLp, p38_upsX_dot]
+        ring
+      rw [hz, WithLp.ofLp_zero, zero_dotProduct] at e1
+      linarith
+    have hnn_pos : 0 < (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+          ((v2 : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ
+        (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+          ((v2 : V3) : Fin 3 → ℝ)) : V3) := by
+      rw [← Kepler.Geom.norm_sq_eq_dot]
+      exact pow_pos (norm_pos_iff.mpr hn0) 2
+    have hv0n : v0 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+          ((v2 : V3) : Fin 3 → ℝ)) : V3) = 0 := by
+      rw [coe_toLp]
+      exact dot_self_cross _ _
+    have hv2n : v2 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+          ((v2 : V3) : Fin 3 → ℝ)) : V3) = 0 := dot_cross_self _ _
+    have h0n : (0 : V3) ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+          ((v2 : V3) : Fin 3 → ℝ)) : V3) = 0 := zero_dotProduct _
+    have e14 : dist 0 (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) ^ 2 = ‖v1‖ * ‖v1‖ := by
+      rw [dist_comm 0, p38_dist_reflection_special h0n, dist_zero_right, pow_two]
+    have e24 : dist v0 (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) ^ 2
+        = dist v0 v1 * dist v0 v1 := by
+      rw [dist_comm v0, p38_dist_reflection_special hv0n, dist_comm v1 v0, pow_two]
+    have e34 : dist v2 (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) ^ 2
+        = dist v1 v2 * dist v1 v2 := by
+      rw [dist_comm v2, p38_dist_reflection_special hv2n, pow_two]
+    have hcm2 := CAYLEYR_5POINTS 0 v0 v2 (p38_reflection (WithLp.toLp 2
+        (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3
+    rw [e14, e24, e34, dist_zero_left, dist_zero_left, dist_zero_left,
+      pow_two, pow_two, pow_two, pow_two, pow_two, pow_two, pow_two] at hcm2
+    have ht0r : a * (dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3
+          * dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3) ^ 2
+        + L * (dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3
+          * dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3) + c = 0 := by
+      rw [← hquad (dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3
+          * dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3)]
+      exact hcm2
+    have hyx : dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3
+        * dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ)
+            ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3 < x45v := by
+      have he : dist (p38_reflection (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3) v1) v3 ^ 2
+          = dist v1 v3 ^ 2 + 4 * (v3 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) * (v1 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) / ((WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) :=
+        p38_dist_reflection_lemma hn0
+      rw [pow_two, pow_two, ← hx45def] at he
+      have hT : 4 * (v3 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) * (v1 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) < 0 := by
+        nlinarith [hprod_neg]
+      have h4 : 4 * (v3 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) * (v1 ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) / ((WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (WithLp.toLp 2 (crossProduct ((v0 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) : V3)) < 0 :=
+        div_neg_of_neg_of_pos hT hnn_pos
+      nlinarith [he, h4]
+    have hroot : quadraticRootPlus a L c = x45v :=
+      p38_quadRootPlus_gt ha_pos hdisc_nn ht0 ht0r hyx
+    unfold enclosedP38
+    simp only [habc]
+    rw [hroot, Real.sqrt_mul_self dist_nonneg]
 
 /-- Helper (private, 2026-11-14): `azim_in_fan` (LA1, `sigmaFan` body) =
 `azim_in_fan_p2` (LA2, `EE`+`azim_cycle` body) on fan darts — verbatim
@@ -2804,7 +3375,19 @@ theorem IN_V_IMP_AZIM_LESS_PI_ALT (V : Set V3) (E : Set (Set V3))
   rw [hmid] at hle1
   exact le_trans hle1 hle3
 
-/-- HOL `vv_enclosed4` (terminal.hl:1777). -/
+/-- HOL `vv_enclosed4` (terminal.hl:1777-1930). DISCHARGED 2026-11-14: the
+two `enclosed4_lemma` hypotheses are fed as follows — the `ups_x`
+positivity from `NONPARALLEL_BALL_ANNULUS40_ALT` (the annulus points are
+never collinear with the origin) via `not_col_eq_upsX_pos_p21`; the
+`chi_msb` product via a wedge/azim dichotomy: with `azim < pi`
+(`IN_V_IMP_AZIM_LESS_PI_ALT` + `vv_rho_node1`, `vv_azim_le`,
+`WEDGE_GE_EQ_AFF_GE`, `AFF_GE_2_2`) the affine combination expansion of
+`vv (i + 2)` gives product `-t3 * t4 * chi² ≤ 0` (HOL
+`chi_msb_swap_23`/`chi_msb_additive_d`); with `azim = pi` (`LDURDPN`) the
+intersection point of `line[0, vv i]` with `conv0 {vv (i+1), vv (i+3)}`
+vanishes under `chi_msb [0, vv i, vv (i+2)]` (HOL
+`AFFINE_IMP_CHI_MSB_0`), giving `t3 chi_a + t4 chi_b = 0` with positive
+weights. -/
 theorem vv_enclosed4 (vv : ℕ → V3) (i : ℕ)
     (hper : Periodic vv 4)
     (hd1 : dist (vv i) (vv (i + 1)) < 4)
@@ -2820,9 +3403,143 @@ theorem vv_enclosed4 (vv : ℕ → V3) (i : ℕ)
         (dist (vv (i + 1)) (vv (i + 2))) (dist (vv i) (vv (i + 2))) ‖vv (i + 2)‖
         ‖vv i‖ ‖vv (i + 3)‖ (dist (vv i) (vv (i + 3)))
         (dist (vv (i + 2)) (vv (i + 3))) := by
-  sorry -- DISCHARGES: the k = 4 enclosed-arc identity (via vv_split_azim)
-  -- BLOCKED: enclosedP38 stub + AZIM_LE_PI_EQ_DIHV (open at LocalAuto5).
-    -- LocalAuto5:1788)
+  have hball : ∀ j : ℕ, vv j ∈ ballAnnulus := fun j => hsub (Set.mem_range_self j)
+  have hk0 : (0 : ℕ) < 4 := by norm_num
+  have h02 : vv i ≠ vv (i + 2) := by
+    intro h
+    have e := cycle_mod_inj_p38 hper hk0 hinj h
+    omega
+  have h01 : vv i ≠ vv (i + 1) := by
+    intro h
+    have e := cycle_mod_inj_p38 hper hk0 hinj h
+    omega
+  have h03 : vv i ≠ vv (i + 3) := by
+    intro h
+    have e := cycle_mod_inj_p38 hper hk0 hinj h
+    omega
+  have hdsep02 : 2 ≤ dist (vv i) (vv (i + 2)) := hsep i (i + 2) h02
+  have hnc01 : ¬ Collinear3 0 (vv i) (vv (i + 1)) :=
+    NONPARALLEL_BALL_ANNULUS40_ALT (vv i) (vv (i + 1)) (hsep i (i + 1) h01) hd1
+      (hball i) (hball (i + 1))
+  have hnc03 : ¬ Collinear3 0 (vv i) (vv (i + 3)) :=
+    NONPARALLEL_BALL_ANNULUS40_ALT (vv i) (vv (i + 3)) (hsep i (i + 3) h03) hd2
+      (hball i) (hball (i + 3))
+  have hnc02 : ¬ Collinear3 0 (vv i) (vv (i + 2)) :=
+    NONPARALLEL_BALL_ANNULUS40_ALT (vv i) (vv (i + 2)) hdsep02 hd3
+      (hball i) (hball (i + 2))
+  refine enclosed4_lemma (vv i) (vv (i + 1)) (vv (i + 2)) (vv (i + 3)) ?_ ?_
+  · have h := (not_col_eq_upsX_pos_p21 0 (vv i) (vv (i + 2))).mp hnc02
+    rwa [dist_zero_left, dist_zero_left, pow_two, pow_two, pow_two] at h
+  · by_cases hchi1 : chiMsb [0, vv i, vv (i + 2)] (vv (i + 1)) = 0
+    · rw [hchi1, zero_mul]
+    · by_cases hchi3 : chiMsb [0, vv i, vv (i + 2)] (vv (i + 3)) = 0
+      · rw [hchi3, mul_zero]
+      · have hvi : vv i ∈ Set.range vv := Set.mem_range_self i
+        have hv3 : vv (i + 3) ∈ Set.range vv := Set.mem_range_self (i + 3)
+        have haz_le : azim 0 (vv i) (vv (i + 1)) (vv (i + 3)) ≤ Real.pi := by
+          have h := IN_V_IMP_AZIM_LESS_PI_ALT (Set.range vv)
+            (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1)))
+            (vv i) hcf hvi (vv (i + 3)) hv3
+          rw [vv_rho_node1 vv 4 hper (by norm_num) hinj i] at h
+          exact h
+        have hmod2 : ¬(i % 4 = (i + 2) % 4) := by omega
+        have hwedge : vv (i + 2) ∈ wedgeGe_p2 0 (vv i) (vv (i + 1)) (vv (i + 3)) := by
+          refine (WEDGE_GE_AZIM_LE _ _ _ _ _).mpr ?_
+          rw [show i + 3 = i + 4 - 1 by omega]
+          exact vv_azim_le vv 4 i (i + 2) hper (by norm_num) hsub hd1
+            (by rw [show i + (4 - 1) = i + 3 by omega]; exact hd2) hd3 hmod2 hsep hcf hinj
+        by_cases hlt : azim 0 (vv i) (vv (i + 1)) (vv (i + 3)) < Real.pi
+        · have hdisj1 : Disjoint ({0, vv i} : Set V3) ({vv (i + 1)} : Set V3) :=
+            p38_th3a hnc01
+          have hdisj2 : Disjoint ({0, vv i} : Set V3) ({vv (i + 3)} : Set V3) :=
+            p38_th3a hnc03
+          have hdisj : Disjoint ({0, vv i} : Set V3)
+              ({vv (i + 1), vv (i + 3)} : Set V3) := by
+            have e : ({vv (i + 1), vv (i + 3)} : Set V3)
+                = {vv (i + 1)} ∪ {vv (i + 3)} := by
+              rw [Set.insert_eq]
+            rw [e]
+            exact hdisj1.union_right hdisj2
+          rw [WEDGE_GE_EQ_AFF_GE hlt hnc01 hnc03,
+            AFF_GE_2_2 _ _ _ _ hdisj, Set.mem_setOf_eq] at hwedge
+          obtain ⟨t1, t2, t3, t4, ht3, ht4, hsum, heq⟩ := hwedge
+          have hF1 : chiMsb [0, vv i, vv (i + 2)] (vv (i + 1))
+              = -t4 * chiMsb [0, vv i, vv (i + 1)] (vv (i + 3)) := by
+            rw [heq, chi_msb_swap_23,
+              chi_msb_additive_d 0 (vv i) (vv (i + 1)) (vv (i + 3)) t1 t2 t3 t4 hsum]
+            ring
+          have hE : t1 • (0 : V3) + t2 • vv i + t3 • vv (i + 1) + t4 • vv (i + 3)
+              = t1 • (0 : V3) + t2 • vv i + t4 • vv (i + 3) + t3 • vv (i + 1) := by
+            module
+          have hF2 : chiMsb [0, vv i, vv (i + 2)] (vv (i + 3))
+              = t3 * chiMsb [0, vv i, vv (i + 1)] (vv (i + 3)) := by
+            rw [heq, chi_msb_swap_23, hE,
+              chi_msb_additive_d 0 (vv i) (vv (i + 3)) (vv (i + 1)) t1 t2 t4 t3
+                (by linarith : t1 + t2 + t4 + t3 = 1),
+              chi_msb_swap_23]
+            ring
+          rw [hF1, hF2]
+          have hnn : 0 ≤ t3 * t4 * chiMsb [0, vv i, vv (i + 1)] (vv (i + 3)) ^ 2 :=
+            mul_nonneg (mul_nonneg ht3 ht4) (sq_nonneg _)
+          nlinarith [hnn]
+        · have hge : Real.pi ≤ azim 0 (vv i) (vv (i + 1)) (vv (i + 3)) := not_lt.mp hlt
+          have hpi : azim 0 (vv i) (vv (i + 1)) (vv (i + 3)) = Real.pi := by
+            linarith
+          obtain ⟨-, hne⟩ := (LDURDPN hnc01 hnc03).mp hpi
+          obtain ⟨z, hz⟩ := (Set.nonempty_iff_ne_empty).2 hne
+          have hz1 : z ∈ line[ℝ, 0, vv i] := hz.1
+          have hz2 : z ∈ conv0_p2 ({vv (i + 1), vv (i + 3)} : Set V3) := hz.2
+          have hab : vv (i + 1) ≠ vv (i + 3) := by
+            intro h
+            have e := cycle_mod_inj_p38 hper hk0 hinj h
+            omega
+          obtain ⟨r, hr⟩ := (mem_affineSpan_pair_iff_exists_lineMap_eq).mp hz1
+          have hr' : r • vv i = z := by
+            have h2 : (AffineMap.lineMap (0 : V3) (vv i)) r = r • vv i := by
+              rw [AffineMap.lineMap_apply]
+              simp
+            rw [← h2]
+            exact hr
+          have hz2' : Affsign (fun x : ℝ => 0 < x) ∅ ({vv (i + 1), vv (i + 3)} : Set V3) z :=
+            hz2
+          unfold Affsign at hz2'
+          obtain ⟨ff, ffin, hfz, hfpos, hfsum⟩ := hz2'
+          have h1f : ffin.toFinset = ({vv (i + 1), vv (i + 3)} : Finset V3) := by
+            ext x
+            simpa [Set.mem_insert_iff, Set.mem_singleton_iff, hab,
+              Set.Finite.mem_toFinset] using x
+          rw [h1f, Finset.sum_insert (by simp [hab] : vv (i + 1) ∉ ({vv (i + 3)} : Finset V3)),
+            Finset.sum_singleton] at hfz hfsum
+          have hfa : 0 < ff (vv (i + 1)) := hfpos _ (by simp)
+          have hfb : 0 < ff (vv (i + 3)) := hfpos _ (by simp)
+          have hzchi : chiMsb [0, vv i, vv (i + 2)] z = 0 := by
+            apply AFFINE_IMP_CHI_MSB_0 [0, vv i, vv (i + 2)] z rfl
+            rw [show setOfList [0, vv i, vv (i + 2)] = ({0, vv i, vv (i + 2)} : Set V3) from by
+              ext t
+              simp [setOfList]]
+            exact affineSpan_mono ℝ (by
+              intro x hx
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+              rcases hx with h | h
+              · exact Or.inl h
+              · exact Or.inr (Or.inl h)) hz1
+          have hadd := CHI_MSB_ADDITIVE [0, vv i, vv (i + 2)] (vv (i + 1)) (vv (i + 3))
+            (ff (vv (i + 1))) (ff (vv (i + 3))) hfsum
+          rw [← hfz, hzchi] at hadd
+          have hP : ff (vv (i + 1)) * chiMsb [0, vv i, vv (i + 2)] (vv (i + 1))
+              + ff (vv (i + 3)) * chiMsb [0, vv i, vv (i + 2)] (vv (i + 3)) = 0 := by
+            linarith
+          have hM : ff (vv (i + 1)) * ff (vv (i + 3))
+              * (chiMsb [0, vv i, vv (i + 2)] (vv (i + 1))
+                * chiMsb [0, vv i, vv (i + 2)] (vv (i + 3)))
+              = -(ff (vv (i + 1)) * chiMsb [0, vv i, vv (i + 2)] (vv (i + 1))) ^ 2 := by
+            linear_combination (ff (vv (i + 1)) * chiMsb [0, vv i, vv (i + 2)] (vv (i + 1))) * hP
+          have h4 : ff (vv (i + 1)) * ff (vv (i + 3))
+              * (chiMsb [0, vv i, vv (i + 2)] (vv (i + 1))
+                * chiMsb [0, vv i, vv (i + 2)] (vv (i + 3))) ≤ 0 := by
+            rw [hM]
+            exact neg_nonpos.mpr (sq_nonneg _)
+          nlinarith [h4, mul_pos hfa hfb]
 
 /-- HOL `enclosed_sym` (terminal.hl:1930). -/
 theorem enclosed_sym (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
