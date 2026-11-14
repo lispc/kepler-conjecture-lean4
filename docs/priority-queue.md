@@ -143,7 +143,10 @@
 > 覆盖 HOL :1955-2196 含 23=2H0 叶 = **三叶合一**，叶 7/10）；5 新件标准三、9 公共消费件零 sorryAx）。
 > **V21 `b1e75fae`**（PWEIWBZ 第五笔 +107/−0：私有 `pweiwbz_C_a12ne2`——a12≠2 组两值标签叶合一
 > （HOL :2199-2345），前提面与 `pweiwbz_C_a12` 逐字同形仅 ha12→ha12ne；叶 9/10）。
-> **在飞 V22 `pweiwbz-w22`**：norm≠2 两叶（`IMJXPHRv2_p28` 路线，str p / str(p+1) 各一）；
+> **V22 `bc02d651`**（PWEIWBZ 第六笔 +171/−0：私有 `pweiwbz_str_arc` producer 三件组 +
+> `pweiwbz_B_norm_ne` / `pweiwbz_C_norm_ne` 两叶——**PWEIWBZ 全部分支叶闭合**；
+> ERRATA：未消费 `vasArcKit_2b_norm_ne`（异 norm 分裂），直接 `IMJXPHRv2_p28`）。
+> **在飞 V23 `pweiwbz-w23`**：本体组装 → 公共 `PWEIWBZ_kit`（陈述 = LA1 `PWEIWBZ_concl`）；
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
@@ -320,6 +323,16 @@
 > **ERRATA（续905 补）**：续876–续904 条目的手写时间再次漂移（最多 +2.5h，随会话推进累积）。本批已**全部按对应 docs commit 的实际时间逐条改正**（续876 06:58 … 续904 09:23，见 `git log --date=format:%H:%M`）。此后编排者写台账时间一律先取 `git log -1 --date=format:%H:%M`，不凭估算；同 commit 内合并写的多条（如 续890+891）共享该 commit 时间。
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
+
+- **2026-11-14（08:10，续1105）**：**V22 `pweiwbz-w22` 落库 `bc02d651`（PWEIWBZ 第六笔 +171/−0）——norm≠2 两叶 + 共享 producer 三件真证，PWEIWBZ 全部分支叶闭合；V23 `pweiwbz-w23` 发车（本体组装 → 公共 `PWEIWBZ_kit`）**。
+① **V22 交付**：私有 `pweiwbz_str_arc`（泛型 producer：`scsIsStr s v l ⇒ ¬Collinear3 0 (v(l+1)) (v(l+3)) ∧ v l ∈ affGt {0} {v(l+1),v(l+3)} ∧ (∀V E v1, … → ¬Lunar v1 (v l) V E)`）+
+`pweiwbz_B_norm_ne`（str p 支：`hs1 hnne ha ⇒ dist = 2`，`IMJXPHRv2_p28@l=p` 第一合取）+ `pweiwbz_C_norm_ne`（str(p+1) 支：`ha hstr1 hnne ⇒ dist = 2`，`IMJXPHRv2_p28@l=p+1` 第二合取经 4-周期 v(p+4)=v p + a 对称落回 `(p,p+1)` 边再 `dist_comm`）。
+② **ERRATA（路线偏差，V2 docstring 不是逐字转写）**：**未消费** `vasArcKit_2b_norm_ne`——其属 HOL `VASYYAU.hl:2594-2844` 的**另一次** norm 分裂（带 `2 < s.a p (p+1)` / `2 < s.a (p+3) p` 前提，本支不成立）；本笔是 `:1255→:1259` 与 `:1881→:1885`，直接调 `IMJXPHRv2_p28`（kit 证体也只是它的 `s.k = 4` 索引改写），故未新增 DAG 边。`hlunar` 只走 `CIZMRRH` generic 支（`localFan_p3.of_LocalFan_noIso` 桥），`JKQEWGV2_p23` **零依赖**。`haff` 的共面性须由 `AZIM_COND_FOR_COPLANAR` 取 **(0, v(l+4), v(l+5), v(l+3))**（`hstr` 平移到 `l+4` 才能喂上）+ 四点换序。
+③ **编排者闸（亲跑）**：worktree@`911ff037` apply RC=0；numstat 恰 **+171/−0**、删除面 0、禁项 0/0/0/0、import 零变化；
+直编 **rc=0/error 0/sorry-decls=0**；装池；in-file 探针 7 项（3 新件 + 4 既有私有件）**全标准三**；
+公共依赖探针 7 项（两 kit + `CIZMRRH`/`IMJXPHRv2_p28`/`coplanar_aff_gt_simple_p18`/`AZIM_COND_FOR_COPLANAR`/`PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14`）**全标准三**；根面 md5 **`246e952c…` 逐字节同**。commit `bc02d651`，已 push（连带 kimi code 侧 `5c71d830` 未推件）。
+④ **V23 `pweiwbz-w23`（在飞）**：PWEIWBZ 本体组装——公共 `PWEIWBZ_kit`（陈述 = LA1 `PWEIWBZ_concl` 逐字），dispatch：三分法 `(¬str p ∧ ¬str(p+1)) ∨ str p ∨ str(p+1)`；双非 str → `YEBWJNG@p`；str p → 4-周期 sift（¬str(p+1)/¬str(p+3) 由 `pweiwbz_str_uniq`）+ `‖v p‖=2 ∨ ≠2` → `pweiwbz_B_a30eq2/_B_a30ne2/_B_norm_ne`；str(p+1) → `‖v(p+1)‖≠2 → C_norm_ne`，`=2` → a30=2 → `C1`，a30≠2 → a12=2/≠2 → `C_a12/_C_a12ne2`；`str p ∧ str(p+1)` 由 uniq 反证。预计 100-200 行。
+⑤ 下一条：续1106。
 
 - **2026-11-14（07:52，续1103）**：**V21 `pweiwbz-w21` 落库 `b1e75fae`（PWEIWBZ 第五笔 +107/−0，两叶合一）——`str(p+1)` 支全闭合、叶 9/10；V22 `pweiwbz-w22` 发车（norm≠2 两叶）**。
 ① **V21 交付**：私有 `pweiwbz_C_a12ne2`（HOL :2199-2345）——两个 HOL 块 `CASES a 1 2 NOT = 2` / `CASES 0 3= cstab` 经机器判定为**同一 `TUAPYYU@p+3` 析取的值标签叶**（`a12` 分叉是二元析取、无第三顶层叶；叶 2 只重放 CHANGE_A_SCS_MOD+PWE4，其化简表多出的 `2*h0 ≤ cstab` 正是 cstab 标签所需），故一 theorem 内 `rcases hTU` 双叶归并（V18/V19 先例）：
