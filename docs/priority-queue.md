@@ -857,6 +857,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（16:05，续1131）**：**OCBICBY 收口汇点 D1 落库 `60ee3305`（章程 APPROVED→LANDED，编排者闸全绿）：新模块 `LocalAuto22Close` +53；LA22 −31（4 声明逐字节下移 + 4 helper 撤 private）；LA16 +1 import**。
+① 闸（亲跑 @`393405f3`）：numstat LA16 +1/−0、LA22 +4/−35、Close 新文件 +53；`verify_move.py` **22/22 PASS**（四块 md5 逐字节同、签名 4/4、可见性 4/4、Close import 恰 LA22+LA19、closure(Close)=111 不含 LA16、SCC 无环、**sorry 52 = 48 + 4**）；shadow pool 三连编 **Close/LA22/LA16 全 rc=0/err0**；装池（LA22/LA16 旧件备份、Close 新增）。
+② 探针：`OCBICBY_p22`/`terminal_pent_taum2_p22`/`empty_5T1_p22`/`empty_6T1_p22` 仍 `sorryAx`（搬运阶段预期）；回归 `OCBICBY_4T2_p22`/`LEMMA_7175074394_p22`/`angle_sum_5T1_p22` **全标准三**；根面 md5 **`246e952c…` 逐字节同**。
+③ 下一步：**D2（车道在飞）**在 Close 内证 `terminal_pent_taum2_p22`（angle_sum + LA19 帽石×2 + `taum_sym2` + ineqP22/ineqP19 桥）→ `empty_5T1_p22`（t5body 骨架）→ `OCBICBY_5T1_p22`（4T2 模板）。5T1 支完成后 `OCBICBY_p22` 总装配仍等 6T1/4T3（LP 解冻）。
+④ 下一条：续1132。
 - **2026-11-14（15:40，续1130）**：**用户批「5t1批准」——OCBICBY 收口汇点章程 APPROVED（`docs/def-fix-charters/ocbicby-close/README.md`）；`ocbicby5t1-w1` 续跑 Phase D1（纯搬运）+ D2（5T1 收口）**。
 ① 章程获批范围：新模块 `Kepler.Text.LocalAuto22Close`（`import LocalAuto22`+`LocalAuto19`）；**4 条声明逐字节下移** `terminal_pent_taum2_p22` / `empty_5T1_p22` / `empty_6T1_p22` / `OCBICBY_p22`（donor=落地 HEAD `c545d94e` 块 md5 已核：`ac28e174`/`c367331a`/`1f548ef5`/`9298b0e0`）；**4 条 helper 只删 `private`**（行 md5 已核：`4ebc5765`/`303a2019`/`79ac3d6a`/`e9240441`）；`LocalAuto16` +1 import（唯一消费者 LA16:437）。零陈述/零证明体改动、零 sorry 增减。
 ② DAG 依据：closure(LA22)=92 不含 LA19；closure(LA19)=110 含 LA22 不含 LA16 ⇒ Close 是唯一合规汇点；落地闸跑 Tarjan（无 >1 SCC 含 LA16/Close）+ `verify_move.py` 22 项（模拟 22/22 PASS、3 负例全中）。

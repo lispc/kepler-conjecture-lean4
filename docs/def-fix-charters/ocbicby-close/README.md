@@ -1,6 +1,6 @@
 # DEF-FIX 章程：OCBICBY 收口汇点 `LocalAuto22Close`
 
-> **状态：APPROVED（用户 2026-11-14，批「5t1批准」；待执行）**。拟案：2026-11-14，车道 `ocbicby5t1-w1`。
+> **状态：LANDED（`60ee3305`，2026-11-14；用户批「5t1批准」后由 `ocbicby5t1-w1` D1 执行，编排者闸全绿）**。拟案：2026-11-14，车道 `ocbicby5t1-w1`。
 > 依据：AGENTS §2「定义改动只走 DEF-FIX 通道」+ `vas-cluster-move/README.md` 先例
 > （用户 2026-11-12 裁决 ②a：纯搬运、陈述逐字节、零 sorry 增减）。
 > **批准范围**：§3 的 4 条声明逐字节下移 + §4 的 4 条 `private` 关键字删除 + §5 的 import 边
@@ -129,7 +129,7 @@ Close 内相对顺序：`empty_6T1_p22` → `empty_5T1_p22` → `terminal_pent_t
 
 - [x] **批准本纯搬运**（用户 2026-11-14，批「5t1批准」）：4 声明逐字节下移 + 4 条 `private`
   关键字删除 + 3 条 import 边；零陈述/零证明体改动。
-- [ ] **LANDED**：执行车道 `ocbicby5t1-w1` Phase D1 按 §7 落地（待回填 commit/证据）。
+- [x] **LANDED `60ee3305`（16:05）**：基准 `393405f3`；numstat LA16 +1、LA22 +4/−35、Close 新文件 +53；`verify_move.py` **22/22 PASS**；直编 Close/LA22/LA16 **rc=0/err0**；探针 4 件仍 sorryAx（搬运阶段预期）、回归 3 件标准三；根面 md5 `246e952c…` 逐字节同。
 
 ## 附：与其它章程的关系
 
