@@ -3562,7 +3562,133 @@ theorem terminal_quad_lemma (d : ℝ) (a b : ℕ → ℕ → ℝ)
 /-! ## Section G: the x-space residual kit and the 4680581274 bank
 (terminal.hl:3069-3950) -/
 
-/-- HOL `tau_x_tau_residual_x_general` (terminal.hl:3069). -/
+/-- HOL `sol0_const1` (nonlinear_lemma.hl:232): `π * const1 = sol0` —
+via the in-file regular-tetrahedron identity `p38_const1_eq`. -/
+private theorem taugen_pi_mul_const1 : Real.pi * const1 = sol0 := by
+  have hc : const1 = sol0 / Real.pi := p38_const1_eq
+  rw [hc, mul_comm, div_mul_cancel₀ _ Real.pi_ne_zero]
+
+/-- HOL `dih_x_dih_x_div_sqrtdelta_{pos,neg}branch` (merge_ineq.hl:920/963)
+merged over the sign of `delta_x4`, extended to the `delta_x = 0` corner
+(the `atn2_0` branch of pent_hex.hl:136). -/
+private theorem taugen_dih_bridge (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h1 : 0 < x1) (hd : 0 ≤ deltaX x1 x2 x3 x4 x5 x6)
+    (hd4 : deltaX4 x1 x2 x3 x4 x5 x6 ≠ 0) :
+    dihXf x1 x2 x3 x4 x5 x6
+      = (if deltaX4 x1 x2 x3 x4 x5 x6 < 0 then Real.pi else 0)
+        + Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * dihXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6 := by
+  rcases eq_or_lt_of_le hd with hdz | hdp
+  · rw [← hdz, Real.sqrt_zero, zero_mul, add_zero]
+    unfold dihXf
+    rw [← hdz, show (4 * x1 * (0:ℝ)) = 0 by ring, Real.sqrt_zero]
+    unfold atn2
+    by_cases hm : deltaX4 x1 x2 x3 x4 x5 x6 < 0
+    · rw [if_neg (not_lt_of_ge (abs_nonneg _)), if_pos (by linarith),
+        zero_div, Real.arctan_zero, if_pos hm]
+      ring
+    · rw [if_neg (not_lt_of_ge (abs_nonneg _)), if_neg (by linarith),
+        if_pos (by
+          have hm2 : 0 < deltaX4 x1 x2 x3 x4 x5 x6 :=
+            lt_of_le_of_ne (le_of_not_gt hm) (Ne.symm hd4)
+          linarith),
+        zero_div, Real.arctan_zero, if_neg hm]
+      ring
+  · have harg : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 / deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 :=
+      div_pos (by positivity) (sq_pos_of_ne_zero hd4)
+    have hP : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
+      Real.sqrt_pos.mpr (by positivity)
+    have hPne : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ≠ 0 := ne_of_gt hP
+    have hPmul : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        = Real.sqrt (4 * x1) * Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) :=
+      Real.sqrt_mul (by positivity : (0:ℝ) ≤ 4 * x1) _
+    have hmtn : matan_t11 (4 * x1 * deltaX x1 x2 x3 x4 x5 x6 / deltaX4 x1 x2 x3 x4 x5 x6 ^ 2)
+        = Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) / |deltaX4 x1 x2 x3 x4 x5 x6|)
+          / (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) / |deltaX4 x1 x2 x3 x4 x5 x6|) := by
+      have e : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6 / deltaX4 x1 x2 x3 x4 x5 x6 ^ 2)
+          = Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) / |deltaX4 x1 x2 x3 x4 x5 x6| := by
+        rw [Real.sqrt_div (by positivity : (0:ℝ) ≤ 4 * x1 * deltaX x1 x2 x3 x4 x5 x6) _,
+          show deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 = |deltaX4 x1 x2 x3 x4 x5 x6| ^ 2 by rw [sq_abs],
+          Real.sqrt_sq (abs_nonneg _)]
+      unfold matan_t11
+      rw [if_neg (ne_of_gt harg), if_pos harg, e]
+    have hA : Real.sqrt (4 * x1) * Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) ≠ 0 :=
+      mul_ne_zero (ne_of_gt (Real.sqrt_pos.mpr (by positivity)))
+        (ne_of_gt (Real.sqrt_pos.mpr hdp))
+    have hmabs : |deltaX4 x1 x2 x3 x4 x5 x6| ≠ 0 := abs_ne_zero.mpr hd4
+    have hR : Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * dihXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6
+        = Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) / deltaX4 x1 x2 x3 x4 x5 x6) := by
+      unfold dihXDivSqrtdeltaPosbranch_t11
+      dsimp only
+      rw [hmtn, hPmul]
+      by_cases hm2 : deltaX4 x1 x2 x3 x4 x5 x6 < 0
+      · rw [abs_of_neg hm2, div_neg, Real.arctan_neg]
+        field_simp
+      · rw [abs_of_nonneg (le_of_not_gt hm2)]
+        field_simp
+    by_cases hm : deltaX4 x1 x2 x3 x4 x5 x6 < 0
+    · rw [if_pos hm, hR]
+      have hL : dihXf x1 x2 x3 x4 x5 x6
+          = Real.pi + Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            / deltaX4 x1 x2 x3 x4 x5 x6) := by
+        unfold dihXf
+        unfold atn2
+        by_cases hb : |(-deltaX4 x1 x2 x3 x4 x5 x6 : ℝ)|
+            < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        · rw [if_pos hb]
+          have hupos : 0 < (-deltaX4 x1 x2 x3 x4 x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
+            div_pos (by linarith) hP
+          have hkey := Real.arctan_inv_of_pos hupos
+          have hinv : ((-deltaX4 x1 x2 x3 x4 x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))⁻¹
+              = -(Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+                / deltaX4 x1 x2 x3 x4 x5 x6) := by
+            rw [inv_div, div_neg]
+          rw [hinv] at hkey
+          have hneg := Real.arctan_neg (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            / deltaX4 x1 x2 x3 x4 x5 x6)
+          linarith
+        · rw [if_neg hb, if_pos (by linarith)]
+          rw [div_neg, Real.arctan_neg]
+          ring
+      rw [hL]
+    · rw [if_neg hm, zero_add, hR]
+      have hmp : 0 < deltaX4 x1 x2 x3 x4 x5 x6 := lt_of_le_of_ne (le_of_not_gt hm) (Ne.symm hd4)
+      have hL : dihXf x1 x2 x3 x4 x5 x6
+          = Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            / deltaX4 x1 x2 x3 x4 x5 x6) := by
+        unfold dihXf
+        unfold atn2
+        by_cases hb : |(-deltaX4 x1 x2 x3 x4 x5 x6 : ℝ)|
+            < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        · rw [if_pos hb]
+          have hmpos : 0 < deltaX4 x1 x2 x3 x4 x5 x6
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
+            div_pos hmp hP
+          have hkey := Real.arctan_inv_of_pos hmpos
+          have hinv : (deltaX4 x1 x2 x3 x4 x5 x6
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))⁻¹
+              = Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+                / deltaX4 x1 x2 x3 x4 x5 x6 := by
+            rw [inv_div]
+          rw [hinv] at hkey
+          have e1 : Real.arctan (-deltaX4 x1 x2 x3 x4 x5 x6
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+              = -Real.arctan (deltaX4 x1 x2 x3 x4 x5 x6
+                / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) := by
+            rw [← Real.arctan_neg]; congr 1; ring
+          rw [e1]
+          linarith
+        · rw [if_neg hb, if_neg (by linarith), if_pos (by linarith)]
+          rw [div_neg, Real.arctan_neg]
+          ring
+      rw [hL]
+
+/-- HOL `tau_x_tau_residual_x_general` (terminal.hl:3069). DISCHARGED
+2026-11-14 (lane taugen-w1): the pos/negbranch bridges of merge_ineq.hl:920/963
+merged as `taugen_dih_bridge` (sign of `delta_x4` + the `delta_x = 0` corner)
+over the realified `taumXP38`/`tauResidualXP38` aliases; endgame
+`π * const1 = sol0` (nonlinear_lemma.hl:232, via `p38_const1_eq`). -/
 theorem tau_x_tau_residual_x_general (x1 x2 x3 x4 x5 x6 : ℝ)
     (h1 : 4 ≤ x1) (h2 : Real.sqrt x1 ≤ 2 * h0) (h3 : 0 < x1) (h4 : 0 < x2)
     (h5 : 0 < x3) (h6 : 0 < x4) (h7 : 0 < x5) (h8 : 0 < x6)
@@ -3573,7 +3699,70 @@ theorem tau_x_tau_residual_x_general (x1 x2 x3 x4 x5 x6 : ℝ)
     taumXP38 x1 x2 x3 x4 x5 x6 =
       Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * tauResidualXP38 x1 x2 x3 x4 x5 x6 +
         flatTermXP38 x1 := by
-  sorry -- DISCHARGES: taum_x residual form (tau_x kit external anchor)
+  have hs1 : Real.sqrt x1 * Real.sqrt x1 = x1 := Real.mul_self_sqrt (le_of_lt h3)
+  have hs2 : Real.sqrt x2 * Real.sqrt x2 = x2 := Real.mul_self_sqrt (le_of_lt h4)
+  have hs3 : Real.sqrt x3 * Real.sqrt x3 = x3 := Real.mul_self_sqrt (le_of_lt h5)
+  have hs4 : Real.sqrt x4 * Real.sqrt x4 = x4 := Real.mul_self_sqrt (le_of_lt h6)
+  have hs5 : Real.sqrt x5 * Real.sqrt x5 = x5 := Real.mul_self_sqrt (le_of_lt h7)
+  have hs6 : Real.sqrt x6 * Real.sqrt x6 = x6 := Real.mul_self_sqrt (le_of_lt h8)
+  have hcy2 : deltaX x2 x3 x1 x5 x6 x4 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hcy3 : deltaX x3 x1 x2 x6 x4 x5 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hb1 := taugen_dih_bridge x1 x2 x3 x4 x5 x6 h3 h12 (ne_of_lt h9)
+  have hb2 := taugen_dih_bridge x2 x3 x1 x5 x6 x4 h4 (by rw [hcy2]; exact h12)
+    (Ne.symm (ne_of_lt h10))
+  have hb3 := taugen_dih_bridge x3 x1 x2 x6 x4 x5 h5 (by rw [hcy3]; exact h12)
+    (Ne.symm (ne_of_lt h11))
+  have hd1 : dihY (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x4)
+        (Real.sqrt x5) (Real.sqrt x6)
+      = (if deltaX4 x1 x2 x3 x4 x5 x6 < 0 then Real.pi else 0)
+        + Real.sqrt (deltaX x1 x2 x3 x4 x5 x6)
+          * dihXDivSqrtdeltaPosbranch_t11 x1 x2 x3 x4 x5 x6 := by
+    unfold dihY; rw [hs1, hs2, hs3, hs4, hs5, hs6]; exact hb1
+  have hd2 : dihY (Real.sqrt x2) (Real.sqrt x3) (Real.sqrt x1) (Real.sqrt x5)
+        (Real.sqrt x6) (Real.sqrt x4)
+      = (if deltaX4 x2 x3 x1 x5 x6 x4 < 0 then Real.pi else 0)
+        + Real.sqrt (deltaX x2 x3 x1 x5 x6 x4)
+          * dihXDivSqrtdeltaPosbranch_t11 x2 x3 x1 x5 x6 x4 := by
+    unfold dihY; rw [hs2, hs3, hs1, hs5, hs6, hs4]; exact hb2
+  have hd3 : dihY (Real.sqrt x3) (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x6)
+        (Real.sqrt x4) (Real.sqrt x5)
+      = (if deltaX4 x3 x1 x2 x6 x4 x5 < 0 then Real.pi else 0)
+        + Real.sqrt (deltaX x3 x1 x2 x6 x4 x5)
+          * dihXDivSqrtdeltaPosbranch_t11 x3 x1 x2 x6 x4 x5 := by
+    unfold dihY; rw [hs3, hs1, hs2, hs6, hs4, hs5]; exact hb3
+  have hend : Real.pi * rhoICD_t11 (Real.sqrt x1) - (1 + const1) * Real.pi
+      = flatTermXP38 x1 := by
+    have hr1 : rhoICD_t11 (Real.sqrt x1)
+        = 1 + const1 * (Real.sqrt x1 - 2) / (2 * h0 - 2) := by
+      unfold rhoICD_t11 ly
+      rw [show (2.52 - 2 : ℝ) = 2 * h0 - 2 by norm_num [h0]]
+      ring
+    have hc : Real.pi * const1 = sol0 := taugen_pi_mul_const1
+    have h252 : (2 * h0 : ℝ) = 2.52 := by norm_num [h0]
+    have h052 : (2 * h0 - 2 : ℝ) = 0.52 := by norm_num [h0]
+    rw [hr1]
+    unfold flatTermXP38 flatTermX_t11 flatTerm_t11
+    rw [h052, h252, eq_div_iff (by norm_num : (0.52:ℝ) ≠ 0)]
+    have e : Real.pi * (1 + const1 * (Real.sqrt x1 - 2) / 0.52)
+        - (1 + const1) * Real.pi
+        = Real.pi * const1 * ((Real.sqrt x1 - 2.52) / 0.52) := by
+      field_simp; ring
+    rw [e, hc, mul_assoc, div_mul_cancel₀ _ (by norm_num : (0.52:ℝ) ≠ 0)]
+  have ht : taumXP38 x1 x2 x3 x4 x5 x6
+      = Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * tauResidualXP38 x1 x2 x3 x4 x5 x6
+        + (Real.pi * rhoICD_t11 (Real.sqrt x1) - (1 + const1) * Real.pi) := by
+    unfold taumXP38 taumX_t11 tauResidualXP38 tauResidualX_t11 rhazim_t11
+      rhazim2_t11 rhazimXDivSqrtdeltaPosbranch_t11
+    simp only [node2Y_t11, rotate2_t11, rotate3_t11]
+    unfold rhazim_t11
+    rw [hd1, hd2, hd3, if_pos h9,
+      if_neg (show ¬deltaX4 x2 x3 x1 x5 x6 x4 < 0 by linarith),
+      if_neg (show ¬deltaX4 x3 x1 x2 x6 x4 x5 < 0 by linarith), hcy2, hcy3]
+    ring
+  rw [ht, hend]
+
 
 /-- HOL `OWZLKVY4` (terminal.hl:3149). -/
 theorem OWZLKVY4 (h : main_nonlinear_terminal_v11) :
