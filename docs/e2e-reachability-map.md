@@ -797,6 +797,38 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AK：perimeter 收线（Text 3→2）@ `dc998142`（2026-11-14）
+
+> 触发：`perimb1-w1` 交付——`fully_surrounded_perimeter_bound` 出锥（`dc998142`：W44
+> `pW44_back1_2`/`pW44_backUnion` 移植 HOL `NKEZBFC.hl:2346-2583`；`W42V5`/`FinalV5` 零槽链；
+> `TameLpPerimeter` copy-rename `fully_surrounded_perimeter_bound'`/`MQMSMAB'`；`Assembly` 2 行
+> `MQMSMAB→MQMSMAB'`）。B1-as-stated 先被机器判假（B1 ⇒ 整条轨道落 `span{p,vv1}`），
+> SF 批内部槽后按 HOL 的 run 内 1_2 重建。
+> 同批：OCBICBY 收口汇点 D1 `60ee3305`（4 声明逐字节下移 `LocalAuto22Close`，cone-neutral；
+> `OCBICBY_p22` 模块列由 `LocalAuto22` 变 `LocalAuto22Close`，名字不变）。
+> 仪器原样换装（**5,971 行**，+63）；manifest `--check` PASS。
+
+| 指标 | 基线 AK | 基线 AJ | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,100,351** | 2,099,226 | +1,125 |
+| SORRIED | **57** | 58 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,310 | 5,246 | +64 |
+| K_UNIVERSE | 2,112,558 | 2,111,615 | +943 |
+| COVERAGE | 99.4222% | 99.4133% | +0.0089pp |
+| 口径 II（ex-Cases） | K_REACH **38,651** / SORRIED **57** / AXIOM **585** / UNIVERSE **49,301** | 37,526 / 58 / 585 / 48,358 | +1,125 / −1 / 0 / +943 |
+| TOTAL_VALUE_DECLS | 2,099,666 | 2,098,541 | +1,125 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.TameLp.fully_surrounded_perimeter_bound`}**，added = ∅。
+**Axiom 名单 diff = 0/0**。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+
+**判读**：Text 3→2（余 `LFLACKU_p23` / `OCBICBY_p22`）。K_MODULES +64 = `TameLpPerimeter` 新 import
+带入的 W 链闭包（W44/W42V5/FinalV5 及其上游）；K_REACH +1,125 = 该闭包的声明与证明体。
+**孤儿记账**：`TameLp.fully_surrounded_perimeter_bound` 本体仍 sorry（文件级），但其锥内消费者已被
+`MQMSMAB'` 替换 ⇒ 不可达、不计入 SORRIED；不删不改（方案 A kit 上移 ~984 行留作文件级清零选项）。
+**注**：测量点 `dc998142`；其后 D2 `5251d592` 只向 Close 加私有证明件（`empty_5T1` 仍未被可达体消费），
+cone-neutral，SORRIED 不变。
+
 ### 基线 AJ：VASYYAU 闸族收线（四 master 4/4 + 三目标 3/3）@ `4750bc3f`（2026-11-14）
 
 > 触发：VASYYAU 闸族战役（V1–V25 + K6/K7/K8 ladder 共 33 笔落库，编排者 = ZCode 主会话；详见 pq 续1120）。

@@ -17,19 +17,19 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AJ @`4750bc3f`（2026-11-14，VASYYAU 闸族收线：四 master 4/4 + 三目标 3/3）**
-> cone `K_REACH 2,099,226` / **SORRIED 58** / **`K_AXIOM 585`** / MODULES 5,246 /
-> UNIVERSE 2,111,615 / COVERAGE **99.4133%**；口径 II 37,526 / 58 / 585 / 48,358。
-> `docs/e2e-reachability-map.tsv` 已按基线 AJ 重写（5,908 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AK @`dc998142`（2026-11-14，perimeter 收线：Text 3→2）**
+> cone `K_REACH 2,100,351` / **SORRIED 57** / **`K_AXIOM 585`** / MODULES 5,310 /
+> UNIVERSE 2,112,558 / COVERAGE **99.4222%**；口径 II 38,651 / 57 / 585 / 49,301。
+> `docs/e2e-reachability-map.tsv` 已按基线 AK 重写（5,971 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AI/AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 58 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 3（`--- SORRIED ---` 段实测：
-> `LFLACKU_p23` / `OCBICBY_p22` / `fully_surrounded_perimeter_bound`）。
-> 较基线 AI：SORRIED 62→58（清单 diff：closed 恰
-> `{SCS_5M2_IMP_SCS_5T1_p29, NWDGKXH_p32, YOBIMPP_p32, MIQMCSN_p32}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +1,212、UNIVERSE +879、MODULES +5。
-> 同批非锥内资产：LA1 四 master kit 4/4（陈述逐字节同形）、`LocalAuto23Vas` 簇 14/14 零 sorry、
-> LocalConcl 四 discharge 转标准三、`LocalAuto32` sorry 60→0（K6/K7/K8 ladder 33 笔过闸）。
+> （与基线 AJ/AI/AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 57 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 2（`--- SORRIED ---` 段实测：
+> `LFLACKU_p23` / `OCBICBY_p22`）。
+> 较基线 AJ：SORRIED 58→57（清单 diff：closed 恰 `{fully_surrounded_perimeter_bound}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +1,125、UNIVERSE +943、MODULES +64。
+> 同批资产：perimeter v5 链（W44/W42V5/FinalV5/TameLpPerimeter + Assembly 2 行；父件'/MQMSMAB'
+> 标准三）；OCBICBY 收口汇点 D1 `60ee3305`（cone-neutral，`LocalAuto22Close`）。
+> **孤儿**：`TameLp.fully_surrounded_perimeter_bound` 文件级 sorry 仍在（锥外、不删不改）。
 > 中间档：`04ab3cac` DAG 切面四刀（cone-neutral 解锁件）、`3cb72c17` TM 18 文件（300 叶证书）；
 > 各节见 map。
 >
@@ -857,6 +857,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（17:35，续1134）**：**基线 AK 落地——perimeter 收线：SORRIED 58→57（Text 3→2）**。
+① 仪器（`e2e_reach_map` @`dc998142`，原样）：**K_REACH 2,100,351（+1,125）/ SORRIED 57（−1）/ K_AXIOM 585（0/0）/ MODULES 5,310（+64）/ UNIVERSE 2,112,558（+943）/ COVERAGE 99.4222%（+0.0089pp）**；口径 II 38,651 / 57 / 585 / 49,301；TOTAL_VALUE_DECLS 2,099,666（+1,125）。
+② **SORRIED 清单逐行 diff**：closed 恰 **{`Kepler.Text.TameLp.fully_surrounded_perimeter_bound`}**、added ∅；Axiom 名单 diff 0/0；根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
+③ 文档六件：map.md 基线 AK 节（AK vs AJ 表 + diff + 孤儿记账）、pq 头 + §8、AGENTS §1（57 / Text 2 / 基线 AK `dc998142`）、README.md / README.zh.md、hf-proof-map 第 21 条；TSV 换装 **5,971 行**；`trust_manifest.py --check` **PASS**。
+④ 口径：**57 = Assembly 55（54 `nli*` + 1 hLP）+ Text 2（`LFLACKU_p23` / `OCBICBY_p22`）**；`TameLp.fully_surrounded_perimeter_bound` 文件级 sorry 仍在但**锥外孤儿**（消费者已换 `MQMSMAB'`），不计入 SORRIED、不删不改。
+⑤ 同批：OCBICBY D2 `5251d592`（`empty_5T1`/`OCBICBY_5T1` 标准三，cone-neutral）；SF-109 立案批准；D3（`terminal_pent_taum2` 单行）在飞。
+⑥ 下一条：续1135。
 - **2026-11-14（17:10，续1133）**：**OCBICBY 5T1 收口 D2 落库 `5251d592`（编排者闸全绿）：`empty_5T1_p22` 真证 + `OCBICBY_5T1_p22` 新增真证（双探针标准三）；`terminal_pent_taum2_p22` 判陈述缺陷，SF-109 已立案并批准**。
 ① D2 闸（亲跑 @`13c166e8`）：Close +352/−3（删除面恰 1 `  sorry`；私有 `ocb_*` 五件）；新增 `  sorry` 0、禁项 0/0/0；直编 Close/LA16 **rc=0/err0**；探针 `empty_5T1_p22`/`OCBICBY_5T1_p22` **标准三**，`terminal_pent_taum2_p22`/`empty_6T1_p22`/`OCBICBY_p22` 仍 sorryAx（预期），回归 `OCBICBY_4T2_p22` 标准三；根面 md5 **`246e952c…` 同**；装池（旧件备份）。
 ② **SF-109（新立案，已批准）**：`terminal_pent_taum2_p22` 把 `ineqP22`（合取构造器）放在**结论** ⇒ 对全称 `y1` 要求证 `2 ≤ y1`，**陈述层不可满足**（编排者亲跑 4 例 shape 探针 rc=0；HOL `Sphere.ineq` 是蕴含壳，`ineqP19` 才是逐字移植）。修法 = 加 `(hbox : ineqP22 [同 8 box] True)` 前提 + 结论回展平不等式（与同文件 `LEMMA_7175074394`/`angle_sum_5T1` 惯例同型；HOL 语义等价；`ineqP22` 定义与 3 个 hbox 消费者不动；本件零代码消费者）。证明已备 = D2 私有 `ocb_terminal_pent_taum2_core`，D3 一行落地后 Close sorry **3→2**。
