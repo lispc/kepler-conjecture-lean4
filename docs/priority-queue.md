@@ -857,6 +857,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（16:35，续1132）**：**perimeter 收线落库 `dc998142`（perimb1-w1 交付，编排者闸全绿）：TameLp 最后一条锥内 sorry `fully_surrounded_perimeter_bound` 出锥——W44 + W42V5 零槽链 + FinalV5 + TameLpPerimeter + Assembly 2 行**。
+① 数学：`LocalFanStepW44`（301 行）移植 HOL `NKEZBFC.hl:2346-2583` 的 run 内 backward 1_2（`pW44_back1_2`）+ back union 恒等式（`pW44_backUnion`）；`LocalFanStepW42V5`（412 行）+ `LocalFanPerimeterFinalV5`（51 行）把 w 侧槽**整体删除**（`hslot_w`/`hprev`/`hB1` 在 v5 全部消失，消费点 `j=i` 单实例由 W44 放电），父件条件形变**零槽形**（`pW43_…_v5` 无任何 perimeter 前提）。
+② 接入（方案 F）：`TameLpPerimeter`（59 行）copy-rename `fully_surrounded_perimeter_bound'` + `MQMSMAB'`（陈述与 TameLp 原声明逐字节同），`Assembly` +2/−1（`:61` import、`:2457` `MQMSMAB`→`MQMSMAB'`）；legacy v4/hB1 一行未改保留；**TameLp 原父件 sorry 成孤儿**（锥外，按裁决记账不删不改）。
+③ 闸（亲跑 @`a301d2e8`）：numstat 5 文件 **+825/−1**（Assembly +2/−1，四新文件 823 行纯新增）；新增 `  sorry` **0**；禁项扫描仅 1 行 docstring 文字提到 axiom/native_decide（无真声明）；按序岛编 **W44→W42V5→FinalV5→TameLpPerimeter→Assembly 全 rc=0/err0**（Assembly 岛协议）；装池（Assembly 旧件备份，四新件入池）。
+④ 探针：`TameLp.fully_surrounded_perimeter_bound'` / `MQMSMAB'` / `pW43_…_v5` **全标准三（零 sorryAx）**；legacy `TameLp.fully_surrounded_perimeter_bound`/`MQMSMAB` 仍 sorryAx（孤儿，预期）；根面 md5 **`246e952c…` 逐字节同**。
+⑤ 仪器复测启动（基线 AK；预期 SORRIED **58→57** = Assembly 55 + Text 2，closed 应恰 `{fully_surrounded_perimeter_bound}`、added ∅）。复测完成后刷文档六件。
+⑥ 下一条：续1133。
 - **2026-11-14（16:05，续1131）**：**OCBICBY 收口汇点 D1 落库 `60ee3305`（章程 APPROVED→LANDED，编排者闸全绿）：新模块 `LocalAuto22Close` +53；LA22 −31（4 声明逐字节下移 + 4 helper 撤 private）；LA16 +1 import**。
 ① 闸（亲跑 @`393405f3`）：numstat LA16 +1/−0、LA22 +4/−35、Close 新文件 +53；`verify_move.py` **22/22 PASS**（四块 md5 逐字节同、签名 4/4、可见性 4/4、Close import 恰 LA22+LA19、closure(Close)=111 不含 LA16、SCC 无环、**sorry 52 = 48 + 4**）；shadow pool 三连编 **Close/LA22/LA16 全 rc=0/err0**；装池（LA22/LA16 旧件备份、Close 新增）。
 ② 探针：`OCBICBY_p22`/`terminal_pent_taum2_p22`/`empty_5T1_p22`/`empty_6T1_p22` 仍 `sorryAx`（搬运阶段预期）；回归 `OCBICBY_4T2_p22`/`LEMMA_7175074394_p22`/`angle_sum_5T1_p22` **全标准三**；根面 md5 **`246e952c…` 逐字节同**。
