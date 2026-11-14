@@ -857,6 +857,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（15:05，续1128）**：**OCBICBY 5T1 前哨落库 `db31ae0e`（ocbicby5t1-w1 FULL-WIN，编排者闸全绿）：pent 帽石 `terminal_pent_taum_p19` + LA22 双胶 `LEMMA_7175074394_p22` / `angle_sum_5T1_p22` 三件真证——5T1 数学侧只剩 `terminal_pent_taum2` / `empty_5T1` 装配**。
+① 交付：LA19 **+39/−2**（帽石 = HOL pent_hex.hl:2223 移植：`taud_minimizer_terminal_pent_cases_p19`(z1,d=20)+四叉+四帽件(y126→z1)+`OWZLKVY4_p19`×2+`linarith`；**LA19 bare `  sorry` 1→0**，仅余 `sol0Bounds_p19` 两 bullet）；LA22 **+206/−5**（`LEMMA_7175074394`：registry 2485876245a+7175074394 + `lindihpi_lt_y_small_p11`(LA11，实测在 LA22 闭包内) + 自证 9 项 Taylor `arctan` 上包络（√0.110186<0.331943、·A<0.3205，余量 8e-7）；`angle_sum_5T1`：registry 4887115291+6789182745+LEMMA×2+delta 槽 swap；同文件 sorry **54→52**）。
+② 闸（亲跑 @`06cd42ca`）：numstat 39/2+206/5；删除面恰 **3** 条 `  sorry`；禁项 0/0/0/0；直编 LA19/LA22 均 **rc=0/err0**（LA19 1 decl-sorry=sol0Bounds，LA22 52）；装池（旧件备份）；探针 **6/6**：帽石/hex 塔顶/OWZ/LEMMA/angle_sum 全标准三、`empty_5T1`/`OCBICBY` 仍 sorryAx（预期）；根面 md5 **`246e952c…` 逐字节同**。
+③ Phase C：`MOVE_PLAN.md`+`charter-draft.md`+`verify_move.py`（22 检查；模拟搬运 22/22 PASS、3 负例全中；closure(LA19)=110 含 LA22、closure(LA22)=92 不含 LA19）。**收口模块 `LocalAuto22Close` 章程待用户批**（4 声明下移+4 private 撤可见性+LA16 +1 import；零陈述改动/零 sorry 增减）。
+④ `sol0Bounds_p19` 判 **不做**（`Gamma4Val.g4v_sol0_bounds` 闭包含 PackingAuto20，与 LA19 ENCODING 纪律冲突；就地证需 ±3.3e-7 arcsin 证书 ≈200–400 行，留专项）。
+⑤ handoff-2026-11-14 已加 §8 接手进度。下一条：续1129。
 - **2026-11-14（14:40，续1127）**：**OCBICBY 单车道发车（用户令：编排者维护一个车道推进 OCBICBY 战役）——目标 5T1 支；实测发现 LA22↛LA19 硬约束 + 收口模块小 DEF-FIX 方案（待批）**。
 ① 分工：本轮 2 车并行且文件零交集——`perimb1-w1`（TameLp/perimeter，在飞）+ `ocbicby5t1-w1`（LA19/LA22/LocalAuto16）。OCBICBY 三支中 4T3（LP wrapper 银行 6 件）/6T1（箱型 ht4nn）均卡 LP 解冻，唯一可施工 = **5T1**。
 ② 战场实测：14 支中 10 支 empty 硬核已证（3T1–3T7/4T1/4T2/4T4/4T5），但**支产品只落了 1 个**（`OCBICBY_4T2_p22` LA22:6552；模板 20–40 行/支）；5T1 缺口 = `terminal_pent_taum_p19`(LA19:2548) / `LEMMA_7175074394_p22`(LA22:4977) / `angle_sum_5T1_p22`(LA22:4985) / `terminal_pent_taum2_p22`(LA22:4998) / `empty_5T1_p22`(LA22:3054) / `OCBICBY_5T1_p22`(待造) + 总装配。
