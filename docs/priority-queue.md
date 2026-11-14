@@ -859,6 +859,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（23:59，续1146）**：**ht4nn 微探针判词（重大 ER）：`ht4nn` 箱陈述为假（内核证实）；6T1 改走 HOL 四项和，新车道 `hexfour-w1`**。
+① **内核反例**（`ht4nn-probe-w1`；标准三、零 sorryAx；编排者亲跑复核 rc=0）：`ht4nn_witness_neg : taum 2 2 2 2 (883/256) 2 < 0`（883/256 = 3.449 ∈ [3.01,3.915]）、`ht4nn_box_false : ¬ ∀ y1 y2 y3 y5 ∈ 箱, 0 ≤ taum y1 y2 y3 2 y5 2`；另有内点见证 B（三范数 >2）。**上游"箱 min ≈ 1.07"是脚本 bug**（`taum_min2.py` 的 `deltaX` 缺 `−x4x5x6` 项、`deltaX4` 是另一函数；真下界 ≈ **−0.551**，`deltaY≥0` 区 ≈ −0.49）。⇒ `empty_6T1_p22_of_ht4nn` / `_only` 的 `ht4nn` 前提在合法配置（正六边形等）不成立，两条条件件 **vacuous**，不能收 6T1（不删、不用）。
+② **正确路线**：HOL `OCBICBY.hl:3040` 的原语句是**四项和** `0.712 ≤ tau3 012 + tau3 024 + tau3 045 + tau3 234`；Lean 桥拆成「三项 >0.712 + 第四耳 ≥0」是过度强化。`terminal_hex_taum_p19`（LA19:4018）的证明已把 `r755Ineq_p19` 的 `f1/f2` 通用槽实例化为 `f1 = taum126 + taum012`、`f2 = 0` ⇒ 把第四耳并入 `f1` 可得四项和，**零新 registry id**。
+③ **新车道 `hexfour-w1`**：Phase 0 确认 `f1/f2` 通用性 → Phase 1 `terminal_hex_taum_four_p19`（复制/参数化 LA19 证明，400–600 行）→ Phase 2 新桥 `empty6T1_hex_bridge_four_p22` + `empty_6T1_p22`（删 1）+ `OCBICBY_6T1_p22` 产品 → Phase 3 若 14/14 则 `OCBICBY_p22` 总装配（删 1）。零算力。
+④ `tmkernel-w1` 继续（div2/loa + 精度；与四项和路线正交——若四项和成功，6T1 不需要新 TM 证书，但检查器对 nli* 仍值钱）。
+⑤ 状态：SORRIED 仍 **56**（Text 1 = `OCBICBY_p22`）；若 `hexfour-w1` 成 → **Text 清零 + 基线 AM**。下一条：续1147。
 - **2026-11-14（23:55，续1145）**：**TM 内核检查器补齐车道 `tmkernel-w1` 发车（用户令：div2/loa 规则 + 精度）**。
 ① 目标：让 `--ite-hull2 --tm-div2` 证书能被 Lean 检查器吃下——(a) **div2/loa 规则**：分母 TM 线性包络跨零、但真分母在盒上定号时，用 TM 携带的认证幅值下界 `loa ≤ |g(x)|` 继续除法（`M = 1/loa`，`bb_arb.c:1228` `tm_div2_salvage`）；pilot 实测本盒 **54/54 走通道 1（trans-loa）**、通道 2（值域对）0 次；(b) **精度**：3 采样叶 NEG（loBound ≈ −2^186），切片定位 `Σ6 lmfun·dihY` 饱和到 1.4e−48（真值 ~13），`atan` rung 128→512 抬 47 个数量级但 150× 慢。
 ② 策略：优先 **checker 侧从既有 certified 数据重算 `loa`**（sqrt 的 `√c`、abs 的符号判定、trans 的值域对），**不改证书 JSON/emitter**；新增 opt-in 检查器变体（如 `checkPosTMHullD`）+ **Lean soundness 定理**，既有 `checkPosTMHullC` 与 BIEFJHU 证书语义/字节零改动。
