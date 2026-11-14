@@ -17,18 +17,20 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AL @`e1e52ad6`（2026-11-14，LFLACKU 收线：Text 2→1）**
-> cone `K_REACH 2,100,373` / **SORRIED 56** / **`K_AXIOM 585`** / MODULES 5,311 /
-> UNIVERSE 2,112,607 / COVERAGE **99.4209%**；口径 II 38,673 / 56 / 585 / 49,350。
-> `docs/e2e-reachability-map.tsv` 已按基线 AL 重写（5,971 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AM @`98414950`（2026-11-14，OCBICBY 收线：Text 清零）**
+> cone `K_REACH 2,100,672` / **SORRIED 55** / **`K_AXIOM 585`** / MODULES 5,313 /
+> UNIVERSE 2,112,660 / COVERAGE **99.4326%**；口径 II 38,972 / 55 / 585 / 49,403。
+> `docs/e2e-reachability-map.tsv` 已按基线 AM 重写（5,972 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AK/AJ/AI/AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 56 构成**：Assembly 55（54 `nli*` + 1 hLP）+ Text 1（`--- SORRIED ---` 段实测：
-> `OCBICBY_p22`）。
-> 较基线 AK：SORRIED 57→56（清单 diff：closed 恰 `{LFLACKU_p23}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +22、UNIVERSE +49、MODULES +1。
-> 同批资产：LFLACKU 孪生模块 `LocalAuto23Jotswix`（+551/−0，三孪生全标准三）+ `LocalAuto16`
-> +2/−1 改道；OCBICBY 支产品 D4 `a3a41000`（10 条，cone-neutral；14 支中 12 支在案）。
+> （与基线 AL/AK/AJ/AI/AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
+> **SORRIED 55 构成**：**Assembly 55（54 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
+> 较基线 AL：SORRIED 56→55（清单 diff：closed 恰 `{OCBICBY_p22}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +299、UNIVERSE +53、MODULES +2。
+> 同批资产：`hE` `252a9777`（`LocalAuto19Euler`）+ **OCBICBY 四项和收线 `98414950`**
+> （`LocalAuto19Four` +804 + Close +462/−4；`empty_6T1_p22`/`OCBICBY_p22` 删除面恰 2 sorry；
+> 14/14 产品）。**ER**：`ht4nn` 箱陈述为假（内核反例 `taum 2 2 2 2 (883/256) 2 < 0`）；
+> `_of_ht4nn`/`_only` vacuous（不删不用）；6T1 走 HOL 四项和 `0.712 ≤ Σ4 tau3`。
+> `JEJTVGB_case_breakdown_p16` LA16 重编后 **标准三**。
 > **孤儿**：`TameLp.fully_surrounded_perimeter_bound` + LA23 四条（`taum_attains_inf_p23` 等）
 > 文件级 sorry 仍在（锥外、不删不改）；LA23 的 `taum_attains_inf_p23` 陈述缺 HOL `JOTSWIX.hl:9`
 > 六条箱约束（y4 槽不连续），SF 补箱候选。
@@ -859,6 +861,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（01:40，续1147）**：**OCBICBY 收线落库 `98414950` + 基线 AM——Text 清零（SORRIED 56→55；55 = Assembly 54 `nli*` + hLP）**。
+① 交付（`hexfour-w1`）：`LocalAuto19Four` **+804/−0**（`r755_noS45S56_p19` 泛化 + `r755_db_p19` 125 条 + `hex234/126/135_step_p19` + `terminal_hex_taum_four_p19`）+ `LocalAuto22Close` **+462/−4**（`hex_tower_hnum_four_p22` + `empty6T1_hex_bridge_four_p22` + `empty_6T1_p22` + `OCBICBY_6T1_p22` + `OCBICBY_p22` 14 元总装配；删除面恰 2 条 sorry）。路线 = HOL **四项和** `0.712 ≤ Σ4 tau3`（`OCBICBY.hl:3040`），第四耳可为负；**不用**被证假的 `ht4nn`、零新 registry id。
+② 闸（亲跑 @`aa4416a0`）：apply-check PASS、两文件、`+804/−0` 与 `+462/−4`、删除面恰 2 `  sorry`、新增 axiom/sorry/native_decide 0；`LocalAuto19Four` 与 Close 直编 **rc=0/err0**（Close **0 条 sorry warning**）；13 新件 + `OCBICBY_p22` **全标准三**；回归 `terminal_hex_taum_p19`/`empty_5T1`/`OCBICBY_5T1`/`4T2`/`4T3'` 标准三；**LA16 重编后 `JEJTVGB_case_breakdown_p16` 标准三**；根面 md5 **`246e952c…` 同**。
+③ **基线 AM**（`e2e_reach_map` @`98414950`，原样）：**K_REACH 2,100,672（+299）/ SORRIED 55（−1）/ K_AXIOM 585（0/0）/ MODULES 5,313（+2）/ UNIVERSE 2,112,660（+53）/ COVERAGE 99.4326%（+0.0117pp）**；口径 II 38,972 / 55 / 585 / 49,403；TOTAL 2,099,987（+299）。SORRIED 清单 diff：closed 恰 **{`OCBICBY_p22`}**、added ∅；**55 条全部在 Assembly（Text 0）**；AXIOM 名单 585/585 逐行同；TSV 5,972 行；manifest PASS。
+④ **ER（ht4nn）**：`ht4nn` 箱陈述为假（内核反例 `taum 2 2 2 2 (883/256) 2 < 0`；上游 min≈1.07 是 `taum_min2.py` 脚本 bug，真下界≈−0.55）；`_of_ht4nn`/`_only` vacuous，保留不删不用。
+⑤ 口径：**55 = 54 `nli*` + 1 hLP，Text 0**。剩余全部为数值证书层；`tmkernel-w1`（div2/loa + 精度）在飞。下一条：续1148。
 - **2026-11-14（23:59，续1146）**：**ht4nn 微探针判词（重大 ER）：`ht4nn` 箱陈述为假（内核证实）；6T1 改走 HOL 四项和，新车道 `hexfour-w1`**。
 ① **内核反例**（`ht4nn-probe-w1`；标准三、零 sorryAx；编排者亲跑复核 rc=0）：`ht4nn_witness_neg : taum 2 2 2 2 (883/256) 2 < 0`（883/256 = 3.449 ∈ [3.01,3.915]）、`ht4nn_box_false : ¬ ∀ y1 y2 y3 y5 ∈ 箱, 0 ≤ taum y1 y2 y3 2 y5 2`；另有内点见证 B（三范数 >2）。**上游"箱 min ≈ 1.07"是脚本 bug**（`taum_min2.py` 的 `deltaX` 缺 `−x4x5x6` 项、`deltaX4` 是另一函数；真下界 ≈ **−0.551**，`deltaY≥0` 区 ≈ −0.49）。⇒ `empty_6T1_p22_of_ht4nn` / `_only` 的 `ht4nn` 前提在合法配置（正六边形等）不成立，两条条件件 **vacuous**，不能收 6T1（不删、不用）。
 ② **正确路线**：HOL `OCBICBY.hl:3040` 的原语句是**四项和** `0.712 ≤ tau3 012 + tau3 024 + tau3 045 + tau3 234`；Lean 桥拆成「三项 >0.712 + 第四耳 ≥0」是过度强化。`terminal_hex_taum_p19`（LA19:4018）的证明已把 `r755Ineq_p19` 的 `f1/f2` 通用槽实例化为 `f1 = taum126 + taum012`、`f2 = 0` ⇒ 把第四耳并入 `f1` 可得四项和，**零新 registry id**。

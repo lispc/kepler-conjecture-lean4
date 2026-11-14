@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2100373
-K_SORRIED 56
+K_REACH 2100672
+K_SORRIED 55
 K_AXIOM 585
-K_MODULES 5311
-K_UNIVERSE 2112607
-COVERAGE 2100373 / 2112607
-K_UNIVERSE_XCASES 49350
-K_REACH_XCASES 38673
-K_SORRIED_XCASES 56
+K_MODULES 5313
+K_UNIVERSE 2112660
+COVERAGE 2100672 / 2112660
+K_UNIVERSE_XCASES 49403
+K_REACH_XCASES 38972
+K_SORRIED_XCASES 55
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2099688
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2099688
-SORRIED 56
+TOTAL_VALUE_DECLS 2099987
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2099987
+SORRIED 55
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -69,7 +69,6 @@ Kepler.Assembly	Kepler.Assembly.nliTskIYOUOBFsym	parent=Kepler.Assembly.nliTskBa
 Kepler.Assembly	Kepler.Assembly.nliTskRIBCYXUsym	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskWKGUESBsym	parent=Kepler.Assembly.nliTskBank
 Kepler.Assembly	Kepler.Assembly.nliTskXLLIPLS	parent=Kepler.Assembly.nliTskBank
-Kepler.Text.LocalAuto22Close	Kepler.Text.OCBICBY_p22	parent=Kepler.Text.JEJTVGB_case_breakdown_p16
 --- AXIOMS ---
 Kepler.Graphs.CertShards.Hex.K001	Kepler.Graphs.hex_shard_100._native.native_decide.ax_1_1
 Kepler.Graphs.CertShards.Hex.K010	Kepler.Graphs.hex_shard_1000._native.native_decide.ax_1_1
@@ -3528,6 +3527,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 385	Kepler.Text.LocalAuto24
 384	Kepler.Interval.Cases.CFWGKMBZ.Shard589
 384	Kepler.Interval.Cases.CFWGKMBZ.Shard595
+384	Kepler.Text.LocalAuto22
 383	Kepler.Interval.Cases.CFWGKMBZ.Shard376
 383	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard619
 382	Kepler.Interval.Cases.CFWGKMBZ.Shard463
@@ -3914,7 +3914,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 269	Kepler.Interval.Cases.CFWGKMBZ.Shard77
 268	Kepler.Interval.Cases.CFWGKMBZ.Shard29
 267	Kepler.Interval.Cases.CFWGKMBZ.Shard244
-267	Kepler.Text.LocalAuto22
+267	Kepler.Text.LocalAuto38
 266	Kepler.Interval.Cases.CFWGKMBZ.Shard282
 266	Kepler.Interval.Cases.CFWGKMBZ.Shard46
 264	Kepler.Interval.Cases.CFWGKMBZ.Shard213
@@ -4044,6 +4044,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 223	Kepler.Text.LocalAuto37
 222	Kepler.Interval.Cases.CFWGKMBZ.Shard311
 221	Kepler.Interval.Cases.CFWGKMBZ.Shard401
+221	Kepler.Text.LocalAuto19
 221	Kepler.Text.XwitccnKernel
 220	Kepler.Interval.Cases.CFWGKMBZ.Shard420
 218	Kepler.Interval.Cases.CFWGKMBZ.Shard248
@@ -4055,7 +4056,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 210	Kepler.Interval.Cases.CFWGKMBZ.Shard409
 209	Kepler.Interval.Cases.CFWGKMBZ.Shard90
 209	Kepler.Text.LocalAuto13
-208	Kepler.Text.LocalAuto38
 201	Kepler.Interval.Cases.CFWGKMBZ.Shard170
 200	Kepler.Interval.Cases.CFWGKMBZ.Shard494
 200	Kepler.Text.PackingAuto4
@@ -4079,7 +4079,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 162	Kepler.Text.LocalAuto26
 159	Kepler.Text.LocalAuto31
 153	Kepler.Text.LocalAuto16
-153	Kepler.Text.LocalAuto19
 153	Kepler.Text.PackingAuto5
 152	Kepler.Interval.Cases.CFWGKMBZ.Shard89
 150	Kepler.Text.TameSpine.TameList63
@@ -4133,9 +4132,9 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 79	Kepler.Text.PolyAuto7
 79	Kepler.Text.TameSpine.JcajyduAqLeaf13W1
 74	Kepler.Geom.LuneVolume
+73	Kepler.Text.IneqClosureDefs
 71	Kepler.Graphs.Graph
 71	Kepler.Text.AzimBridge
-71	Kepler.Text.IneqClosureDefs
 70	Kepler.Text.LocalAuto10
 68	Kepler.Geom.WedgeVolume
 68	Kepler.Text.PlanarityNotCut
@@ -4189,6 +4188,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 39	Kepler.Text.Reduction1W1n
 39	Kepler.Text.TameSpine.JcajyduAqLeaf12G
 38	Kepler.NliBanks2
+38	Kepler.Text.LocalAuto22Close
 38	Kepler.Text.PolyAuto3
 36	Kepler.Geom.SimplexVolume
 36	Kepler.Text.Reduction1W3a
@@ -4336,6 +4336,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 15	Kepler.Graphs.Plane
 15	Kepler.NliBanks3
 15	Kepler.Text.ConformingAuto10
+15	Kepler.Text.EulerAtn2Kit
 15	Kepler.Text.PlanarityAuto13
 15	Kepler.Text.Reduction3Thm8B
 15	Kepler.Text.Reduction3Thm9C2
@@ -4365,7 +4366,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 14	Kepler.Text.TameSpine.TameList71
 13	Kepler.Graphs.FaceDivision
 13	Kepler.Text.ConformingAuto9
-13	Kepler.Text.EulerAtn2Kit
 13	Kepler.Text.Gamma4Deriv8
 13	Kepler.Text.Gamma4VolY
 13	Kepler.Text.LocalFanStepW6K5
@@ -4404,6 +4404,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 12	Kepler.Text.TameSpine.Reduction3J5BetwnPreFace
 11	Kepler.Text.ConformingAuto5
 11	Kepler.Text.Gamma4Deriv7
+11	Kepler.Text.LocalAuto19Four
 11	Kepler.Text.MoreLemma2Naming
 11	Kepler.Text.PlanarityAuto7
 11	Kepler.Text.PlanarityConnect
@@ -5250,6 +5251,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 3	Kepler.Graphs.CertShards.QuadR.K079
 3	Kepler.Text.Gamma4Mono
 3	Kepler.Text.Gamma4Mono2
+3	Kepler.Text.LocalAuto19Euler
 3	Kepler.Text.LocalAuto7W12H
 3	Kepler.Text.LocalAuto7W12K
 3	Kepler.Text.LocalAuto7W12M
@@ -5894,7 +5896,6 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 1	Kepler.Text.ChainCardAtoms
 1	Kepler.Text.ChainQRDYXYJ
 1	Kepler.Text.Gamma4ValCornerKit
-1	Kepler.Text.LocalAuto22Close
 1	Kepler.Text.LocalAuto7W16
 1	Kepler.Text.LocalAuto7W17
 1	Kepler.Text.LocalAuto7W21

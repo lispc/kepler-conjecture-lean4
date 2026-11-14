@@ -797,6 +797,40 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AM：Text 清零（SORRIED 56→55）@ `98414950`（2026-11-14）
+
+> 触发：`hexfour-w1` 交付——OCBICBY 收线：HOL **四项和**路线（不走被证假的 `ht4nn`）。
+> `LocalAuto19Four` +804（`r755` 的 `f1/f2` 泛化 + 234/126/135 三层链 +
+> `terminal_hex_taum_four_p19`）+ `LocalAuto22Close` +462/−4（`empty6T1_hex_bridge_four_p22` +
+> `empty_6T1_p22` + `OCBICBY_6T1_p22` + `OCBICBY_p22` 14 元总装配；删除面恰 2 条 `sorry`）。
+> 同批（AL→AM 之间）：`hE` 收线 `252a9777`（`LocalAuto19Euler` +550 + Close +30）。
+> **ER**：`ht4nn` 箱陈述为假（内核反例 `taum 2 2 2 2 (883/256) 2 < 0`、`ht4nn_box_false`；
+> 上游 "箱 min≈1.07" 是脚本 bug，真下界 ≈ −0.55）⇒ `_of_ht4nn`/`_only` vacuous（不删不用）；
+> 6T1 改走 HOL 四项和（`0.712 ≤ Σ4 tau3`，第四耳可为负）。
+> 仪器原样换装（**5,972 行**，+1）；manifest `--check` PASS。
+
+| 指标 | 基线 AM | 基线 AL | Δ |
+|---|---:|---:|---:|
+| K_REACH | **2,100,672** | 2,100,373 | +299 |
+| SORRIED | **55** | 56 | **−1** |
+| K_AXIOM | **585** | 585 | 0 |
+| K_MODULES | 5,313 | 5,311 | +2 |
+| K_UNIVERSE | 2,112,660 | 2,112,607 | +53 |
+| COVERAGE | 99.4326% | 99.4209% | +0.0117pp |
+| 口径 II（ex-Cases） | K_REACH **38,972** / SORRIED **55** / AXIOM **585** / UNIVERSE **49,403** | 38,673 / 56 / 585 / 49,350 | +299 / −1 / 0 / +53 |
+| TOTAL_VALUE_DECLS | 2,099,987 | 2,099,688 | +299 |
+
+**SORRIED 清单逐行 diff**：closed = **{`Kepler.Text.OCBICBY_p22`}**，added = ∅。
+**Axiom 名单 diff = 0/0**（585/585 逐行同）。根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`；
+`sorryAx` 仍由 Assembly 的 54 `nli*` + 1 hLP 供给）。
+
+**判读**：**Text 0**；SORRIED 55 = **Assembly 55（54 `nli*` + 1 hLP）**。K_MODULES +2 =
+`LocalAuto19Euler` + `LocalAuto19Four`；K_REACH +299 = 四项和链 + 14 支总装配的证明体入锥。
+`JEJTVGB_case_breakdown_p16` 在 LA16 重编后 **标准三**（terminal case breakdown 不再带 `sorryAx`）。
+**孤儿/遗留**：`OCBICBY_p22` 的旧 `ht4nn` 条件件（`_of_ht4nn`/`_only`）与 `empty_6T1_p22_of_ht4nn*`
+保留但 vacuous（不删不用）；LA23 四条 + `TameLp.fully_surrounded_perimeter_bound` 文件级 sorry
+仍在（锥外）。**剩余全部 = 数值证书层**（54 `nli*` + hLP）。
+
 ### 基线 AL：LFLACKU 收线（Text 2→1）@ `e1e52ad6`（2026-11-14）
 
 > 触发：`lflacku-w1` 交付——`LFLACKU_p23` 出锥（`e1e52ad6`：新模块 `LocalAuto23Jotswix`
