@@ -797,6 +797,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（09:25，续1110）**：**hex51-w2 收线落库 `1115058e`（hex 数值塔基全解锁，LA19 +317/−7，sorry-decl 15→12）+ hexsym-w1 补位发车（agent-66：taum_sym_cases2 对称 kit）**。
+① **大超预期**：工单预判的 NEEDS-DB 墙**未触发**——DB 是假设级消费（`h "<id>"` 模式，探针恰标准三，先例 edge2_flatD_x1_delta_lemma3_p19 复核一致）；tau_x 真身化 + C 件后塔基 SF 级卡点清零。三真证：OWZLKVY4_p19（pent_hex.hl:216-288 双分支 + EAR_DELTA_X4 孪生）/ minimizer_hex_cases（:2288）/ 234_reduction（:2981-3079）；126/135 随 234 翻绿（六探针全标准三）。
+② 闸（亲跑）：apply--check@a7a8d525 PASS；添加行禁词 0；直编 13.2 s RC=0/err0 + 六探针恰标准三；根面 md5 246e952c 逐字节同；新 olean 装池。雷区六则入档（ℝ 数词 defeq 2*2≠4 / rcases 清除假设等）。
+③ **剩余 BLOCKED（hex51-w2 精确判词）**：hex 塔顶 `terminal_hex_taum` 需 `taum_sym_cases2_p19`（LA19:2169，sphere.hl 二面角对称 kit，独立硬骨头）⇒ **hexsym-w1 专项**；6T1 装配另需 ht4nn（REAL_ARITH alien 非负约定的 Lean 显式件）+ side-case 两件；5T1 装配另需 pent 塔四子件 + LEMMA_7175074394 链。
+④ 并行情报：用户 V25（vasyyau-disch-w25 `e01fab51`：**LocalConcl 四 discharge 接线，四 master 转标准三**——VASYYAU 战役 master 层收官）+ V26（K6 线）在飞。
+⑤ 在飞 2：enclosed4-final-w1（agent-64，装配编译迭代中）+ hexsym-w1（agent-66）。
+
 - **2026-11-14（08:20，续1104）**：**taugen-w1 收线落库 `5c71d830`（C1+C4 双件，LA19 +236/−3、LA38 +193/−3，双件同批）——C 件 4/6 落地 + hex51-w2 补位发车（agent-65）**。
 ① 路线：合并桥 `taugen_dih_bridge`（HOL 两分支按 delta_x4 符号合一）+ delta=0 角延拓 ⇒ 主定理零 case-split；末桥由 π·const1=sol0 收口。预算判词：净 +429 超工单 300 ~123——双文件硬约束致桥/末桥同构复制，每文件远低于 450 止损线，复核采信。
 ② 闸（亲跑）：apply--check@911ff037 PASS（用户 V21 未触双文件）；删除面恰 2 sorry+2 docstring；添加行禁词 0；双拼接探针编 RC=0/err0（7.9+14.2 s）+ 双探针恰标准三；根面 md5 246e952c 逐字节同；双新 olean 装池。
