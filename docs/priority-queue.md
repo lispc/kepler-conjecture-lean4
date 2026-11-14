@@ -859,6 +859,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（21:20，续1141）**：**OCBICBY 4T3 收线落库 `d6d160be`：14 支产品 12→13；6T1 压到两条精确输入（`ht4nn` LP 箱 + `hE` 几何桥）**。
+① 交付：`LocalAuto22Close` 单文件 **+1415/−0**（LA22/LA38 零改动）——4T3 全链：`taud_x_taud_c` / `taud_x_taum_x'`（经 LA19 已证 `OWZLKVY4_p19` + yOfX 桥）、`cayleyR_conic_c` / `cayleyR_disc_c`（LEMMA50/51，纯 `ring`）、`quad_4680581274_{delta_issue,delta_y_issue,a,y,derived}'`（wrapper 五件真证，含树内首次 `delta_y_issue`）、`empty_4T3_p22'` / `OCBICBY_4T3_p22'`。
+② 6T1：`hex_tower_hnum_p22`（0.712 塔不等式）真证（`terminal_hex_taum_p19` 三条 `deltaY` 逃逸由 `DELTA_Y_POS_4POINTS` 杀掉）；条件件 `empty_6T1_p22_of_ht4nn`（`hE` + `ht4nn` 两前提）/ `OCBICBY_6T1_p22_of_ht4nn`。
+③ 闸（亲跑 @`01191b48`）：apply-check PASS、单文件、`+1415/−0`、删除面 0、新增 `sorry`/`axiom`/`native_decide` 0（唯一 "sorry" 命中为 docstring 单词）；Close 直编 **rc=0/err0**（2 条基线 sorry 保留）；探针 **17/17 标准三**，回归 `empty_5T1`/`OCBICBY_5T1`/`terminal_pent_taum2`/`4T2` 标准三、`OCBICBY_p22` 仍 sorryAx（预期）；根面 md5 **`246e952c…` 同**。六桩（`tauqP38`/`unit6P38` 等）**零消费**、零新 registry id、零 DEF-FIX。
+④ **残余精确清单**（`~/c17_backup/lane_snapshots/ocbicby6t4-w1/LP-OBLIGATION-6T1.md`）：(a) **`ht4nn` LP 箱**：`∀ y1 y2 y3 y5 ∈ [2,2h0]³×[3.01,3.915], 0 ≤ taum y1 y2 y3 2 y5 2`，箱 min≈1.07，109 条 registry 全扫无正向覆盖（唯一形状匹配 `6762190381` 的 `deltaY<200` 支真实存在）；需用户裁决——**注意可走 TSKAJXY 同款 TM 证书直证，不必新增 nli***；(b) **`hE` 几何桥**：`0 ≤ yOfX eulerAx_p19 …`（偶三元 Euler-A），数学已写（扇角序 ⇒ `2E = y1y2y3·2(1+cosα+cosβ+cos(α+β)) ≥ 0`），缺 `azim↔dot` 桥，估 150–300 行，**普通证明任务、零算力**。
+⑤ 两支到位 ⇒ 14/14 → 补 `empty_6T1_p22`（删除面 1）→ Phase 5 `OCBICBY_p22` 总装配（≤150 行，删除面 1）→ **Text 清零**。本次 cone-neutral（`OCBICBY_p22` 仍 sorry）⇒ SORRIED 56 不变、无新基线。
+⑥ 下一条：续1142。
 - **2026-11-14（20:35，续1140）**：**TSKAJXY-XLLIPLS 单盒 TM pilot 发车 `tskajxy-tm-w1`（用户明批：给 nli* 流水线定标）**。
 ① **授权边界**：单盒 certtm 专项（BIEFJHU-a 后第二例，AGENTS §4 续批注记）；**TM3 量产扫全库 / Mono\* / D 证书层仍 hold**，pilot 结束即回 hold。
 ② **目标**：`nliTskXLLIPLS`（`Assembly.lean:980`，`bank_TSKAJXYXLLIPLS`）；盒 `[2hplus,√8]×[2,2.01]²×[2hplus,2.8]×[2,2.01]²`、`0 < gamma4fgcy y1..y6 lmfun`——严格/无析取/全数值 dyadic/无哑元；case JSON 在库（`pipeline/interval/out/cases/TSKAJXY-XLLIPLS.json`，498 ops / 60 ite）；原始格 ≈1,826 → TM 估 3k–8k 叶（BIEFJHU ×1.85 标定）。
