@@ -797,6 +797,28 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AN：`nliPackIneqDefA` 接线（SORRIED 55→54）@ `a09ad494`（2026-11-15）
+
+> 触发：`nli-triage-w1` 交付——`Assembly.lean` +14/−2（1 行 import `PackingAuto22PackIneqA`
+> + `nliPackIneqDefA` body 纯接线；`UKBRPFE`/`WAZLDCD`/`BIEFJHU` 三组件全部在库真证；
+> 陈述逐字未动、零新增公理）。同批锥外：`nli-precision-w1` `2fd799ff`（`atan1_box` 两叶
+> 内核 PASS、全盒复刻 0→5,012/6,512）、`tmparams-w1` `02839181`（`pipeline/interval` 外部
+> `TMParams` 生成器 +1,533，不入锥）。
+>
+> 实测（`e2e_reach_map` 原样，输出 5,975 行；`/tmp/reachmap_AN.out`）：
+> `K_REACH` **2,101,084（+412）** / **SORRIED 54**（−1；`--- SORRIED ---` 清单逐行 diff：
+> closed 恰 `{Kepler.Assembly.nliPackIneqDefA}`、added ∅）/ **`K_AXIOM 585`（0/0）** /
+> `K_MODULES` **5,317（+4）** / `K_UNIVERSE` **2,113,085（+425）** /
+> COVERAGE **99.432063%**（分母涨得更快，微降 −0.0005pp）；口径 II **38,978 / 54 / 585 / 49,422**；
+> `TOTAL_VALUE_DECLS` 2,100,399（+412）。
+>
+> 构成：**SORRIED 54 = Assembly 54（53 `nli*` + 1 hLP），Text 0**。
+> TSV 换装 **5,975 行**；`trust_manifest.py --check` PASS（585/585、0 形状未知、三区间
+> 0 空隙 0 重叠、pins OK）；根面 589 逐字节同（md5 `246e952c…`）。
+>
+> 判读：K_REACH +412 / MODULES +4 = 接线证明体（6 个组件 + `packIneqAWAZLDCD` 的证书树）
+> 首次入锥；COVERAGE 微降是 UNIVERSE +425 的正常分母效应，非退步。
+
 ### 基线 AM：Text 清零（SORRIED 56→55）@ `98414950`（2026-11-14）
 
 > 触发：`hexfour-w1` 交付——OCBICBY 收线：HOL **四项和**路线（不走被证假的 `ht4nn`）。

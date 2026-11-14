@@ -17,20 +17,19 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AM @`98414950`（2026-11-14，OCBICBY 收线：Text 清零）**
-> cone `K_REACH 2,100,672` / **SORRIED 55** / **`K_AXIOM 585`** / MODULES 5,313 /
-> UNIVERSE 2,112,660 / COVERAGE **99.4326%**；口径 II 38,972 / 55 / 585 / 49,403。
-> `docs/e2e-reachability-map.tsv` 已按基线 AM 重写（5,972 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AN @`a09ad494`（2026-11-15，`nliPackIneqDefA` 接线；Text 0）**
+> cone `K_REACH 2,101,084` / **SORRIED 54** / **`K_AXIOM 585`** / MODULES 5,317 /
+> UNIVERSE 2,113,085 / COVERAGE **99.432063%**；口径 II 38,978 / 54 / 585 / 49,422。
+> `docs/e2e-reachability-map.tsv` 已按基线 AN 重写（5,975 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （与基线 AL/AK/AJ/AI/AH/AG/AF/AE/AD/AC/Z/Y/X/W **逐字节 IDENTICAL**，md5 `246e952c…`）。
-> **SORRIED 55 构成**：**Assembly 55（54 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
-> 较基线 AL：SORRIED 56→55（清单 diff：closed 恰 `{OCBICBY_p22}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +299、UNIVERSE +53、MODULES +2。
-> 同批资产：`hE` `252a9777`（`LocalAuto19Euler`）+ **OCBICBY 四项和收线 `98414950`**
-> （`LocalAuto19Four` +804 + Close +462/−4；`empty_6T1_p22`/`OCBICBY_p22` 删除面恰 2 sorry；
-> 14/14 产品）。**ER**：`ht4nn` 箱陈述为假（内核反例 `taum 2 2 2 2 (883/256) 2 < 0`）；
-> `_of_ht4nn`/`_only` vacuous（不删不用）；6T1 走 HOL 四项和 `0.712 ≤ Σ4 tau3`。
-> `JEJTVGB_case_breakdown_p16` LA16 重编后 **标准三**。
+> （md5 `246e952c…` 逐字节同）。
+> **SORRIED 54 构成**：**Assembly 54（53 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
+> 较基线 AM：SORRIED 55→54（清单 diff：closed 恰 `{nliPackIneqDefA}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +412、UNIVERSE +425、MODULES +4；COVERAGE 微降 = universe 涨得更快。
+> 同批资产：`nli-triage-w1` `a09ad494`（Assembly +14/−2 纯接线；审计 0 假陈述 / 3 条锥外影子
+> VACUOUS）；`nli-precision-w1` `2fd799ff`（`atan1_box` 两叶内核 PASS）；`tmparams-w1` `02839181`
+> （pipeline 外部 `TMParams` 生成器 +1,533，生成 5.9 s/叶 vs 镜像 333 s，不入锥）。
+> 在飞：`qitnpea-w1`（`nliRestQITNPEA4003532128a` 纯代数）。
 > **孤儿**：`TameLp.fully_surrounded_perimeter_bound` + LA23 四条（`taum_attains_inf_p23` 等）
 > 文件级 sorry 仍在（锥外、不删不改）；LA23 的 `taum_attains_inf_p23` 陈述缺 HOL `JOTSWIX.hl:9`
 > 六条箱约束（y4 槽不连续），SF 补箱候选。
@@ -108,7 +107,7 @@
 
 > **2026-11-15 07:08 收线（`a09ad494`）**：`nli-triage-w1` 落库——`nliPackIneqDefA` 纯接线真闭合
 > （Assembly +14/−2；6/6 探针标准三；Assembly 岛编 rc=0/0 err；根面 md5 `246e952c…` 同）；
-> 锥内 nli* **54→53**（SORRIED 55→54，基线 AN 待仪器）。审计：0 假陈述/0 空盒；3 条锥外影子
+> 锥内 nli* **54→53**（SORRIED 55→54；基线 AN 已实测）。审计：0 假陈述/0 空盒；3 条锥外影子
 > `*Ids` VACUOUS；rad2 便宜路线已用尽，下一个最便宜 = `nliRestQITNPEA4003532128a`。
 
 > **2026-11-15 双车道发车（用户令「都发」）**：`nli-triage-w1`（55 债分诊 + 资产盘点 + 便宜路线）
@@ -882,6 +881,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（07:37，续1155）**：**基线 AN 落地——`nliPackIneqDefA` 接线（SORRIED 55→54，Text 0）**。
+① 仪器（`e2e_reach_map` 原样，输出 **5,975 行**；`/tmp/reachmap_AN.out`）：`K_REACH` **2,101,084（+412）** / **SORRIED 54（−1；清单 diff：closed 恰 `{Kepler.Assembly.nliPackIneqDefA}`、added ∅）** / `K_AXIOM` **585（0/0）** / `MODULES` **5,317（+4）** / `UNIVERSE` **2,113,085（+425）** / COVERAGE **99.432063%**（分母涨微降）；口径 II **38,978 / 54 / 585 / 49,422**；`TOTAL_VALUE_DECLS` 2,100,399（+412）。
+② 构成：**SORRIED 54 = Assembly 54（53 `nli*` + 1 hLP），Text 0**。`trust_manifest.py --check` **PASS**（585/585、0 形状未知、三区间 0 空隙 0 重叠、pins OK）；TSV 换装 5,975 行；根面 589 md5 `246e952c…` 同。
+③ 文档六件已刷：`e2e-reachability-map.md` AN 节 + TSV + pq 头/本条 + `AGENTS.md` §1 + `README`×2 + `hf-proof-map` 24 + handoff §8。
+④ 下一条：续1156（`qitnpea-w1` 交付后）。
 - **2026-11-15（07:30，续1154）**：**`qitnpea-w1` 发车（用户令「发」）——`nliRestQITNPEA4003532128a` 纯代数真证**。
 ① 债点 `Assembly.lean:1394`，bank `PackingAuto21:460`；盒 `[2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]`，结论 `δ4>25 ∨ δ>0.14 ∨ δ<0`。
 ② 侦察（triage PICK-2）：`y3=y4=y5=√2 ⇒ δ4 = x1(x2+x6−x1)`；9³ 网格三支覆盖全盒，最小最大余量 **0.819**；残区 `{δ≥0, δ4≤25}` 上 min δ=**1.013**（≫0.14）。

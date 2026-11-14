@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2100672
-K_SORRIED 55
+K_REACH 2101084
+K_SORRIED 54
 K_AXIOM 585
-K_MODULES 5313
-K_UNIVERSE 2112660
-COVERAGE 2100672 / 2112660
-K_UNIVERSE_XCASES 49403
-K_REACH_XCASES 38972
-K_SORRIED_XCASES 55
+K_MODULES 5317
+K_UNIVERSE 2113085
+COVERAGE 2101084 / 2113085
+K_UNIVERSE_XCASES 49422
+K_REACH_XCASES 38978
+K_SORRIED_XCASES 54
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2099987
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2099987
-SORRIED 55
+TOTAL_VALUE_DECLS 2100399
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2100399
+SORRIED 54
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -24,7 +24,6 @@ Kepler.Assembly	Kepler.Assembly.nliKcblrqcIneqDef	parent=Kepler.Assembly.nonline
 Kepler.Assembly	Kepler.Assembly.nliLpIneqs	parent=Kepler.Assembly.nonlinearInequalities
 Kepler.Assembly	Kepler.Assembly.nliMainNonlinearTerminalV11	parent=Kepler.Assembly.nonlinearInequalities
 Kepler.Assembly	Kepler.Assembly.nliOx3q1h	parent=Kepler.Assembly.nonlinearInequalities
-Kepler.Assembly	Kepler.Assembly.nliPackIneqDefA	parent=Kepler.Assembly.nonlinearInequalities
 Kepler.Assembly	Kepler.Assembly.nliRestBIXPCGW7274157868a	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestBIXPCGW9455898160	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestFHBVYXZa	parent=Kepler.Assembly.nliPackNonlinearRest
@@ -3941,6 +3940,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 259	Kepler.Interval.Cases.CFWGKMBZ.Shard563
 259	Kepler.Interval.Cases.CFWGKMBZ.Shard601
 259	Kepler.Interval.Cases.CFWGKMBZ.Shard603
+258	Kepler.Interval.Cases.C8055810915.Shard1
 258	Kepler.Interval.Cases.CFWGKMBZ.Shard152
 258	Kepler.Interval.Cases.CFWGKMBZ.Shard187
 258	Kepler.Interval.Cases.CFWGKMBZ.Shard191
@@ -4089,6 +4089,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 145	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard22
 145	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard7
 145	Kepler.Interval.CertTM
+144	Kepler.Interval.Cases.C8055810915.Base
 143	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard11
 143	Kepler.Interval.Cases.CQITNPEAx3725403817.Shard23
 143	Kepler.Text.SgtrnafKernel
@@ -4535,6 +4536,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 6	Kepler.Text.ChainListsL2
 6	Kepler.Text.Gamma4Env
 6	Kepler.Text.LocalAuto7W12O
+6	Kepler.Text.PackingAuto22PackIneqA
 6	Kepler.Text.Reduction1W3c
 6	Kepler.Text.Reduction1W3g
 6	Kepler.Text.Reduction3Thm12C
@@ -4613,6 +4615,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 4	Kepler.Graphs.TameEnum
 4	Kepler.Graphs.TameEnumProps
 4	Kepler.Interval.Cases.C6096597438b
+4	Kepler.Interval.Cases.C8055810915
 4	Kepler.Interval.Cases.CFWGKMBZ
 4	Kepler.Interval.Cases.CQITNPEAx3725403817
 4	Kepler.Text.Gamma4SharpRoute
