@@ -859,6 +859,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（23:55，续1145）**：**TM 内核检查器补齐车道 `tmkernel-w1` 发车（用户令：div2/loa 规则 + 精度）**。
+① 目标：让 `--ite-hull2 --tm-div2` 证书能被 Lean 检查器吃下——(a) **div2/loa 规则**：分母 TM 线性包络跨零、但真分母在盒上定号时，用 TM 携带的认证幅值下界 `loa ≤ |g(x)|` 继续除法（`M = 1/loa`，`bb_arb.c:1228` `tm_div2_salvage`）；pilot 实测本盒 **54/54 走通道 1（trans-loa）**、通道 2（值域对）0 次；(b) **精度**：3 采样叶 NEG（loBound ≈ −2^186），切片定位 `Σ6 lmfun·dihY` 饱和到 1.4e−48（真值 ~13），`atan` rung 128→512 抬 47 个数量级但 150× 慢。
+② 策略：优先 **checker 侧从既有 certified 数据重算 `loa`**（sqrt 的 `√c`、abs 的符号判定、trans 的值域对），**不改证书 JSON/emitter**；新增 opt-in 检查器变体（如 `checkPosTMHullD`）+ **Lean soundness 定理**，既有 `checkPosTMHullC` 与 BIEFJHU 证书语义/字节零改动。
+③ 验收：新检查器直编 rc=0/err0、`#print axioms ..._sound` 标准三；叶 0/657 中至少一个 `div 失败 221@225t` 消失（记录 loBound 变化）；BIEFJHU 任一个 `C1965189142aHullT*` 回归 PASS；精度给「PASS 所需最小 N / s/叶 / 内存」或 NEG 量化（`CALIB.md`）。
+④ 边界：certtm/`bb_arb` 仅 TSKAJXY 单盒测试/重建（≤1 次、不量产），TM3/Mono\*/D 仍 hold；与在飞 `ht4nn-probe-w1` 文件零交集（它只读+快照）。
+⑤ 下一条：续1146。
 - **2026-11-14（23:25，续1144）**：**6T1 残余压到单条：`hE` 收线落库 `252a9777`——6T1 只剩 `ht4nn`；ER：无条件 hE 为假（正六边形反例）**。
 ① 交付（`he6t1-w1`）：新模块 `LocalAuto19Euler` **+550/−0**（`hE_6T1` 条件形 + 两私有件）+ `LocalAuto22Close` **+30**（+1 import、`empty_6T1_p22_of_ht4nn_only` / `OCBICBY_6T1_p22_of_ht4nn_only`）。路线 = HOL `DIH_IMP_EULER_A_POS_p22`（LA22:286，已证标准三）+ 三非共线（`PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14`，由 `scs_6T1_generic_p22` 的 `taustar<0` 供给）+ 自造 `hsum < 2π`（azim 分解 + `EAR_SOL_NN` + `tau_fun_azim`/`dsv_unadorned` + `ρ≥1`；`4·0.551408+0.712 < 3 < π`）。
 ② 闸（亲跑 @`c9d55133`）：apply-check PASS、两文件、`+550/−0` 与 `+30/−0`、删除面 0、新增 axiom/sorry/native_decide 0；Euler 直编 **rc=0/err0**、Close 直编 **rc=0/err0**（2 条基线 sorry）；探针 `hE_6T1`/两条 `_only` **全标准三**，回归 `empty_6T1_p22_of_ht4nn`/`hex_tower_hnum`/`empty_5T1`/`OCBICBY_5T1` 标准三、`OCBICBY_p22` 仍 sorryAx（预期）；根面 md5 **`246e952c…` 同**。
