@@ -33,6 +33,7 @@ import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto22PackIneqA  -- nliPackIneqDefA 接线（packIneqAWAZLDCD）
+import Kepler.Text.NliQitnpea  -- nliRestQITNPEA4003532128a 纯代数真证（qitnpea-w1）
 import Kepler.Text.PackingAuto25
 import Kepler.NliBanks
 import Kepler.NliBanks2
@@ -1391,7 +1392,8 @@ theorem nliRestJSPEVYT : bank_JSPEVYT := by
 [2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]；PA21 `bank_QITNPEA4003532128a` /
 `proj_bank_QITNPEA4003532128a`）。资产状态：deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliRestQITNPEA4003532128a : bank_QITNPEA4003532128a := sorry
+theorem nliRestQITNPEA4003532128a : bank_QITNPEA4003532128a :=
+  Kepler.NliQitnpea.nliRestQITNPEA4003532128a_proved
 
 /-- rest 7/62：HOL ineq entry `IXPOTPA`（ineq.hl:1265，盒
 [2hmin,2hplus]×[2,2hmin]²×[√8,4hmin]×[2,2hmin]²；PA21 `bank_IXPOTPA` /
