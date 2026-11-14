@@ -857,6 +857,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（17:10，续1133）**：**OCBICBY 5T1 收口 D2 落库 `5251d592`（编排者闸全绿）：`empty_5T1_p22` 真证 + `OCBICBY_5T1_p22` 新增真证（双探针标准三）；`terminal_pent_taum2_p22` 判陈述缺陷，SF-109 已立案并批准**。
+① D2 闸（亲跑 @`13c166e8`）：Close +352/−3（删除面恰 1 `  sorry`；私有 `ocb_*` 五件）；新增 `  sorry` 0、禁项 0/0/0；直编 Close/LA16 **rc=0/err0**；探针 `empty_5T1_p22`/`OCBICBY_5T1_p22` **标准三**，`terminal_pent_taum2_p22`/`empty_6T1_p22`/`OCBICBY_p22` 仍 sorryAx（预期），回归 `OCBICBY_4T2_p22` 标准三；根面 md5 **`246e952c…` 同**；装池（旧件备份）。
+② **SF-109（新立案，已批准）**：`terminal_pent_taum2_p22` 把 `ineqP22`（合取构造器）放在**结论** ⇒ 对全称 `y1` 要求证 `2 ≤ y1`，**陈述层不可满足**（编排者亲跑 4 例 shape 探针 rc=0；HOL `Sphere.ineq` 是蕴含壳，`ineqP19` 才是逐字移植）。修法 = 加 `(hbox : ineqP22 [同 8 box] True)` 前提 + 结论回展平不等式（与同文件 `LEMMA_7175074394`/`angle_sum_5T1` 惯例同型；HOL 语义等价；`ineqP22` 定义与 3 个 hbox 消费者不动；本件零代码消费者）。证明已备 = D2 私有 `ocb_terminal_pent_taum2_core`，D3 一行落地后 Close sorry **3→2**。
+③ 5T1 支现状：`empty_5T1_p22` + `OCBICBY_5T1_p22` 已真证；剩 `terminal_pent_taum2`（SF-109 待 D3）与 `empty_6T1`/`OCBICBY`（LP 解冻/总装配）。
+④ 下一条：续1134。
 - **2026-11-14（16:35，续1132）**：**perimeter 收线落库 `dc998142`（perimb1-w1 交付，编排者闸全绿）：TameLp 最后一条锥内 sorry `fully_surrounded_perimeter_bound` 出锥——W44 + W42V5 零槽链 + FinalV5 + TameLpPerimeter + Assembly 2 行**。
 ① 数学：`LocalFanStepW44`（301 行）移植 HOL `NKEZBFC.hl:2346-2583` 的 run 内 backward 1_2（`pW44_back1_2`）+ back union 恒等式（`pW44_backUnion`）；`LocalFanStepW42V5`（412 行）+ `LocalFanPerimeterFinalV5`（51 行）把 w 侧槽**整体删除**（`hslot_w`/`hprev`/`hB1` 在 v5 全部消失，消费点 `j=i` 单实例由 W44 放电），父件条件形变**零槽形**（`pW43_…_v5` 无任何 perimeter 前提）。
 ② 接入（方案 F）：`TameLpPerimeter`（59 行）copy-rename `fully_surrounded_perimeter_bound'` + `MQMSMAB'`（陈述与 TameLp 原声明逐字节同），`Assembly` +2/−1（`:61` import、`:2457` `MQMSMAB`→`MQMSMAB'`）；legacy v4/hB1 一行未改保留；**TameLp 原父件 sorry 成孤儿**（锥外，按裁决记账不删不改）。

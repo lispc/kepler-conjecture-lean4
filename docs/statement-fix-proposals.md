@@ -6862,3 +6862,74 @@ Lean 现行文（HEAD `4673518a`）写成
   olean（pit 15），实测一开闸即拉起 **7 个并行 `lean -o`**、空闲页从 48 万跌到 7.8 万 ⇒ 立即止损
   （AGENTS §4 机器限制优先）。SF 专属检查（patch 多重集相等）已按脚本同口径手工执行并通过；
   规则 4 的编译检查由**同文件岛编 RC=0** 等价覆盖。此例外记入 `handoff §6` pit 16。
+
+## 109. `terminal_pent_taum2_p22` 的 `ineqP22` 结论壳不可满足（HOL `Sphere.ineq` 是蕴含；该声明是全树唯一把 `ineqP22` 放**结论**者）— 分级 **A**（移植壳误植 · 陈述修正 · HOL 语义等价 · 零消费者 · `ocbicby5t1-w1` D2 施工发现）
+
+### (a) 目标与现状
+
+`lean/Kepler/Text/LocalAuto22Close.lean`（D1 从 LA22:4998 逐字节下移；donor `5251d592`）：
+
+```lean
+/-- HOL `terminal_pent_taum2`. -/
+theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
+    (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
+    (hd1 : 0 ≤ deltaY y126 y1 y2 y6 2 2)
+    (hd2 : 0 ≤ deltaY y135 y1 y3 y5 2 2)
+    (hsub : …) :
+    ineqP22 [(2, y1, 2 * h0), … (2, y135, 2 * h0)]
+      (0.616 < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taum y135 y1 y3 y5 2 2) := by
+  sorry
+```
+
+HOL 原版（`reference/flyspeck/text_formalization/local/OCBICBY.hl:3357`）的结论是
+`ineq [8 boxes] (#0.616 < …)`；HOL `Sphere.ineq` 是**蕴含**壳
+（`ineq [] c = c`；`ineq ((lo,v,hi)::rest) c = (lo ≤ v ∧ v ≤ hi → ineq rest c)`）。
+
+### (b) 机器证据（编排者 2026-11-14 亲跑，`rc=0`）
+
+```lean
+example (l x h : ℝ) (Q : Prop) : (ineqP22 [(l,x,h)] Q ↔ (l ≤ x ∧ x ≤ h ∧ Q))   -- 合取
+example (l x h : ℝ) (Q : Prop) : (ineqP19 [(l,x,h)] Q ↔ ((l ≤ x ∧ x ≤ h) → Q)) -- 蕴含
+example : ¬ ineqP22 [(2,(0:ℝ),2), (2,(0:ℝ),2)] True                            -- 结论壳不可满足
+example : ineqP19 [(2,(0:ℝ),2)] True                                            -- 蕴含壳平凡真
+```
+
+`ineqP22`（LA22:175）逐项展开为 `l ≤ x ∧ x ≤ h ∧ rest`；把它放在**结论**位置意味着
+对全称 `y1` 证明 `2 ≤ y1` 等 16 个 box 合取项 ⇒ 按现状**无证明**（陈述层不可满足，
+非缺引理）。`ineqP19`（LA19:236）才是 HOL 的逐字蕴含移植。
+
+使用面（全树 `rg`）：`ineqP22` 作**假设**的消费者 3 处（`LEMMA_7175074394_p22` /
+`angle_sum_5T1_p22` / LA22:6107 一件），依赖合取读法，**`ineqP22` 定义不动**；
+`ineqP22` 作**结论**的声明全树仅本件；本件现有代码消费者 **0**（D2 的
+`empty_5T1_p22` 走私有 `ocb_pent_taum2_core`，不依赖本件）。
+
+### (c) 修法（加一条前提，结论恢复 HOL 语义）
+
+```lean
+theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
+    (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
+    (hbox : ineqP22 [(2, y1, 2 * h0), (2, y2, 2 * h0), (2, y3, 2 * h0), (2, y4, 2),
+      (3.01, y5, 3.237), (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)] True)
+    (hd1 : 0 ≤ deltaY y126 y1 y2 y6 2 2)
+    (hd2 : 0 ≤ deltaY y135 y1 y3 y5 2 2)
+    (hsub : …) :
+    0.616 < taum y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taum y135 y1 y3 y5 2 2
+```
+
+与 HOL `ineq boxes c`（`boxes ⇒ c`）语义等价；与同文件 `LEMMA_7175074394_p22` /
+`angle_sum_5T1_p22` 的既有惯例逐字同型（`hbox : ineqP22 boxes True` + 展平结论）。
+其余 8 个 `y…` 参数与 `hd1/hd2/hsub` 逐字不动。
+
+### (d) 验收
+
+- `LocalAuto22Close` 岛编 RC=0 / 0 err；`#print axioms terminal_pent_taum2_p22`
+  恰 `[propext, Classical.choice, Quot.sound]`；Close 的 `  sorry` 体 **3→2**
+  （剩 `empty_6T1_p22` / `OCBICBY_p22`）。
+- 证明 = 一行调用私有 `ocb_terminal_pent_taum2_core`（D2 已证，陈述即 SF 后形态）。
+- 其它 3 个 `ineqP22` 假设消费者与 `ineqP22` 定义零改动。
+
+### (e) 执行记录
+
+- **编排者批准（2026-11-14，按既定「合理 SF 预授权」；理由：现陈述机器可证不可满足、
+  HOL 语义为蕴含、零消费者、证明已备）**。
+- 执行：`ocbicby5t1-w1` D3 单行落地（待回填 commit/探针）。
