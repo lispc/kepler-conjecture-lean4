@@ -100,3 +100,23 @@ dReal 重建：重新下载 deb（URL 见 LOCK.md），`ar x` + 解 `data.tar.gz
 再按 `pipeline/tools/dreal-4.21.06.2/` 现状补齐 `lib/` 下的依赖库
 （来源：Ubuntu jammy 仓库 libnlopt0/libgmpxx4ldbl/coinor-libclp1/coinor-libcoinutils3v5/coinor-libosi1v5，
 以及 launchpad PPA `ppa:dreal/dreal` 的 libibex-dev 2.7.4 jammy 包）。
+
+## TM 证书参数外部生成器（`emit_tm_params.py`，不受信任）
+
+`hull`/TM 路线的 `TMParams.sqrtCerts` 原先由 Lean 镜像（`ProbeAtan1.lean`）逐叶求值
+（~333 s/叶）。`emit_tm_params.py` 用 `tmexact.py`（逐位同构的纯整数复刻，stdlib-only）
+在外部产出同一 `TMParams`，生成 ~5.9 s/叶；产物仍由内核
+`checkPosTMHullC ... = true := by decide +kernel` 验收——**生成器不进可信基**。
+
+```sh
+python3 -I pipeline/interval/emit_tm_params.py \
+  --expr lean/Kepler/Interval/Cases/TskXLLIPLSAtan1Base.lean \
+  --cert <full.cert.json> --leaf 0 --out /tmp/params0.lean
+python3 -I pipeline/interval/bench_tm_params.py \
+  --expr lean/Kepler/Interval/Cases/TskXLLIPLSAtan1Base.lean \
+  --cert <full.cert.json> --leaves 0-19
+```
+
+验证（`tmparams-w1`，基线 `320e4cbf`）：叶 0/657 的 43/43 triples 与落库参数逐项相等；
+叶 0/1/2/657 四模块内核 `decide` 全 PASS（~26 s / 10.07 GB 每叶，axioms = 标准三）。
+`--no-verify` 只跳过 in-process oracle 复算，**不跳过**内核验收。
