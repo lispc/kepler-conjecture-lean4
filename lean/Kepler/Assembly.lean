@@ -32,6 +32,7 @@ import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.PackingAuto22
+import Kepler.Text.PackingAuto22PackIneqA  -- nliPackIneqDefA 接线（packIneqAWAZLDCD）
 import Kepler.Text.PackingAuto25
 import Kepler.NliBanks
 import Kepler.NliBanks2
@@ -1963,8 +1964,19 @@ theorem nliLpIneqsIds : AllCertified lpIneqsIds := sorry
 占位；`fcdjdot`/`textCapstone` 的前提件）。真化 = `packIneqDefAIds` 代入 +
 查表接线（同分量 4 形）。
 退化防线：**不得**经占位 `True` 平凡闭合。
--- NEEDS: 语义真化（`PLACEHOLDER(P6-E)` → 注册表折算）。 -/
-theorem nliPackIneqDefA : PackIneqDefA := sorry
+-- NEEDS: ~~语义真化（`PLACEHOLDER(P6-E)` → 注册表折算）~~ 已兑现 2026-11-15
+（nli-triage-w1）：三项组件全部在库真证，本体改为纯接线（见证体注释）。 -/
+theorem nliPackIneqDefA : PackIneqDefA :=
+  -- 2026-11-15 nli-triage-w1 真闭合（纯接线，零新增公理）：
+  -- `packIneqDefAP22 = UKBRPFE_bank ∧ WAZLDCD_bank ∧ BIEFJHU_bank`，三个
+  -- 合取项各自的组件均已在库真证（名字见下）：
+  --   UKBRPFE_bank = bank_6096597438b ∧ bank_6096597438a（本节 nliRest6096597438b/a）
+  --   WAZLDCD_bank（`Kepler.Text.packIneqAWAZLDCD`，PA22PackIneqA:190）
+  --   BIEFJHU_bank = bank_1965189142a ∧ bank_1965189142x34（本节 nliRest1965189142a/x34）
+  -- 探针 `#print axioms` = [propext, Classical.choice, Quot.sound]。
+  ⟨⟨nliRest6096597438b, nliRest6096597438a⟩,
+    Kepler.Text.packIneqAWAZLDCD,
+    ⟨nliRest1965189142a, nliRest1965189142x34⟩⟩
 
 /-- 中层骨架 5'：pack_ineq_def_a 注册表侧（YSSKQOY.hl:24-28，Flypaper ∩
 {UKBRPFE,WAZLDCD,BIEFJHU} ≠ ∅，5 条，IdLists.lean:618-623）。
