@@ -677,14 +677,137 @@ theorem tau_x_tau_residual_x_general_p19 (x1 x2 x3 x4 x5 x6 : ℝ)
   rw [ht, hend]
 
 
-/-- HOL `OWZLKVY4` (pent_hex.hl:216). NEEDS-DB: consumes a nonlinear-database
-conjunct (terminal `taud ≤ taum` estimate) beyond the anchor. -/
+/-- HOL `taum_taum_x` (terminal.hl:169): `taum` is `y_of_x taum_x` at the
+squared slots (LocalAuto38 `taum_taum_x` twin over the realified `taumX_p19`
+alias; LocalAuto19 does not import LocalAuto38). -/
+theorem taum_taum_x_p19 (y1 y2 y3 y4 y5 y6 : ℝ)
+    (h1 : 0 ≤ y1) (h2 : 0 ≤ y2) (h3 : 0 ≤ y3) (h4 : 0 ≤ y4) (h5 : 0 ≤ y5)
+    (h6 : 0 ≤ y6) :
+    taum y1 y2 y3 y4 y5 y6 = yOfX taumX_p19 y1 y2 y3 y4 y5 y6 := by
+  have e1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self h1
+  have e2 : Real.sqrt (y2 * y2) = y2 := Real.sqrt_mul_self h2
+  have e3 : Real.sqrt (y3 * y3) = y3 := Real.sqrt_mul_self h3
+  have e4 : Real.sqrt (y4 * y4) = y4 := Real.sqrt_mul_self h4
+  have e5 : Real.sqrt (y5 * y5) = y5 := Real.sqrt_mul_self h5
+  have e6 : Real.sqrt (y6 * y6) = y6 := Real.sqrt_mul_self h6
+  unfold taum solY lnazim yOfX taumX_p19 taumX_t11 rhazim2_t11 rotate3_t11
+    node2Y_t11 rhazim_t11 rhoICD_t11
+  rw [e1, e2, e3, e4, e5, e6]
+  ring
+
+/-- HOL `OWZLKVY4` (pent_hex.hl:216). DISCHARGED 2026-11-14 (lane hex51-w2):
+the `delta_y ≥ 80` branch consumes database conjunct "2314572187" with the
+local `Functional_equation.taud_x_taud` unfolding (`y_of_x taud_x = taud`);
+the residual branch consumes "7796879304" over the realified tau_x kit
+(`taum_taum_x_p19` + `tau_x_tau_residual_x_general_p19`), discharging the
+three `delta_x4` sign hypotheses through a local `EAR_DELTA_X4` twin
+(database conjuncts "8346775862" and "8631418063"). -/
 theorem OWZLKVY4_p19 (h : mainNonlinearTerminalV11_p18) (y1 y2 y3 y4 y5 y6 : ℝ)
     (b1 : 2 ≤ y1) (b2 : y1 ≤ 2 * h0) (b3 : 2 ≤ y2) (b4 : y2 ≤ 2 * h0)
     (b5 : 2 ≤ y3) (b6 : y3 ≤ 2 * h0) (b7 : cstab ≤ y4) (b8 : y4 ≤ 3.915)
     (b9 : y5 = 2) (b10 : y6 = 2) (hd : 0 ≤ deltaY y1 y2 y3 y4 y5 y6) :
     taudP19 y1 y2 y3 y4 y5 y6 ≤ taum y1 y2 y3 y4 y5 y6 := by
-  sorry
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hcstab : cstab = (3.01:ℝ) := rfl
+  have hy1nn : 0 ≤ y1 := by linarith
+  have hy2nn : 0 ≤ y2 := by linarith
+  have hy3nn : 0 ≤ y3 := by linarith
+  have hy4nn : 0 ≤ y4 := by linarith
+  have hy5nn : 0 ≤ y5 := by rw [b9]; norm_num
+  have hy6nn : 0 ≤ y6 := by rw [b10]; norm_num
+  have hy1pos : 0 < y1 := by linarith
+  have hy2pos : 0 < y2 := by linarith
+  have hy3pos : 0 < y3 := by linarith
+  have hy4pos : 0 < y4 := by linarith
+  have hy5pos : 0 < y5 := by rw [b9]; norm_num
+  have hy6pos : 0 < y6 := by rw [b10]; norm_num
+  have h20 : (2:ℝ) = 2.0 := by norm_num
+  -- `Functional_equation.taud_x_taud` twin: `y_of_x taud_x = taud`.
+  have htx : yOfX taudX_t11 y1 y2 y3 y4 y5 y6 = taudP19 y1 y2 y3 y4 y5 y6 := by
+    unfold yOfX taudX_t11 taudP19 flatTermX_t11 flatTerm_t11 flatTerm_p19
+      muY_t11 muY_p19 deltaY
+    rw [Real.sqrt_mul_self hy1nn, Real.sqrt_mul_self hy2nn,
+      Real.sqrt_mul_self hy3nn]
+  by_cases h80 : (80:ℝ) ≤ deltaY y1 y2 y3 y4 y5 y6
+  · -- branch `delta_y ≥ 80`: database conjunct "2314572187".
+    have hreg : mainEstimate_2314572187 :=
+      h "2314572187" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have hb1 : y1 ≤ 2.52 := by rw [← h252]; exact b2
+    have hb2 : y2 ≤ 2.52 := by rw [← h252]; exact b4
+    have hb3 : y3 ≤ 2.52 := by rw [← h252]; exact b6
+    have hb4lo : (3.01:ℝ) ≤ y4 := hcstab ▸ b7
+    have hdb := hreg y1 y2 y3 y4 y5 y6 (h20 ▸ b1) hb1 b3 hb2 b5 hb3 hb4lo b8
+      (by linarith [b9]) (by linarith [b9]) (by linarith [b10]) (by linarith [b10])
+    rcases hdb with htm | hlt
+    · rw [htx] at htm
+      exact le_of_lt htm
+    · linarith
+  · -- branch `delta_y < 80`: the tau_x residual route.
+    have hd80 : deltaY y1 y2 y3 y4 y5 y6 < 80 := lt_of_not_ge h80
+    have hd200 : deltaY y1 y2 y3 y4 y5 y6 ≤ 200 := by linarith
+    have hb1 : y1 ≤ 2.52 := by rw [← h252]; exact b2
+    have hb2 : y2 ≤ 2.52 := by rw [← h252]; exact b4
+    have hb3 : y3 ≤ 2.52 := by rw [← h252]; exact b6
+    have hb4lo : (3.01:ℝ) ≤ y4 := hcstab ▸ b7
+    -- local `EAR_DELTA_X4` twin: the three `delta_x4` signs at squared slots.
+    have earx : deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) < 0 ∧
+        0 < deltaX4 (y2 * y2) (y3 * y3) (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4) ∧
+        0 < deltaX4 (y3 * y3) (y1 * y1) (y2 * y2) (y6 * y6) (y4 * y4) (y5 * y5) := by
+      have hregA : mainEstimate_8346775862 :=
+        h "8346775862" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hA := hregA y1 y2 y3 y4 y5 y6 b1 b2 b3 b4 b5 b6 hb4lo b8
+        (by linarith [b9]) (by linarith [b9]) (by linarith [b10]) (by linarith [b10])
+      have hregB : mainEstimate_8631418063 :=
+        h "8631418063" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hB2 := hregB y2 y1 y3 y5 y4 y6 b3 b4 b1 b2 b5 b6
+        (by linarith [b9]) (by linarith [b9]) hb4lo b8 (by linarith [b10]) (by linarith [b10])
+      have hB3 := hregB y3 y1 y2 y6 y4 y5 b5 b6 b1 b2 b3 b4
+        (by linarith [b10]) (by linarith [b10]) hb4lo b8 (by linarith [b9]) (by linarith [b9])
+      have perm2 : deltaX4 (y2 * y2) (y3 * y3) (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4)
+          = deltaX4 (y2 * y2) (y1 * y1) (y3 * y3) (y5 * y5) (y4 * y4) (y6 * y6) := by
+        unfold deltaX4; ring
+      rcases hA with hA1 | hA2
+      · linarith
+      · refine ⟨hA2, ?_, ?_⟩
+        · rw [perm2]; exact hB2
+        · exact hB3
+    -- `taum` expansion through the realified tau_x kit.
+    have hexp : taum y1 y2 y3 y4 y5 y6
+        = Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * tauResidualX_p19 (y1 * y1) (y2 * y2)
+            (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) + flatTerm_p19 y1 := by
+      rw [taum_taum_x_p19 y1 y2 y3 y4 y5 y6 hy1nn hy2nn hy3nn hy4nn hy5nn hy6nn]
+      have e1 : yOfX taumX_p19 y1 y2 y3 y4 y5 y6
+          = taumX_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
+      rw [e1, tau_x_tau_residual_x_general_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+          (y5 * y5) (y6 * y6) (by nlinarith [b1]) (by rw [Real.sqrt_mul_self hy1nn]; exact b2)
+        (mul_pos hy1pos hy1pos) (mul_pos hy2pos hy2pos) (mul_pos hy3pos hy3pos)
+        (mul_pos hy4pos hy4pos) (mul_pos hy5pos hy5pos) (mul_pos hy6pos hy6pos)
+        earx.1 earx.2.1 earx.2.2 hd]
+      rw [show deltaY y1 y2 y3 y4 y5 y6
+          = deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) from rfl]
+      rw [flatTermX_p19, Real.sqrt_mul_self hy1nn]
+    -- the residual lower bound: database conjunct "7796879304".
+    have hres : muY_p19 y1 y2 y3 < tauResidualX_p19 (y1 * y1) (y2 * y2) (y3 * y3)
+        (y4 * y4) (y5 * y5) (y6 * y6) := by
+      have hreg2 : mainEstimate_7796879304 :=
+        h "7796879304" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb2 := hreg2 y1 y2 y3 y4 y5 y6 (h20 ▸ b1) hb1 b3 hb2 b5 hb3 hb4lo b8
+        (by linarith [b9]) (by linarith [b9]) (by linarith [b10]) (by linarith [b10])
+      rcases hdb2 with hlt | hgt | hrl
+      · linarith
+      · linarith
+      · have e2 : yOfX tauResidualX_t11 y1 y2 y3 y4 y5 y6
+            = tauResidualX_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
+        rw [e2] at hrl
+        exact hrl
+    have hmul : Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * muY_p19 y1 y2 y3
+        ≤ Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * tauResidualX_p19 (y1 * y1) (y2 * y2)
+            (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) :=
+      mul_le_mul_of_nonneg_left hres.le (Real.sqrt_nonneg _)
+    have hexp2 : taudP19 y1 y2 y3 y4 y5 y6
+        = flatTerm_p19 y1 + Real.sqrt (deltaY y1 y2 y3 y4 y5 y6) * muY_p19 y1 y2 y3 := rfl
+    rw [hexp, hexp2]
+    linarith [hmul]
 
 /-- HOL `OPEN_REAL_INTERVAL_SING` (pent_hex.hl:290). -/
 theorem OPEN_REAL_INTERVAL_SING_p19 (a b c : ℝ) : Set.Ioo a b ≠ {c} := by
@@ -1942,7 +2065,12 @@ theorem terminal_pent_taum_p19 (h : mainNonlinearTerminalV11_p18)
         + taum y135 y1 y3 y5 2 2) := by
   sorry
 
-/-- HOL `taud_minimizer_terminal_hex_cases` (pent_hex.hl:2288). NEEDS-DB. -/
+/-- HOL `taud_minimizer_terminal_hex_cases` (pent_hex.hl:2288).
+DISCHARGED 2026-11-14 (lane hex51-w2): the slotted-cell minimizer
+(`taud_minimizer_p19`) is split by `taud_minimizer_cases_p19`; the
+`z1 = 2*h0` and derivative branches are killed by `OWZLKVY4_p19` +
+`taud_2h0_p19` / the database conjuncts "6877738680" and "9692636487"
+(with the p19/t11 derivative-numerator twins `hD1`/`hD2`). -/
 theorem taud_minimizer_terminal_hex_cases_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 : ℝ)
     (hd : 0 ≤ deltaY y1 y2 y3 y4 2 2) (b1 : 2 ≤ y1) (b1' : y1 ≤ 2 * h0)
@@ -1951,7 +2079,79 @@ theorem taud_minimizer_terminal_hex_cases_p19 (h : mainNonlinearTerminalV11_p18)
     ∃ z1, 0 ≤ deltaY z1 y2 y3 y4 2 2 ∧ 2 ≤ z1 ∧ z1 ≤ 2 * h0 ∧
       taudP19 z1 y2 y3 y4 2 2 ≤ taudP19 y1 y2 y3 y4 2 2 ∧
       (z1 = 2 ∨ deltaY z1 y2 y3 y4 2 2 = 0) := by
-  sorry
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hcstab : cstab = (3.01:ℝ) := rfl
+  have hy2nn : 0 ≤ y2 := by linarith
+  have hy3nn : 0 ≤ y3 := by linarith
+  -- the slotted-cell minimizer (HOL `taud_minimizer` at `a = 2, b = 2*h0, d = 0`).
+  have hne : (Set.Icc 2 (2 * h0) ∩ {q : ℝ | 0 ≤ deltaY q y2 y3 y4 2 2}) ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.mp ⟨y1, ⟨⟨b1, b1'⟩, hd⟩⟩
+  obtain ⟨z1, hz1, hmin⟩ := taud_minimizer_p19 2 (2 * h0) 0 y2 y3 y4 2 2 (le_refl 0) hne
+  have hz1d : 0 ≤ deltaY z1 y2 y3 y4 2 2 := hz1.2
+  have hz1lo : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1hi : z1 ≤ 2 * h0 := hz1.1.2
+  have hz1nn : 0 ≤ z1 := by linarith
+  have hz1le : z1 ≤ 2.52 := by rw [← h252]; exact hz1hi
+  have hy2le : y2 ≤ 2.52 := by rw [← h252]; exact b2'
+  have hy3le : y3 ≤ 2.52 := by rw [← h252]; exact b3'
+  refine ⟨z1, hz1d, hz1lo, hz1hi, hmin y1 ⟨⟨b1, b1'⟩, hd⟩, ?_⟩
+  -- p19/t11 twin bridges for the derivative numerators and `taud`.
+  have hD1 : yOfX taudD1numX_p19 z1 y2 y3 y4 2 2 = yOfX taudD1numX_t11 z1 y2 y3 y4 2 2 := by
+    unfold yOfX taudD1numX_p19 taudD1numX_t11 mu6X_p19 mu6X_t11 muY_p19 muY_t11
+      deltaX1_p19 deltaX1_t11
+    rw [h0_num_p19.2.2]
+  have hD2 : yOfX taudD2numX_p19 z1 y2 y3 y4 2 2 = yOfX taudD2numX_t11 z1 y2 y3 y4 2 2 := by
+    unfold yOfX taudD2numX_p19 taudD2numX_t11 mu6X_p19 mu6X_t11 muY_p19 muY_t11
+      deltaX1_p19 deltaX1_t11
+    ring
+  have htz : yOfX taudX_t11 z1 y2 y3 y4 2 2 = taudP19 z1 y2 y3 y4 2 2 := by
+    unfold yOfX taudX_t11 taudP19 flatTermX_t11 flatTerm_t11 flatTerm_p19
+      muY_t11 muY_p19 deltaY
+    rw [Real.sqrt_mul_self hz1nn, Real.sqrt_mul_self hy2nn,
+      Real.sqrt_mul_self hy3nn]
+  -- the four-way split at the minimizer.
+  have h4 := taud_minimizer_cases_p19 2 (2 * h0) 0 z1 y2 y3 y4 2 2 (le_refl 0)
+    (by norm_num) hy2nn hy3nn hz1 hmin
+  rcases h4 with hz12 | hz12h0 | hd0 | hder
+  · exact Or.inl hz12
+  · -- z1 = 2*h0: `taud (2*h0) ≥ 0` contradicts the forced chain `< 0`.
+    have h2h0nn := taud_2h0_p19 y2 y3 y4 2 2 (by rw [← hz12h0]; exact hz1d) b2' b3'
+    rw [← hz12h0] at h2h0nn
+    have hoy := OWZLKVY4_p19 h y1 y2 y3 y4 2 2 b1 b1' b2 b2' b3 b3'
+      (hcstab ▸ b4) b4' rfl rfl hd
+    exfalso
+    linarith [hmin y1 ⟨⟨b1, b1'⟩, hd⟩]
+  · exact Or.inr hd0.symm
+  · obtain ⟨hD1eq, hD2nn⟩ := hder
+    by_cases h15 : (15:ℝ) ≤ deltaY z1 y2 y3 y4 2 2
+    · -- delta ≥ 15: database conjunct "6877738680".
+      have hreg : mainEstimate_6877738680 :=
+        h "6877738680" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hreg z1 y2 y3 y4 2 2 hz1lo hz1le b2 hy2le b3 hy3le b4 b4'
+        (le_refl 2) (le_refl 2) (le_refl 2) (le_refl 2)
+      rw [← hD1, ← hD2] at hdb
+      rcases hdb with h1 | h2 | h3
+      · linarith
+      · linarith
+      · rcases h3 with h3a | h3b | h3c
+        · linarith
+        · rw [htz] at h3b
+          have hoy := OWZLKVY4_p19 h y1 y2 y3 y4 2 2 b1 b1' b2 b2' b3 b3'
+            (hcstab ▸ b4) b4' rfl rfl hd
+          exfalso
+          linarith [hmin y1 ⟨⟨b1, b1'⟩, hd⟩]
+        · linarith
+    · -- delta < 15: database conjunct "9692636487".
+      have hlt15 : deltaY z1 y2 y3 y4 2 2 < 15 := lt_of_not_ge h15
+      have hreg : mainEstimate_9692636487 :=
+        h "9692636487" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hreg z1 y2 y3 y4 2 2 hz1lo hz1le b2 hy2le b3 hy3le b4 b4'
+        (le_refl 2) (le_refl 2) (le_refl 2) (le_refl 2)
+      rw [← hD2] at hdb
+      rcases hdb with ⟨h1 | h2⟩ | h3
+      · linarith
+      · linarith
+      · linarith
 
 /-! ## Section F: symmetry kit, wlog, and the r755 / hex reductions -/
 
@@ -2327,7 +2527,12 @@ theorem taud_mu_clauses_p19 (h : mainNonlinearTerminalV11_p18) (y2 y3 y4 : ℝ)
 
 /-- HOL `terminal_hex_234_reduction` (pent_hex.hl:2981): the r755 database
 bundle (five slot-instantiations of `taud_mu_clauses`) reduces the 234-cell
-`taum` bound. NEEDS-DB. -/
+`taum` bound. DISCHARGED 2026-11-14 (lane hex51-w2): the five hypotheses are
+the r755 clauses (consumed as given); the analytic core is
+`taud_minimizer_terminal_hex_cases_p19` + `OWZLKVY4_p19` (minimizer route),
+splitting on `z1 = 2` (`taud_mu_clauses_p19` × the d-range selection) and
+`delta_y z1 = 0` (`taud_ge_flat_term_p19` + `edge2_flatD_x1_delta_lemma3_p19`
++ `delta_mono_p19` + `delta_2_nn_p19`). -/
 theorem terminal_hex_234_reduction_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y234 : ℝ) (f1 f2 : ℝ) (b1 b2 : Prop)
     (h0c : ineqP19 [(2, y1, 2.52), (2, y2, 2.52), (2, y3, 2.52), (3.01, y4, 3.915),
@@ -2355,7 +2560,112 @@ theorem terminal_hex_234_reduction_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.915), (2, y234, 2.52)]
       ((f1 + taum y234 y2 y3 y4 2 2) + f2 > 0.712 ∨
         (deltaY y234 y2 y3 y4 2 2 < 0 ∨ b1) ∨ b2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7
+  have y1lo := c1.1
+  have y1hi := c1.2
+  have y2lo := c2.1
+  have y2hi := c2.2
+  have y3lo := c3.1
+  have y3hi := c3.2
+  have y4lo := c4.1
+  have y4hi := c4.2
+  have y234lo := c7.1
+  have y234hi := c7.2
+  have hh0 := h0c c1 c2 c3 c4 c5 c6 c7
+  have hh1 := h1c c1 c2 c3 c4 c5 c6 c7
+  have hh2 := h2c c1 c2 c3 c4 c5 c6 c7
+  have hh3 := h3c c1 c2 c3 c4 c5 c6 c7
+  have hh4 := h4c c1 c2 c3 c4 c5 c6 c7
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hcstab : cstab = (3.01:ℝ) := rfl
+  have y2hi2 : y2 ≤ 2 * h0 := by rw [h252]; exact c2.2
+  have y3hi2 : y3 ≤ 2 * h0 := by rw [h252]; exact c3.2
+  have y234hi2 : y234 ≤ 2 * h0 := by rw [h252]; exact c7.2
+  by_cases hb1 : b1
+  · exact Or.inr (Or.inl (Or.inr hb1))
+  by_cases hb2 : b2
+  · exact Or.inr (Or.inr hb2)
+  have h1P : f1 + 0 + f2 > 0.712 := by
+    rcases hh1 with h | h | h | h
+    · exact h
+    · exact absurd h hb1
+    · contradiction
+    · exact absurd h hb2
+  by_cases htaum : 0 ≤ taum y234 y2 y3 y4 2 2
+  · exact Or.inl (by linarith [htaum, h1P])
+  by_cases hdlt : deltaY y234 y2 y3 y4 2 2 < 0
+  · exact Or.inr (Or.inl (Or.inl hdlt))
+  -- main case: `taum y234 < 0` with `0 ≤ delta_y y234` — the minimizer route.
+  have hd234 : 0 ≤ deltaY y234 y2 y3 y4 2 2 := le_of_not_gt hdlt
+  have htaumlt : taum y234 y2 y3 y4 2 2 < 0 := lt_of_not_ge htaum
+  obtain ⟨z1, hz1d, hz1lo, hz1hi, hminz, hz1case⟩ :=
+    taud_minimizer_terminal_hex_cases_p19 h y234 y2 y3 y4 hd234
+      y234lo y234hi2 y2lo y2hi2 y3lo y3hi2 c4.1 c4.2 htaumlt
+  have hoy := OWZLKVY4_p19 h y234 y2 y3 y4 2 2 y234lo y234hi2
+    y2lo y2hi2 y3lo y3hi2 (hcstab ▸ c4.1) c4.2 rfl rfl hd234
+  refine Or.inl ?_
+  have hsuff : f1 + taudP19 z1 y2 y3 y4 2 2 + f2 > 0.712 := by
+    rcases hz1case with hz12 | hz1d0
+    · -- z1 = 2: `taud_mu_clauses` with the d-range selection.
+      rw [hz12]
+      rw [hz12] at hz1d
+      have hmu := taud_mu_clauses_p19 h y2 y3 y4 ⟨y2lo, c2.2, y3lo, c3.2, c4.1, c4.2⟩
+      by_cases d16 : deltaY 2 y2 y3 y4 2 2 ≤ 16
+      · have hc1 := hmu.1 ⟨hz1d, d16⟩
+        rcases hh4 with h4P | hb | hd4 | hb
+        · linarith [hc1, h4P]
+        · exact absurd hb hb1
+        · rcases hd4 with hd4 | hd4
+          · linarith
+          · linarith
+        · exact absurd hb hb2
+      · have d16' : (16:ℝ) ≤ deltaY 2 y2 y3 y4 2 2 := by linarith
+        by_cases d100 : deltaY 2 y2 y3 y4 2 2 ≤ 100
+        · have hc2 := hmu.2.1 ⟨d16', d100⟩
+          rcases hh3 with h3P | hb | hd3 | hb
+          · linarith [hc2, h3P]
+          · exact absurd hb hb1
+          · rcases hd3 with hd3 | hd3
+            · linarith
+            · linarith
+          · exact absurd hb hb2
+        · have d100' : (100:ℝ) ≤ deltaY 2 y2 y3 y4 2 2 := by linarith
+          have hc3 := hmu.2.2 d100'
+          rcases hh2 with h2P | hb | hd2 | hb
+          · linarith [hc3, h2P]
+          · exact absurd hb hb1
+          · linarith
+          · exact absurd hb hb2
+    · -- delta_y z1 = 0: the flat-term / edge2-flatD route.
+      have hft := taud_ge_flat_term_p19 z1 y2 y3 y4 2 2 hz1hi y2hi2 y3hi2 hz1d
+      have hed := edge2_flatD_x1_delta_lemma3_p19 h 0 z1 y2 y3 y4 2 2
+        hz1d0 (le_refl 0) (by norm_num) hz1lo (h252 ▸ hz1hi) y2lo c2.2 y3lo c3.2
+        c4.1 c4.2 rfl rfl
+      have hed' := hed ⟨hz1lo, h252 ▸ hz1hi⟩ ⟨y2lo, c2.2⟩ ⟨y3lo, c3.2⟩ ⟨c4.1, c4.2⟩
+        ⟨le_refl 2, le_refl 2⟩ ⟨le_refl 2, le_refl 2⟩
+      have hed2 : edge2FlatDX1_p19 0 (y2 * y2) (y3 * y3) (y4 * y4) 4 4 = z1 * z1 := by
+        have e : (2:ℝ) * 2 = 4 := by norm_num
+        simp only [e] at hed'
+        exact hed'
+      have hf2 : yOfX (flatTerm2_234x_p19 0 4 4) y1 y2 y3 y4 y5 y6 = flatTerm_p19 z1 := by
+        unfold yOfX flatTerm2_234x_p19
+        rw [hed2, Real.sqrt_mul_self (show (0:ℝ) ≤ z1 by linarith [hz1lo])]
+      have hd2nn := delta_2_nn_p19 h z1 y2 y3 y4 hz1lo hz1hi y2lo y2hi2
+        y3lo y3hi2 c4.1 c4.2 hz1d0
+      have hm2 := delta_mono_p19 h (2 * h0) z1 y2 y3 y4 2 2 hz1lo hz1hi (le_refl _)
+        y2lo y2hi2 y3lo y3hi2 c4.1 c4.2
+        (le_refl 2) (le_refl 2) (le_refl 2) (le_refl 2) hz1d (by linarith)
+      rw [hz1d0] at hm2
+      have hd252 : deltaY 2.52 y2 y3 y4 2 2 ≤ 0 := h252 ▸ hm2
+      rcases hh0 with h0P | hb | hd0' | hb
+      · rw [hf2] at h0P
+        linarith [hft, h0P]
+      · exact absurd hb hb1
+      · rcases hd0' with hd0' | hd0'
+        · linarith
+        · linarith
+      · exact absurd hb hb2
+  linarith [hminz, hoy, hsuff]
 
 /-- HOL `terminal_hex_126_reduction` (pent_hex.hl:3079): the 126-reduction is
 the 234-reduction at the rotated slot tuple. -/
