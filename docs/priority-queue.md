@@ -857,6 +857,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（15:40，续1130）**：**用户批「5t1批准」——OCBICBY 收口汇点章程 APPROVED（`docs/def-fix-charters/ocbicby-close/README.md`）；`ocbicby5t1-w1` 续跑 Phase D1（纯搬运）+ D2（5T1 收口）**。
+① 章程获批范围：新模块 `Kepler.Text.LocalAuto22Close`（`import LocalAuto22`+`LocalAuto19`）；**4 条声明逐字节下移** `terminal_pent_taum2_p22` / `empty_5T1_p22` / `empty_6T1_p22` / `OCBICBY_p22`（donor=落地 HEAD `c545d94e` 块 md5 已核：`ac28e174`/`c367331a`/`1f548ef5`/`9298b0e0`）；**4 条 helper 只删 `private`**（行 md5 已核：`4ebc5765`/`303a2019`/`79ac3d6a`/`e9240441`）；`LocalAuto16` +1 import（唯一消费者 LA16:437）。零陈述/零证明体改动、零 sorry 增减。
+② DAG 依据：closure(LA22)=92 不含 LA19；closure(LA19)=110 含 LA22 不含 LA16 ⇒ Close 是唯一合规汇点；落地闸跑 Tarjan（无 >1 SCC 含 LA16/Close）+ `verify_move.py` 22 项（模拟 22/22 PASS、3 负例全中）。
+③ 排程：**D1 纯搬运**（单独 patch/commit，零 sorry 增减；编译 Close/LA22/LA16；`OCBICBY_p22` 仍 sorryAx）；**D2 证明体**（`terminal_pent_taum2_p22` = `angle_sum_5T1`+帽石×2+`taum_sym2`；`empty_5T1_p22` = t5body DELIVERY §5 骨架；`OCBICBY_5T1_p22` = 4T2 模板）。`OCBICBY_p22` 总装配仍待 6T1/4T3（LP 解冻）。
+④ 与 `perimb1-w1` 零文件冲突（本单 LA19/LA22/LA16/Close；perimeter 单 TameLpPerimeter/Assembly/W44）。
+⑤ 下一条：续1131。
 - **2026-11-14（15:25，续1129）**：**perimb1-w1 Phase 0 交付 + 编排者裁决：B1-as-stated 判 NO-GO（机器证据：B1 ⇒ 整条 rho 轨道落 span{p,vv1}，3 维扇下必假）；SF 批准（内部槽 `hslot_wEG`）；接线选方案 F（TameLpPerimeter copy-rename + Assembly 2 行）**。
 ① 交付：`SCOUT.md`（238 行）+ `MOVE_PLAN.md`（189 行）+ `SF-NEEDED.md`（88 行）+ 探针 `ProbeB1Planar.lean`（编排者主仓复现 **rc=0**、`b1probe_affsign_in_span`/`affGt_subset_span`/`orbit_in_span` 三件全标准三）。
 ② **HOL 溯源 ERRATA（推翻旧判）**：旧注「1_2 是隐式依赖、:2376-2406 无可见供给」**作废**——HOL 供给可见：u 侧 forward 1_2 = `NKEZBFC.hl:2143-2270`（EGHNAVX 第 4 合取 run cone + AZIM_EQ×3 + `decomposition_planar_by_angle_fan` + `FAN_IN_AFF_GE_IMP_EQ` + union IH）；w 侧 backward = `:2346-2583`（镜像链，第 5 合取）。**HOL 只有 run 内 1_2，无全范围 backward 形**；W42A 的 `pW5w_telescope (i:=1)` 是 Lean 侧加强形（B1）。
