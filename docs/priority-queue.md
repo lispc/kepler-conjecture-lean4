@@ -859,6 +859,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（22:10，续1142）**：**TSKAJXY-XLLIPLS pilot 收线：glue 落库 `6f02985d`（3 新文件 +279/−0，全标准三）；证书路线判定 NO-GO（TM 精度饱和 + 36–72 CPU·天）——"流水线定标"完成**。
+① 交付：`Interval/Cases/TskXLLIPLSBase.lean`（19,614 节点 IExpr，164 KB 表达式）+ `Text/TskXLLIPLSLemmas.lean`（93 行）+ `Text/PackIneqTskXLLIPLS.lean`（166 行）：`tsk_eval`（**∀ρ∈ℝ⁶ 无前提恒等式** `evalReal = gamma4fgcy`）、`tsk_mem`（bank 盒 ⊂ 证书盒）、`packIneqTskXLLIPLS_of_hull`（hpos 条件收口）——三件探针全标准三、零 sorryAx/新公理；`Assembly:980` 未动、`nliTskXLLIPLS` 仍 sorryAx；根面 md5 `246e952c…` 同。
+② **定标数（实测）**：TM 叶 **6,512**（13,023 节点，深度 8–21/中位 14，invalid=0）；生成 **50.6 s**（C++ 单核）；表达式 **19,614 节点**（sqrt 79 / div 165 / atan 143 / ite 60）；Base 编译 6.4 s / 1.12 GB；**镜像 s/叶 454–480 s** ⇒ stage-A 全量 **36 CPU·天**、内核 **36–72 CPU·天**；6h 窗口覆盖 **0.7%**。
+③ **两把锁**：**锁 1 精度饱和**——3/3 采样叶 NEG（loBound≈−2^186）；切片：单 `dihY` PASS 且紧（2.0 vs 2.2），`Σ6 lmfun·dihY`（6,534 节点）界饱和到 1.4e−48（真值~13），全式必穿零；atan rung 128→512 抬 47 个数量级但 150× 慢 ⇒ **即使时间无限，本 checker 配置内核也过不了**（bb_arb 靠自己的 `--tm-prec 256` + div2/loa 通道闭合）。**锁 2 成本**如上。⇒ 证书流水线当前形态不可扩展。
+④ **候选 B 勘误**：`QZECFIC wt0` 同样不闭合（invalid=32,769，全为 sqrt/log 底非正，`max_nodes` 到顶）——"全档 NEG 就切 B"本轮不成立；正确顺序 = 先补 kernel 的 div2/loa 规则（或 guard 定号叶），再谈下一盒。
+⑤ **残余（下一工程，均超出本 pilot 授权）**：① kernel 缺 div2/loa；② 需 ~10² 提速（36–72 CPU·天/盒）；③ 候选 B sqrt 底退化；④ 误差逐节点归因（`CertTM` 无 trace）。**certtm 回 hold**（AGENTS §4 续批注记已标收线）。
+⑥ 下一条：续1143。
 - **2026-11-14（21:20，续1141）**：**OCBICBY 4T3 收线落库 `d6d160be`：14 支产品 12→13；6T1 压到两条精确输入（`ht4nn` LP 箱 + `hE` 几何桥）**。
 ① 交付：`LocalAuto22Close` 单文件 **+1415/−0**（LA22/LA38 零改动）——4T3 全链：`taud_x_taud_c` / `taud_x_taum_x'`（经 LA19 已证 `OWZLKVY4_p19` + yOfX 桥）、`cayleyR_conic_c` / `cayleyR_disc_c`（LEMMA50/51，纯 `ring`）、`quad_4680581274_{delta_issue,delta_y_issue,a,y,derived}'`（wrapper 五件真证，含树内首次 `delta_y_issue`）、`empty_4T3_p22'` / `OCBICBY_4T3_p22'`。
 ② 6T1：`hex_tower_hnum_p22`（0.712 塔不等式）真证（`terminal_hex_taum_p19` 三条 `deltaY` 逃逸由 `DELTA_Y_POS_4POINTS` 杀掉）；条件件 `empty_6T1_p22_of_ht4nn`（`hE` + `ht4nn` 两前提）/ `OCBICBY_6T1_p22_of_ht4nn`。
