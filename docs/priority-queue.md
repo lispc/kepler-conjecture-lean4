@@ -857,6 +857,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（13:00，续1124）**：**🏁 hextop-w2 收线落库 `f1466ece`（hex 塔顶收口，LA19 纯追加 +834，error 轨迹 101→1→0，18/18 探针标准三）——hex 塔全链绿，6T1 装配面齐备**。
+① 末叶 S3 case-树直证（六置换帧 0-3 hop；勘误并修正 w1 工单 R 映射两处笔误）；patch byte-identical + §7.1-26 头合规（重写头三行+cmp 姿势入档）。雷区五条补遗（rw 名单不混用/hop 实参=目标帧/组合 C 槽映射全表）。
+② **6T1 装配面全齐**：塔顶 ✓ + 塔基 ✓（1115058e）+ 桥 ✓（6f4d4492）+ side-case/ht4nn_ge200 ✓（362ab04e）——**只剩箱型 ht4nn**（LP 解冻后 by_cases 两半拼合）⇒ empty_6T1_p22 → OCBICBY_6T1_p22。
+③ 在飞 0（本会话），空位 2。下一波候选：5T1 帽石（terminal_pent_taum_p19，pent4 判词独立装配线）+ sol0Bounds 数界债（上界证法已示范）+ LA22 胶两件（5T1 需）。等用户点单。
+④ LA19 全文件现仅 2 存量债（:333 sol0Bounds×2 + :2550 terminal_pent_taum——基线既有非新面）。
+
 - **2026-11-14（12:35，续1123）**：**hextop-w1 续跑交付（PARTIAL-DEEP，无 patch 纪律交付）+ hextop-w2 继任发车（agent-70：唯一剩叶收口）**。
 ① hextop-w1 总耗时 2h24m（含续跑）：塔顶声明已立（terminal_hex_taum_p19，HOL OCBICBY.hl:3088-3111 五终局分支核对）+ 13 条装配基建编译通过（D/C 槽桥/registry 桥/feeder/25 叶装配）——**error 轨迹 101→1**；唯剩 (1,1,1) 叶组合放电。硬交付物：完整诊断（含 HOL 考古结论——`pent_hex.hl:3180` 脚本装配在标准 HOL Light 语义不可复现、按数学忠实重建，θ 由 Lean 可验证约束唯一确定）+ WIP 文件 + §7 已收敛继任工单（S3 六元组 s-值表 + 10 叶 case-树 + 注入模板）。**无 patch（未零 error 不交假绿）——纪律样本**。
 ② hextop-w2 工单：WIP 直继（非 patch 流），§7 工单预计 1-2 编译轮；失败则交新诊断不硬熬。交付后 6T1 装配面全齐（塔顶+塔基+桥+prep），只待 ht4nn 箱（LP 解冻）。
