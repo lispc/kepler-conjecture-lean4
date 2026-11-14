@@ -859,6 +859,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（22:40，续1143）**：**双车道发车（用户令「按你建议走吧」）：`he6t1-w1`（hE 几何桥）+ `ht4nn-probe-w1`（ht4nn 单盒有界微探针）**。
+① `he6t1-w1`：证 `hE_6T1 : ∀ vv, BBsV39 scs6T1 vv → 0 ≤ yOfX eulerAx_p19 ‖vv0‖ ‖vv2‖ ‖vv4‖ …`；数学已在 `LP-OBLIGATION-6T1.md` §O2（`2E = y1y2y3·2(1+u·v+v·w+u·w)`，扇角序 ⇒ `E/(y1y2y3) = 2cos(s/2)[cos(d/2)+cos(s/2)] ≥ 0`）；缺 `azim↔dot` 桥 + 三向角序（`ConvexLocalFan`/`azimInFan_p2`/`vv_split_azim_generic_p22` 在库），估 150–300 行；落点新模块 `LocalAuto19Euler` + Close +1 import + 两条 `_only` 条件件（`empty_6T1_p22_of_ht4nn_only` / `OCBICBY_6T1_p22_of_ht4nn_only`）⇒ **6T1 残余压到只剩 `ht4nn`**。零算力。
+② `ht4nn-probe-w1`：用户明批的 TSKAJXY pilot 延伸——`ht4nn` 单盒**有界微探针**（4h 墙钟；root box + ≤400 叶 + 1–3 叶 checker 探针；certtm/`bb_arb` **仅此盒**；TM3/Mono\*/D 仍 hold）。判三选一：R1 TM 证书（从 pilot 的 dihY 资产构 taum IExpr；单 `dihY` 1,065 节点 PASS 且紧 ⇒ taum ~3 dihY 量级有希望）/ R2 解析（球面三角角序）/ NO-GO（→ 新 registry id 交用户裁决）。
+③ 两车文件零交集（he6t1 改 LA19/Close；ht4nn-probe 只读 + 快照）；并行 Lean ≤2。
+④ 预期：hE 成功 ⇒ 6T1 只剩一条箱；ht4nn 若 R1 GO ⇒ 无需新 registry id，Text 清零路径全通；若 NO-GO ⇒ 用户裁 registry id 或等 LP。
+⑤ 下一条：续1144。
 - **2026-11-14（22:10，续1142）**：**TSKAJXY-XLLIPLS pilot 收线：glue 落库 `6f02985d`（3 新文件 +279/−0，全标准三）；证书路线判定 NO-GO（TM 精度饱和 + 36–72 CPU·天）——"流水线定标"完成**。
 ① 交付：`Interval/Cases/TskXLLIPLSBase.lean`（19,614 节点 IExpr，164 KB 表达式）+ `Text/TskXLLIPLSLemmas.lean`（93 行）+ `Text/PackIneqTskXLLIPLS.lean`（166 行）：`tsk_eval`（**∀ρ∈ℝ⁶ 无前提恒等式** `evalReal = gamma4fgcy`）、`tsk_mem`（bank 盒 ⊂ 证书盒）、`packIneqTskXLLIPLS_of_hull`（hpos 条件收口）——三件探针全标准三、零 sorryAx/新公理；`Assembly:980` 未动、`nliTskXLLIPLS` 仍 sorryAx；根面 md5 `246e952c…` 同。
 ② **定标数（实测）**：TM 叶 **6,512**（13,023 节点，深度 8–21/中位 14，invalid=0）；生成 **50.6 s**（C++ 单核）；表达式 **19,614 节点**（sqrt 79 / div 165 / atan 143 / ite 60）；Base 编译 6.4 s / 1.12 GB；**镜像 s/叶 454–480 s** ⇒ stage-A 全量 **36 CPU·天**、内核 **36–72 CPU·天**；6h 窗口覆盖 **0.7%**。

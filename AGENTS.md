@@ -93,6 +93,9 @@
   给 nli* 流水线定标）可动 certtm / `bb_arb`；**TM3 量产扫全库、Mono\*、D 证书层仍然 hold**，
   本 pilot 结束即回 hold 态。**（2026-11-14 已收线：glue 落库 `6f02985d` 全标准三；证书路线
   NO-GO——TM 精度在 2 万节点规模饱和、全量重放 36–72 CPU·天；certtm 已回 hold。）**
+  **续批 2（2026-11-14 用户明批「按你建议走吧」）**：`ht4nn` 单盒 TM **有界微探针**
+  （车道 `ht4nn-probe-w1`：4h 墙钟、root box + ≤400 叶 + 1–3 叶 checker 探针，不做量产）
+  可动 certtm / `bb_arb`；**TM3 量产扫全库、Mono\*、D 证书层仍然 hold**，探针结束即回 hold。
 
 ## 5. 落库流程
 
