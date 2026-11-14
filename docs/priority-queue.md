@@ -97,7 +97,10 @@
 ---
 
 
-## 1. 在飞（2026-11-15：**空**；`nli-triage-w1` `a09ad494` + `tmparams-w1` `02839181` 已收线）
+## 1. 在飞（2026-11-15：1 条 —— `qitnpea-w1`；前两车道已收线）
+
+> **2026-11-15 07:30 发车（用户令「发」）**：`qitnpea-w1` — `nliRestQITNPEA4003532128a`
+> 纯代数真证（3 变量、余量 0.819、PICK-2 骨架）；零农场、单文件 ≤450 行；成功 SORRIED 54→53。
 
 > **2026-11-15 07:24 收线（`02839181`）**：`tmparams-w1` 落库——外部精确复刻直产 `TMParams`
 > （`pipeline/interval` 四工具 +1533，不入可信基）；4/4 叶内核 PASS（~26 s / 10.07 GB，标准三）；
@@ -879,6 +882,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（07:30，续1154）**：**`qitnpea-w1` 发车（用户令「发」）——`nliRestQITNPEA4003532128a` 纯代数真证**。
+① 债点 `Assembly.lean:1394`，bank `PackingAuto21:460`；盒 `[2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]`，结论 `δ4>25 ∨ δ>0.14 ∨ δ<0`。
+② 侦察（triage PICK-2）：`y3=y4=y5=√2 ⇒ δ4 = x1(x2+x6−x1)`；9³ 网格三支覆盖全盒，最小最大余量 **0.819**；残区 `{δ≥0, δ4≤25}` 上 min δ=**1.013**（≫0.14）。
+③ 路线：`by_cases δ<0` → 右支；否则 `by_cases 25<δ4` → 左支；余下用盒界 + `nlinarith`/显式代数分解证 `0.14<δ`；新模块 + `Assembly` 1 import + 1 body，陈述逐字不动。
+④ 边界：不 commit/push、不跑 `lake build`/`auto_gate`/地图/root；单 lean（后台 map 仪器可能占 1）；新增公理/`sorry`/`admit`/`native_decide` 为零；≤450 行；验收新模块 RC=0/0 error + `#print axioms` 标准三。
+⑤ 下一条：续1155。
 - **2026-11-15（07:24，续1153）**：**`tmparams-w1` 收线落库 `02839181`——外部复刻直产 `TMParams`；4/4 叶内核 PASS；生成 5.9 s/叶（56×）；6,512 叶 650→~58–69 CPU·h**。
 ① 交付：`pipeline/interval/{emit_tm_params,tmexact,parse_expr,bench_tm_params}.py`（**+1533/−0**，纯 Python 工具、不入可信基）；`emit_tm_params` 输入 (AST, box) → `TMParams`；`tmexact` 逐位同构纯整数复刻；`bench` 定标。README 增段（用法/验证/`--no-verify` 语义）。
 ② 语义：`SqrtTMP = ⟨slo,shi,sc,o1,o2⟩` 按**动态求值顺序**消费（guard 先于分支、参数先于节点、straddle 两支都走）；分支 sqrt 用 `sqrtMantissaRel(fB.lo/hi/lo−W)`，guard sqrt 用 representation-bound `sqrtMantissa`（sc=0），fallback 占位 `(0,0,0)`。叶 0/657 的 **43/43 triples 与落库 `kParams` 逐项相等**。
