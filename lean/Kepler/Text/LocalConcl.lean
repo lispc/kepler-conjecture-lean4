@@ -520,6 +520,7 @@ import Kepler.Text.LocalAuto35
 import Kepler.Text.LocalAuto36
 import Kepler.Text.LocalAuto37
 import Kepler.Text.LocalAuto38
+import Kepler.Text.VasMasterKit
 import Kepler.Text.VasTuaKit
 import Kepler.Text.YebwjngKit
 import Mathlib
@@ -4958,7 +4959,8 @@ theorem WGDHPPI_discharged : ∀ (s : ScsV39) (v : ℕ → V3), isScsV39 s →
 
 /-- HOLD (b) `TUAPYYU_concl`: cycle path
 `TUAPYYU_concl -> LA25.TUAPYYU_p25 (LA25:1264, proof = `fun _ =>
-TUAPYYU_concl`). ERRATA (SF-107, 2026-11-12): added `(hmn : main_nonlinear_terminal_v11)` per HOL `VASYYAU.hl:524`; cycle/line refs kept as historical record (at HEAD fb89790e the twin is LA25:2251, body `fun h => TUAPYYU_concl h`). -/
+TUAPYYU_concl`). ERRATA (SF-107, 2026-11-12): added `(hmn : main_nonlinear_terminal_v11)` per HOL `VASYYAU.hl:524`; cycle/line refs kept as historical record (at HEAD fb89790e the twin is LA25:2251, body `fun h => TUAPYYU_concl h`).
+DISCHARGED 2026-11-14 (lane vasyyau-disch-w25): wired to `VasMasterKit.TUAPYYU_kit`. -/
 theorem TUAPYYU_discharged (hmn : main_nonlinear_terminal_v11) :
     ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
@@ -4968,8 +4970,8 @@ theorem TUAPYYU_discharged (hmn : main_nonlinear_terminal_v11) :
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
     ¬scsIsStr s v p → ¬scsIsStr s v (p + 1) →
     dist (v p) (v (p + 1)) = s.a p (p + 1) ∨
-      dist (v p) (v (p + 1)) = s.b p (p + 1) := by
-  sorry
+      dist (v p) (v (p + 1)) = s.b p (p + 1) :=
+  TUAPYYU_kit hmn
 
 /-- DISCHARGED 2026-11-13 (lane vasw0-w1, VASYYAU Wave 0): proved as
 `YebwjngKit.YEBWJNG_kit` (CUXVZOZ_p21 engine + the TUAPYYU1-style fan
@@ -4989,7 +4991,8 @@ theorem YEBWJNG_discharged (h : main_nonlinear_terminal_v11) :
   YEBWJNG_kit h
 
 /-- HOLD (b) `WKZZEEH_concl`: cycle path
-`WKZZEEH_concl -> LA25.WKZZEEH_p25 (LA25:1400, proof = `WKZZEEH_concl ...`). -/
+`WKZZEEH_concl -> LA25.WKZZEEH_p25 (LA25:1400, proof = `WKZZEEH_concl ...`).
+DISCHARGED 2026-11-14 (lane vasyyau-disch-w25): wired to `VasMasterKit.WKZZEEH_kit`. -/
 theorem WKZZEEH_discharged (h : main_nonlinear_terminal_v11) :
     ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
@@ -4998,11 +5001,12 @@ theorem WKZZEEH_discharged (h : main_nonlinear_terminal_v11) :
     (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
     ¬scsIsStr s v p → ¬scsIsStr s v (p + 1) → ¬scsIsStr s v (p + 3) →
-    ¬(dist (v p) (v (p + 3)) = cstab ∧ dist (v p) (v (p + 1)) = cstab) := by
-  sorry
+    ¬(dist (v p) (v (p + 3)) = cstab ∧ dist (v p) (v (p + 1)) = cstab) :=
+  WKZZEEH_kit h
 
 /-- HOLD (b) `PWEIWBZ_concl`: cycle path
-`PWEIWBZ_concl -> LA25.PWEIWBZ_p25 (LA25:1543, proof = `PWEIWBZ_concl ...`). -/
+`PWEIWBZ_concl -> LA25.PWEIWBZ_p25 (LA25:1543, proof = `PWEIWBZ_concl ...`).
+DISCHARGED 2026-11-14 (lane vasyyau-disch-w25): wired to `VasMasterKit.PWEIWBZ_kit`. -/
 theorem PWEIWBZ_discharged (h : main_nonlinear_terminal_v11) :
     ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
@@ -5010,12 +5014,13 @@ theorem PWEIWBZ_discharged (h : main_nonlinear_terminal_v11) :
       4 * h0 < s.b i j) →
     (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
-    s.a p (p + 1) = 2 → dist (v p) (v (p + 1)) = 2 := by
-  sorry
+    s.a p (p + 1) = 2 → dist (v p) (v (p + 1)) = 2 :=
+  PWEIWBZ_kit h
 
 /-- HOLD (b) `VASYYAU_concl`: cycle path
 `VASYYAU_concl -> LA25.VASYYAU_p25 (LA25:1554, proof = `VASYYAU_concl ...`);
-the six `VASYYAU.hl` LA32 mentions are NEEDS-comments, not twins. -/
+the six `VASYYAU.hl` LA32 mentions are NEEDS-comments, not twins.
+DISCHARGED 2026-11-14 (lane vasyyau-disch-w25): wired to `VasMasterKit.VASYYAU_kit`. -/
 theorem VASYYAU_discharged (h : main_nonlinear_terminal_v11) :
     ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
     scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
@@ -5025,8 +5030,8 @@ theorem VASYYAU_discharged (h : main_nonlinear_terminal_v11) :
       (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
     scsIsStr s v p →
     (dist (v p) (v (p + 1)) = s.a p (p + 1) ∧
-      dist (v p) (v (p + 3)) = s.a p (p + 3)) := by
-  sorry
+      dist (v p) (v (p + 3)) = s.a p (p + 3)) :=
+  VASYYAU_kit h
 
 /-- HOLD (b) `WKEIDFT_concl`: cycle path
 `WKEIDFT_concl -> LA24.WKEIDFT_concl_p24 (LA24:144, verbatim restatement
