@@ -154,10 +154,10 @@
 > 全替换为 `VasMasterKit._kit` 调用，删除面恰 4 sorry；加 1 行 `import VasMasterKit`。**四 discharge 转标准三**）。
 > **K6 第一刀 `d31bbc5a`**（+115/−6：`EXTREMAL_SCS_4M6_p32` + `BB_4M6_IMP_scs_4T3_p32`，四 master kit 直接消费；LA32 sorry 60→58）。
 > **K7 底部 `6440d2a1`**（+692/−65：17 件——prime 孪生 6 + prime ARROW 3 + prime IS_SCS 3 + SLICE 2 + SLICE_ARROW 2 + STAB 头；LA32 sorry 58→41）。
-> **在飞第三批**：`k6-finish-w1`（K6 收线→`NWDGKXH`）与 `k7-finish-w1`（K7 收线→`YOBIMPP`）；同文件 K6 区/K7 区分离。
+> **K6 收线 `ecb95f82`**（+109/−13：`SCS_4T3_IS_SCS` + `MM_4M6_IMP_MM_4T3` + `SCS_4M6_ARROW_SCS_4T3_STAB_4M6` +
+> **`NWDGKXH_p32` 真证（终极三目标 1/3）**；LA32 sorry 41→37）。
+> **在飞 k7-finish-w1**（K7 收线→`YOBIMPP`）与 **k8slice-w1**（K8 底部 IS_SCS/STAB/SLICE 机械件）。
 > 禁止消费 WGDHPPI/NOT_STR_IN_CASES_4(_1)_p25/TUAPYYU_IMP_CASES_p25（带 sorryAx）。
-> **在飞 k6-extremal-w1（V26，第三车道）**：K6 第一刀 `EXTREMAL_SCS_4M6_p32`（`PWEIWBZ@1/2/3` + `VASYYAU@0/@1`/`TUAPYYU@0`
-> str 分裂 + `quad_nonexist_849_p16`；预算内顺带 `BB_4M6_IMP_scs_4T3_p32`）。
 > 两车道同改 LA32 但行段分离（373-700 vs 993+），import 插入点不同；先到先落。
 > 依据：LA23↛LA21/22 DAG 死锁已由 V3 解除；W0 钥匙（`58517f80`）/
 > `ARCV_ADD_AFF_GE_p18`（`23c16896`）/ `EGHNAVX1_ALT_p22`（`ffc849da`）已落。
@@ -335,13 +335,20 @@
 >
 > **ERRATA（续697）**：续695 ④⑤ 把 `fan_hypermaps_iso`+`iso_simple` 称作「`hsimple` 与 W22d wedge 半**双用途**」**不成立**——两件在 Lean 下坍缩为**同 `(V,E)`** 的映射相等/`Simple` 传输；切片扇 `(vPrime_p3 V FF, ePrime_p3 E FF)` 与原扇 `(V,E)` 不同，**不能跨用**；`hsimple` 仍只能等 HOL `localization_simple_hypermap`（零命中）。真双用途只剩 `LINEAR_FACE_2` 侧的 `hcard`。
 
-- **2026-11-14（09:42，续1111）**：**K6/K7 双车道同批落库——K6 第一刀 `d31bbc5a`（+115/−6，EXTREMAL+BB_4M6_IMP）+ K7 底部 `6440d2a1`（+692/−65，17 件）；LA32 sorry 60→41；第三批双车道发车（k6-finish / k7-finish 收线目标 NWDGKXH/YOBIMPP）**。
+- **2026-11-14（10:05，续1113）**：**K6 收线 `ecb95f82`（+109/−13）——`NWDGKXH_p32` 真证（终极三目标第一件）；LA32 sorry 41→37；k8slice-w1 发车（K8 底部 IS_SCS/STAB/SLICE 机械件）**。
+① **K6 交付**（k6-finish-w1）：`SCS_4T3_IS_SCS_p32`（`la32isScs_mkFunlist` k=4,d=0.513 + 16 格表扫描 + hble 4 残类）、`MM_4M6_IMP_MM_4T3_p32`（`XWNHLMD_MM_p33` @ (4M6′,4T3) + `BB_4M6_IMP_scs_4T3_p32`）、`SCS_4M6_ARROW_SCS_4T3_STAB_4M6_p32`（arrow 展开：isScs 面 `SCS_4T3_IS_SCS_p32`/`STAB_4M6_SCS_p33`；MMs 二歧 diag→`MM_4M6_IMP`、非 diag→`MM_4M6_IMP_STAB_4M6_p33`）、**`NWDGKXH_p32`**（`FZIOTEF_TRANS` + `FZIOTEF_UNION`(`FZIOTEF_REFL {scs4T3}`, `SET_STAB_4M6_ARROW_4T5_p33`) + `{A}∪{B}={A,B}`）。
+② **编排者闸（亲跑）**：worktree@`e10acde9` apply RC=0；numstat **+109/−13**、删除面恰 **4** sorry、禁项 0/0/0/0、import 零变化；直编 rc=0/err0/sorry-decls **41→37**；4 件 + 6 消费件（`FZIOTEF_TRANS` 等）**10/10 标准三**；根面 md5 **`246e952c…` 逐字节同**。commit `ecb95f82`，已 push。
+③ **口径**：**终极三目标进度 1/3——`NWDGKXH_p32`（K6）已真证**；余 `YOBIMPP_p32`（K7，k7-finish 在飞）与 `MIQMCSN_p32`（K8，底部开跑）。LA32 余 **37** 条 sorry。
+④ **k8slice-w1（在飞，第二车道）**：K8 底部——A. IS_SCS 三件（`SCS_4M8_02/13_IS_SCS`、`SCS_3T7_IS_SCS`，模板 `SCS_4T3_IS_SCS_p32`）→ B. STAB/SLICE 四件（`STAB_4M8_02/13_SCS`、`SCS_4M8_02_SLICE_02`、`SCS_4M8_13_SLICE_13`）→ C. 4M8 slice/arrow 链五件（预算内）。
+⑤ 下一条：续1114。
+
+- **2026-11-14（09:42，续1112）**：**K6/K7 双车道同批落库——K6 第一刀 `d31bbc5a`（+115/−6，EXTREMAL+BB_4M6_IMP）+ K7 底部 `6440d2a1`（+692/−65，17 件）；LA32 sorry 60→41；第三批双车道发车（k6-finish / k7-finish 收线目标 NWDGKXH/YOBIMPP）**。
 ① **K6 第一刀**（k6-extremal-w1 交付，`d31bbc5a`）：`EXTREMAL_SCS_4M6_p32`（`PWEIWBZ_kit@1/2/3` 三条 2 边 + `Periodic v 4` 收 `dist(v3,v0)`；第四合取 str 分裂——`str0→VASYYAU@0`(a01=2h0)、`str1→VASYYAU@1`、双非→`TUAPYYU@0` 二析取，均以 `quad_nonexist_849_p16` 取 `(v1,v2,v3,v0)` 反证，`b01=cstab` 收口）+ `BB_4M6_IMP_scs_4T3_p32`（EXTREMAL 四距离 + BBs annulus/periodic/fan + 16 残类逐点表核对）；加 1 行 `import VasMasterKit`。
 ② **K7 底部**（k7slice-w1 交付，`6440d2a1`）：**17 件全真证**——prime 孪生 6（BB/MM × 3T4_prime2/3T3_prime/3M1_prime）+ prime ARROW 3 + prime IS_SCS 3（LA29 骨架 `_p32` 移植、9 格残类扫描）+ `SCS_4M7_SLICE_13/02`（`LKGRQUI_p27` 实例）+ `SLICE_ARROW×2`（`FZIOTEF_TRANS/UNION` + `PRO_EQU_INV_p33`）+ `STAB_SCS_4M7_ARROW_3T3_3M1_3T4` 头；import delta 恰 1 行 `+LocalAuto33`。
 ③ **编排者闸（亲跑）**：K6 patch worktree@`2de5d212` apply RC=0；**+115/−6**、删除面 2、禁项 0/0/0/0、import 1 行；直编 LA32 rc=0/err0/sorry-decls **60→58**；EXTREMAL/BB_4M6_IMP + 4 依赖件（VASYYAU/PWEIWBZ/TUAPYYU kit + `quad_nonexist_849_p16`）标准三；根面 md5 逐字节同。K7 patch worktree@`d31bbc5a` **`git apply -3` 唯一 import hunk 冲突，编排者手工合并（两 import 均保留）**；**+692/−65**、删除面 17、禁项 0、import 1 行；直编 rc=0/err0/sorry-decls **58→41**；17 件探针全标准三；根面 md5 逐字节同。两笔均已 push。
 ④ **口径**：LA32 p32 定理 124 / 余 sorry **41**（起点 60）；K6 余 3 件（`MM_4M6_IMP_MM_4T3` / `SCS_4M6_ARROW_SCS_4T3_STAB_4M6` / `NWDGKXH` 本体，+ `SCS_4T3_IS_SCS` 视需要）；K7 余 7 件（`MIN_NOT_STAND_4M7` / BB·MM_4M7 四孪生 / `SCS_4M7_ARROW_STAB_4M7_4M6` / `YOBIMPP` 本体）。
 ⑤ **第三批双车道（在飞）**：`k6-finish-w1`（K6 收线→`NWDGKXH_p32`，含 hexagons 4T3→4T5 arrow 定位）与 `k7-finish-w1`（K7 收线→`YOBIMPP_p32`）；两车道同文件但 K6 区（:1200-1500）/K7 区（:1800+）分离，无 import 变化预期。
-⑥ 下一条：续1112。
+⑥ 下一条：续1113。
 
 - **2026-11-14（09:12，续1109）**：**V25 `vasyyau-disch-w25` 落库 `e01fab51`（LocalConcl 四 discharge 接线 +17/−12，删除面恰 4 sorry）——四件转标准三；V26 `k6-extremal-w1` 发车（K6 第一刀 `EXTREMAL_SCS_4M6_p32`）**。
 ① **V25 交付**：`LocalConcl.lean` 四条 HOLD (b) 接线——`TUAPYYU_discharged := TUAPYYU_kit hmn`、`WKZZEEH_discharged := WKZZEEH_kit h`、`PWEIWBZ_discharged := PWEIWBZ_kit h`、`VASYYAU_discharged := VASYYAU_kit h`；加 1 行 `import Kepler.Text.VasMasterKit`（有意义的无环口径：LocalConcl import 闭包内 0 模块 import LocalConcl；`Assembly.lean:57` 是上层消费者，不动）。**四条 discharge 公共 API 全部转标准三**。
