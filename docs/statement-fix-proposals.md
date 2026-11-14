@@ -6932,4 +6932,9 @@ theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
 
 - **编排者批准（2026-11-14，按既定「合理 SF 预授权」；理由：现陈述机器可证不可满足、
   HOL 语义为蕴含、零消费者、证明已备）**。
-- 执行：`ocbicby5t1-w1` D3 单行落地（待回填 commit/探针）。
+- **执行（`c45eb7f4`，2026-11-14，编排者闸全绿）**：`ocbicby5t1-w1` D3 单 hunk 落地——
+  `LocalAuto22Close` +8/−11（加 `hbox` 前提 + 结论展平 + body 一行 `ocb_terminal_pent_taum2_core`；
+  8 个 `y…` 与 `hd1/hd2/hsub` 逐字不动；`ineqP22` 定义与其它声明零改动）。
+  Close/LA16 直编 **rc=0/err0**；`#print axioms terminal_pent_taum2_p22` 恰
+  `[propext, Classical.choice, Quot.sound]`；`empty_5T1_p22`/`OCBICBY_5T1_p22` 回归标准三；
+  Close `  sorry` 体 **3→2**（剩 `empty_6T1_p22`/`OCBICBY_p22`）；根面 md5 `246e952c…` 同。

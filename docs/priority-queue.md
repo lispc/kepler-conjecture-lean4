@@ -857,6 +857,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（18:05，续1135）**：**OCBICBY 5T1 收口 D3 落库 `c45eb7f4`（SF-109 执行，编排者闸全绿）：`terminal_pent_taum2_p22` 标准三——5T1 支三件全绿；Close sorry 3→2**。
+① 改动：`LocalAuto22Close` **+8/−11**（单 hunk）——加 `(hbox : ineqP22 [同 8 box] True)` 前提 + 结论展平 + body 一行 `exact ocb_terminal_pent_taum2_core …`；8 个 `y…` 参数与 `hd1/hd2/hsub` 逐字不动；`ineqP22` 定义与其它声明零改动。
+② 闸（亲跑 @`26efa98a`）：删除面恰 **1** 条 `  sorry`、新增 0；禁项 0/0/0；单 hunk；Close/LA16 直编 **rc=0/err0**；探针 `terminal_pent_taum2_p22`/`empty_5T1_p22`/`OCBICBY_5T1_p22` **全标准三**，`empty_6T1_p22`/`OCBICBY_p22` 仍 sorryAx（预期）；根面 md5 **`246e952c…` 同**；装池（旧件备份）。
+③ **5T1 支状态**：`terminal_pent_taum2_p22` / `empty_5T1_p22` / `OCBICBY_5T1_p22` 三件全标准三；`OCBICBY_p22` 总装配仍等 **6T1（ht4nn 箱）/ 4T3（LP wrapper 银行）** 解冻 + 14 支合取。
+④ SF-109 执行记录已回填（commit/探针/净行）。下一条：续1136。
 - **2026-11-14（17:35，续1134）**：**基线 AK 落地——perimeter 收线：SORRIED 58→57（Text 3→2）**。
 ① 仪器（`e2e_reach_map` @`dc998142`，原样）：**K_REACH 2,100,351（+1,125）/ SORRIED 57（−1）/ K_AXIOM 585（0/0）/ MODULES 5,310（+64）/ UNIVERSE 2,112,558（+943）/ COVERAGE 99.4222%（+0.0089pp）**；口径 II 38,651 / 57 / 585 / 49,301；TOTAL_VALUE_DECLS 2,099,666（+1,125）。
 ② **SORRIED 清单逐行 diff**：closed 恰 **{`Kepler.Text.TameLp.fully_surrounded_perimeter_bound`}**、added ∅；Axiom 名单 diff 0/0；根面 589 **逐字节 IDENTICAL**（md5 `246e952c…`）。
