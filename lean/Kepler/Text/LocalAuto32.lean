@@ -965,8 +965,19 @@ theorem MM_4M7_IMP_STAB_4M7_p32 (v : ℕ → V3) (i j : ℕ)
     (h1 : v ∈ MMsV39 scs4M7) (h2 : scsDiag 4 i j)
     (h3 : dist (v i) (v j) ≤ cstab) :
     MMsV39 (scsStabDiagV39 scs4M7 i j) ≠ ∅ := by
-  sorry
-  -- NEEDS: XWNHLMD_MM + MMS_IMP_BBS + BB_4M7_IMP_BB_STAN_4M7_p32.
+  have hk4 : scs4M7.k = 4 := rfl
+  have hd' : scsDiag scs4M7.k i j := by rw [hk4]; exact h2
+  exact XWNHLMD_MM_p33 scs4M7 (scsStabDiagV39 scs4M7 i j) v
+    SCS_4M7_IS_SCS_p29 (STAB_4M7_SCS_p33 i j hd').1 SCS_4M7_BASIC_p29
+    (STAB_4M7_SCS_p33 i j hd').2 rfl h1
+    (BB_4M7_IMP_BB_STAN_4M7_p32 v i j (MMS_IMP_BBS_p28 scs4M7 v h1) h2 h3)
+    (le_refl _)
+  -- DISCHARGED (k8-arrow-w1, 2026-11-14): in-region twin of the K7 private
+  -- `la32MM_4M7_IMP_STAB` (:2429; statements verbatim identical, same HOL
+  -- `MIQMCSN.hl:1101`). The twin sits below this declaration, so the body is
+  -- restated here rather than referenced (Lean has no forward references);
+  -- `K_SCS_4M7_p32` (:986, also below) is replaced by the `rfl` `hk4`.
+  -- `XWNHLMD_MM` over the proved `BB_4M7_IMP_BB_STAN_4M7_p32`.
 
 /-- `_p32` substrate: `scs_stab_diag_v39` is mod-`k` invariant in its
 diagonal indices (HOL `STAB_MOD`). -/
@@ -3089,25 +3100,51 @@ theorem SCS_4M8_13_SLICE_13_p32 :
 /-- HOL `SCS_4M8_13_ARROW_3T7` (MIQMCSN.hl:3336). -/
 theorem SCS_4M8_13_ARROW_3T7_p32 :
     scsArrowV39 {scs4M8_13} {scs3T7} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via {scs_prop_equ_v39 scs_3T7 1} +
-  -- SCS_4M8_13_SLICE_13_p32 + PRO_EQU_ID1/YXIONXL3 collapse.
+  have hm1 : isScsV39 (scsPropEquV39 scs3T7 1) :=
+    PROP_EQU_IS_SCS_p33 (s := scs3T7) rfl SCS_3T7_IS_SCS_p32 1
+  have hid : scsPropEquV39 (scsPropEquV39 scs3T7 1) 2 = scs3T7 :=
+    (PRO_EQU_ID1_p33 (s := scs3T7) (k := 3) rfl SCS_3T7_IS_SCS_p32 1).symm
+  have h2 : scsArrowV39 {scsPropEquV39 scs3T7 1} {scs3T7} := by
+    have h3 := YXIONXL3_p33 (scsPropEquV39 scs3T7 1) 2 hm1
+    rwa [hid] at h3
+  exact FZIOTEF_TRANS _ _ _ SCS_4M8_13_SLICE_13_p32 h2
+  -- DISCHARGED (k8-arrow-w1, 2026-11-14): HOL chain `FZIOTEF_TRANS` via
+  -- `{scs_prop_equ_v39 scs_3T7 1}` — `SCS_4M8_13_SLICE_13` into that set,
+  -- then `YXIONXL3` at shift `2` collapsed back to `scs_3T7` by `PRO_EQU_ID1`
+  -- (`3 - 1 MOD 3 = 2`, the HOL `ARITH_RULE` slot).
 
 /-- HOL `K_SCS_OPP_3T7` (MIQMCSN.hl:3346). -/
 theorem K_SCS_OPP_3T7_p32 : (scsOppV39 scs3T7).k = 3 := rfl
 
 /-- HOL `SCS_3T7_OPP_IS_SCS` (MIQMCSN.hl:3350). -/
-theorem SCS_3T7_OPP_IS_SCS_p32 : isScsV39 (scsOppV39 scs3T7) := by
-  sorry
-  -- NEEDS: hexagons OPP_IS_SCS kit (peropp/peropp2 mod-3 periodicity +
-  -- symmetry + ordering + card bound for scs_3T7).
+theorem SCS_3T7_OPP_IS_SCS_p32 : isScsV39 (scsOppV39 scs3T7) :=
+  OPP_IS_SCS_p33 scs3T7 SCS_3T7_IS_SCS_p32
+  -- DISCHARGED (k8-arrow-w1, 2026-11-14): HOL applies the generic
+  -- `OPP_IS_SCS` to `scs_3T7`; no mod-3 table sweep is needed (the `peropp`
+  -- transport is the LA33 `OPP_IS_SCS_p33` kit).
 
 /-- HOL `SCS_4M8_13_ARROW_3T7_OPP` (MIQMCSN.hl:3357). -/
 theorem SCS_4M8_13_ARROW_3T7_OPP_p32 :
     scsArrowV39 {scs4M8_02} {scsOppV39 scs3T7} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via {scs_4M8_13} + SCS_4M8_02_ARROW_4M8_13_p32
-  -- + SCS_4M8_13_ARROW_3T7_p32 + YXIONXL2 (opp arrow on scs_3T7).
+  have hopp : isScsV39 (scsOppV39 scs3T7) := SCS_3T7_OPP_IS_SCS_p32
+  have hm2 : isScsV39 (scsPropEquV39 (scsOppV39 scs3T7) 2) :=
+    PROP_EQU_IS_SCS_p33 (s := scsOppV39 scs3T7) rfl hopp 2
+  have hid : scsPropEquV39 (scsPropEquV39 (scsOppV39 scs3T7) 2) 1
+      = scsOppV39 scs3T7 :=
+    (PRO_EQU_ID1_p33 (s := scsOppV39 scs3T7) (k := 3) rfl hopp 2).symm
+  have h2 : scsArrowV39 {scsPropEquV39 (scsOppV39 scs3T7) 2}
+      {scsOppV39 scs3T7} := by
+    have h3 := YXIONXL3_p33 (scsPropEquV39 (scsOppV39 scs3T7) 2) 1 hm2
+    rwa [hid] at h3
+  exact FZIOTEF_TRANS _ _ _ SCS_4M8_02_SLICE_02_p32 h2
+  -- DISCHARGED (k8-arrow-w1, 2026-11-14): HOL chain `FZIOTEF_TRANS` via
+  -- `{scs_prop_equ_v39 (scs_opp_v39 scs_3T7) 2}` — `SCS_4M8_02_SLICE_02`
+  -- into that set, then `YXIONXL3` at shift `1` collapsed back to
+  -- `scs_opp_v39 scs_3T7` by `PRO_EQU_ID1` (`3 - 2 MOD 3 = 1`).
+  -- The stale NEEDS `+ YXIONXL2` is not usable here: HOL/the LA33 twin carry
+  -- the gate `~(k <= 3)` (`3 < s.k`) and `k = 3` for 3T7; the HOL block's
+  -- `SCS_OPP_REFL`/`YXIONXL2` tail is a `{s} -> {s}` identity step that the
+  -- `PRO_EQU_ID1` collapse above makes unnecessary.
 
 /-- HOL `PROP_OPP_4M8_13` (MIQMCSN.hl:3377). DISCHANGED: componentwise
 `ScsV39.mk.injEq`; the four table components are 16-cell residue sweeps —
@@ -3157,16 +3194,25 @@ theorem PROP_OPP_4M8_13_p32 :
 /-- HOL `SCS_4M8_02_ARROW_4M8_13` (MIQMCSN.hl:3410). -/
 theorem SCS_4M8_02_ARROW_4M8_13_p32 :
     scsArrowV39 {scs4M8_02} {scs4M8_13} := by
-  sorry
-  -- NEEDS: PROP_OPP_4M8_13_p32 + YXIONXL2 (opp arrow) + YXIONXL3 /
-  -- OPP_IS_SCS on scs_4M8_02.
+  have h1 : scsArrowV39 {scs4M8_02} {scsOppV39 scs4M8_02} :=
+    YXIONXL2_p33 scs4M8_02 SCS_4M8_02_IS_SCS_p32
+      (by rw [K_SCS_4M8_02_p32]; norm_num)
+  have h2 : scsArrowV39 {scsOppV39 scs4M8_02} {scs4M8_13} := by
+    have h3 := YXIONXL3_p33 (scsOppV39 scs4M8_02) 2
+      (OPP_IS_SCS_p33 scs4M8_02 SCS_4M8_02_IS_SCS_p32)
+    rwa [← PROP_OPP_4M8_13_p32] at h3
+  exact FZIOTEF_TRANS _ _ _ h1 h2
+  -- DISCHARGED (k8-arrow-w1, 2026-11-14): HOL chain `FZIOTEF_TRANS` via
+  -- `{scs_opp_v39 (scs_4M8_02)}` — `YXIONXL2` (`k = 4 > 3`) then
+  -- `YXIONXL3` at shift `2` against `OPP_IS_SCS`, with the target rewritten by
+  -- `PROP_OPP_4M8_13` (`scs_4M8_13 = pe (opp (scs_4M8_02)) 2`).
 
 /-- HOL `SCS_4M8_02_ARROW_3T7` (MIQMCSN.hl:3428). -/
 theorem SCS_4M8_02_ARROW_3T7_p32 :
-    scsArrowV39 {scs4M8_02} {scs3T7} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via {scs_4M8_13} + SCS_4M8_02_ARROW_4M8_13_p32
-  -- + SCS_4M8_13_ARROW_3T7_p32.
+    scsArrowV39 {scs4M8_02} {scs3T7} :=
+  FZIOTEF_TRANS _ _ _ SCS_4M8_02_ARROW_4M8_13_p32 SCS_4M8_13_ARROW_3T7_p32
+  -- DISCHARGED (k8-arrow-w1, 2026-11-14): HOL `FZIOTEF_TRANS` via
+  -- `{scs_4M8_13}` (the two links above).
 
 /-- HOL `MIQMCSN` (MIQMCSN.hl:3436). -/
 theorem MIQMCSN_p32 :
