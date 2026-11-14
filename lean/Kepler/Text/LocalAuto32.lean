@@ -108,6 +108,7 @@ import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto20
 import Kepler.Text.LocalAuto23
 import Kepler.Text.LocalAuto29
+import Kepler.Text.VasMasterKit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -995,18 +996,126 @@ theorem EXTREMAL_SCS_4M6_p32 :
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 1) (v 2) = 2 ∧ dist (v 2) (v 3) = 2 ∧
     dist (v 3) (v 0) = 2 ∧ dist (v 0) (v 1) = cstab := by
-  sorry
-  -- NEEDS: main_nonlinear_terminal_v11 + MMS_IMP_BBS + BB_VV_FUN_EQ
-  -- + SCS_4M6_STAND_OR_PRO_p32 + VASYYAU (str case split).
+  intro h v hv hdist
+  -- substrate: `SCS` record facts, `MMs` -> `BBs`, periodicity `v 4 = v 0`
+  have his : isScsV39 scs4M6' := SCS_4M6_IS_SCS_p29
+  have hbas : scsBasicV39 scs4M6' := SCS_4M6_BASIC
+  have hk : scs4M6'.k = 4 := K_SCS_4M6
+  have hper : Periodic v 4 := by
+    have hp := (MMS_IMP_BBS_p28 scs4M6' v hv).2.1
+    rw [hk] at hp
+    exact hp
+  have hv4 : v 4 = v 0 := by simpa using hper 0
+  have hdiag : ∀ i j, scsDiag 4 i j →
+      scs4M6'.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧ 4 * h0 < scs4M6'.b i j := by
+    intro i j hd
+    exact ⟨(h0_LT_B_SCS_4M6_p32).2 i j hd, hdist i j hd, (h0_LT_B_SCS_4M6_p32).1 i j hd⟩
+  have hval : ∀ i, (scs4M6'.a i (i + 1) = 2 ∧ scs4M6'.b i (i + 1) = 2 * h0) ∨
+      (scs4M6'.a i (i + 1) = 2 * h0 ∧ scs4M6'.b i (i + 1) = cstab) :=
+    SCS_4M6_STAND_OR_PRO_p32
+  obtain ⟨ha12, ha23, ha34, ha01, ha14, hb01⟩ := SCS_4M6_STAND_p32
+  -- the three unit edges (HOL: `PWEIWBZ @ 1/2/3`)
+  have h12 : dist (v 1) (v 2) = 2 :=
+    PWEIWBZ_kit h scs4M6' v 1 his hbas hk hv hdiag hval ha12
+  have h23 : dist (v 2) (v 3) = 2 :=
+    PWEIWBZ_kit h scs4M6' v 2 his hbas hk hv hdiag hval ha23
+  have h34 : dist (v 3) (v 4) = 2 :=
+    PWEIWBZ_kit h scs4M6' v 3 his hbas hk hv hdiag hval ha34
+  have h30 : dist (v 3) (v 0) = 2 := by
+    rw [← hv4]
+    exact h34
+  refine ⟨h12, h23, h30, ?_⟩
+  -- the quad contradiction: `(v 1, v 2, v 3, v 0)` is a `2,2,2,2*h0` quad
+  -- with both diagonals above `cstab` (HOL: `quad_nonexist_849`)
+  have hd13 : scsDiag 4 1 3 := by unfold scsDiag; decide
+  have hd20 : scsDiag 4 2 0 := by unfold scsDiag; decide
+  have hquad : dist (v 1) (v 0) = 2 * h0 → False := fun h10 =>
+    quad_nonexist_849_p16 h ⟨v 1, v 2, v 3, v 0, h12, h23, h30, h10,
+      le_of_lt (hdist 1 3 hd13), le_of_lt (hdist 2 0 hd20)⟩
+  -- HOL: `scs_is_str` case split at `0`, then at `1`
+  by_cases hs0 : scsIsStr scs4M6' v 0
+  · -- `str 0`: `VASYYAU @ 0` pins `dist(v0,v1) = a 0 1 = 2*h0`
+    obtain ⟨hd01, -⟩ := VASYYAU_kit h scs4M6' v 0 his hbas hk hv hdiag hval hs0
+    exact (hquad (by simpa [dist_comm] using hd01.trans ha01)).elim
+  · by_cases hs1 : scsIsStr scs4M6' v 1
+    · -- `str 1`: `VASYYAU @ 1` pins `dist(v1,v4) = a 1 4 = 2*h0`
+      obtain ⟨-, hd14⟩ := VASYYAU_kit h scs4M6' v 1 his hbas hk hv hdiag hval hs1
+      have h14 : dist (v 1) (v 4) = 2 * h0 := hd14.trans ha14
+      have h10 : dist (v 1) (v 0) = 2 * h0 := by
+        rw [← hv4]
+        exact h14
+      exact (hquad h10).elim
+    · -- `~str 0 ∧ ~str 1`: `TUAPYYU @ 0` splits `a 0 1` vs `b 0 1`
+      obtain hd01 | hd01 :=
+        TUAPYYU_kit h scs4M6' v 0 his hbas hk hv hdiag hval hs0 hs1
+      · exact (hquad (by simpa [dist_comm] using hd01.trans ha01)).elim
+      · exact hd01.trans hb01
 
 /-- HOL `BB_4M6_IMP_scs_4T3` (MIQMCSN.hl:1992). -/
 theorem BB_4M6_IMP_scs_4T3_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M6' →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     BBsV39 scs4T3 v := by
-  sorry
-  -- NEEDS: EXTREMAL_SCS_4M6_p32 + BBs_v39 pointwise table match
-  -- (FUNLIST_EXPLICIT on scs_4T3 vs the extremal distances).
+  intro h v hv hdiag
+  obtain ⟨h12, h23, h30, h01⟩ := EXTREMAL_SCS_4M6_p32 h v hv hdiag
+  have hBB : BBsV39 scs4M6' v := MMS_IMP_BBS_p28 scs4M6' v hv
+  have hk6 : scs4M6'.k = 4 := K_SCS_4M6
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [hk6] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  -- the two `cstab` diagonals and the `6` upper bounds inherited from `scs_4M6'`
+  have hd13 : scsDiag 4 1 3 := by unfold scsDiag; decide
+  have hd02 : scsDiag 4 0 2 := by unfold scsDiag; decide
+  have h13lt : cstab < dist (v 1) (v 3) := hdiag 1 3 hd13
+  have h02lt : cstab < dist (v 0) (v 2) := hdiag 0 2 hd02
+  have hb02 : dist (v 0) (v 2) ≤ 6 := by
+    have h := (hBB.2.2.1 0 2).2
+    rwa [show scs4M6'.b 0 2 = 6 from by
+      simp [scs4M6', mkUnadornedV39, funlistV39, psort, assocdV39]] at h
+  have hb13 : dist (v 1) (v 3) ≤ 6 := by
+    have h := (hBB.2.2.1 1 3).2
+    rwa [show scs4M6'.b 1 3 = 6 from by
+      simp [scs4M6', mkUnadornedV39, funlistV39, psort, assocdV39]] at h
+  -- both orientations of the extremal corpus
+  have hd01' : dist (v 0) (v 1) = cstab := h01
+  have hd10' : dist (v 1) (v 0) = cstab := by rw [dist_comm]; exact h01
+  have hd12' : dist (v 1) (v 2) = 2 := h12
+  have hd21' : dist (v 2) (v 1) = 2 := by rw [dist_comm]; exact h12
+  have hd23' : dist (v 2) (v 3) = 2 := h23
+  have hd32' : dist (v 3) (v 2) = 2 := by rw [dist_comm]; exact h23
+  have hd30' : dist (v 3) (v 0) = 2 := h30
+  have hd03' : dist (v 0) (v 3) = 2 := by rw [dist_comm]; exact h30
+  have h02lo : cstab ≤ dist (v 0) (v 2) := le_of_lt h02lt
+  have h20lo : cstab ≤ dist (v 2) (v 0) := by rw [dist_comm]; exact le_of_lt h02lt
+  have h02hi : dist (v 0) (v 2) ≤ 6 := hb02
+  have h20hi : dist (v 2) (v 0) ≤ 6 := by rw [dist_comm]; exact hb02
+  have h13lo : cstab ≤ dist (v 1) (v 3) := le_of_lt h13lt
+  have h31lo : cstab ≤ dist (v 3) (v 1) := by rw [dist_comm]; exact le_of_lt h13lt
+  have h13hi : dist (v 1) (v 3) ≤ 6 := hb13
+  have h31hi : dist (v 3) (v 1) ≤ 6 := by rw [dist_comm]; exact hb13
+  refine ⟨hBB.1, ?_, ?_, ?_⟩
+  · simpa [K_SCS_4T3_p32] using hper
+  · intro i j
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hamod : scs4T3.a i j = scs4T3.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hbmod : scs4T3.b i j = scs4T3.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hvij : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    rw [hamod, hbmod, hvij]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [scs4T3, mkUnadornedV39, funlistV39, psort, assocdV39, dist_self,
+        hd01', hd10', hd12', hd21', hd23', hd32', hd30', hd03',
+        h02lo, h20lo, h02hi, h20hi, h13lo, h31lo, h13hi, h31hi]
+  · exact Or.inr ((hBB.2.2.2).resolve_left (by rw [K_SCS_4M6]; norm_num))
 
 /-- HOL `MM_4M6_IMP_MM_4T3` (MIQMCSN.hl:2031). -/
 theorem MM_4M6_IMP_MM_4T3_p32 :
