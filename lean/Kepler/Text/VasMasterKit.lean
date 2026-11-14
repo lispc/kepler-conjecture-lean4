@@ -1458,4 +1458,175 @@ private theorem pweiwbz_C_a12ne2 (h : main_nonlinear_terminal_v11) (s : ScsV39)
   exact CUXVZOZ_p21 h s FF 4 p v hFF.symm his hk.symm (by norm_num) hv hb P.gen hd
     (fun i j hdij _ => P.diagLt i j hdij) P.diagB hang hcase1 ha01 (le_of_eq P.b01) h2 hdc
 
+/-! ## `PWEIWBZ`, the `norm ≠ 2` leaves (VASYYAU.hl:1255-1290 / :1881-1953)
+
+The two remaining leaves of the `PWEIWBZ` quad: at a *straight* index `p`
+(`str p` branch) and at `p+1` (`str (p+1)` branch) respectively, with the
+vertex radius off the annulus boundary (`norm ≠ 2`).  Both close through
+`IMJXPHRv2` (NUXCOEA.hl:7717), whose three non-substrate premises
+(non-collinearity, wedge membership, no-lunar) are produced uniformly at the
+straight index by `pweiwbz_str_arc`.
+-/
+
+/-- Producer triple of `IMJXPHRv2` at a straight index `l` (`norm (v l) ≠ 2` is
+*not* needed for it): given `scsIsStr s v l`,
+* `¬Collinear3 0 (v (l+1)) (v (l+3))` — `PROPERTIES_GENERIC_LOCAL_FAN_ALT`
+  (HOL `:2632-2647` route, LA14:4277) + `scsGeneric` (`GSXRFWM_p33`);
+* `v l ∈ affGt {0} {v (l+1), v (l+3)}` — `coplanar_aff_gt_simple_p18` at
+  `i = l+3` (LA18:1372), the coplanarity being `AZIM_COND_FOR_COPLANAR`
+  (LA6:6480) fed with the straight azimuth at `l` transported to `l+4`;
+* `¬Lunar v1 (v l) V E` — `CIZMRRH` trichotomy (LA3:2734) with the generic
+  branch `scsGeneric` supplies. -/
+private theorem pweiwbz_str_arc (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (l : ℕ) (his : isScsV39 s) (hb : scsBasicV39 s) (hk : s.k = 4)
+    (hv : v ∈ MMsV39 s) (hstr : scsIsStr s v l) :
+    ¬ Collinear3 0 (v (l + 1)) (v (l + 3)) ∧
+      (v l ∈ affGt {0} {v (l + 1), v (l + 3)}) ∧
+      (∀ (V : Set V3) (E : Set (Set V3)) (v1 : V3),
+        V = Set.range v → E = (Set.range fun i : ℕ => {v i, v (i + 1)}) →
+          ¬ Lunar v1 (v l) V E) := by
+  let FF : Set (V3 × V3) := Set.range fun i => (v i, v (i + 1))
+  have hgen : scsGeneric v := GSXRFWM_p33 s v his hk hv
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hv
+  have hper : Periodic v 4 := by
+    have h1 := hBB.2.1
+    rw [hk] at h1
+    exact h1
+  have hcl : ConvexLocalFan (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF :=
+    BBS_IMP_CONVEX_LOCAL_FAN_p34 s 4 v (by omega) hk hBB
+  have hvne : ∀ i j : ℕ, v i = v j → i % 4 = j % 4 := by
+    intro i j he
+    have h1 := (BB_VV_FUN_EQ_p26 s v his hBB i j).mp he
+    rwa [hk] at h1
+  -- ═══ A. the straight azimuth at `l` ═══
+  have haz : azim 0 (v l) (v (l + 1)) (v (l + 3)) = Real.pi := by
+    have h' : azim 0 (v l) (v (l + 1)) (v (l + (s.k - 1))) = Real.pi := hstr
+    rw [hk] at h'
+    simpa only [show l + (4 - 1) = l + 3 by omega] using h'
+  -- ═══ B. non-collinearity ═══
+  have hnc : ¬ Collinear3 0 (v (l + 1)) (v (l + 3)) :=
+    PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF
+      (v (l + 1)) (v (l + 3)) hcl.1 ⟨l + 1, rfl⟩ ⟨l + 3, rfl⟩
+      (fun he => by have h1 := hvne (l + 1) (l + 3) he; omega) hgen
+  -- ═══ C. the wedge membership ═══
+  have h4 : v (l + 4) = v l := hper l
+  have h5 : v (l + 5) = v (l + 1) := by
+    have h1 := hper (l + 1)
+    simpa only [show (l + 1) + 4 = l + 5 by omega] using h1
+  have hcp : Coplanar ({0, v (l + 3), v (l + 4), v (l + 5)} : Set V3) := by
+    have haz' : azim 0 (v (l + 4)) (v (l + 5)) (v (l + 3)) = Real.pi := by
+      rw [h4, h5]
+      exact haz
+    have hset : ({0, v (l + 4), v (l + 5), v (l + 3)} : Set V3) =
+        {0, v (l + 3), v (l + 4), v (l + 5)} := by
+      ext x
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [← hset]
+    exact (AZIM_COND_FOR_COPLANAR 0 (v (l + 4)) (v (l + 5)) (v (l + 3))).mp
+      (Or.inr haz')
+  have hcol : ∀ j : ℕ, v j ≠ v (l + 3) → ¬ Collinear3 0 (v (l + 3)) (v j) :=
+    fun j hj => PROPERTIES_GENERIC_LOCAL_FAN_ALT_p14 (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF
+      (v (l + 3)) (v j) hcl.1 ⟨l + 3, rfl⟩ ⟨j, rfl⟩ (Ne.symm hj) hgen
+  have haff0 : v (l + 4) ∈ affGt {0} {v (l + 3), v (l + 5)} :=
+    coplanar_aff_gt_simple_p18 s 4 v (l + 3) his hk (by norm_num) hv hb hcol hcp
+  have haff : v l ∈ affGt {0} {v (l + 1), v (l + 3)} := by
+    rw [h4, h5, Set.pair_comm] at haff0
+    exact haff0
+  -- ═══ D. the `¬Lunar` premise ═══
+  have hlf3 : localFan_p3 (Set.range v)
+      (Set.range fun i => ({v i, v (i + 1)} : Set V3)) FF :=
+    localFan_p3.of_LocalFan_noIso hcl.1 fun x hx => by
+      obtain ⟨i, rfl⟩ := hx
+      exact ⟨v (i + 1), Set.mem_range_self i⟩
+  have hlunar : ∀ (V : Set V3) (E : Set (Set V3)) (v1 : V3),
+      V = Set.range v → E = (Set.range fun i : ℕ => {v i, v (i + 1)}) →
+        ¬ Lunar v1 (v l) V E := by
+    intro V E v1 hV hE hl
+    subst hV
+    subst hE
+    have hlun3 : lunar_p3 (v1, v l) (Set.range v)
+        (Set.range fun i : ℕ => ({v i, v (i + 1)} : Set V3)) := by
+      simpa only [lunar_p3, Lunar, circular_p3, Circular, Collinear3] using hl
+    rcases CIZMRRH hlf3 with ⟨-, hno⟩ | ⟨-, hno⟩ | ⟨-, hno⟩
+    · exact hno (Or.inr ⟨v1, v l, hlun3⟩)
+    · exact hno (Or.inl hgen)
+    · exact hno (Or.inl hgen)
+  exact ⟨hnc, haff, hlunar⟩
+
+/-- HOL `VASYYAU.hl:1255-1290`, `scs_is_str s v p` branch, `~(2 = norm (v p))`:
+the straight vertex at `p` has `dist(v p, v(p+1)) = s.a p (p+1)` by
+`IMJXPHRv2` (NUXCOEA.hl:7717); with the value-table premise
+`a(p,p+1) = 2` this is the leaf `dist = 2`. -/
+private theorem pweiwbz_B_norm_ne (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s) (hb : scsBasicV39 s) (hk : s.k = 4)
+    (hv : v ∈ MMsV39 s)
+    (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j)
+    (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+    (hs1 : scsIsStr s v p) (hnne : ‖v p‖ ≠ 2) (ha : s.a p (p + 1) = 2) :
+    dist (v p) (v (p + 1)) = 2 := by
+  obtain ⟨hnc, haff, hlunar⟩ := pweiwbz_str_arc h s v p his hb hk hv hs1
+  have hnc' : ¬ Collinear ℝ ({0, v (p + 1), v (p + (s.k - 1))} : Set V3) := by
+    rw [hk]
+    simpa only [Collinear3] using hnc
+  have haff' : v p ∈ affGt {0} {v (p + 1), v (p + (s.k - 1))} := by
+    rw [hk]
+    simpa using haff
+  obtain ⟨h1, -⟩ := IMJXPHRv2_p28 s 4 v p hk his hv hs1 (by norm_num) hnc' haff'
+    (fun i hi => (hdiag p i hi).2.2) hnne
+    (fun i hi => lt_of_le_of_lt (hdiag p i hi).1 (hdiag p i hi).2.1)
+    (fun i => by simp [BASIC_IMP_NOT_J_p25 s hb p i]) hlunar
+  exact h1.symm.trans ha
+
+/-- HOL `VASYYAU.hl:1881-1953`, `scs_is_str s v (p+1)` branch,
+`~(2 = norm (v (p+1)))`: `IMJXPHRv2` at `l = p+1` gives
+`dist(v(p+1), v(p+4)) = s.a (p+1) (p+4)`; the `4`-periodicity of `s.a` and of
+`v` plus the `a`-symmetry turn the right-hand side into `a(p,p+1) = 2` and the
+edge into `(p,p+1)`. -/
+private theorem pweiwbz_C_norm_ne (h : main_nonlinear_terminal_v11) (s : ScsV39)
+    (v : ℕ → V3) (p : ℕ) (his : isScsV39 s) (hb : scsBasicV39 s) (hk : s.k = 4)
+    (hv : v ∈ MMsV39 s)
+    (hdiag : ∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j)
+    (hval : ∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab))
+    (ha : s.a p (p + 1) = 2) (hstr1 : scsIsStr s v (p + 1))
+    (hnne : ‖v (p + 1)‖ ≠ 2) :
+    dist (v p) (v (p + 1)) = 2 := by
+  obtain ⟨hnc, haff, hlunar⟩ := pweiwbz_str_arc h s v (p + 1) his hb hk hv hstr1
+  have hnc' : ¬ Collinear ℝ
+      ({0, v ((p + 1) + 1), v ((p + 1) + (s.k - 1))} : Set V3) := by
+    rw [hk]
+    simpa only [Collinear3] using hnc
+  have haff' : v (p + 1) ∈ affGt {0} {v ((p + 1) + 1), v ((p + 1) + (s.k - 1))} := by
+    rw [hk]
+    simpa using haff
+  -- periodicity of the realisation and of the `a` registry
+  have hBB : BBsV39 s v := MMS_IMP_BBS_p28 s v hv
+  have hper : Periodic v 4 := by
+    have h1 := hBB.2.1
+    rw [hk] at h1
+    exact h1
+  have his' : isScsV39 s := his
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, -, -, hsym, -, -, -, -, -, -, -, -⟩ := his
+  have hpa4 : Periodic2 s.a 4 := hk ▸ hpa
+  have ha14 : s.a (p + 1) (p + 4) = 2 :=
+    ((hpa4 (p + 1) p).2).trans (((hsym (p + 1) p).1).trans ha)
+  obtain ⟨-, h2⟩ := IMJXPHRv2_p28 s 4 v (p + 1) hk his' hv hstr1 (by norm_num) hnc' haff'
+    (fun i hi => (hdiag (p + 1) i hi).2.2) hnne
+    (fun i hi => lt_of_le_of_lt (hdiag (p + 1) i hi).1 (hdiag (p + 1) i hi).2.1)
+    (fun i => by simp [BASIC_IMP_NOT_J_p25 s hb (p + 1) i]) hlunar
+  have h2' : s.a (p + 1) (p + 4) = dist (v (p + 1)) (v (p + 4)) := by
+    simpa only [show (p + 1) + (4 - 1) = p + 4 by omega] using h2
+  have hd : dist (v (p + 1)) (v (p + 4)) = 2 := h2'.symm.trans ha14
+  have hd' : dist (v (p + 1)) (v p) = 2 := by
+    rw [← hper p]
+    exact hd
+  simpa only [dist_comm] using hd'
+
 end Kepler.Text
