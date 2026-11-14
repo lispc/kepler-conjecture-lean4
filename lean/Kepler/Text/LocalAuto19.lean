@@ -1980,7 +1980,52 @@ theorem sqrt20_p19 : 4.47 ≤ Real.sqrt 20 := by
   have h3 : Real.sqrt (4.47 ^ 2) ≤ Real.sqrt 20 := Real.sqrt_le_sqrt h2
   rwa [Real.sqrt_sq (by norm_num)] at h3
 
-/-- HOL `terminal_pent_taum126_012` (pent_hex.hl:1626). NEEDS-DB. -/
+/-- Helper: `dih_y` is invariant under swapping the 2nd/3rd (and 5th/6th)
+slots — the same dihedral edge with the other two vertices exchanged
+(HOL `dih_y_sym` route through `dih_x`/`atn2`; twins:
+LocalAuto38's `dihY_swap23_p38`, PackingAuto25's `dihY_sym23P25` — the
+proof below is the latter's verbatim template). DISCHARGED 2026-11-14
+(hexsym-w1). -/
+theorem dihY_swap23_p19 (a b c d e f : ℝ) :
+    dihY a b c d e f = dihY a c b d f e := by
+  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
+    by simp only [deltaX]; ring
+  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
+    by simp only [deltaX4]; ring
+  show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)
+      = dihXf (a * a) (c * c) (b * b) (d * d) (f * f) (e * e)
+  unfold dihXf
+  rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f),
+    hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)]
+
+/-- HOL `taum_sym_cases2` (pent_hex.hl:2414): the four S3 symmetries of
+`taum`. DISCHARGED 2026-11-14 (hexsym-w1): `taum` is the `solY`-weighted
+sum of the three `lnazim` (= `ly i * dihY`) edges from the origin; each
+S3 permutation permutes those three terms, and each permuted `dihY` is
+related to the original by `dihY_swap23_p19` (the LA38 `taum_sym2`
+route, two-conjunct core composed here by rewrites). -/
+theorem taum_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y2 y1 y3 y5 y4 y6 = taum y1 y2 y3 y4 y5 y6 ∧
+      taum y1 y3 y2 y4 y6 y5 = taum y1 y2 y3 y4 y5 y6 ∧
+      taum y3 y1 y2 y6 y4 y5 = taum y1 y2 y3 y4 y5 y6 ∧
+      taum y3 y2 y1 y6 y5 y4 = taum y1 y2 y3 y4 y5 y6 := by
+  have e1 : dihY y2 y1 y3 y5 y4 y6 = dihY y2 y3 y1 y5 y6 y4 :=
+    dihY_swap23_p19 _ _ _ _ _ _
+  have e2 : dihY y1 y3 y2 y4 y6 y5 = dihY y1 y2 y3 y4 y5 y6 :=
+    dihY_swap23_p19 _ _ _ _ _ _
+  have e3 : dihY y3 y2 y1 y6 y5 y4 = dihY y3 y1 y2 y6 y4 y5 :=
+    dihY_swap23_p19 _ _ _ _ _ _
+  refine ⟨?_, ?_, ?_, ?_⟩ <;>
+    simp only [taum, solY, lnazim, e1, e2, e3] <;> ring
+
+/-- HOL `terminal_pent_taum126_012` (pent_hex.hl:1626). DISCHARGED 2026-11-14
+(lane pent4-w1): the 135-side slotted-cell minimizer
+(`taud_minimizer_terminal_pent_cases_p19`) splits into `z1 = 2` (database
+conjunct "7903347843" with the `mud_126_135_p19` rotation), `z1 = 2 * h0`
+(`taud_2h0_p19`), `delta = 0` (`lemma_5546286427_p19`), and
+`0.12 <= taud z1` (linear arithmetic with the "3665919985" `taum` bound). -/
 theorem terminal_pent_taum126_012_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h126 : 0.12 ≤ taudP19 y126 y1 y2 y6 2 2)
@@ -1989,9 +2034,57 @@ theorem terminal_pent_taum126_012_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taudP19 y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taudP19 y135 y1 y3 y5 2 2
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hb1 : y1 ≤ (2.52:ℝ) := by rw [← h252]; exact c1.2
+  have hb2 : y2 ≤ (2.52:ℝ) := by rw [← h252]; exact c2.2
+  have hb3 : y3 ≤ (2.52:ℝ) := by rw [← h252]; exact c3.2
+  -- the slotted-cell minimizer for the 135 configuration at `d = 0`.
+  have hmem : y135 ∈ Set.Icc 2 (2 * h0) ∩ {q : ℝ | (0:ℝ) ≤ deltaY q y1 y3 y5 2 2} :=
+    ⟨⟨c8.1, c8.2⟩, h135⟩
+  obtain ⟨z1, hz1, hmin, hcases⟩ := taud_minimizer_terminal_pent_cases_p19 h 0 y135 y1 y3 y5 2 2
+    hmem c1.1 c1.2 c3.1 c3.2 c5.1 c5.2 rfl rfl (le_refl (0:ℝ))
+  have hz1l : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1u : z1 ≤ 2 * h0 := hz1.1.2
+  have hz1u' : z1 ≤ (2.52:ℝ) := by rw [← h252]; exact hz1u
+  have hz1d : (0:ℝ) ≤ deltaY z1 y1 y3 y5 2 2 := hz1.2
+  -- database conjunct "3665919985": the `taum` lower bound.
+  have hDB366 : mainEstimate_3665919985 :=
+    h "3665919985" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h366 := hDB366 y1 y2 y3 y4 y5 y6 c1.1 hb1 c2.1 hb2 c3.1 hb3 c4.1 c4.2 c5.1 c5.2 c6.1 c6.2
+  have hsw := (taum_sym_cases2_p19 y1 y2 y3 y4 y5 y6).2.1
+  rcases hcases with hz12 | hz12h0 | hd0 | htau
+  · -- case z1 = 2: database conjunct "7903347843" over the swapped config.
+    have hDB : mainEstimate_7903347843 :=
+      h "7903347843" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+    have hdb' : taum y1 y3 y2 y4 y6 y5 + yOfX (mud126xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5
+        - sol0 + (0.12:ℝ) > (0.616:ℝ) := hdb
+    have hmud : yOfX (mud126xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5
+        = yOfX (mud135xV1_p19 2 2 2) y1 y2 y3 y4 y5 y6 :=
+      mud_126_135_p19 (y1 * y1) (y3 * y3) (y2 * y2) (y4 * y4) (y6 * y6) (y5 * y5) 2 2 2
+    have hmud2 := taud_mud_135_x_p19 2 2 2 y1 y2 y3 y4 y5 y6 (by linarith) (by linarith)
+    rw [hsw, hmud, hmud2, flat_term_2_p19] at hdb'
+    rw [hz12] at hmin
+    linarith
+  · -- case z1 = 2 * h0: `taud_2h0_p19` gives nonnegativity.
+    have hz1d2 : (0:ℝ) ≤ deltaY (2 * h0) y1 y3 y5 2 2 := by rw [← hz12h0]; exact hz1d
+    have ht2h0 := taud_2h0_p19 y1 y3 y5 2 2 hz1d2 c1.2 c3.2
+    rw [hz12h0] at hmin
+    linarith
+  · -- case delta = 0: `lemma_5546286427_p19` (the 126 flat-term route).
+    have hdb := lemma_5546286427_p19 h z1 y1 y3 y2 y4 y6 y5 ⟨c1.1, hb1⟩ ⟨c3.1, hb3⟩ ⟨c2.1, hb2⟩
+      ⟨c4.1, c4.2⟩ ⟨c6.1, c6.2⟩ ⟨c5.1, c5.2⟩ ⟨hz1l, hz1u'⟩ hd0
+    have hft := taud_ge_flat_term_p19 z1 y1 y3 y5 2 2 hz1u c1.2 c3.2 hz1d
+    rw [hsw] at hdb
+    linarith
+  · -- case 0.12 <= taud z1: linear arithmetic with "3665919985".
+    linarith
 
-/-- HOL `terminal_pent_tau135_012` (pent_hex.hl:1717). NEEDS-DB. -/
+/-- HOL `terminal_pent_tau135_012` (pent_hex.hl:1717). DISCHARGED 2026-11-14
+(lane pent4-w1): swapped-slot application of `terminal_pent_taum126_012_p19`
+(the `taum_sym_cases2_p19` (23)(56) conjunct rewrites the central `taum`). -/
 theorem terminal_pent_tau135_012_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h135 : 0.12 ≤ taudP19 y135 y1 y3 y5 2 2)
@@ -2000,9 +2093,22 @@ theorem terminal_pent_tau135_012_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taudP19 y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taudP19 y135 y1 y3 y5 2 2
+  have hsw := (taum_sym_cases2_p19 y1 y3 y2 y4 y6 y5).2.1
+  have h' := terminal_pent_taum126_012_p19 h y1 y3 y2 y4 y6 y5 y135 y126 h135 h126
+  have h'' : (0.616:ℝ) < taudP19 y135 y1 y3 y5 2 2 + taum y1 y3 y2 y4 y6 y5
+      + taudP19 y126 y1 y2 y6 2 2 := h' c1 c3 c2 c4 c6 c5 c8 c7
+  rw [← hsw] at h''
+  linarith
 
-/-- HOL `terminal_pent_tau126_2` (pent_hex.hl:1784). NEEDS-DB. -/
+/-- HOL `terminal_pent_tau126_2` (pent_hex.hl:1784). DISCHARGED 2026-11-14
+(lane pent4-w1): the 135-side minimizer splits into `0.12 <= taud z1`
+(`terminal_pent_tau135_012_p19`), `z1 = 2` (database conjunct "7997589055"
+with the two `mud` rotations), `z1 = 2 * h0` (delta >= 20: "2320951108" +
+`taud_053_p19`; delta <= 20: "5429238960" + `delta_126_x_2h0_le_d_p19` +
+`taud_2h0_p19`), and `delta = 0` ("2565248885" + `flat_term2_126_x_eval_p19`
++ `taud_ge_flat_term_p19`). -/
 theorem terminal_pent_tau126_2_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h126 : y126 = 2) (h126' : 0 ≤ deltaY y126 y1 y2 y6 2 2)
@@ -2011,9 +2117,109 @@ theorem terminal_pent_tau126_2_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taudP19 y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taudP19 y135 y1 y3 y5 2 2
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hb1 : y1 ≤ (2.52:ℝ) := by rw [← h252]; exact c1.2
+  have hb2 : y2 ≤ (2.52:ℝ) := by rw [← h252]; exact c2.2
+  have hb3 : y3 ≤ (2.52:ℝ) := by rw [← h252]; exact c3.2
+  have hmem : y135 ∈ Set.Icc 2 (2 * h0) ∩ {q : ℝ | (0:ℝ) ≤ deltaY q y1 y3 y5 2 2} :=
+    ⟨⟨c8.1, c8.2⟩, h135⟩
+  obtain ⟨z1, hz1, hmin, hcases⟩ := taud_minimizer_terminal_pent_cases_p19 h 0 y135 y1 y3 y5 2 2
+    hmem c1.1 c1.2 c3.1 c3.2 c5.1 c5.2 rfl rfl (le_refl (0:ℝ))
+  have hz1l : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1u : z1 ≤ 2 * h0 := hz1.1.2
+  have hz1u' : z1 ≤ (2.52:ℝ) := by rw [← h252]; exact hz1u
+  have hz1d : (0:ℝ) ≤ deltaY z1 y1 y3 y5 2 2 := hz1.2
+  have hDB366 : mainEstimate_3665919985 :=
+    h "3665919985" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h366 := hDB366 y1 y2 y3 y4 y5 y6 c1.1 hb1 c2.1 hb2 c3.1 hb3 c4.1 c4.2 c5.1 c5.2 c6.1 c6.2
+  have hsw := (taum_sym_cases2_p19 y1 y2 y3 y4 y5 y6).2.1
+  have hy1nn : (0:ℝ) ≤ y1 := by linarith
+  have hy3nn : (0:ℝ) ≤ y3 := by linarith
+  have hy2nn : (0:ℝ) ≤ y2 := by linarith
+  by_cases ht : 0.12 ≤ taudP19 z1 y1 y3 y5 2 2
+  · -- case tau >= 0.12: the 012 lemma closes it.
+    have h012 := terminal_pent_tau135_012_p19 h y1 y2 y3 y4 y5 y6 y126 y135
+      (le_trans ht hmin) h126'
+    exact h012 c1 c2 c3 c4 c5 c6 c7 c8
+  rcases hcases with hz12 | hz12h0 | hd0 | htau
+  · -- case z1 = 2: database conjunct "7997589055".
+    have hDB : mainEstimate_7997589055 :=
+      h "7997589055" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+    have hdb' : taum y1 y3 y2 y4 y6 y5 + yOfX (mud126xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5 - sol0
+        + yOfX (mud135xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5 - sol0 > (0.616:ℝ) := hdb
+    have hm1 : yOfX (mud126xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5
+        = yOfX (mud135xV1_p19 2 2 2) y1 y2 y3 y4 y5 y6 :=
+      mud_126_135_p19 (y1 * y1) (y3 * y3) (y2 * y2) (y4 * y4) (y6 * y6) (y5 * y5) 2 2 2
+    have hm2 : yOfX (mud135xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5
+        = yOfX (mud126xV1_p19 2 2 2) y1 y2 y3 y4 y5 y6 :=
+      (mud_126_135_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) 2 2 2).symm
+    have hm1' := taud_mud_135_x_p19 2 2 2 y1 y2 y3 y4 y5 y6 hy1nn hy3nn
+    have hm2' := taud_mud_126_x_p19 2 2 2 y1 y2 y3 y4 y5 y6 hy1nn hy2nn
+    rw [hsw, hm1, hm2, hm1', hm2', flat_term_2_p19] at hdb'
+    rw [hz12] at hmin
+    rw [h126]
+    linarith
+  · -- case z1 = 2 * h0
+    rw [hz12h0] at hmin
+    rw [hz12h0] at hz1d
+    by_cases hd20 : (20:ℝ) ≤ deltaY (2 * h0) y1 y3 y5 2 2
+    · -- case delta >= 20: "2320951108" + taud_053.
+      have hDB : mainEstimate_2320951108 :=
+        h "2320951108" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+      have hdb' : taum y1 y3 y2 y4 y6 y5 + yOfX (mud135xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5 - sol0
+          + (0.053:ℝ) > (0.616:ℝ) := hdb
+      have hm2' := taud_mud_135_x_p19 2 2 2 y1 y3 y2 y4 y6 y5 hy1nn hy2nn
+      have h053 := taud_053_p19 y1 y3 y5 2 2 c1.2 c3.2 hd20
+      rw [hsw, hm2', flat_term_2_p19] at hdb'
+      rw [h126]
+      linarith
+    · -- case delta <= 20: "5429238960" + delta_126_x_2h0_le_d + taud_2h0.
+      have hd20' : deltaY (2 * h0) y1 y3 y5 2 2 ≤ 20 := le_of_not_ge hd20
+      have hDB : mainEstimate_5429238960 :=
+        h "5429238960" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+      have hdb' : (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (20:ℝ))
+          ∨ (taum y1 y3 y2 y4 y6 y5 + yOfX (mud135xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5 - sol0
+            > (0.616:ℝ)) := hdb
+      have hdle := delta_126_x_2h0_le_d_p19 h (deltaY (2 * h0) y1 y3 y5 2 2) (2 * h0) y1 y3 y2 y4 y6
+        y5 (by rw [h252]; norm_num) (le_refl (2 * h0)) c1.1 c1.2 c3.1 c3.2 c5.1 (by linarith)
+        hz1d hd20' rfl
+      have hm2' := taud_mud_135_x_p19 2 2 2 y1 y3 y2 y4 y6 y5 hy1nn hy2nn
+      have h2h0 := taud_2h0_p19 y1 y3 y5 2 2 hz1d c1.2 c3.2
+      rcases hdb' with h1 | h2
+      · linarith [hdle, h1]
+      · rw [hsw, hm2', flat_term_2_p19] at h2
+        rw [h126]
+        linarith
+  · -- case delta = 0: database conjunct "2565248885".
+    have hd0' : deltaY z1 y1 y3 y5 2 2 = 0 := hd0.symm
+    have hDB : mainEstimate_2565248885 :=
+      h "2565248885" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+    have hdb' : (taum y1 y3 y2 y4 y6 y5 + yOfX (flatTerm2_126x_p19 0 4 4) y1 y3 y2 y4 y6 y5
+          + yOfX (mud135xV1_p19 2 2 2) y1 y3 y2 y4 y6 y5 - sol0 > (0.616:ℝ))
+        ∨ (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (0:ℝ)) := hdb
+    have hft := flat_term2_126_x_eval_p19 h 0 z1 y1 y3 y2 y4 y6 y5 hd0' (le_refl (0:ℝ))
+      (by norm_num) hz1l hz1u c1.1 c1.2 c3.1 c3.2 c5.1 (by linarith)
+    have hm2' := taud_mud_135_x_p19 2 2 2 y1 y3 y2 y4 y6 y5 hy1nn hy2nn
+    have hdle := delta_126_x_2h0_le_d_p19 h 0 z1 y1 y3 y2 y4 y6 y5 hz1l hz1u c1.1 c1.2 c3.1 c3.2
+      c5.1 (by linarith) (le_refl (0:ℝ)) (by norm_num) hd0'
+    have hftg := taud_ge_flat_term_p19 z1 y1 y3 y5 2 2 hz1u c1.2 c3.2 hz1d
+    rcases hdb' with h1 | h2
+    · rw [hsw, hft, hm2', flat_term_2_p19] at h1
+      rw [h126]
+      linarith
+    · linarith [hdle, h2]
 
-/-- HOL `terminal_pent_tau135_2` (pent_hex.hl:1903). NEEDS-DB. -/
+  · exact (ht htau).elim
+
+/-- HOL `terminal_pent_tau135_2` (pent_hex.hl:1903). DISCHARGED 2026-11-14
+(lane pent4-w1): swapped-slot application of `terminal_pent_tau126_2_p19`
+(the `taum_sym_cases2_p19` (23)(56) conjunct rewrites the central `taum`). -/
 theorem terminal_pent_tau135_2_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h135 : y135 = 2) (h126 : 0 ≤ deltaY y126 y1 y2 y6 2 2)
@@ -2022,9 +2228,24 @@ theorem terminal_pent_tau135_2_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taudP19 y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taudP19 y135 y1 y3 y5 2 2
+  have hsw := (taum_sym_cases2_p19 y1 y3 y2 y4 y6 y5).2.1
+  have h' := terminal_pent_tau126_2_p19 h y1 y3 y2 y4 y6 y5 y135 y126 h135 h135' h126
+  have h'' : (0.616:ℝ) < taudP19 y135 y1 y3 y5 2 2 + taum y1 y3 y2 y4 y6 y5
+      + taudP19 y126 y1 y2 y6 2 2 := h' c1 c3 c2 c4 c6 c5 c8 c7
+  rw [← hsw] at h''
+  linarith
 
-/-- HOL `terminal_pent_tau126_2h0` (pent_hex.hl:1932). NEEDS-DB. -/
+
+/-- HOL `terminal_pent_tau126_2h0` (pent_hex.hl:1932). DISCHARGED 2026-11-14
+(lane pent4-w1): the 135-side minimizer splits into `0.12 <= taud z1`
+(`terminal_pent_tau135_012_p19`), `z1 = 2` (`terminal_pent_tau135_2_p19`),
+`z1 = 2 * h0` (delta >= 20: `taud_053_p19` on both ears + "3665919985";
+delta <= 20: "5708641738" + `delta_126_x_2h0_le_d_p19` + `taud_2h0_p19`),
+and `delta = 0` ("1948775510" + `flat_term2_126_x_eval_p19` +
+`taud_ge_flat_term_p19`; the `delta_135_x` composite is transported across
+the `delta_y` slot symmetry to the hypothesis `20 <= delta_y y126 ...`). -/
 theorem terminal_pent_tau126_2h0_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h126 : y126 = 2 * h0) (h126' : 20 ≤ deltaY y126 y1 y2 y6 2 2)
@@ -2033,9 +2254,103 @@ theorem terminal_pent_tau126_2h0_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taudP19 y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taudP19 y135 y1 y3 y5 2 2
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hb1 : y1 ≤ (2.52:ℝ) := by rw [← h252]; exact c1.2
+  have hb2 : y2 ≤ (2.52:ℝ) := by rw [← h252]; exact c2.2
+  have hb3 : y3 ≤ (2.52:ℝ) := by rw [← h252]; exact c3.2
+  have hmem : y135 ∈ Set.Icc 2 (2 * h0) ∩ {q : ℝ | (0:ℝ) ≤ deltaY q y1 y3 y5 2 2} :=
+    ⟨⟨c8.1, c8.2⟩, h135⟩
+  obtain ⟨z1, hz1, hmin, hcases⟩ := taud_minimizer_terminal_pent_cases_p19 h 0 y135 y1 y3 y5 2 2
+    hmem c1.1 c1.2 c3.1 c3.2 c5.1 c5.2 rfl rfl (le_refl (0:ℝ))
+  have hz1l : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1u : z1 ≤ 2 * h0 := hz1.1.2
+  have hz1u' : z1 ≤ (2.52:ℝ) := by rw [← h252]; exact hz1u
+  have hz1d : (0:ℝ) ≤ deltaY z1 y1 y3 y5 2 2 := hz1.2
+  have hDB366 : mainEstimate_3665919985 :=
+    h "3665919985" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h366 := hDB366 y1 y2 y3 y4 y5 y6 c1.1 hb1 c2.1 hb2 c3.1 hb3 c4.1 c4.2 c5.1 c5.2 c6.1 c6.2
+  have hsw := (taum_sym_cases2_p19 y1 y2 y3 y4 y5 y6).2.1
+  have hy1nn : (0:ℝ) ≤ y1 := by linarith
+  have hy3nn : (0:ℝ) ≤ y3 := by linarith
+  have hy2nn : (0:ℝ) ≤ y2 := by linarith
+  have h20a : (20:ℝ) ≤ deltaY (2 * h0) y1 y2 y6 2 2 := by rw [← h126]; exact h126'
+  by_cases ht : 0.12 ≤ taudP19 z1 y1 y3 y5 2 2
+  · -- case tau >= 0.12: the 012 lemma closes it.
+    have h012 := terminal_pent_tau135_012_p19 h y1 y2 y3 y4 y5 y6 y126 y135
+      (le_trans ht hmin) (by linarith)
+    exact h012 c1 c2 c3 c4 c5 c6 c7 c8
+  rcases hcases with hz12 | hz12h0 | hd0 | htau
+  · -- case z1 = 2: the 135_2 lemma.
+    have h2 := terminal_pent_tau135_2_p19 h y1 y2 y3 y4 y5 y6 y126 z1 hz12 (by linarith) hz1d
+    have h2' : (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
+        + taudP19 z1 y1 y3 y5 2 2 := h2 c1 c2 c3 c4 c5 c6 c7 ⟨hz1l, hz1u⟩
+    rw [hz12] at hmin h2'
+    linarith
+  · -- case z1 = 2 * h0
+    rw [hz12h0] at hmin
+    rw [hz12h0] at hz1d
+    have h2h0 := taud_2h0_p19 y1 y3 y5 2 2 hz1d c1.2 c3.2
+    by_cases hd20 : (20:ℝ) ≤ deltaY (2 * h0) y1 y3 y5 2 2
+    · -- case delta >= 20: taud_053 on both ears + "3665919985".
+      have h053b := taud_053_p19 y1 y3 y5 2 2 c1.2 c3.2 hd20
+      have h053a := taud_053_p19 y1 y2 y6 2 2 c1.2 c2.2 h20a
+      rw [h126]
+      linarith
+    · -- case delta <= 20: "5708641738" + delta_126_x_2h0_le_d + taud_2h0.
+      have hd20' : deltaY (2 * h0) y1 y3 y5 2 2 ≤ 20 := le_of_not_ge hd20
+      have h053a := taud_053_p19 y1 y2 y6 2 2 c1.2 c2.2 h20a
+      have hDB : mainEstimate_5708641738 :=
+        h "5708641738" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+      have hdb' : ((taum y1 y3 y2 y4 y6 y5 + (0.053:ℝ) > (0.616:ℝ)) ∨
+          (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (20:ℝ))) := hdb
+      have hdle := delta_126_x_2h0_le_d_p19 h (deltaY (2 * h0) y1 y3 y5 2 2) (2 * h0) y1 y3 y2 y4 y6
+        y5 (by rw [h252]; norm_num) (le_refl (2 * h0)) c1.1 c1.2 c3.1 c3.2 c5.1 (by linarith)
+        hz1d hd20' rfl
+      rcases hdb' with h1 | h2
+      · rw [hsw] at h1
+        rw [h126]
+        linarith
+      · linarith [hdle, h2]
+  · -- case delta = 0: database conjunct "1948775510".
+    have hd0' : deltaY z1 y1 y3 y5 2 2 = 0 := hd0.symm
+    have hDB : mainEstimate_1948775510 :=
+      h "1948775510" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+    have hdb' : (taum y1 y3 y2 y4 y6 y5 + yOfX (flatTerm2_126x_p19 0 4 4) y1 y3 y2 y4 y6 y5
+          + yOfX (mud135xV1_p19 (2 * h0) 2 2) y1 y3 y2 y4 y6 y5 > (0.616:ℝ))
+        ∨ (yOfX (delta135x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 < (20:ℝ))
+        ∨ (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (0:ℝ)) := hdb
+    have hft := flat_term2_126_x_eval_p19 h 0 z1 y1 y3 y2 y4 y6 y5 hd0' (le_refl (0:ℝ))
+      (by norm_num) hz1l hz1u c1.1 c1.2 c3.1 c3.2 c5.1 (by linarith)
+    have hmud := taud_mud_135_x_p19 (2 * h0) 2 2 y1 y3 y2 y4 y6 y5 hy1nn hy2nn
+    have hftg := taud_ge_flat_term_p19 z1 y1 y3 y5 2 2 hz1u c1.2 c3.2 hz1d
+    have hdle := delta_126_x_2h0_le_d_p19 h 0 z1 y1 y3 y2 y4 y6 y5 hz1l hz1u c1.1 c1.2 c3.1 c3.2
+      c5.1 (by linarith) (le_refl (0:ℝ)) (by norm_num) hd0'
+    have hperm : yOfX (delta135x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5
+        = deltaY y126 y1 y2 y6 2 2 := by
+      rw [h126]
+      have h4 : (4:ℝ) * h0 * h0 = (2 * h0) * (2 * h0) := by ring
+      rw [h4]
+      unfold yOfX delta135x_p19 deltaY deltaX
+      rw [show (2:ℝ) * 2 = 4 from by norm_num]
+      ring
+    rcases hdb' with h1 | h2 | h3
+    · rw [hsw, hft, hmud, flat_term_2h0_p19] at h1
+      rw [h126]
+      linarith
+    · rw [hperm] at h2
+      linarith
+    · linarith [hdle, h3]
 
-/-- HOL `taud_sqrt20` (pent_hex.hl:2047). NEEDS-DB. -/
+  · exact (ht htau).elim
+
+/-- HOL `taud_sqrt20` (pent_hex.hl:2047). DISCHARGED 2026-11-14 (lane pent4-w1):
+`flat_term2_135_x_eval_p19` evaluates the composite to `flatTerm_p19 z1`, and
+the remaining factorwise inequality is `4.47 <= sqrt 20` times the
+nonnegativity of `mu_y z1 y1 y3` (HOL `REAL_LE_MUL2` route). -/
 theorem taud_sqrt20_p19 (h : mainNonlinearTerminalV11_p18) (z1 y1 y2 y3 y4 y5 y6 : ℝ)
     (bz : 2 ≤ z1) (bz' : z1 ≤ 2 * h0) (b1 : 2 ≤ y1) (b1' : y1 ≤ 2 * h0)
     (b3 : 2 ≤ y3) (b3' : y3 ≤ 2 * h0) (b5 : 3.01 ≤ y5) (b5' : y5 ≤ 3.915)
@@ -2043,9 +2358,33 @@ theorem taud_sqrt20_p19 (h : mainNonlinearTerminalV11_p18) (z1 y1 y2 y3 y4 y5 y6
     yOfX (flatTerm2_135x_p19 20 4 4) y1 y2 y3 y4 y5 y6
         + (0.012 + 0.01 * (2.52 * 2 - y1 - y3)) * 4.47
       ≤ taudP19 z1 y1 y3 y5 2 2 := by
-  sorry
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hzp : z1 ≤ (2.52:ℝ) := by rw [← h252]; exact bz'
+  have h1p : y1 ≤ (2.52:ℝ) := by rw [← h252]; exact b1'
+  have h3p : y3 ≤ (2.52:ℝ) := by rw [← h252]; exact b3'
+  have hmu : (0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y3) ≤ muY_p19 z1 y1 y3 := by
+    unfold muY_p19
+    linarith [hzp]
+  have hmu0 : (0:ℝ) ≤ (0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y3) := by
+    norm_num
+    linarith [h1p, h3p]
+  have hft := flat_term2_135_x_eval_p19 h 20 z1 y1 y2 y3 y4 y5 y6 hd (by norm_num) (by norm_num)
+    bz bz' b1 b1' b3 b3' b5 b5'
+  have h47 : (4.47:ℝ) ≤ Real.sqrt 20 := sqrt20_p19
+  have hmul : ((0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y3)) * 4.47
+      ≤ muY_p19 z1 y1 y3 * Real.sqrt 20 :=
+    mul_le_mul hmu h47 (by norm_num) (le_trans hmu0 hmu)
+  rw [hft, taudP19, hd]
+  linarith [hmul]
 
-/-- HOL `terminal_pent_tau126_delta20` (pent_hex.hl:2078). NEEDS-DB. -/
+/-- HOL `terminal_pent_tau126_delta20` (pent_hex.hl:2078). DISCHARGED 2026-11-14
+(lane pent4-w1): the 135-side minimizer splits into `0.12 <= taud z1`
+(`terminal_pent_tau135_012_p19`), `z1 = 2` (`terminal_pent_tau135_2_p19`),
+`z1 = 2 * h0` (delta <= 20: "1586903463" + `taud_sqrt20_p19` +
+`taud_2h0_p19`; delta > 20: "8875146520" + `taud_sqrt20_p19`), and
+`delta = 0` ("1008824382" + both flat-term evaluations + `taud_ge_flat_term`;
+the stray `delta_135_x`/`delta_126_x` disjuncts are transported across the
+`delta_y` slot symmetries to the hypotheses on `y126`/`z1`). -/
 theorem terminal_pent_tau126_delta20_p19 (h : mainNonlinearTerminalV11_p18)
     (y1 y2 y3 y4 y5 y6 y126 y135 : ℝ)
     (h126 : deltaY y126 y1 y2 y6 2 2 = 20)
@@ -2054,7 +2393,156 @@ theorem terminal_pent_tau126_delta20_p19 (h : mainNonlinearTerminalV11_p18)
         (3.01, y6, 3.237), (2, y126, 2 * h0), (2, y135, 2 * h0)]
       (0.616 < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
         + taudP19 y135 y1 y3 y5 2 2) := by
-  sorry
+  intro c1 c2 c3 c4 c5 c6 c7 c8
+  show (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6 + taudP19 y135 y1 y3 y5 2 2
+  have h252 : (2:ℝ) * h0 = 2.52 := h0_num_p19.2.1
+  have hb1 : y1 ≤ (2.52:ℝ) := by rw [← h252]; exact c1.2
+  have hb2 : y2 ≤ (2.52:ℝ) := by rw [← h252]; exact c2.2
+  have hb3 : y3 ≤ (2.52:ℝ) := by rw [← h252]; exact c3.2
+  have hmem : y135 ∈ Set.Icc 2 (2 * h0) ∩ {q : ℝ | (0:ℝ) ≤ deltaY q y1 y3 y5 2 2} :=
+    ⟨⟨c8.1, c8.2⟩, h135⟩
+  obtain ⟨z1, hz1, hmin, hcases⟩ := taud_minimizer_terminal_pent_cases_p19 h 0 y135 y1 y3 y5 2 2
+    hmem c1.1 c1.2 c3.1 c3.2 c5.1 c5.2 rfl rfl (le_refl (0:ℝ))
+  have hz1l : (2:ℝ) ≤ z1 := hz1.1.1
+  have hz1u : z1 ≤ 2 * h0 := hz1.1.2
+  have hz1u' : z1 ≤ (2.52:ℝ) := by rw [← h252]; exact hz1u
+  have hz1d : (0:ℝ) ≤ deltaY z1 y1 y3 y5 2 2 := hz1.2
+  have hDB366 : mainEstimate_3665919985 :=
+    h "3665919985" (by simp [mainNonlinearTerminalV11Ids_t11])
+  have h366 := hDB366 y1 y2 y3 y4 y5 y6 c1.1 hb1 c2.1 hb2 c3.1 hb3 c4.1 c4.2 c5.1 c5.2 c6.1 c6.2
+  have hsw := (taum_sym_cases2_p19 y1 y2 y3 y4 y5 y6).2.1
+  have hy1nn : (0:ℝ) ≤ y1 := by linarith
+  have hy3nn : (0:ℝ) ≤ y3 := by linarith
+  have hdle2 := delta_135_x_2h0_le_d_p19 h 20 y126 y1 y3 y2 y4 y6 y5 c7.1 c7.2 c1.1 c1.2 c2.1
+    c2.2 c6.1 (by linarith) (by norm_num) (by norm_num) h126
+  have hsq := taud_sqrt20_p19 h y126 y1 y3 y2 y4 y6 y5 c7.1 c7.2 c1.1 c1.2 c2.1 c2.2 c6.1
+    (by linarith) h126
+  by_cases ht : 0.12 ≤ taudP19 z1 y1 y3 y5 2 2
+  · -- case tau >= 0.12: the 012 lemma closes it.
+    have h012 := terminal_pent_tau135_012_p19 h y1 y2 y3 y4 y5 y6 y126 y135
+      (le_trans ht hmin) (by linarith)
+    exact h012 c1 c2 c3 c4 c5 c6 c7 c8
+  rcases hcases with hz12 | hz12h0 | hd0 | htau
+  · -- case z1 = 2: the 135_2 lemma.
+    have h2 := terminal_pent_tau135_2_p19 h y1 y2 y3 y4 y5 y6 y126 z1 hz12 (by linarith) hz1d
+    have h2' : (0.616:ℝ) < taudP19 y126 y1 y2 y6 2 2 + taum y1 y2 y3 y4 y5 y6
+        + taudP19 z1 y1 y3 y5 2 2 := h2 c1 c2 c3 c4 c5 c6 c7 ⟨hz1l, hz1u⟩
+    rw [hz12] at hmin h2'
+    linarith
+  · -- case z1 = 2 * h0
+    rw [hz12h0] at hmin
+    rw [hz12h0] at hz1d
+    have h2h0 := taud_2h0_p19 y1 y3 y5 2 2 hz1d c1.2 c3.2
+    have hperm3 : yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5
+        = deltaY z1 y1 y3 y5 2 2 := by
+      have h4 : (4:ℝ) * h0 * h0 = (2 * h0) * (2 * h0) := by ring
+      rw [h4, ← hz12h0]
+      unfold yOfX delta126x_p19 deltaY deltaX
+      rw [show (2:ℝ) * 2 = 4 from by norm_num]
+      ring
+    by_cases hd20 : (20:ℝ) ≤ deltaY z1 y1 y3 y5 2 2
+    · -- case delta >= 20: "8875146520".
+      have hDB : mainEstimate_8875146520 :=
+        h "8875146520" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+      have hdb' : (taum y1 y3 y2 y4 y6 y5 + yOfX (flatTerm2_135x_p19 20 4 4) y1 y3 y2 y4 y6 y5
+            + ((0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y2)) * 4.47
+            + yOfX (mud126xV1_p19 (2 * h0) 2 2) y1 y3 y2 y4 y6 y5 > (0.616:ℝ))
+          ∨ (yOfX (delta135x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (20:ℝ))
+          ∨ (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 < (20:ℝ)) := hdb
+      have hmud := taud_mud_126_x_p19 (2 * h0) 2 2 y1 y3 y2 y4 y6 y5 hy1nn hy3nn
+      rcases hdb' with h1 | h2 | h3
+      · rw [hsw, hmud, flat_term_2h0_p19] at h1
+        linarith
+      · linarith [hdle2, h2]
+      · rw [hperm3] at h3
+        linarith
+    · -- case delta <= 20: "1586903463".
+      have hd20' : deltaY z1 y1 y3 y5 2 2 ≤ 20 := le_of_not_ge hd20
+      have hDB : mainEstimate_1586903463 :=
+        h "1586903463" (by simp [mainNonlinearTerminalV11Ids_t11])
+      have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+      have hdb' : (taum y1 y3 y2 y4 y6 y5 + yOfX (flatTerm2_135x_p19 20 4 4) y1 y3 y2 y4 y6 y5
+            + ((0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y2)) * 4.47 + (0:ℝ) > (0.616:ℝ))
+          ∨ (yOfX (delta135x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (20:ℝ))
+          ∨ (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 < (0:ℝ))
+          ∨ (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (20:ℝ)) := hdb
+      rcases hdb' with h1 | h2 | h3 | h4
+      · rw [hsw] at h1
+        linarith
+      · linarith [hdle2, h2]
+      · rw [hperm3, hz12h0] at h3
+        linarith
+      · rw [hperm3] at h4
+        linarith
+  · -- case delta = 0: database conjunct "1008824382".
+    have hd0' : deltaY z1 y1 y3 y5 2 2 = 0 := hd0.symm
+    have hDB : mainEstimate_1008824382 :=
+      h "1008824382" (by simp [mainNonlinearTerminalV11Ids_t11])
+    have hdb := hDB y1 y3 y2 y4 y6 y5 c1.1 hb1 c3.1 hb3 c2.1 hb2 c4.1 c4.2 c6.1 c6.2 c5.1 c5.2
+    have hdb' : (taum y1 y3 y2 y4 y6 y5 + 0.705 * yOfX (flatTerm2_135x_p19 20 4 4) y1 y3 y2 y4 y6 y5
+          + ((0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y2)) * 4.47
+          + yOfX (flatTerm2_126x_p19 0 4 4) y1 y3 y2 y4 y6 y5 > (0.616:ℝ))
+        ∨ (yOfX (delta135x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (20:ℝ))
+        ∨ (yOfX (delta126x_p19 (4 * h0 * h0) 4 4) y1 y3 y2 y4 y6 y5 > (0:ℝ)) := hdb
+    have hf135 := flat_term2_135_x_eval_p19 h 20 y126 y1 y3 y2 y4 y6 y5 h126 (by norm_num)
+      (by norm_num) c7.1 c7.2 c1.1 c1.2 c2.1 c2.2 c6.1 (by linarith)
+    have hft := flat_term2_126_x_eval_p19 h 0 z1 y1 y3 y2 y4 y6 y5 hd0' (le_refl (0:ℝ))
+      (by norm_num) hz1l hz1u c1.1 c1.2 c3.1 c3.2 c5.1 (by linarith)
+    have hmu : (0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y2) = muY_p19 (2 * h0) y1 y2 := by
+      rw [muY_p19, h252]
+      ring
+    have hmu0 : (0:ℝ) ≤ (0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y2) := by
+      norm_num
+      linarith [hb1, hb2]
+    have harc : (0.3398:ℝ) ≤ Real.arcsin (1 / 3 : ℝ) := by
+      have hs : Real.sin (0.3398:ℝ) ≤ 1 / 3 := by
+        have hb := Real.sin_bound (show |(0.3398:ℝ)| ≤ 1 by norm_num)
+        rw [abs_le] at hb
+        norm_num at hb
+        linarith [hb.2]
+      have ha := Real.arcsin_le_arcsin hs
+      have hpi2 : -(Real.pi / 2) ≤ (0.3398:ℝ) := by have h := Real.pi_gt_d2; linarith
+      have hpi3 : (0.3398:ℝ) ≤ Real.pi / 2 := by have h := Real.pi_gt_d2; linarith
+      rwa [Real.arcsin_sin hpi2 hpi3] at ha
+    have hs0 : sol0 ≤ (0.52:ℝ) * 0.07 * 4.47 / 0.295 := by
+      have e : sol0 = 3 * Real.arccos (1 / 3 : ℝ) - Real.pi := rfl
+      rw [e, Real.arccos_eq_pi_div_two_sub_arcsin]
+      have hpi : Real.pi < 3.14159265358979323847 := Real.pi_lt_d20
+      linarith [harc, hpi]
+    have hc : (0.295:ℝ) * sol0 ≤ (0.52:ℝ) * 0.07 * 4.47 := by
+      have h1 : (0.295:ℝ) * sol0 ≤ (0.295:ℝ) * ((0.52:ℝ) * 0.07 * 4.47 / 0.295) :=
+        mul_le_mul (le_refl (0.295:ℝ)) hs0 sol0Pos_p19.le (by norm_num)
+      have h2 : (0.295:ℝ) * ((0.52:ℝ) * 0.07 * 4.47 / 0.295) = (0.52:ℝ) * 0.07 * 4.47 := by
+        field_simp
+      rwa [h2] at h1
+    have hcombi : muY_p19 (2 * h0) y1 y2 * Real.sqrt 20 + 0.705 * flatTerm_p19 y126
+        ≤ muY_p19 y126 y1 y2 * Real.sqrt 20 + flatTerm_p19 y126 := by
+      rw [mu_y_ft_combine_p19]
+      have h52 : (2 * h0 - 2 : ℝ) = 0.52 := h0_num_p19.2.2
+      have hftle := flat_term_neg_p19 y126 c7.2
+      have hX : (0.295:ℝ) ≤ (2 * h0 - 2) * 0.07 * Real.sqrt 20 / sol0 := by
+        rw [le_div_iff₀ sol0Pos_p19, h52]
+        nlinarith [hc, sqrt20_p19, show (0:ℝ) ≤ (0.52:ℝ) * 0.07 by norm_num]
+      nlinarith [hX, hftle]
+    have hii : muY_p19 y126 y1 y2 * Real.sqrt 20 + flatTerm_p19 y126
+        ≤ taudP19 y126 y1 y2 y6 2 2 := by
+      rw [taudP19, h126]
+      linarith
+    have hiii : ((0.012:ℝ) + 0.01 * ((2.52:ℝ) * 2 - y1 - y2)) * 4.47
+        ≤ muY_p19 (2 * h0) y1 y2 * Real.sqrt 20 := by
+      rw [← hmu]
+      exact mul_le_mul (le_refl _) sqrt20_p19 (by norm_num) hmu0
+    have hftg := taud_ge_flat_term_p19 z1 y1 y3 y5 2 2 hz1u c1.2 c3.2 hz1d
+    have hdle := delta_126_x_2h0_le_d_p19 h 0 z1 y1 y3 y2 y4 y6 y5 hz1l hz1u c1.1 c1.2 c3.1 c3.2
+      c5.1 (by linarith) (le_refl (0:ℝ)) (by norm_num) hd0'
+    rcases hdb' with h1 | h2 | h3
+    · rw [hsw, hf135, hft] at h1
+      linarith
+    · linarith [hdle2, h2]
+    · linarith [hdle, h3]
+
+  · exact (ht htau).elim
 
 /-- HOL `terminal_pent_taum` (pent_hex.hl:2223). NEEDS-DB. -/
 theorem terminal_pent_taum_p19 (h : mainNonlinearTerminalV11_p18)
@@ -2165,45 +2653,6 @@ theorem delta_y_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 a : ℝ) :
       deltaY a y2 y1 y6 2 2 = deltaY a y1 y2 y6 2 2 := by
   unfold deltaY deltaX <;> ring <;> trivial
 
-/-- Helper: `dih_y` is invariant under swapping the 2nd/3rd (and 5th/6th)
-slots — the same dihedral edge with the other two vertices exchanged
-(HOL `dih_y_sym` route through `dih_x`/`atn2`; twins:
-LocalAuto38's `dihY_swap23_p38`, PackingAuto25's `dihY_sym23P25` — the
-proof below is the latter's verbatim template). DISCHARGED 2026-11-14
-(hexsym-w1). -/
-theorem dihY_swap23_p19 (a b c d e f : ℝ) :
-    dihY a b c d e f = dihY a c b d f e := by
-  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
-      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
-    by simp only [deltaX]; ring
-  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
-      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := fun _ _ _ _ _ _ =>
-    by simp only [deltaX4]; ring
-  show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)
-      = dihXf (a * a) (c * c) (b * b) (d * d) (f * f) (e * e)
-  unfold dihXf
-  rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f),
-    hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (f * f)]
-
-/-- HOL `taum_sym_cases2` (pent_hex.hl:2414): the four S3 symmetries of
-`taum`. DISCHARGED 2026-11-14 (hexsym-w1): `taum` is the `solY`-weighted
-sum of the three `lnazim` (= `ly i * dihY`) edges from the origin; each
-S3 permutation permutes those three terms, and each permuted `dihY` is
-related to the original by `dihY_swap23_p19` (the LA38 `taum_sym2`
-route, two-conjunct core composed here by rewrites). -/
-theorem taum_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
-    taum y2 y1 y3 y5 y4 y6 = taum y1 y2 y3 y4 y5 y6 ∧
-      taum y1 y3 y2 y4 y6 y5 = taum y1 y2 y3 y4 y5 y6 ∧
-      taum y3 y1 y2 y6 y4 y5 = taum y1 y2 y3 y4 y5 y6 ∧
-      taum y3 y2 y1 y6 y5 y4 = taum y1 y2 y3 y4 y5 y6 := by
-  have e1 : dihY y2 y1 y3 y5 y4 y6 = dihY y2 y3 y1 y5 y6 y4 :=
-    dihY_swap23_p19 _ _ _ _ _ _
-  have e2 : dihY y1 y3 y2 y4 y6 y5 = dihY y1 y2 y3 y4 y5 y6 :=
-    dihY_swap23_p19 _ _ _ _ _ _
-  have e3 : dihY y3 y2 y1 y6 y5 y4 = dihY y3 y1 y2 y6 y4 y5 :=
-    dihY_swap23_p19 _ _ _ _ _ _
-  refine ⟨?_, ?_, ?_, ?_⟩ <;>
-    simp only [taum, solY, lnazim, e1, e2, e3] <;> ring
 
 /-- HOL `edge2_flatD_sym` (pent_hex.hl:2425; via `Merge_ineq.delta_x_sym`). -/
 theorem edge2_flatD_sym_p19 (d y1 y2 y3 a : ℝ) :
