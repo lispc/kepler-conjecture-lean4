@@ -46,6 +46,7 @@ import Kepler.Text.LocalAuto26
 import Kepler.Text.LocalAuto28
 import Kepler.Text.LocalAuto33
 import Kepler.Text.LocalAuto34
+import Kepler.Text.VasArcKit
 import Kepler.Text.VasTuaKit
 import Kepler.Text.YebwjngKit
 import Mathlib
@@ -1677,5 +1678,144 @@ theorem PWEIWBZ_kit (h : main_nonlinear_terminal_v11) :
       · exact pweiwbz_C_norm_ne h s v p his hb hk hv hdiag hval ha hstr1 hn1
     · -- ═══ `¬str p ∧ ¬str (p+1)`: `YEBWJNG` ═══
       exact YEBWJNG_kit h s v p his hb hk hv hdiag hval hstr0 hstr1 ha
+
+/-- HOL `VASYYAU` (VASYYAU.hl:2364-2844) — downstream kit version of the
+LocalAuto1 registry twin `VASYYAU_concl` (statement verbatim, same
+`h : main_nonlinear_terminal_v11` premise and quantifier order).
+
+Branch skeleton (measured against the HOL script):
+
+* `SCS_A_2 @ p` gives `2 ≤ a(p,p+1)`; split `= 2` vs `2 <`.
+* `a(p,p+1) = 2`: `PWEIWBZ @ p` pins the first equation (`dist = 2 = a`); the
+  second is `NUXCOEAv2 @ (l = p, j = p+1)` (HOL :2469), whose `(p+1,p)`
+  registry value is the `a`-symmetric image of the `(p,p+1)` one.
+* `2 < a(p,p+1)`: `SCS_A_2 @ p+3` gives `2 ≤ a(p+3,p)` (`Periodic2` image),
+  split `= 2` vs `2 <`:
+  * `a(p+3,p) = 2`: `PWEIWBZ @ p+3` + `NUXCOEAv2 @ (l = p, j = p+3)`
+    (HOL :2485-2558) gives BOTH equations at once;
+  * `2 < a(p+3,p)`: `A_NOT_EQ2_IMP_B @ p+3` + `PRO_ADD_NOT_IN_SCS_M @ p/p+3`
+    + `B_LE_2h0_2_SCS_M_4 @ p` + `B_LE_2h0_IMP_B @ p+1/p+2` give the two unit
+    edges (HOL :2565-2584, closed by `YEBWJNG @ p+1` and `@ p+2`), then
+    `vasArcKit_2b` yields both equations (HOL :2594-2844).
+
+Every `¬scsIsStr` fact is `pweiwbz_str_uniq` + `omega`; the `WGDHPPI`-fed
+`NOT_STR_IN_CASES_4` twins carry `sorryAx` and are not consumed. -/
+theorem VASYYAU_kit (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+    scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+    (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j) →
+    (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
+    scsIsStr s v p →
+    (dist (v p) (v (p + 1)) = s.a p (p + 1) ∧
+      dist (v p) (v (p + 3)) = s.a p (p + 3)) := by
+  intro s v p his hb hk hv hdiag hval hstr
+  have his' : isScsV39 s := his
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpb, -, hsym, -, -, -, -, -, -, -, -⟩ := his'
+  have hpa4 : Periodic2 s.a 4 := hk ▸ hpa
+  have hpb4 : Periodic2 s.b 4 := hk ▸ hpb
+  have hsymA : ∀ i j : ℕ, s.a i j = s.a j i := fun i j => (hsym i j).1
+  have hsymB : ∀ i j : ℕ, s.b i j = s.b j i := fun i j => (hsym i j).2.2.2.1
+  -- every successor edge has `b > 2` (`2 ≤ a` plus `a < b`)
+  have hbgt : ∀ i : ℕ, 2 < s.b i (i + 1) := fun i =>
+    lt_of_le_of_lt (SCS_A_2_p27 s his i) (CONDTION_A_LT_B_p25 s hval i)
+  -- straight-vertex producer triple at `p`
+  obtain ⟨hnc, haff, hlunar⟩ := pweiwbz_str_arc h s v p his hb hk hv hstr
+  have hnc' : ¬ Collinear ℝ ({0, v (p + 1), v (p + (s.k - 1))} : Set V3) := by
+    rw [hk]
+    simpa only [Collinear3] using hnc
+  have haff' : v p ∈ affGt {0} {v (p + 1), v (p + (s.k - 1))} := by
+    rw [hk]
+    simpa using haff
+  have hdiag1 : ∀ i, scsDiag 4 p i → 4 * h0 < s.b p i :=
+    fun i hi => (hdiag p i hi).2.2
+  have hdiag2 : ∀ i, scsDiag 4 p i → s.a p i < dist (v p) (v i) :=
+    fun i hi => lt_of_le_of_lt (hdiag p i hi).1 (hdiag p i hi).2.1
+  have hJ : ∀ i, ¬ s.J p i := fun i => by simp [BASIC_IMP_NOT_J_p25 s hb p i]
+  have h2le : 2 ≤ s.a p (p + 1) := SCS_A_2_p27 s his p
+  by_cases ha2 : s.a p (p + 1) = 2
+  · -- ═══ `a(p,p+1) = 2` ═══
+    have h1 : dist (v p) (v (p + 1)) = 2 :=
+      PWEIWBZ_kit h s v p his hb hk hv hdiag hval ha2
+    refine ⟨?_, ?_⟩
+    · rw [h1, ha2]
+    · have haj : s.a (p + 1) p = dist (v (p + 1)) (v p) := by
+        rw [hsymA (p + 1) p, ha2, dist_comm, h1]
+      have hbj : dist (v (p + 1)) (v p) < s.b (p + 1) p := by
+        rw [hsymB (p + 1) p, dist_comm, h1]
+        exact hbgt p
+      obtain ⟨-, hB⟩ := NUXCOEAv2_p28 s 4 v p (p + 1) hk (by norm_num) his hv
+        hstr hnc' haff' (Or.inl rfl) haj hbj hdiag1 hdiag2 hJ hlunar
+      exact hB.symm
+  · -- ═══ `2 < a(p,p+1)` ═══
+    have h2a : 2 < s.a p (p + 1) := lt_of_le_of_ne h2le (Ne.symm ha2)
+    have h2le3 : 2 ≤ s.a (p + 3) p := by
+      have hq := SCS_A_2_p27 s his (p + 3)
+      rw [show (p + 3) + 1 = p + 4 from by omega] at hq
+      rwa [(hpa4 (p + 3) p).2] at hq
+    by_cases ha3 : s.a (p + 3) p = 2
+    · -- ═══ `a(p+3,p) = 2` ═══
+      have ha3' : s.a (p + 3) (p + 4) = 2 := by
+        rw [(hpa4 (p + 3) p).2]
+        exact ha3
+      have h1 : dist (v (p + 3)) (v (p + 4)) = 2 :=
+        PWEIWBZ_kit h s v (p + 3) his hb hk hv hdiag hval ha3'
+      have hper : v (p + 4) = v p := by
+        have hpv := (MMS_IMP_BBS_p28 s v hv).2.1
+        rw [hk] at hpv
+        exact hpv p
+      have hd3 : dist (v (p + 3)) (v p) = 2 := by
+        rw [← hper, h1]
+      have haj : s.a (p + 3) p = dist (v (p + 3)) (v p) := ha3.trans hd3.symm
+      have hb3p : s.b (p + 3) p = s.b (p + 3) ((p + 3) + 1) := by
+        rw [show (p + 3) + 1 = p + 4 from by omega]
+        exact ((hpb4 (p + 3) p).2).symm
+      have hbj : dist (v (p + 3)) (v p) < s.b (p + 3) p := by
+        rw [hd3, hb3p]
+        exact hbgt (p + 3)
+      obtain ⟨hA, hB⟩ := NUXCOEAv2_p28 s 4 v p (p + 3) hk (by norm_num) his hv
+        hstr hnc' haff' (Or.inr (by omega)) haj hbj hdiag1 hdiag2 hJ hlunar
+      exact ⟨hA.symm, hB.symm⟩
+    · -- ═══ `2 < a(p+3,p)`: the arc leaf ═══
+      have h2b : 2 < s.a (p + 3) p := lt_of_le_of_ne h2le3 (Ne.symm ha3)
+      have hns1 : ¬ scsIsStr s v (p + 1) := by
+        intro hc
+        have e := pweiwbz_str_uniq h s v his hk hv p (p + 1) hstr hc
+        omega
+      have hns2 : ¬ scsIsStr s v (p + 2) := by
+        intro hc
+        have e := pweiwbz_str_uniq h s v his hk hv p (p + 2) hstr hc
+        omega
+      have hns3 : ¬ scsIsStr s v (p + 3) := by
+        intro hc
+        have e := pweiwbz_str_uniq h s v his hk hv p (p + 3) hstr hc
+        omega
+      -- the `2*h0` registry values on the two adjacent edges (HOL :2568-2572)
+      have ha01 : s.a p (p + 1) = 2 * h0 := (A_NOT_EQ2_IMP_B_p25 s p hval ha2).1
+      have hper3 : s.a (p + 3) ((p + 3) + 1) = s.a (p + 3) p := by
+        rw [show (p + 3) + 1 = p + 4 from by omega]
+        exact (hpa4 (p + 3) p).2
+      have ha3ne : ¬(s.a (p + 3) ((p + 3) + 1) = 2) := fun he => ha3 (hper3.symm.trans he)
+      obtain ⟨ha34, -⟩ := A_NOT_EQ2_IMP_B_p25 s (p + 3) hval ha3ne
+      have hmem1 : p % 4 ∈ scsM s := PRO_ADD_NOT_IN_SCS_M_p25 s p 4 his hk ha01
+      have hmem3 : (p + 3) % 4 ∈ scsM s :=
+        PRO_ADD_NOT_IN_SCS_M_p25 s (p + 3) 4 his hk ha34
+      have hsub : {(p % 4), ((p + 3) % 4)} ⊆ scsM s := by
+        intro x hx
+        rcases Set.mem_insert_iff.mp hx with hx | hx
+        · rw [hx]; exact hmem1
+        · rw [Set.mem_singleton_iff] at hx
+          rw [hx]; exact hmem3
+      -- the two unit edges `p+1, p+2` / `p+2, p+3` (HOL :2573-2584)
+      obtain ⟨hb12le, hb23le⟩ := B_LE_2h0_2_SCS_M_4_pair_p25 s his hk hsub
+      obtain ⟨ha12, -⟩ := B_LE_2h0_IMP_B_p25 s (p + 1) hval hb12le
+      obtain ⟨ha23, -⟩ := B_LE_2h0_IMP_B_p25 s (p + 2) hval hb23le
+      have h12 : dist (v (p + 1)) (v (p + 2)) = 2 :=
+        YEBWJNG_kit h s v (p + 1) his hb hk hv hdiag hval hns1 hns2 ha12
+      have h23 : dist (v (p + 2)) (v (p + 3)) = 2 :=
+        YEBWJNG_kit h s v (p + 2) his hb hk hv hdiag hval hns2 hns3 ha23
+      exact vasArcKit_2b s v p his hb hk hv hdiag hval hstr h2a h2b hnc haff hlunar
+        h12 h23
 
 end Kepler.Text
