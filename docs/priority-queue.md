@@ -861,6 +861,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（02:55，续1149）**：**`nli-precision-w1` 发车（用户令「同意，发」）——TSKAJXY 叶级 0.024 缺口 sound 化**。
+① 目标：叶 0（真 loBound **−0.02393747527508621106**）或叶 657（**−0.01891693053906524711974**）做到 **PASS**；缺口来自**外层抵消**（S6 项 5.6% 相对误差），不是 atan rung（N=128→256 根级前 22 位相同）。
+② 方向：Phase 0 逐节点误差归因（mirror tracing/二分切片）；Phase 1 `div` 节点逐节点择优（div2 vs 区间回落，取 loBound 大者；sound、近零成本）+ guard 切叶最小验证；Phase 2 `mul` err 的 Schwarz/Hessian 收紧（opt-in 新规则 + soundness；目标 +0.024）；Phase 3 `LExpr` 子表达式共享 / `--gsplit2` 型 guard 定号叶。
+③ 边界：不碰 Text/Close/Assembly；只改 `Interval`/emitter；既有 `CertTM`/`checkPosTMHullC`/BIEFJHU 零改动；`bb_arb` 仅 TSKAJXY 叶 0/657 附近少量重整（≤3 次、不量产）；TM3/Mono\*/D 仍 hold。
+④ 验收：至少一叶在 sound 检查器下 PASS（记 s/叶/内存），或给「差多少、需要哪条规则/多少叶/多少秒」的精确量化；每条新规则 soundness 标准三。
+⑤ 下一条：续1150。
 - **2026-11-15（02:20，续1148）**：**TM 内核检查器 div2/loa 落库 `e8e7e4a5`：规则 sound 资产 +813；定标 ER（pilot `−2^186` 是误读，真 loBound −0.0239；两叶 `salv=0`）；精度残余 0.024 归因外层抵消**。
 ① 交付（`tmkernel-w1`）：新模块 `Interval/CertTMDiv2.lean` **+813/−0**（opt-in、纯新增）：`DInterval.loaLower` / `loaLower_le_abs`（认证幅值下界）、`sqrtL` / `valid_sqrtL`（sqrt 注入 `loa := √c`）、`valid_div2`（`M = 1/loa`，复用 `valid_invCore`）、`divNode` / `divNode_sound`（三通道 inv→invCore·loa→区间回落）、`evalTMHullD3C` / `checkPosTMHullD` + soundness、生产镜面 `evalTMHullFill2D` / `tmHullLeafProbeD`；合成用例 `exDiv2_fires_kernel` 内核 `decide` PASS。
 ② 闸（亲跑 @`7771bda5`）：apply-check PASS、单文件 `+813/−0`、禁项 0、直编 **rc=0/err0**（5.75 GB）；`checkPosTMHullD_sound` / `evalTMHullD3C_sound` / `divNode_sound` / `valid_div2` / `valid_sqrtL` / `DInterval.loaLower_le_abs` **全标准三**；`checkPosTMHullC_sound` 回归标准三；根面 md5 **`246e952c…` 同**。
