@@ -1298,7 +1298,7 @@ def hull_sel_boxes(cert_path, want, stride=None):
     return picks, ntm, stride
 
 
-def hull_expr(case, rung_n, rung_out):
+def hull_expr(case, rung_n, rung_out, atan1_box=False):
     """The case expression for the hull route: dummy `(0, 0)` sqrt slots
     (mantissas live in `TMParams.sqrtCerts`, not in the AST), closed trans
     args pinned at (2048, -64), open trans args at the pilot rung.
@@ -1307,11 +1307,19 @@ def hull_expr(case, rung_n, rung_out):
     expand to an extra `.div` node (const numerator / denominator), and the
     hull route consumes one invCert per emitted div.  Closed trans args
     carrying sqrt nodes are unclosed (`trans_unclose_sqrt`) — the closed
-    fast path would evaluate them with the dead dummy certificates."""
+    fast path would evaluate them with the dead dummy certificates.
+
+    `atan1_box=True` (opt-in, default OFF = byte-identical) routes a closed
+    `atan` of the literal `1` to the `TKind.atan1K` node, whose wrapper
+    returns the library `pi4D` box (one `2^-64` ulp).  The default
+    `arctanK`/rung-2048 enclosure of `π/4` is an asymmetric 1-ulp-per-term
+    bracket padded by the alternating-series remainder `1/4097 ≈ 2.44e-4`
+    per side; on nli-precision-w1 leaf 0/657 that padding dominates the
+    root Taylor lower bound (whole gap `0.0239` / `0.0189`, measured)."""
     rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
               trans=lambda op, closed: ("2048", "(-64)") if closed
               else (str(rung_n), f"({rung_out})"),
-              trans_unclose_sqrt=True)
+              trans_unclose_sqrt=True, atan1_box=atan1_box)
     expr = rpn.emit(case["prog"])
     return (expr, expr.count("(.sqrt "), expr.count("(.div "),
             expr.count("(.trans "))
