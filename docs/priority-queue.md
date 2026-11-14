@@ -97,7 +97,11 @@
 ---
 
 
-## 1. 在飞（2026-11-14 22:48：**空**；上一波 `nli-precision-w1` 已收线 `2fd799ff`）
+## 1. 在飞（2026-11-15：2 条 —— `nli-triage-w1` + `tmparams-w1`）
+
+> **2026-11-15 双车道发车（用户令「都发」）**：`nli-triage-w1`（55 债分诊 + 资产盘点 + 便宜路线）
+> + `tmparams-w1`（外部精确复刻直产 `TMParams`，目标把 333 s/叶镜像打掉）。两条均零农场/低算力，
+> 每车道恒 1 lean；交付后编排者过闸。
 
 > **2026-11-14 22:47 收线（`2fd799ff`）**：`nli-precision-w1` 落库——TSKAJXY 两 pilot 叶内核 PASS
 > （叶 0 +8.75e−4 / 叶 657 +2.82e−3，原 −0.0239/−0.0189）；真因 = closed `atan 1` 的 `arctanI`
@@ -866,6 +870,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（06:36，续1151）**：**双车道发车（用户令「都发」）——`nli-triage-w1`（55 债分诊/资产盘点/便宜路线）+ `tmparams-w1`（外部复刻直产 `TMParams`）**。
+① **`nli-triage-w1`**：把 54 `nli*` + hLP 对账成 `NLI_MAP.md`（声明/bank/HOL 行/盒形/已有资产/叶数/路线 `WIRE|MATH|SMALL-CERT|FARM|LP`）；资产盘点（`NliBanks*` 已证组件、`Interval/Cases` 已生成证书、`Gamma4*` 单调性套件）；陈述审计（空盒/退化盒/析取恒真/`else True`，ht4nn 先例）；至少尝试闭环 1 条（先例：`nliTskRIBCYXUsharp` 单调性、`nliTskdx4` 区间算术、`nliTskGXSA`/`TADIAMB` 用 `NliBanks`）。零农场、只读为主。
+② **`tmparams-w1`**：把 `nli-precision-w1` 的逐位同构复刻（`b/tm.py`，两叶差 ≤3.5e−15）扩成 `tools/emit_params.py`，直接产出 `TMParams.sqrtCerts`（triples 遍历序）；用叶 0/657 回归 + 另选 1–2 叶内核 `decide` 验收（≤6 次）；目标每叶 **333+26 s → 26 s**（6,512 叶 650→47 CPU·h；10⁶ 叶 10⁵→7×10³ CPU·h）。
+③ 边界：不 commit/push（编排者闸）；不跑 `lake build`/`auto_gate`/地图/root；每车道 ≤1 lean、起编前 `pgrep -x lean` ≤2、`nice -n 19`；新增 `axiom`/`admit`/`native_decide`/`sorry` 为零；陈述/检查器语义不动。两份 ORDERS 已落快照 `lane_snapshots/{nli-triage-w1,tmparams-w1}/`。
+④ 下一条：续1152。
 - **2026-11-14（22:47，续1150）**：**`nli-precision-w1` 收线落库 `2fd799ff`——TSKAJXY 两 pilot 叶经 `atan1_box` 内核 PASS；归因推翻工单三假设（真因 = closed `atan 1` 的 `arctanI` 包络）；全盒复刻 0→5012/6512**。（时间按 commit 实取；续1149 手写 02:55 为车道侧时区，偏 +5.5h，本条目起校正。）
 ① 交付：`emit_lean.py` `hull_expr` 加 opt-in `atan1_box=False`（默认字节不变，+11/−3）+ 新增 `TskXLLIPLSAtan1{Base,Leaf0,Leaf657}.lean`（24/95/95，合计 **+225/−3**）。`TKind.atan1K`/`pi4D`/`transOn`/`valid_trans` 分支基线已在库，零新数学、零新公理；`CertTM`/`CertTMDiv2`/`checkPosTMHullC` 字节未动。
 ② 精度：叶 0 **−0.02393747527508621106 → +0.00087508603573064651024**；叶 657 **−0.01891693053906524711 → +0.002822432042080472253717**。内核 `decide` 26.0/26.1 s、10.07/10.06 GB 每叶；Base 直编 7.4 s/5.75 GB。
