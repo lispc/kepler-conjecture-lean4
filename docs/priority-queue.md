@@ -823,6 +823,8 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-14（10:20，续1116）**：**hextop-w1 发车（agent-68：hex 塔顶 terminal_hex_taum 立声明+装配，LA19）**——用户批「发」；6T1 收口最后输入，与在飞 hex6t1prep（LA22）零文件冲突。装配路线 = hexsym-w1 DELIVERY §6（135_reduction∘r755 束），DB 走假设级消费先例。patch 生成纪律（§7.1-26）已写入工单。在飞 2：hex6t1prep-w1（agent-67）+ hextop-w1（agent-68）；用户 K8 第三。6T1 收口车道（empty_6T1→OCBICBY_6T1_p22）待两输入齐后发。
+
 - **2026-11-14（10:05，续1115）**：**hexsym-w1 收线落库 `ddf5c0a7`（塔顶 blocker 清除，LA19 +165/−15，sorry 净 −3）——hex 塔全链通 + §7.1-26 patch 头雷区入册**。
 ① 三真证：`taum_sym_cases2_p19`（LA38 taum_sym2 同路线 LA19 侧落地，新 `dihY_swap23_p19`）+ `r755_ikj/jik`（DB 置换实例化 + 9 连 rw + 8 支注入）。塔顶 `terminal_hex_taum`（=135_reduction∘r755 束）装配路线已备（DELIVERY §6），下一棒按 HOL pent_hex.hl:3180 立声明组装。
 ② ⚠️ **闸面事故与修正（入 §7.1-26）**：车道 patch 的 b 侧路径误为 `/tmp/...`（车道在 /tmp 内 git diff 生成）——`git apply --check` 照样 PASS，应用即判 rename 险删 LA19（编排者 git status 抓到 ` D` + stray `tmp/` 签名）；修正 = 还原 + 修路径头 + cmp 车道成品逐字节比对后重应用，全绿。
