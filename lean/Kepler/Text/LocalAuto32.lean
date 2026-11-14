@@ -474,10 +474,56 @@ private theorem la32IS_SCS_3M1_prime : isScsV39 scs3M1Prime := by
 
 /-- HOL `SCS_4T3_IS_SCS` (MIQMCSN.hl:213). -/
 theorem SCS_4T3_IS_SCS_p32 : isScsV39 scs4T3 := by
-  sorry
-  -- NEEDS: hexagons-style SCS_TAC expansion of `is_scs_v39 scs_4T3`
-  -- (22-conjunct unfolding: periodicity/symmetry via PSORT_MOD,
-  -- FUNLIST_EXPLICIT; card bound needs ncard = 2 on the a-edge set).
+  refine la32isScs_mkFunlist (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (fun i j => ⟨la32funlist_symm _ _ _ _ _, la32funlist_symm _ _ _ _ _⟩)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4 i (i + 1)
+          (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hsub : {i | i < 4 ∧ (2 * h0 <
+            funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] 2 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4
+            i (i + 1))} ⊆ ({0} : Set ℕ) := by
+        intro i hi
+        obtain ⟨h4, hc⟩ := hi
+        simp only [Set.mem_singleton_iff]
+        by_contra hne
+        interval_cases i
+        · exact absurd rfl hne
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+        · simp [funlistV39, psort, assocdV39] at hc
+          norm_num [h0, cstab] at hc
+      have hfin : ({0} : Set ℕ).Finite := Set.toFinite _
+      have hle := Set.ncard_le_ncard hsub hfin
+      have hc0 : ({0} : Set ℕ).ncard = 1 := Set.ncard_singleton 0
+      omega)
+  -- DISCHARGED (k6-finish-w1, 2026-11-14): `la32isScs_mkFunlist` skeleton
+  -- (`k = 4`, `d = 0.513`) + 16-cell table sweeps (`hdom`/`h2a`/`hble`)
+  -- + card set contained in `{0}` (`ncard + 4 ≤ 6`).
 
 /-- HOL `SCS_4M8_02_IS_SCS` (MIQMCSN.hl:320). -/
 theorem SCS_4M8_02_IS_SCS_p32 : isScsV39 scs4M8_02 := by
@@ -1749,8 +1795,14 @@ theorem MM_4M6_IMP_MM_4T3_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M6' →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     MMsV39 scs4T3 ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M6_IMP_scs_4T3_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdiag
+  refine XWNHLMD_MM_p33 scs4M6' scs4T3 v SCS_4M6_IS_SCS_p29 SCS_4T3_IS_SCS_p32
+    SCS_4M6_BASIC SCS_4T3_BASIC_p32 (by rw [K_SCS_4M6, K_SCS_4T3_p32]) hv
+    (BB_4M6_IMP_scs_4T3_p32 h v hv hdiag) ?_
+  rw [show scs4M6'.d = 0.513 from rfl, show scs4T3.d = 0.513 from rfl]
+  -- DISCHARGED (k6-finish-w1, 2026-11-14): `XWNHLMD_MM_p33` at
+  -- `(s, s') = (scs4M6', scs4T3)`, `BB_4M6_IMP_scs_4T3_p32` for the `BBs`
+  -- slot, equal `d = 0.513` for the `d`-monotonicity slot.
 
 /-- HOL `SCS_4M6_ARROW_SCS_4T3_STAB_4M6` (MIQMCSN.hl:2048). -/
 theorem SCS_4M6_ARROW_SCS_4T3_STAB_4M6_p32 :
@@ -1758,17 +1810,61 @@ theorem SCS_4M6_ARROW_SCS_4T3_STAB_4M6_p32 :
     scsArrowV39 {scs4M6'}
       ({scs4T3} ∪ {s | ∃ i j, scsDiag 4 i j ∧
         s = scsStabDiagV39 scs4M6' i j}) := by
-  sorry
-  -- NEEDS: scs_arrow_v39 unfolding + EXTREMAL_SCS_4M6_p32 (dist on
-  -- diagonals) + STAB_MOD/YRTAFYH kit on the stab branch.
+  intro h
+  refine ⟨?_, ?_⟩
+  · intro s hs
+    rcases hs with hs | ⟨i, j, hd, rfl⟩
+    · rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact SCS_4T3_IS_SCS_p32
+    · exact (STAB_4M6_SCS_p33 i j (show scsDiag scs4M6'.k i j from hd)).1
+  · by_cases hempty : MMsV39 scs4M6' = ∅
+    · left
+      intro s hs
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      exact hempty
+    · right
+      obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hempty
+      by_cases hd : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)
+      · exact ⟨scs4T3, Or.inl rfl, MM_4M6_IMP_MM_4T3_p32 h v hv hd⟩
+      · have hex : ∃ i j, scsDiag 4 i j ∧ dist (v i) (v j) ≤ cstab := by
+          by_contra hcon
+          exact hd fun i j hdij => by
+            by_contra hle
+            exact hcon ⟨i, j, hdij, le_of_not_gt hle⟩
+        obtain ⟨i, j, hdij, hle⟩ := hex
+        exact ⟨scsStabDiagV39 scs4M6' i j, Or.inr ⟨i, j, hdij, rfl⟩,
+          MM_4M6_IMP_STAB_4M6_p33 i j hv hdij hle⟩
+  -- DISCHARGED (k6-finish-w1, 2026-11-14): `scs_arrow_v39` unfolding:
+  -- `isScs` face by `SCS_4T3_IS_SCS_p32`/`STAB_4M6_SCS_p33`; `MMs`
+  -- dichotomy by `MM_4M6_IMP_MM_4T3_p32` (diag face) or
+  -- `MM_4M6_IMP_STAB_4M6_p33` (a diag pair with `dist ≤ cstab`).
 
 /-- HOL `NWDGKXH` (MIQMCSN.hl:2110). -/
 theorem NWDGKXH_p32 :
     main_nonlinear_terminal_v11 → scsArrowV39 {scs4M6'} {scs4T3, scs4T5} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via ({scs_4T3} ∪ stab-diag set) +
-  -- SCS_4M6_ARROW_SCS_4T3_STAB_4M6_p32 + hexagons arrow
-  -- stab-diag-of-4M6 → {scs_4T3, scs_4T5}.
+  intro h
+  have h1 := SCS_4M6_ARROW_SCS_4T3_STAB_4M6_p32 h
+  have hrefl : scsArrowV39 ({scs4T3} : Set ScsV39) {scs4T3} :=
+    FZIOTEF_REFL _ (fun t ht => by
+      rw [Set.mem_singleton_iff] at ht
+      subst ht
+      exact SCS_4T3_IS_SCS_p32)
+  have hunion : scsArrowV39
+      ({scs4T3} ∪ {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M6' i j})
+      ({scs4T3} ∪ {scs4T5}) :=
+    FZIOTEF_UNION _ _ _ _ hrefl SET_STAB_4M6_ARROW_4T5_p33
+  have h2 : scsArrowV39
+      ({scs4T3} ∪ {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M6' i j})
+      ({scs4T3, scs4T5} : Set ScsV39) := by
+    rwa [show ({scs4T3} ∪ {scs4T5} : Set ScsV39) = {scs4T3, scs4T5} from by
+      rw [Set.singleton_union]] at hunion
+  exact FZIOTEF_TRANS _ _ _ h1 h2
+  -- DISCHARGED (k6-finish-w1, 2026-11-14): `FZIOTEF_TRANS` via
+  -- `SCS_4M6_ARROW_SCS_4T3_STAB_4M6_p32` and the union arrow
+  -- (`FZIOTEF_UNION` of `FZIOTEF_REFL {scs4T3}` and
+  -- `SET_STAB_4M6_ARROW_4T5_p33`).
 
 /-! ## Section 7: the 4M7 dichotomy (MIQMCSN.hl:2130-2490) -/
 
