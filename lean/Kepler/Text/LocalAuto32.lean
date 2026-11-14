@@ -1946,30 +1946,141 @@ theorem SCS_4M7_STAND_p32 :
     scs4M7.b 1 2 = cstab ∧ scs4M7.b 0 1 = cstab := by
   simp [scs4M7, mkUnadornedV39, funlistV39, psort, assocdV39]
 
+/-- `BBs` transfer from a table-dominating system when only the pointwise
+`dist`-bounds are available (the `_12`/`_01` retables below differ from
+`scs_4M7` on exactly one class, where the pin on `dist` replaces the table
+comparison). -/
+private theorem la32BB_of_pt {s t : ScsV39} {v : ℕ → V3} (hk : s.k = t.k)
+    (hpt : ∀ i j, s.a i j ≤ dist (v i) (v j) ∧ dist (v i) (v j) ≤ s.b i j)
+    (h : BBsV39 t v) : BBsV39 s v := by
+  obtain ⟨hann, hper, -, hfan⟩ := h
+  refine ⟨hann, ?_, hpt, ?_⟩
+  · rw [hk]; exact hper
+  · rcases hfan with h3 | h5
+    · exact Or.inl (by omega)
+    · exact Or.inr h5
+
 /-- HOL `MIN_NOT_STAND_4M7` (MIQMCSN.hl:2166). -/
 theorem MIN_NOT_STAND_4M7_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M7 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 1) (v 2) = 2 * h0 ∨ dist (v 0) (v 1) = 2 * h0 := by
-  sorry
-  -- NEEDS: main_nonlinear_terminal_v11 + MMS_IMP_BBS + BB_VV_FUN_EQ +
-  -- SCS_4M7_STAND_OR_PRO_p32 + VASYYAU (str case split).
+  intro h v hv hdist
+  -- substrate: `SCS` record facts, `MMs` -> `BBs`, periodicity, table values
+  have his : isScsV39 scs4M7 := SCS_4M7_IS_SCS_p29
+  have hbas : scsBasicV39 scs4M7 := SCS_4M7_BASIC_p29
+  have hk : scs4M7.k = 4 := K_SCS_4M7_p32
+  have hBB : BBsV39 scs4M7 v := MMS_IMP_BBS_p28 scs4M7 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [hk] at hp
+    exact hp
+  have hv5 : v 5 = v 1 := by
+    have hp := hper 1
+    simpa using hp
+  have hv4 : v 4 = v 0 := by
+    have hp := hper 0
+    simpa using hp
+  have hdiag : ∀ i j, scsDiag 4 i j → scs4M7.a i j ≤ cstab ∧
+      cstab < dist (v i) (v j) ∧ 4 * h0 < scs4M7.b i j := by
+    intro i j hd
+    exact ⟨(h0_LT_B_SCS_4M7_p32).2 i j hd, hdist i j hd, (h0_LT_B_SCS_4M7_p32).1 i j hd⟩
+  have hval := SCS_4M7_STAND_OR_PRO_p32
+  obtain ⟨ha01, ha12, ha25, hb12, hb01⟩ := SCS_4M7_STAND_p32
+  -- HOL: `scs_is_str` case split at `0`, then `1`, then `2`
+  by_cases hs0 : scsIsStr scs4M7 v 0
+  · -- `str 0`: `VASYYAU @ 0` pins `dist(v0,v1) = a 0 1 = 2*h0`
+    obtain ⟨hd01, -⟩ := VASYYAU_kit h scs4M7 v 0 his hbas hk hv hdiag hval hs0
+    exact Or.inr (hd01.trans ha01)
+  · by_cases hs1 : scsIsStr scs4M7 v 1
+    · -- `str 1`: `VASYYAU @ 1` pins `dist(v1,v2) = a 1 2 = 2*h0`
+      obtain ⟨hd12, -⟩ := VASYYAU_kit h scs4M7 v 1 his hbas hk hv hdiag hval hs1
+      exact Or.inl (hd12.trans ha12)
+    · by_cases hs2 : scsIsStr scs4M7 v 2
+      · -- `str 2`: `VASYYAU @ 2` pins `dist(v2,v5) = a 2 5 = 2*h0`; `v 5 = v 1`
+        obtain ⟨-, hd25⟩ := VASYYAU_kit h scs4M7 v 2 his hbas hk hv hdiag hval hs2
+        rw [show 2 + 3 = 5 by norm_num] at hd25
+        rw [hv5, dist_comm] at hd25
+        exact Or.inl (hd25.trans ha25)
+      · -- `~str 0/1/2`: `TUAPYYU @ 1`/`@ 0` split `a` vs `b`; `WKZZEEH @ 1`
+        -- kills the double-`b` branch (`v 4 = v 0`, `STR_MOD_EQ`)
+        have hs4 : ¬scsIsStr scs4M7 v 4 := by
+          intro h4
+          exact hs0 (by simpa using (STR_MOD_EQ_p25 scs4M7 v 4 his hk hv 4).mpr h4)
+        have hwk : ¬(dist (v 1) (v 4) = cstab ∧ dist (v 1) (v 2) = cstab) := by
+          have h' := WKZZEEH_kit h scs4M7 v 1 his hbas hk hv hdiag hval hs1 hs2 hs4
+          simpa using h'
+        obtain hd12 | hd12 := TUAPYYU_kit h scs4M7 v 1 his hbas hk hv hdiag hval hs1 hs2
+        · exact Or.inl (hd12.trans ha12)
+        · obtain hd01 | hd01 := TUAPYYU_kit h scs4M7 v 0 his hbas hk hv hdiag hval hs0 hs1
+          · exact Or.inr (hd01.trans ha01)
+          · exact absurd ⟨by rw [hv4, dist_comm]; exact hd01.trans hb01,
+              hd12.trans hb12⟩ hwk
 
 /-- HOL `BB_4M7_IMP_4M6_12` (MIQMCSN.hl:2226). -/
 theorem BB_4M7_IMP_4M6_12_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M7 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 1) (v 2) = 2 * h0 → BBsV39 scs4M6' v := by
-  sorry
-  -- NEEDS: MIN_NOT_STAND_4M7_p32 + BBs_v39 pointwise table match.
+  intro h v hv hdist h12
+  have hBB : BBsV39 scs4M7 v := MMS_IMP_BBS_p28 scs4M7 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [K_SCS_4M7_p32] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  have h12' : dist (v 2) (v 1) = 2 * h0 := by rw [dist_comm]; exact h12
+  -- pointwise target bounds: the tables agree except on the class `{1,2}`,
+  -- where `4M6'.b = 2*h0` and the pin `h12` supplies the upper bound
+  have hpt : ∀ i j, scs4M6'.a i j ≤ dist (v i) (v j) ∧
+      dist (v i) (v j) ≤ scs4M6'.b i j := by
+    intro i j
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hA7 : scs4M7.a i j = scs4M7.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB7 : scs4M7.b i j = scs4M7.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+        ((1, 3), 6)] (2 * h0) 4 i j = funlistV39 [((0, 1), cstab), ((1, 2), cstab),
+        ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hA6 : scs4M6'.a i j = scs4M6'.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4)
+          (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB6 : scs4M6'.b i j = scs4M6'.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4)
+          (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hd : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    have h7 := hBB.2.2.1 i j
+    rw [hA7, hB7, hd] at h7
+    rw [hA6, hB6, hd]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      norm_num [scs4M6', scs4M7, mkUnadornedV39, funlistV39, psort, assocdV39, h0]
+        at h7 ⊢ <;>
+      first
+        | exact h7
+        | (rw [h12]; norm_num [h0])
+        | (rw [h12']; norm_num [h0])
+        | linarith
+  exact la32BB_of_pt (s := scs4M6') (t := scs4M7) rfl hpt hBB
 
 /-- HOL `MM_4M7_IMP_MM_4M6_12` (MIQMCSN.hl:2262). -/
 theorem MM_4M7_IMP_MM_4M6_12_p32 :
     main_nonlinear_terminal_v11 → ∀ v : ℕ → V3, v ∈ MMsV39 scs4M7 →
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 1) (v 2) = 2 * h0 → MMsV39 scs4M6' ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M7_IMP_4M6_12_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdist h12
+  exact XWNHLMD_MM_p33 scs4M7 scs4M6' v SCS_4M7_IS_SCS_p29 SCS_4M6_IS_SCS_p29
+    SCS_4M7_BASIC_p29 SCS_4M6_BASIC rfl hv
+    (BB_4M7_IMP_4M6_12_p32 h v hv hdist h12) (le_refl _)
 
 /-- HOL `BB_4M7_IMP_4M6_01` (MIQMCSN.hl:2283). -/
 theorem BB_4M7_IMP_4M6_01_p32 :
@@ -1977,9 +2088,57 @@ theorem BB_4M7_IMP_4M6_01_p32 :
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 0) (v 1) = 2 * h0 →
     BBsV39 (scsPropEquV39 (scsOppV39 scs4M6') 1) v := by
-  sorry
-  -- NEEDS: MIN_NOT_STAND_4M7_p32 + BBs_v39 / scs_opp_v39 /
-  -- scs_prop_equ_v39 pointwise re-index.
+  intro h v hv hdist h01
+  have hBB : BBsV39 scs4M7 v := MMS_IMP_BBS_p28 scs4M7 v hv
+  have hper : Periodic v 4 := by
+    have hp := hBB.2.1
+    rw [K_SCS_4M7_p32] at hp
+    exact hp
+  have hvmod : ∀ i, v (i % 4) = v i := fun i => periodic_mod_eq_p23 hper i
+  have h01' : dist (v 1) (v 0) = 2 * h0 := by rw [dist_comm]; exact h01
+  -- mod-4 invariance of the reflected table (`pe (opp 4M6') 1`)
+  have hS01 : isScsV39 (scsPropEquV39 (scsOppV39 scs4M6') 1) :=
+    PROP_EQU_IS_SCS_p33 (s := scsOppV39 scs4M6') (k := 4) rfl
+      (OPP_IS_SCS_p33 scs4M6' SCS_4M6_IS_SCS_p29) 1
+  obtain ⟨-, -, -, -, -, -, -, hpa, -, -, hpb, -, -, -, -, -, -, -, -, -, -⟩ := hS01
+  have hpa4 : Periodic2 (scsPropEquV39 (scsOppV39 scs4M6') 1).a 4 := hpa
+  have hpb4 : Periodic2 (scsPropEquV39 (scsOppV39 scs4M6') 1).b 4 := hpb
+  have hA01 := fun i j =>
+    periodic2_mod_eq_p26 (by omega) hpa4 i j
+  have hB01 := fun i j =>
+    periodic2_mod_eq_p26 (by omega) hpb4 i j
+  -- pointwise target bounds: the reflected `a`-table is dominated by the
+  -- `scs_4M7` one, the `b`-table agrees except on `{0,1}`, where `h01` pins
+  have hpt : ∀ i j, (scsPropEquV39 (scsOppV39 scs4M6') 1).a i j ≤ dist (v i) (v j) ∧
+      dist (v i) (v j) ≤ (scsPropEquV39 (scsOppV39 scs4M6') 1).b i j := by
+    intro i j
+    have h4i : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h4j : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hA7 : scs4M7.a i j = scs4M7.a (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab),
+        ((1, 3), cstab)] 2 4 i j = funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0),
+        ((0, 2), cstab), ((1, 3), cstab)] 2 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hB7 : scs4M7.b i j = scs4M7.b (i % 4) (j % 4) := by
+      show funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+        ((1, 3), 6)] (2 * h0) 4 i j = funlistV39 [((0, 1), cstab), ((1, 2), cstab),
+        ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)] (2 * h0) 4 (i % 4) (j % 4)
+      exact funlist_mod_p32 _ _ _ _ _ (by omega)
+    have hd : dist (v i) (v j) = dist (v (i % 4)) (v (j % 4)) := by
+      rw [← hvmod i, ← hvmod j]
+    have h7 := hBB.2.2.1 i j
+    rw [hA7, hB7, hd] at h7
+    rw [hA01 i j, hB01 i j, hd]
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      norm_num [scsPropEquV39, scsOppV39, peropp2, scs4M6', scs4M7, mkUnadornedV39,
+        funlistV39, psort, assocdV39, h0] at h7 ⊢ <;>
+      first
+        | exact h7
+        | (rw [h01]; norm_num [h0])
+        | (rw [h01']; norm_num [h0])
+        | (norm_num [h0, cstab] at h7 ⊢; linarith)
+  exact la32BB_of_pt (s := scsPropEquV39 (scsOppV39 scs4M6') 1) (t := scs4M7)
+    rfl hpt hBB
 
 /-- HOL `MM_4M7_IMP_MM_4M6_01` (MIQMCSN.hl:2327). -/
 theorem MM_4M7_IMP_MM_4M6_01_p32 :
@@ -1987,8 +2146,29 @@ theorem MM_4M7_IMP_MM_4M6_01_p32 :
     (∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) →
     dist (v 0) (v 1) = 2 * h0 →
     MMsV39 (scsPropEquV39 (scsOppV39 scs4M6') 1) ≠ ∅ := by
-  sorry
-  -- NEEDS: BB_4M7_IMP_4M6_01_p32 + XWNHLMD_MM + MMS_IMP_BBS.
+  intro h v hv hdist h01
+  exact XWNHLMD_MM_p33 scs4M7 (scsPropEquV39 (scsOppV39 scs4M6') 1) v
+    SCS_4M7_IS_SCS_p29
+    (PROP_EQU_IS_SCS_p33 (s := scsOppV39 scs4M6') (k := 4) rfl
+      (OPP_IS_SCS_p33 scs4M6' SCS_4M6_IS_SCS_p29) 1)
+    SCS_4M7_BASIC_p29 ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩ rfl hv
+    (BB_4M7_IMP_4M6_01_p32 h v hv hdist h01) (le_refl _)
+
+/-- In-region twin of HOL `MM_4M7_IMP_STAB_4M7` (MIQMCSN.hl:1101): the
+stab-diag nonemptiness consumed by `SCS_4M7_ARROW_STAB_4M7_4M6` below (the
+public `_p32` skeleton at Section 3 is outside this lane's K7 region and is
+left untouched).  `XWNHLMD_MM` on `s' = scsStabDiagV39 scs4M7 i j` over the
+proved `BB_4M7_IMP_BB_STAN_4M7_p32`. -/
+private theorem la32MM_4M7_IMP_STAB (v : ℕ → V3) (i j : ℕ)
+    (h1 : v ∈ MMsV39 scs4M7) (h2 : scsDiag 4 i j)
+    (h3 : dist (v i) (v j) ≤ cstab) :
+    MMsV39 (scsStabDiagV39 scs4M7 i j) ≠ ∅ := by
+  have hd' : scsDiag scs4M7.k i j := by rw [K_SCS_4M7_p32]; exact h2
+  exact XWNHLMD_MM_p33 scs4M7 (scsStabDiagV39 scs4M7 i j) v
+    SCS_4M7_IS_SCS_p29 (STAB_4M7_SCS_p33 i j hd').1 SCS_4M7_BASIC_p29
+    (STAB_4M7_SCS_p33 i j hd').2 rfl h1
+    (BB_4M7_IMP_BB_STAN_4M7_p32 v i j (MMS_IMP_BBS_p28 scs4M7 v h1) h2 h3)
+    (le_refl _)
 
 /-- HOL `SCS_4M7_ARROW_STAB_4M7_4M6` (MIQMCSN.hl:2361). -/
 theorem SCS_4M7_ARROW_STAB_4M7_4M6_p32 :
@@ -1996,9 +2176,37 @@ theorem SCS_4M7_ARROW_STAB_4M7_4M6_p32 :
     scsArrowV39 {scs4M7}
       ({scs4M6', scsPropEquV39 (scsOppV39 scs4M6') 1} ∪
         {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M7 i j}) := by
-  sorry
-  -- NEEDS: scs_arrow_v39 unfolding + BB/MM_4M7_IMP_* twins + STAB_MOD /
-  -- YRTAFYH kit on the stab branch.
+  intro h
+  refine ⟨?_, ?_⟩
+  · -- every target member is an `scs` system
+    rintro t (ht | ht)
+    · rcases Set.mem_insert_iff.mp ht with ht | ht
+      · rw [ht]; exact SCS_4M6_IS_SCS_p29
+      · rw [Set.mem_singleton_iff] at ht
+        rw [ht]
+        exact PROP_EQU_IS_SCS_p33 (s := scsOppV39 scs4M6') (k := 4) rfl
+          (OPP_IS_SCS_p33 scs4M6' SCS_4M6_IS_SCS_p29) 1
+    · obtain ⟨i, j, hd, rfl⟩ := ht
+      exact (STAB_4M7_SCS_p33 i j (by rw [K_SCS_4M7_p32]; exact hd)).1
+  · -- the realisation dichotomy: extremal (`MIN_NOT_STAND`) or stab slice
+    by_cases hempty : ∀ s ∈ ({scs4M7} : Set ScsV39), MMsV39 s = ∅
+    · exact Or.inl hempty
+    · push_neg at hempty
+      obtain ⟨s, hs, hne⟩ := hempty
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      obtain ⟨v, hv⟩ := hne
+      by_cases hstr : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)
+      · rcases MIN_NOT_STAND_4M7_p32 h v hv hstr with h12 | h01
+        · exact Or.inr ⟨scs4M6', by simp,
+            MM_4M7_IMP_MM_4M6_12_p32 h v hv hstr h12⟩
+        · exact Or.inr ⟨scsPropEquV39 (scsOppV39 scs4M6') 1, by simp,
+            MM_4M7_IMP_MM_4M6_01_p32 h v hv hstr h01⟩
+      · push_neg at hstr
+        obtain ⟨i, j, hd, hle⟩ := hstr
+        exact Or.inr ⟨scsStabDiagV39 scs4M7 i j,
+          Or.inr ⟨i, j, hd, rfl⟩,
+          la32MM_4M7_IMP_STAB v i j hv hd hle⟩
 
 /-- HOL `K_SCS_OPP_4M6` (MIQMCSN.hl:2443). -/
 theorem K_SCS_OPP_4M6_p32 : (scsOppV39 scs4M6').k = 4 := rfl
@@ -2073,10 +2281,53 @@ theorem SCS_4M6_OPP_IS_SCS_p32 : isScsV39 (scsOppV39 scs4M6') := by
 theorem YOBIMPP_p32 :
     main_nonlinear_terminal_v11 →
     scsArrowV39 {scs4M7} {scs4M6', scs3T3, scs3M1, scs3T4} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via SCS_4M7_ARROW_STAB_4M7_4M6_p32 +
-  -- STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32 + SCS_OPP_REFL /
-  -- YXIONXL2 on scs_prop_equ_v39 (scs_opp_v39 scs_4M6') 1.
+  intro h
+  -- the intermediate set `{4M6', pe (opp 4M6') 1} ∪ stab-diag`
+  have h1 : scsArrowV39 {scs4M7}
+      (({scs4M6'} ∪ {scsPropEquV39 (scsOppV39 scs4M6') 1}) ∪
+        {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M7 i j}) := by
+    have h0 := SCS_4M7_ARROW_STAB_4M7_4M6_p32 h
+    rwa [show ({scs4M6', scsPropEquV39 (scsOppV39 scs4M6') 1} : Set ScsV39)
+        = {scs4M6'} ∪ {scsPropEquV39 (scsOppV39 scs4M6') 1} from by
+      ext x; simp [or_comm]] at h0
+  -- `{4M6'} -> {4M6'}` (reflexivity) and `{pe (opp 4M6') 1} -> {4M6'}` (opp chain)
+  have hself : scsArrowV39 ({scs4M6'} : Set ScsV39) {scs4M6'} :=
+    FZIOTEF_REFL _ (fun t ht => by
+      rw [Set.mem_singleton_iff] at ht
+      rw [ht]
+      exact SCS_4M6_IS_SCS_p29)
+  have hpe : scsArrowV39 {scsPropEquV39 (scsOppV39 scs4M6') 1} {scs4M6'} := by
+    have hB : isScsV39 (scsOppV39 scs4M6') := SCS_4M6_OPP_IS_SCS_p32
+    have hstep : scsArrowV39 {scsPropEquV39 (scsOppV39 scs4M6') 1}
+        {scsPropEquV39 (scsPropEquV39 (scsOppV39 scs4M6') 1) (4 - 1 % 4)} :=
+      YXIONXL3_p33 _ (4 - 1 % 4)
+        (PROP_EQU_IS_SCS_p33 (s := scsOppV39 scs4M6') (k := 4) rfl hB 1)
+    have hid : scsPropEquV39 (scsPropEquV39 (scsOppV39 scs4M6') 1) (4 - 1 % 4)
+        = scsOppV39 scs4M6' := (PRO_EQU_ID1_p33 (s := scsOppV39 scs4M6') (k := 4) rfl hB 1).symm
+    rw [hid] at hstep
+    have hback : scsArrowV39 {scsOppV39 scs4M6'} {scs4M6'} := by
+      have h2 := YXIONXL2_p33 (scsOppV39 scs4M6') hB (by
+        rw [K_SCS_OPP_4M6_p32]; norm_num)
+      rwa [SCS_OPP_REFL_fb scs4M6' SCS_4M6_IS_SCS_p29] at h2
+    exact FZIOTEF_TRANS _ _ _ hstep hback
+  have hAB : scsArrowV39 ({scs4M6'} ∪ {scsPropEquV39 (scsOppV39 scs4M6') 1})
+      {scs4M6'} := by
+    have h0 := FZIOTEF_UNION ({scs4M6'} : Set ScsV39) {scs4M6'}
+      {scsPropEquV39 (scsOppV39 scs4M6') 1} {scs4M6'} hself hpe
+    rwa [show ({scs4M6'} ∪ {scs4M6'} : Set ScsV39) = {scs4M6'} from by
+      ext x; simp] at h0
+  have h2 : scsArrowV39
+      (({scs4M6'} ∪ {scsPropEquV39 (scsOppV39 scs4M6') 1}) ∪
+        {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M7 i j})
+      {scs4M6', scs3T3, scs3M1, scs3T4} := by
+    have h0 := FZIOTEF_UNION ({scs4M6'} ∪ {scsPropEquV39 (scsOppV39 scs4M6') 1})
+      {scs4M6'} {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M7 i j}
+      {scs3T3, scs3M1, scs3T4} hAB STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32
+    rwa [show (({scs4M6'} ∪ {scs3T3, scs3M1, scs3T4}) : Set ScsV39)
+        = {scs4M6', scs3T3, scs3M1, scs3T4} from by
+      ext x
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]] at h0
+  exact FZIOTEF_TRANS _ _ _ h1 h2
 
 /-! ## Section 8: the 4M8 dichotomy (MIQMCSN.hl:2491-3053) -/
 
