@@ -96,7 +96,17 @@
 ---
 
 
-## 1. 在飞（2026-11-15：1 条 —— `qitnpea-w1`；前两车道已收线）
+## 1. 在飞（2026-11-15：2 条 —— `guardcons-w1` + `lp-pilot-w1`；`qitnpea-w1` 已收线 `06285994`）
+
+> **2026-11-15 07:50 双车道发车（用户令「都发」）**：`guardcons-w1`（族 B `iteHullTM2`
+> 分支一致性 Phase 0，零 Lean；不一致则 ≤20 叶超平面切分原型）+ `lp-pilot-w1`（10–100 条
+> LP 记录端到端定标，外推 43,078）。两条均 bounded、不碰全量/不改 checker；全局单 lean 锁
+> `/tmp/lean_global_lock`；后台 map AO 仪器占 1 lean。
+
+> **2026-11-15 07:47 收线（`06285994`）**：`qitnpea-w1` 落库——`nliRestQITNPEA4003532128a`
+> 纯代数真证（`NliQitnpea` +142；Assembly 1 import + body）；新模块 34 s / 5.81 GB
+> RC=0/0 err/0 warn，探针标准三；Assembly 岛编 rc=0/0 err（59 个 `:= sorry`）；
+> 根面 589 md5 同；锥内 nli* **53→52**（SORRIED 54→53，基线 AO 待仪器）。
 
 > **2026-11-15 07:30 发车（用户令「发」）**：`qitnpea-w1` — `nliRestQITNPEA4003532128a`
 > 纯代数真证（3 变量、余量 0.819、PICK-2 骨架）；零农场、单文件 ≤450 行；成功 SORRIED 54→53。
@@ -881,6 +891,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（07:50，续1156）**：**`qitnpea-w1` 收线 `06285994`（`nliRestQITNPEA4003532128a` 纯代数真证）；双车道发车（`guardcons-w1` + `lp-pilot-w1`）**。
+① **qitnpea 交付**：`NliQitnpea.lean` **+142**（`y3=y4=y5=√2 ⇒ x3=x4=x5=2`；`δ4=x1(x2+x6−x1)`、`δ=(x2x6)(8−x1)−2(x1−(x2+x6))²`；u/t 凹二次 + 弦线 cut，`δ>0.14` 余量 **0.1759**，数值真 min **0.31759**）+ Assembly 1 import + body。新模块直编 **34 s / 5.81 GB，RC=0/0 err/0 warn**；模块/Assembly 探针 = 标准三；Assembly 岛编 **rc=0/0 err（59 个 `:= sorry`）**；根面 589 md5 `246e952c…` 同。锥内 nli* **53→52**（SORRIED 54→53；基线 AO 待仪器）。
+② **`guardcons-w1`**：族 B 1,400 叶 `iteHullTM2` 跳变——Phase 0 用复刻在 guard 零集采样比较两支，判定**分支一致性**；成立则给精确引理陈述（交编排者评估 bounded hold release），不成立则 ≤20 叶**超平面/guard 定号切分**原型量 m/成本；不碰 certtm/D/BBTree。
+③ **`lp-pilot-w1`**：10–100 条 LP 记录端到端定标（parse→gen_data→glpsol→flatten→SoPlex→socert→Lean 叶；batch 编译 5–20 叶），外推 43,078 的 CPU·h 与 infeasible/Farkas 缺口；不跑全量、不改 checker。
+④ 边界：两车道均不 commit/push、不 `lake build`/`auto_gate`/地图/root；全局单 lean 锁 `/tmp/lean_global_lock`（后台 map AO 占 1 个 lean）；新增公理/`sorry` 为零。ORDERS 已落两份快照。
+⑤ 下一条：续1157（基线 AO）。
 - **2026-11-15（07:37，续1155）**：**基线 AN 落地——`nliPackIneqDefA` 接线（SORRIED 55→54，Text 0）**。
 ① 仪器（`e2e_reach_map` 原样，输出 **5,975 行**；`/tmp/reachmap_AN.out`）：`K_REACH` **2,101,084（+412）** / **SORRIED 54（−1；清单 diff：closed 恰 `{Kepler.Assembly.nliPackIneqDefA}`、added ∅）** / `K_AXIOM` **585（0/0）** / `MODULES` **5,317（+4）** / `UNIVERSE` **2,113,085（+425）** / COVERAGE **99.432063%**（分母涨微降）；口径 II **38,978 / 54 / 585 / 49,422**；`TOTAL_VALUE_DECLS` 2,100,399（+412）。
 ② 构成：**SORRIED 54 = Assembly 54（53 `nli*` + 1 hLP），Text 0**。`trust_manifest.py --check` **PASS**（585/585、0 形状未知、三区间 0 空隙 0 重叠、pins OK）；TSV 换装 5,975 行；根面 589 md5 `246e952c…` 同。
