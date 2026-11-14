@@ -1629,4 +1629,53 @@ private theorem pweiwbz_C_norm_ne (h : main_nonlinear_terminal_v11) (s : ScsV39)
     exact hd
   simpa only [dist_comm] using hd'
 
+/-- HOL `PWEIWBZ` (VASYYAU.hl:1126-2348) — downstream kit version of the
+LocalAuto1 registry twin `PWEIWBZ_concl` (statement verbatim, same
+`h : main_nonlinear_terminal_v11` premise and quantifier order).  The body is
+the HOL three-way case split on the straightness of the two adjacent residues
+`p`, `p+1` (mutually exclusive by `pweiwbz_str_uniq`):
+
+* `¬str p ∧ ¬str (p+1)` — `YEBWJNG_kit @ p`;
+* `str p` — `¬str (p+1)`, `¬str (p+3)` by the at-most-one-straight bound, then
+  the `norm (v p) = 2` split into `pweiwbz_B_a30eq2` / `pweiwbz_B_a30ne2`
+  (`a(p+3)p = 2` vs. `≠ 2`) and the `norm (v p) ≠ 2` leaf `pweiwbz_B_norm_ne`;
+* `str (p+1)` — `norm (v (p+1)) = 2` splits into `pweiwbz_C1` (`a(p+3)p = 2`)
+  and, on `a(p+3)p ≠ 2`, `pweiwbz_C_a12` / `pweiwbz_C_a12ne2` (`a(p+1)(p+2)`
+  split); the `norm (v (p+1)) ≠ 2` leaf is `pweiwbz_C_norm_ne`. -/
+theorem PWEIWBZ_kit (h : main_nonlinear_terminal_v11) :
+    ∀ (s : ScsV39) (v : ℕ → V3) (p : ℕ), isScsV39 s →
+    scsBasicV39 s → s.k = 4 → v ∈ MMsV39 s →
+    (∀ i j, scsDiag 4 i j → s.a i j ≤ cstab ∧ cstab < dist (v i) (v j) ∧
+      4 * h0 < s.b i j) →
+    (∀ i, (s.a i (i + 1) = 2 ∧ s.b i (i + 1) = 2 * h0) ∨
+      (s.a i (i + 1) = 2 * h0 ∧ s.b i (i + 1) = cstab)) →
+    s.a p (p + 1) = 2 → dist (v p) (v (p + 1)) = 2 := by
+  intro s v p his hb hk hv hdiag hval ha
+  by_cases hstr0 : scsIsStr s v p
+  · -- ═══ `str p`: the other two residues are non-straight ═══
+    have hns1 : ¬scsIsStr s v (p + 1) := by
+      intro hc
+      have e := pweiwbz_str_uniq h s v his hk hv p (p + 1) hstr0 hc
+      omega
+    have hns3 : ¬scsIsStr s v (p + 3) := by
+      intro hc
+      have e := pweiwbz_str_uniq h s v his hk hv p (p + 3) hstr0 hc
+      omega
+    by_cases hn : ‖v p‖ = 2
+    · by_cases ha30 : s.a (p + 3) p = 2
+      · exact pweiwbz_B_a30eq2 h s v p his hb hk hv hdiag hval hns1 hns3 hstr0 hn ha ha30
+      · exact pweiwbz_B_a30ne2 h s v p his hb hk hv hdiag hval hns1 hns3 hstr0 hn ha ha30
+    · exact pweiwbz_B_norm_ne h s v p his hb hk hv hdiag hval hstr0 hn ha
+  · by_cases hstr1 : scsIsStr s v (p + 1)
+    · -- ═══ `str (p+1)` ═══
+      by_cases hn1 : ‖v (p + 1)‖ = 2
+      · by_cases ha30 : s.a (p + 3) p = 2
+        · exact pweiwbz_C1 h s v p his hb hk hv hdiag hval ha hstr1 ha30
+        · by_cases ha12 : s.a (p + 1) (p + 2) = 2
+          · exact pweiwbz_C_a12 h s v p his hb hk hv hdiag hval ha hstr1 hn1 ha30 ha12
+          · exact pweiwbz_C_a12ne2 h s v p his hb hk hv hdiag hval ha hstr1 hn1 ha30 ha12
+      · exact pweiwbz_C_norm_ne h s v p his hb hk hv hdiag hval ha hstr1 hn1
+    · -- ═══ `¬str p ∧ ¬str (p+1)`: `YEBWJNG` ═══
+      exact YEBWJNG_kit h s v p his hb hk hv hdiag hval hstr0 hstr1 ha
+
 end Kepler.Text
