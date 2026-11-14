@@ -3073,9 +3073,53 @@ theorem SCS_4M8_ARROW_STEP_ONE_p32 :
     scsArrowV39 {scs4M8}
       ({scs4M6', scsOppV39 scs4M6', scs4M8_02, scs4M8_13} ∪
         {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j}) := by
-  sorry
-  -- NEEDS: scs_arrow_v39 unfolding + BB/MM_4M8_IMP_* twins + STAB_MOD /
-  -- YRTAFYH kit on the stab branch.
+  intro h
+  refine ⟨?_, ?_⟩
+  · -- every target member is an `scs` system
+    rintro t (ht | ⟨i, j, hd, rfl⟩)
+    · rcases Set.mem_insert_iff.mp ht with ht | ht
+      · rw [ht]; exact SCS_4M6_IS_SCS_p29
+      · rcases Set.mem_insert_iff.mp ht with ht | ht
+        · rw [ht]; exact OPP_IS_SCS_p33 scs4M6' SCS_4M6_IS_SCS_p29
+        · rcases Set.mem_insert_iff.mp ht with ht | ht
+          · rw [ht]; exact SCS_4M8_02_IS_SCS_p32
+          · rw [Set.mem_singleton_iff] at ht
+            rw [ht]; exact SCS_4M8_13_IS_SCS_p32
+    · exact (STAB_4M8_SCS_p33 i j (by rw [K_SCS_4M8_p33]; exact hd)).1
+  · -- the realisation dichotomy: extremal (`MIN_NOT_STAND_4M8`) or stab slice
+    by_cases hempty : ∀ s ∈ ({scs4M8} : Set ScsV39), MMsV39 s = ∅
+    · exact Or.inl hempty
+    · push_neg at hempty
+      obtain ⟨s, hs, hne⟩ := hempty
+      rw [Set.mem_singleton_iff] at hs
+      subst hs
+      obtain ⟨v, hv⟩ := hne
+      by_cases hstr : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)
+      · rcases MIN_NOT_STAND_4M8_p32 h v hv hstr with h23 | h01 | ⟨h01, h12, h23, h30⟩
+        · exact Or.inr ⟨scs4M6', by simp,
+            MM_4M8_IMP_MM_4M6_23_p32 h v hv hstr h23⟩
+        · exact Or.inr ⟨scsOppV39 scs4M6', by simp,
+            MM_4M8_IMP_MM_4M6_01_p32 h v hv hstr h01⟩
+        · -- protruding configuration: `quad_diag_362` bounds one of the two diagonals
+          rcases quad_diag_362_p16 h (v 1) (v 2) (v 3) (v 0) h12 h23 h30
+            (by rw [dist_comm]; exact h01) with h13le | h20le
+          · exact Or.inr ⟨scs4M8_13, by simp,
+              MM_4M8_IMP_MM_4M8_13_p32 h v hv hstr h01 h12 h23 h30 h13le⟩
+          · exact Or.inr ⟨scs4M8_02, by simp,
+              MM_4M8_IMP_MM_4M8_02_p32 h v hv hstr h01 h12 h23 h30
+                (by rw [dist_comm]; exact h20le)⟩
+      · push_neg at hstr
+        obtain ⟨i, j, hdij, hle⟩ := hstr
+        exact Or.inr ⟨scsStabDiagV39 scs4M8 i j, Or.inr ⟨i, j, hdij, rfl⟩,
+          MM_4M8_IMP_STAB_4M8_p32 v i j hv hdij hle⟩
+  -- DISCHARGED (miqmcsn-w1, 2026-11-14): HOL `SCS_4M8_ARROW_STEP_ONE` verbatim:
+  -- `scs_arrow_v39` unfolding (five `is_scs` leaves: `SCS_4M6_IS_SCS`,
+  -- `OPP_IS_SCS` of `scs_4M6'`, `SCS_4M8_02_IS_SCS`, `SCS_4M8_13_IS_SCS`,
+  -- `STAB_4M8_SCS`), then the `MMs` dichotomy on `{scs_4M8}`
+  -- (`MIN_NOT_STAND_4M8` strict leaf feeding `MM_4M8_IMP_MM_4M6_23` /
+  -- `MM_4M8_IMP_MM_4M6_01` / `quad_diag_362` + `MM_4M8_IMP_MM_4M8_13` /
+  -- `MM_4M8_IMP_MM_4M8_02`; the non-strict leaf feeding
+  -- `MM_4M8_IMP_STAB_4M8`).
 
 /-! ## Section 9: diag + half-slice kit (MIQMCSN.hl:3016-3074) -/
 
@@ -3509,8 +3553,68 @@ theorem SCS_4M8_02_ARROW_3T7_p32 :
 theorem MIQMCSN_p32 :
     main_nonlinear_terminal_v11 →
     scsArrowV39 {scs4M8} {scs4M6', scs3T7, scs3T4} := by
-  sorry
-  -- NEEDS: FZIOTEF_TRANS via ({scs_4M6', scs_opp_v39 scs_4M6',
-  -- scs_4M8_02, scs_4M8_13} ∪ stab-diag set) + SCS_4M8_ARROW_STEP_ONE_p32
-  -- + SET_STAB_4M8_ARROW_3T4_p32 + SCS_4M8_02_ARROW_3T7_p32 +
-  -- YXIONXL2/SCS_OPP_REFL on scs_opp_v39 scs_4M6'.
+  intro h
+  -- the intermediate set of `SCS_4M8_ARROW_STEP_ONE`
+  have h1 := SCS_4M8_ARROW_STEP_ONE_p32 h
+  have hisT : ∀ t ∈ ({scs4M6', scs3T7, scs3T4} : Set ScsV39), isScsV39 t := by
+    intro t ht
+    rcases Set.mem_insert_iff.mp ht with ht | ht
+    · rw [ht]; exact SCS_4M6_IS_SCS_p29
+    · rcases Set.mem_insert_iff.mp ht with ht | ht
+      · rw [ht]; exact SCS_3T7_IS_SCS_p32
+      · rw [Set.mem_singleton_iff] at ht
+        rw [ht]; exact is_scs_3T4_p33
+  -- `{4M6'} -> {4M6'}` (reflexivity) and `{opp 4M6'} -> {4M6'}` (opp chain)
+  have hself : scsArrowV39 ({scs4M6'} : Set ScsV39) {scs4M6'} :=
+    FZIOTEF_REFL _ (fun t ht => by
+      rw [Set.mem_singleton_iff] at ht
+      rw [ht]
+      exact SCS_4M6_IS_SCS_p29)
+  have hopp : scsArrowV39 {scsOppV39 scs4M6'} {scs4M6'} := by
+    have hB : isScsV39 (scsOppV39 scs4M6') := SCS_4M6_OPP_IS_SCS_p32
+    have h2 := YXIONXL2_p33 (scsOppV39 scs4M6') hB (by
+      rw [K_SCS_OPP_4M6_p32]; norm_num)
+    rwa [SCS_OPP_REFL_fb scs4M6' SCS_4M6_IS_SCS_p29] at h2
+  -- the five pieces into the final target set
+  have hselfT : scsArrowV39 ({scs4M6'} : Set ScsV39) {scs4M6', scs3T7, scs3T4} :=
+    SING_PAD_p33 scs4M6' ({scs4M6', scs3T7, scs3T4} : Set ScsV39) (by simp) hisT
+  have hoppT : scsArrowV39 {scsOppV39 scs4M6'} {scs4M6', scs3T7, scs3T4} :=
+    FZIOTEF_TRANS _ _ _ hopp hselfT
+  have hp02 : scsArrowV39 ({scs4M8_02} : Set ScsV39) {scs4M6', scs3T7, scs3T4} :=
+    FZIOTEF_TRANS _ _ _ SCS_4M8_02_ARROW_3T7_p32
+      (SING_PAD_p33 scs3T7 ({scs4M6', scs3T7, scs3T4} : Set ScsV39) (by simp) hisT)
+  have hp13 : scsArrowV39 ({scs4M8_13} : Set ScsV39) {scs4M6', scs3T7, scs3T4} :=
+    FZIOTEF_TRANS _ _ _ SCS_4M8_13_ARROW_3T7_p32
+      (SING_PAD_p33 scs3T7 ({scs4M6', scs3T7, scs3T4} : Set ScsV39) (by simp) hisT)
+  have hstab : scsArrowV39
+      {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j}
+      {scs4M6', scs3T7, scs3T4} :=
+    FZIOTEF_TRANS _ _ _ SET_STAB_4M8_ARROW_3T4_p32
+      (SING_PAD_p33 scs3T4 ({scs4M6', scs3T7, scs3T4} : Set ScsV39) (by simp) hisT)
+  -- union the five pieces into one arrow out of the singleton union of the source
+  have c1 := FZIOTEF_BOTH_p33 ({scs4M6'} : Set ScsV39) {scsOppV39 scs4M6'}
+    {scs4M6', scs3T7, scs3T4} hselfT hoppT hisT
+  have c2 := FZIOTEF_BOTH_p33 ({scs4M6'} ∪ {scsOppV39 scs4M6'}) {scs4M8_02}
+    {scs4M6', scs3T7, scs3T4} c1 hp02 hisT
+  have c3 := FZIOTEF_BOTH_p33 (({scs4M6'} ∪ {scsOppV39 scs4M6'}) ∪ {scs4M8_02}) {scs4M8_13}
+    {scs4M6', scs3T7, scs3T4} c2 hp13 hisT
+  have c4 := FZIOTEF_BOTH_p33 ((({scs4M6'} ∪ {scsOppV39 scs4M6'}) ∪ {scs4M8_02}) ∪ {scs4M8_13})
+    {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j}
+    {scs4M6', scs3T7, scs3T4} c3 hstab hisT
+  -- reassociate the source back to the `STEP_ONE` intermediate set
+  have hsrc : (((({scs4M6'} ∪ {scsOppV39 scs4M6'}) ∪ {scs4M8_02}) ∪ {scs4M8_13}) ∪
+      {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j})
+      = ({scs4M6', scsOppV39 scs4M6', scs4M8_02, scs4M8_13} ∪
+        {s | ∃ i j, scsDiag 4 i j ∧ s = scsStabDiagV39 scs4M8 i j}) := by
+    ext x
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff, or_assoc,
+      or_left_comm, or_comm]
+  rw [hsrc] at c4
+  exact FZIOTEF_TRANS _ _ _ h1 c4
+  -- DISCHARGED (miqmcsn-w1, 2026-11-14): HOL `MIQMCSN` verbatim:
+  -- `FZIOTEF_TRANS` through the `SCS_4M8_ARROW_STEP_ONE` intermediate set,
+  -- whose pieces go to `{scs_4M6'}` (`FZIOTEF_REFL` on `scs_4M6'` and the
+  -- `YXIONXL2`/`SCS_OPP_REFL` chain on `scs_opp_v39 scs_4M6'`), to
+  -- `{scs_3T7}` (`SCS_4M8_02`/`SCS_4M8_13_ARROW_3T7`) and to `{scs_3T4}`
+  -- (`SET_STAB_4M8_ARROW_3T4`), merged by `FZIOTEF_BOTH`/`FZIOTEF_UNION`
+  -- and padded to the target set `{scs_4M6', scs_3T7, scs_3T4}`.
