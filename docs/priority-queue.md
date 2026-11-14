@@ -97,7 +97,11 @@
 ---
 
 
-## 1. 在飞（2026-11-15：1 条 —— `tmparams-w1`；`nli-triage-w1` 已收线 `a09ad494`）
+## 1. 在飞（2026-11-15：**空**；`nli-triage-w1` `a09ad494` + `tmparams-w1` `02839181` 已收线）
+
+> **2026-11-15 07:24 收线（`02839181`）**：`tmparams-w1` 落库——外部精确复刻直产 `TMParams`
+> （`pipeline/interval` 四工具 +1533，不入可信基）；4/4 叶内核 PASS（~26 s / 10.07 GB，标准三）；
+> 生成 5.9 s/叶 vs Lean 镜像 333 s/叶（56×）；6,512 叶 **650→~58–69 CPU·h**。基线 AN 仪器在跑。
 
 > **2026-11-15 07:08 收线（`a09ad494`）**：`nli-triage-w1` 落库——`nliPackIneqDefA` 纯接线真闭合
 > （Assembly +14/−2；6/6 探针标准三；Assembly 岛编 rc=0/0 err；根面 md5 `246e952c…` 同）；
@@ -875,6 +879,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（07:24，续1153）**：**`tmparams-w1` 收线落库 `02839181`——外部复刻直产 `TMParams`；4/4 叶内核 PASS；生成 5.9 s/叶（56×）；6,512 叶 650→~58–69 CPU·h**。
+① 交付：`pipeline/interval/{emit_tm_params,tmexact,parse_expr,bench_tm_params}.py`（**+1533/−0**，纯 Python 工具、不入可信基）；`emit_tm_params` 输入 (AST, box) → `TMParams`；`tmexact` 逐位同构纯整数复刻；`bench` 定标。README 增段（用法/验证/`--no-verify` 语义）。
+② 语义：`SqrtTMP = ⟨slo,shi,sc,o1,o2⟩` 按**动态求值顺序**消费（guard 先于分支、参数先于节点、straddle 两支都走）；分支 sqrt 用 `sqrtMantissaRel(fB.lo/hi/lo−W)`，guard sqrt 用 representation-bound `sqrtMantissa`（sc=0），fallback 占位 `(0,0,0)`。叶 0/657 的 **43/43 triples 与落库 `kParams` 逐项相等**。
+③ 内核验收（编排者亲跑 4 叶）：叶 0/1/2/657 生成模块 `checkPosTMHullC ... = true := by decide +kernel` 全 **RC=0 / 0 error**；`#print axioms` = check `[propext,Quot.sound]` / pos 标准三；wall **25.85–26.04 s**、RSS **10.04–10.08 GB**。落地工具再跑叶 0：params 与落库逐项同、oracle True、gen 5.83 s + verify 5.90 s。
+④ 定标：生成 **5.90 s/叶**（71 叶样本，RSS 52–60 MB）vs Lean 镜像 **333 s/叶** = **56×**；全盒 6,512 叶：生成 **10.7** + 内核 **47.3** = **58–69 CPU·h**（镜像路线 ~650）；10⁶ 叶：1,644 + 7,259 = **8.9–10.5k CPU·h**。瓶颈已翻到内核（~69%）。
+⑤ 风险：内核仍是主成本；sqrt fallback 占位在 51 叶样本未触发（oracle 兜底）；样本 `salv=0` 按 `checkPosTMHullC` 验收，将来 salvage 叶需 `checkPosTMHullD`；引擎绑定基线 `320e4cbf` 的 CertTM/Trans/Div/Sqrt/Expr 定义与 `(-80)` 模板。下一条：续1154（基线 AN）。
 - **2026-11-15（07:08，续1152）**：**`nli-triage-w1` 落库 `a09ad494`——`nliPackIneqDefA` 纯接线真闭合（锥内 nli* 54→53）；审计 0 假陈述 / 3 条锥外影子 VACUOUS；基线 AN 待跑**。
 ① 交付：`Assembly.lean` +14/−2（1 import `PackingAuto22PackIneqA` + 1 body；陈述逐字未动、零新增公理）。三合取项组件全在库真证：UKBRPFE（`nliRest6096597438b/a`）、WAZLDCD（`packIneqAWAZLDCD`）、BIEFJHU（`nliRest1965189142a/x34`）。
 ② 闸（亲跑 @`320e4cbf`）：apply-check PASS；Assembly 岛编 **rc=0/0 err**（60 个 `:= sorry`，闭件 warning 消失）；6/6 探针 = `[propext, Classical.choice, Quot.sound]`；根面 589 行 md5 **`246e952c…`** 逐字节同（585 native + sorryAx）。
