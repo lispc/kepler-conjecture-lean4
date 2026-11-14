@@ -6738,5 +6738,124 @@ theorem OCBICBY_4T2_p22 (h : main_nonlinear_terminal_v11) :
   obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
   exact (not_le.mpr hneg) (empty_4T2 h _ hbb)
 
+/-- HOL `OCBICBY` 3T1 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T1 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T1`. -/
+theorem OCBICBY_3T1_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T1} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T1 h _ hbb)
+
+/-- HOL `OCBICBY` 3T2 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T2 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T2`. -/
+theorem OCBICBY_3T2_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T2} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T2 h _ hbb)
+
+/-- HOL `OCBICBY` 3T3 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T3 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T3`. -/
+theorem OCBICBY_3T3_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T3} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T3 h _ hbb)
+
+/-- HOL `OCBICBY` 3T4 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T4 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T4`. -/
+theorem OCBICBY_3T4_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T4} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T4 h _ hbb)
+
+/-- HOL `OCBICBY` 3T5 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T5 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T5`. -/
+theorem OCBICBY_3T5_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T5} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T5 h _ hbb)
+
+/-- HOL `OCBICBY` 3T6' branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T6' = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T6'`. -/
+theorem OCBICBY_3T6'_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T6'} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T6' h _ hbb)
+
+/-- HOL `OCBICBY` 3T7 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs3T7 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_3T7`. -/
+theorem OCBICBY_3T7_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs3T7} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_3T7 h _ hbb)
+
+/-- HOL `OCBICBY` 4T1 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs4T1 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_4T1`. -/
+theorem OCBICBY_4T1_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs4T1} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_4T1 h _ hbb)
+
+/-- HOL `OCBICBY` 4T4 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs4T4 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_4T4`. -/
+theorem OCBICBY_4T4_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs4T4} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_4T4 h _ hbb)
+
+/-- HOL `OCBICBY` 4T5 branch (OCBICBY.hl:4761), discharged via the
+`arrow_rewrite_list` glue (OCBICBY.hl:4740-4747): `MMsV39 scs4T5 = ∅` since
+`BBprimeV39` needs `taustarV39 < 0`, contradicting `empty_4T5`. -/
+theorem OCBICBY_4T5_p22 (h : main_nonlinear_terminal_v11) :
+    scsArrowV39 {scs4T5} ∅ := by
+  rw [scs_arrow_sing_empty_p22]
+  ext vv
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hv
+  obtain ⟨⟨⟨hbb, _, hneg⟩, _⟩, _, _, _, _, _⟩ := hv
+  exact (not_le.mpr hneg) (empty_4T5 h _ hbb)
 
 end Kepler.Text
