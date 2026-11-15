@@ -93,7 +93,12 @@
 ---
 
 
-## 1. 在飞（2026-11-15：1 条长任务 —— `rulep-replay-w1`）
+## 1. 在飞（2026-11-15：1 条长任务 —— `rulep-replay-w2`，接管 w1 checkpoint）
+
+> **2026-11-15 15:27 `rulep-replay-w2` 接管续跑（用户令「续跑」）**：w1 停在预扫 **610/1,400**
+> （**0 FAIL**）、内核 3 叶 PASS（4471/4487/4495）；checkpoint/pool 完整。w2 复用
+> `/tmp/rulep-replay-w1` 与 w1 快照，按 undone **分块**（预扫 30 叶/调用、内核 15 叶/调用），
+> 避免 w1 的长时间单调用 stall；剩余预扫 ~2.6 h + 内核 ~10.5 h，总 ~13 h。
 
 > **2026-11-15 12:48 发车（用户令「1400 回放」）**：`rulep-replay-w1`——TSKAJXY 族 B **1,400 叶**
 > Rule P 全量：Phase 0 Python 预扫（~4.6 CPU·h）→ Phase 1 内核回放 + campaign farm
@@ -936,6 +941,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（15:27，续1166）**：**`rulep-replay-w2` 接管续跑（用户令「续跑」）——w1 停在预扫 610/1,400（0 FAIL），checkpoint 完整**。
+① w1 停止状态：预扫 **610/1,400 PASS、0 FAIL**；内核 **3 叶 PASS**（4471/4487/4495）；`pool/Kepler` 已建；0 lean/0 python/无锁；`PRESCAN.tsv` 611 行、`prescan_done/` 610、`SUMMARY.tsv` 4 行。
+② w2 复用 `/tmp/rulep-replay-w1` 与 w1 快照，**不重建** worktree/pool；按 `familyB.idx` 减 `prescan_done/`（或 `DONE/`）得到 undone，用 `--only <csv>` 分块：**预扫 30 叶/调用、内核 15 叶/调用**（每块 ≤7 min，避免长时间单调用 stall）；每块后重算 undone；24 h 止损。
+③ 预估剩余：预扫 790×11.8 s ≈ **2.6 h**；内核 1,397×27 s ≈ **10.5 h**；总 **~13 h**。
+④ 纪律：严格单 lean（`pgrep=0` + 全局锁）、不改 certtm/旧 checker/陈述、不伪造 PASS；预扫任何非 PASS 立即停。w1 的 610 叶 + 3 内核叶零丢失。
+⑤ 下一条：续1167。
 - **2026-11-15（12:48，续1165）**：**`rulep-replay-w1` 发车（用户令「1400 回放」）——族 B 1,400 叶 Rule P 全量（预扫 + 内核 + campaign pool）**。
 ① 输入：HEAD `7f9ce6df`（优化 CertTM）；`familyB.idx` 1,400；`tskajxy-tm-w1/certs/full.cert.json`；`emit_tm_params.py --rule P --rung 4096`。
 ② Phase 0 预扫（带 oracle，~4.6 CPU·h）→ `PRESCAN.tsv`；**任何非 PASS 立即停**。
