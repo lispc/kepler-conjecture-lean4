@@ -93,7 +93,12 @@
 ---
 
 
-## 1. 在飞（2026-11-15：2 条 —— `guardcons-w1` + `lp-pilot-w1`；`qitnpea-w1` 已收线 `06285994`）
+## 1. 在飞（2026-11-15：1 条 —— `guardcons-w1`；`lp-pilot-w1` 已收线）
+
+> **2026-11-15 08:37 收线（`lp-pilot-w1`）**：LP 43,078 定标完成——**42,889 bound 叶
+> ≈795 CPU·h**（生成 120.6 + 编译/内核 674.2）；1 lean 15–20 天、2 lean×10 叶批 ≈7.8 天；
+> **磁盘硬墙：oleans 0.70–0.95 TB**（本机清理后 237 GB 仍不够）；**189/189 infeasible
+> 已落库闭合（ERRATA）**，无 Farkas 缺口。全量从 43,078 降为 42,889 bound 叶。
 
 > **2026-11-15 07:50 双车道发车（用户令「都发」）**：`guardcons-w1`（族 B `iteHullTM2`
 > 分支一致性 Phase 0，零 Lean；不一致则 ≤20 叶超平面切分原型）+ `lp-pilot-w1`（10–100 条
@@ -888,6 +893,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（08:41，续1158）**：**`lp-pilot-w1` 收线——LP 43,078 定标：42,889 bound 叶 ≈795 CPU·h；磁盘 0.83 TB 是硬墙；189/189 infeasible 已闭合（ERRATA）**。
+① 样本：Phase 0 单条复跑（生成 5.63 s + 编译 30.93 s / 7.82 GB）；Phase 1 **26 条**（root 10 / easy 分支 5 / easy infeas 1 / hard 5 / hard infeas 5），**20 feasible 全 PASS**，socert 中位 root **8.99** / easy **7.84** / hard **11.31 s**，RSS 201–349 MB；6 infeasible 按预期在 socert 失败（发射侧无 Farkas 通道，**非证明缺口**）。
+② 批量：5/10/20 叶 = **155.2/317.3/601.8 s**，摊销 **30–32 s/叶**，峰值 RSS **11.5/14.7/19.3 GB**（20 叶为安全上限，30 叶预计 >26 GB）；35/35 `bound` axioms 标准三、35/35 `dual_check`=`[propext]`、**sorryAx 0**；另做 1 条真实 pin→`LpTerminalCertified` 实编译标准三。
+③ 外推 42,889 bound：生成 **120.6** + 编译/内核 **674.2** = **794.8 CPU·h**；1 lean **358.5–463.7 h（15–19 天）**；2 lean×10 叶批 **≈179 h（7.5 天）**；3 lean ≈5.1 天（内存余量小）；128 核农场理想 ≈6.2 h。**磁盘：olean 16.3–20.6 MB/叶 × 42,889 ≈ 0.70–0.95 TB（中心 0.83 TB）**；本机清理后 237 GB，缺口 ≈0.6–0.7 TB。
+④ **ERRATA**：**189/189 infeasible 已落库**（`LPLeafInfeas00` 零 sorry；189 个 `Kepler.LP.T*` Farkas 模块，`core_farkasCheck := by decide` + `farkasCheck_rowCoreOf` 桥，全 tracked）；工单/`LPPilot` 的“Farkas/G5 未含”过时。全量 43,078 → **42,889 bound 叶**，无额外 189 条。
+⑤ **本地判定**：CPU/墙钟长窗口可行，但**磁盘是硬墙**。阈值：**≥1 TB 空闲盘（建议 1.2 TB）+ 2 lean×≤10 叶批 ⇒ ≈7.8 天**；1 lean ⇒ 15–20 天；否则农场（同样需 ≥0.85 TB 存储）。旧成本档（socert 3.5 min/条、Data 423 s）作废，以本单为准。
+⑥ 磁盘清理（同批）：worktree **61→3**（保留 main / `guardcons-w1` / `lp-pilot-w1`）+ 删除 `/tmp/k6ext-w1-out`（28 GB），释放 **235 GiB**；当前 **237 GiB free（46%）**。下一条：续1159。
 - **2026-11-15（08:02，续1157）**：**基线 AO 落地——`nliRestQITNPEA4003532128a` 真证（SORRIED 54→53，Text 0）**。
 ① 仪器（`e2e_reach_map` 原样，5,975 行）：`K_REACH` **2,101,085（+1）** / **SORRIED 53（−1；清单 diff：closed 恰 `{Kepler.Assembly.nliRestQITNPEA4003532128a}`、added ∅）** / `K_AXIOM` **585（0/0）** / `MODULES` **5,318（+1）** / `UNIVERSE` **2,113,086（+1）** / COVERAGE **99.432063%**；口径 II **38,979 / 53 / 585 / 49,423**；`TOTAL_VALUE_DECLS` 2,100,400（+1）。
 ② 构成：**SORRIED 53 = Assembly 53（52 `nli*` + 1 hLP），Text 0**。`trust_manifest.py --check` **PASS**；TSV 5,975 行；根面 589 md5 `246e952c…` 同。
