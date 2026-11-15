@@ -1092,6 +1092,139 @@ def pbox_of(box):
     return [(c, c) for c in boxCenter(box)]
 
 
+# ---------------------------------------------------------------------------
+# Rule P point-path cost levers (mirror of `CertTM`: `twoPi4D` / `rungOf` /
+# `arctanIP*` / `transOnP`).  Point path only: `evalPointFill` below dispatches
+# `trans` through `transOnP`; the landed main-box `transOn` is untouched, so
+# `evalFill2D`/`checkPosTMHullC` stay bit-identical.
+# ---------------------------------------------------------------------------
+
+TWO_PI4D = (mul((2, 0), PI4D[0]), mul((2, 0), PI4D[1]))
+
+# (threshold t, series order N): `|x| ≤ t ⇒ N`; the alternating remainder
+# `t^(2N+1)/(2N+1)` is ≤ 1e-13 on every row (see CertTM `rungOf`).
+RUNG_TABLE = (
+    ((1, -1), 32),      # 1/2
+    ((3, -2), 64),      # 3/4
+    ((7, -3), 128),     # 7/8
+    ((15, -4), 256),    # 15/16
+    ((31, -5), 512),    # 31/32
+    ((63, -6), 1024),   # 63/64
+    ((127, -7), 2048),  # 127/128
+)
+
+
+def withinRung(I, t):
+    """`withinRung I t`: `-t ≤ I.lo ∧ I.hi ≤ t`."""
+    return ble(neg(t), I[0]) and ble(I[1], t)
+
+
+def rungOf(I, R):
+    """`rungOf I R`: adaptive series order from the certified interval."""
+    for t, n in RUNG_TABLE:
+        if withinRung(I, t):
+            return min(R, n)
+    return R
+
+
+def clampR(Rr):
+    """`clampR Rr = ⟨dmax Rr.lo 0, dmin Rr.hi 1⟩`."""
+    return (dmax(Rr[0], ZERO), dmin(Rr[1], (1, 0)))
+
+
+def arctanIBaseP(J, R, out):
+    """`arctanIBaseP J R out` (adaptive rung)."""
+    if ble((-1, 0), J[0]) and ble(J[1], (1, 0)):
+        N = rungOf(J, R)
+        L = arctanPoint(J[0], N, out)
+        if L is None:
+            return None
+        H = arctanPoint(J[1], N, out)
+        if H is None:
+            return None
+        return (L[0], H[1])
+    return None
+
+
+def arctanIPosAuxP(Rr, R, out):
+    """`arctanIPosAuxP Rr R out`: `twoPi4D - [arctan R.lo, arctan R.hi]`."""
+    N = rungOf(clampR(Rr), R)
+    L = arctanPoint(dmax(Rr[0], ZERO), N, out)
+    if L is None:
+        return None
+    H = arctanPoint(dmin(Rr[1], (1, 0)), N, out)
+    if H is None:
+        return None
+    return isub(TWO_PI4D, (L[0], H[1]))
+
+
+def arctanIPosP(J, R, out):
+    """`arctanIPosP J R out`."""
+    if ble((1, 0), J[0]):
+        Rr = irecip(J, out)
+        return None if Rr is None else arctanIPosAuxP(Rr, R, out)
+    return None
+
+
+def arctanINegP(J, R, out):
+    """`arctanINegP J R out`."""
+    if ble(J[1], (-1, 0)):
+        L = arctanIPosP(neg(J), R, out)
+        return None if L is None else (neg(L[1]), neg(L[0]))
+    return None
+
+
+ONE_D = ((1, 0), (1, 0))
+
+
+def arctanINearP(J, R, out):
+    """`arctanINearP`: on `J ⊆ [1/2, 2]`, `arctan y = pi4D + arctan ((y-1)/(y+1))`."""
+    if ble((1, -1), J[0]) and ble(J[1], (2, 0)):
+        T = idiv(isub(J, ONE_D), iadd(J, ONE_D), out)
+        if T is None:
+            return None
+        K0 = arctanIBaseP(T, R, out)
+        if K0 is None:
+            return None
+        return (add(PI4D[0], K0[0]), add(PI4D[1], K0[1]))
+    return None
+
+
+def arctanINearNegP(J, R, out):
+    """`arctanINearNegP`: odd symmetry of `arctanINearP` on `J ⊆ [-2, -1/2]`."""
+    if ble((-2, 0), J[0]) and ble(J[1], (-1, -1)):
+        L = arctanINearP(ineg(J), R, out)
+        return None if L is None else ineg(L)
+    return None
+
+
+def arctanIP(J, R, out):
+    """`arctanIP J R out`: near-1 (pi/4 reduction) / point branches with
+    adaptive rung; crossing intervals fall back to the landed `arctanI`."""
+    if ble((1, -1), J[0]) and ble(J[1], (2, 0)):
+        return arctanINearP(J, R, out)
+    if ble((-2, 0), J[0]) and ble(J[1], (-1, -1)):
+        return arctanINearNegP(J, R, out)
+    if ble((-1, 0), J[0]) and ble(J[1], (1, 0)):
+        return arctanIBaseP(J, R, out)
+    if ble((1, 0), J[0]):
+        return arctanIPosP(J, R, out)
+    if ble(J[1], (-1, 0)):
+        return arctanINegP(J, R, out)
+    return arctanI(J, R, out)
+
+
+def transOnP(kind, I, N, out):
+    """`transOnP`: `transOn` with `arctan` routed through `arctanIP`."""
+    if kind == ".atan1K":
+        if I[0] == (1, 0) and I[1] == (1, 0):
+            return PI4D
+        return arctanIP(I, N, out)
+    if kind == ".arctanK":
+        return arctanIP(I, N, out)
+    return transOn(kind, I, N, out)
+
+
 def evalPointFill(ast, pbox, R):
     """Mirror of `evalPointTM R pbox`: returns `(I, triples)` where the
     triples are `(slo, shi, 0)` in consumption order (computed mantissas)."""
@@ -1154,7 +1287,7 @@ def evalPointFill(ast, pbox, R):
         v = evalPointFill(args[1], pbox, R)
         if v is None:
             return None
-        I = transOn(args[0], v[0], R, _i(args[3]))
+        I = transOnP(args[0], v[0], R, _i(args[3]))
         return None if I is None else (I, v[1])
     if op == ".ite":
         C = evalPointFill(args[0], pbox, R)
@@ -1388,7 +1521,7 @@ def _evalPointCq(ast, pbox, pq, pi, R):
         v = _evalPointCq(args[1], pbox, pq, pi, R)
         if v is None:
             return None
-        I = transOn(args[0], v[0], R, _i(args[3]))
+        I = transOnP(args[0], v[0], R, _i(args[3]))
         return None if I is None else (I, v[1])
     if op == ".ite":
         C = _evalPointCq(args[0], pbox, pq, pi, R)

@@ -236,8 +236,11 @@ def main():
                     help="C = landed df-hull checker; P = opt-in point-anchored "
                          "Rule P (point certs + point rung)")
     ap.add_argument("--rung", type=int, default=8192,
-                    help="point-evaluation trans rung R (Rule P only; the "
-                         "landed AST rung is ignored on the point path)")
+                    help="point-evaluation trans rung cap R (Rule P only; "
+                         "the landed AST rung is ignored on the point path: "
+                         "open arctan uses the per-node adaptive table rung, "
+                         "near-1 args use the pi/4 reduction at N=32, and R "
+                         "only caps the crossing-interval fallback)")
     ap.add_argument("--no-verify", action="store_true",
                     help="skip the in-process kernel replay oracle")
     args = ap.parse_args()
