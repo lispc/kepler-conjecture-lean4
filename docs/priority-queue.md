@@ -93,7 +93,13 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-replay-w2` + `famsplit-w1`；fullbox prescan/g4feas 已收线、`ztgmain-w1` Phase 1 待锁）
+## 1. 在飞（2026-11-16：`rulep-replay-w2`；fullbox prescan/famsplit/g4feas 已收线、`ztgmain-w1` Phase 1 待锁）
+
+> **2026-11-16 02:20 `famsplit-w1` 收线（无 lean）**：族 A **100 父叶 → 200 子盒，
+> Rule P 200/200 PASS**（lb min **+3.526e−3**、P50 +5.060e−3、max +9.460e−3）；
+> 100/100 父叶翻正（增益 ≥+3.617e−3）；0 Rule C fallback；0.728 CPU·h / 22 min。
+> 200 个未编译模块在快照 `modules/`，worklist `famsplit_worklist_pass.idx`。
+> ⇒ 全盒内核波 = **5,012 PASS + 200 子叶 = 5,212 叶**（~39–45 h 单 lean）。
 
 > **2026-11-16 01:50 `famsplit-w1` 发车（编排者，A 波必要子步）**：族 A **100 叶
 > 沿最宽维二分 → 200 子叶**，Rule P @ 4096 逐子盒预扫（`--box`）；PASS 子叶进
@@ -989,6 +995,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（02:20，续1176）**：**`famsplit-w1` 收线——族 A 100 父叶 → 200 子盒，Rule P 200/200 PASS；全盒内核波补齐**。
+① 方法：每父叶沿**最宽实数宽度维**做一次精确 dyadic 二分（中点自动约分奇数 mantissa）；`SPLIT_CHECK.tsv` 100/100 全 true（两半非空、并集=父盒、交集=中点切片、端点 dyadic）。Rule P @ 4096 逐子盒 `--box` 预扫，200/200 PASS（in-process oracle `checkPosTMHullP = True`）。
+② 余量：lb min **+3.526061933e−3**（最薄 `1587:0` = `TskXLLIPLSAtan1PFamA1587H0`）、P50 +5.060e−3、max +9.460e−3；父盒原 lb ∈[−3.525e−4,−2.372e−6]，每父叶 `min(两半)` 翻正，最小增益 +3.617e−3。**0 Rule C fallback**。
+③ 结构：200 叶全同 sqrtCerts 43 / pointCerts 0 / salv 0 / inv 165 / trans 143；切维分布 dim3/4/5 = 52/70/46（dim0/1 各 8、dim2 16）。成本 0.728 CPU·h / 2 worker / 22 min，峰值 26.3 MiB；零 lean、主仓干净、w2 未受影响。
+④ 交付：`FAMSPLIT.tsv`(200×25)、`famsplit_worklist_pass.idx`(200 `parent:half:module`)、`FAMSPLIT_BOXES.json`、`modules/`(200 未编译 Rule P 模块)、`SPLIT_CHECK.tsv`、`FAMSPLIT_SUMMARY.md`、`MANIFEST.sha256`(637)；`verify_delivery.py` 自检 OK。
+⑤ 下一步：w2 同刻 **993/1,400**（02:25，ETA ~05:35）；收线后全盒内核波 = **5,012 + 200 = 5,212 叶**，单 lean 25.5–31 s/叶 ≈ **39–45 h**；先建 campaign pool（复用 w2 的 1,400 B olean + 新叶），分块 checkpoint 续跑。下一条：续1177。
 
 - **2026-11-16（01:50，续1175）**：**`famsplit-w1` 发车——族 A 100 叶切叶 → 200 子叶 Rule P 预扫（A 波必要子步）**。
 ① 背景：`rulep-fullbox-prescan-w1` 的 100 FAIL 恰好=族 A；Rule P 不收紧族 A（与 C-rule lb 最大差 5e−14），CALIB2 记载“最宽维二分一次 100/100 PASS”。

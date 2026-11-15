@@ -166,9 +166,14 @@
   族 A 的 lb 与旧 C-rule 最大差 5e−14 ⇒ **Rule P 不收紧族 A，必须按 CALIB2 切叶**
   （100 → 200 子叶）。总 18.88 CPU·h；`kernel_worklist_pass.idx` 5,012 叶，
   27–31 s/叶 ≈ **37.6–43.2 h 单 lean**。
-- 当前：`rulep-replay-w2` 内核 **919/1,400**（01:50，~29 s/叶，ETA ~05:35）；
-  收线后接 **5,012 叶内核补叶** + 族 A 切叶（200 子叶）→ 装配 →
-  `packIneqTskXLLIPLS_of_hull` → `Assembly.nliTskXLLIPLS`。
+- **2026-11-16 02:20 族 A 切叶收线**（`famsplit-w1`，2 worker，无 lean）：100 父叶
+  沿最宽实测宽度维 dyadic 二分 → **200 子盒，Rule P 200/200 PASS**（lb min
+  **+3.526e−3**、P50 +5.060e−3、max +9.460e−3）；100/100 父叶翻正；
+  **0 Rule C fallback**；0.728 CPU·h / 22 min；200 个未编译模块在快照 `modules/`。
+  ⇒ 全盒内核波 = **5,012 + 200 = 5,212 叶**，单 lean **≈39–45 h**。
+- 当前：`rulep-replay-w2` 内核 **993/1,400**（02:25，~29 s/叶，ETA ~05:35）；
+  收线后接 **5,212 叶内核补叶** → 装配 → `packIneqTskXLLIPLS_of_hull` →
+  `Assembly.nliTskXLLIPLS`。
 - **不要**再做 guard 超平面切分：分支恒等让切分零收益（`guardcons-w1` 判定）。
 - **不要**把“130 GB olean”当真：TSKAJXY 叶 olean 实测 ~0.2 MB/叶 ⇒ 全盒 ~1.3–1.5 GB；
   130 GB 是混入 LP 叶 16–21 MB/叶 的误估。
