@@ -1169,8 +1169,8 @@ def arctanIPosP(J, R, out):
 def arctanINegP(J, R, out):
     """`arctanINegP J R out`."""
     if ble(J[1], (-1, 0)):
-        L = arctanIPosP(neg(J), R, out)
-        return None if L is None else (neg(L[1]), neg(L[0]))
+        L = arctanIPosP(ineg(J), R, out)
+        return None if L is None else ineg(L)
     return None
 
 
