@@ -93,7 +93,12 @@
 ---
 
 
-## 1. 在飞（2026-11-15：**空**；`guardrule-w1` 已收线 `058b2c12`）
+## 1. 在飞（2026-11-15：2 条 —— `rulep-opt-w1` + `ztgijcf4-w1`）
+
+> **2026-11-15 11:01 双车道发车（用户令「先做 2 和 ztgijcf4-w1」）**：`rulep-opt-w1`（Rule P
+> 点求值降本：π/2 用 `pi4D` 精确组合 + per-node 自适应 rung；主 box/旧 checker 零改动；目标
+> 单叶 5–9 min → 1–3 min）+ `ztgijcf4-w1`（10 条剩余 ZTGIJCF4 按 NliBanks4/5 的 6 条模板
+> 收线）。两车道共用全局单 lean 锁；Rule P 重检查独占（`pgrep=0`、21–29 GB）；不 commit/push。
 
 > **2026-11-15 10:48 收线（`058b2c12`）**：`guardrule-w1` 落库——Rule P 点锚定 `iteHullTM2`
 > opt-in 实现（`CertTM` +701 纯追加；`TMParamsP`/`valid_iteHull2P`/`evalPointTM`/
@@ -915,6 +920,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（11:01，续1162）**：**双车道发车（用户令「先做 2 和 ztgijcf4-w1」）——`rulep-opt-w1` + `ztgijcf4-w1`**。
+① **`rulep-opt-w1`**：只改 Rule P 点求值（π/2 用库内 `pi4D` 精确组合 + per-node 自适应 rung；主 box 求值/旧 checker/旧证书零改动）；目标单叶 **5–9 min → 1–3 min**（≥2× 或精确卡点）；4 叶内核验收 + 1,400 外推。
+② **`ztgijcf4-w1`**：10 条剩余实例（`1_1_0_0`/`1_0_0_1`/`1_0_0_0`/`0_1_1_0`/`0_1_0_1`/`0_1_0_0`/`0_0_1_1`/`0_0_1_0`/`0_0_0_1`/`0_0_0_0`）按 `NliBanks4/5` 的 6 条已证模板收线；新模块 + Assembly 1 import + body；部分交付允许，未闭给精确 blocker；不许 `sorry`/假桩。
+③ 纪律：不 commit/push；不 `lake build`/`auto_gate`/地图/root；全局单 lean 锁 `/tmp/lean_global_lock`；Rule P 重检查要求 `pgrep -x lean = 0`；新增公理/`sorry` 为零；单文件 ≤450 行；6–8 h 止损。ORDERS 已落两份快照。
+④ 下一条：续1163。
 - **2026-11-15（10:48，续1161）**：**`guardrule-w1` 收线 `058b2c12`——Rule P 点锚定 `iteHullTM2` opt-in 落库；4 叶内核 PASS；1,400 回放成本更正为 120–210 CPU·h**。
 ① 实现（`CertTM` +701 纯追加）：`TMParamsP`/`.ofBase`/`.empty`、`iteHullTM2P`、`valid_iteHull2P`、`evalPointTM`+`evalPointTM_mem`、`evalTMHullD2P`+`evalTMHullD2P_sound`、`checkPosTMHullP`+`checkPosTMHullP_sound`、`exPRule_*` smoke（旧规则拒绝、Rule P 接受同一 ite 叶）。旧 `TMParams`/旧 checker/旧证书零改动；**未给 `TMParams` 加字段**（`TMParamsP` 包 base + pointCerts，避免打断已落库 3 元证书）。
 ② 闸（亲跑 @`5fbb1b72`）：apply 纯追加 4 文件 **+1370/−0**；CertTM 岛编 RC=0/0 err（13.45 s/6.44 GB）；`valid_iteHull2P`/`evalPointTM_mem`/`evalTMHullD2P_sound`/`checkPosTMHullP_sound`/`exPRule_*` 全标准三；旧叶 657 回归 25.70 s/10.05 GB 标准三；族 B 叶 4471 内核 **292.85 s/28.74 GB，check=[propext,Quot.sound]、pos=标准三**（车道 4 叶全过：4471/4495/5087/5348）；Final 重编 rc=0；根面 589 md5 `246e952c…` 同。
