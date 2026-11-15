@@ -93,7 +93,13 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶；`g4hol-w1` 已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶 + `g4port-w1` CertTM2 引擎原型；g4hol 已收线）
+
+> **2026-11-16 07:20 `g4port-w1` 发车（用户令「发」）**：CertTM2 **引擎原型 + 三件 pilot**
+> （纯 Python，不占 lean）——二阶 Taylor + 逐子盒局部导数剪枝（HOL `mono_depth=200`）
+> + 凸性/凹性 glue + 自适应搜索；pilot `ZTGIJCF4_0_0_0_0` / `_0_1_0_0` / ox3q1h `#147`；
+> 判停线：叶数 ≤2× HOL（≲300/件）、内核 ≤3 CPU·h/件、≤5k 行/件 ⇒ GO，
+> 任一超 10× ⇒ NO-GO。**只借算法，不借 digest 信任**。
 
 > **2026-11-16 07:10 `g4hol-w1` 收线（只读）**：**HOL 没有更便宜的 γ4 形式化路线，
 > 只有更便宜的信任路线**——叶子层不在主树证，走独立 `formal_ineqs`（二阶 Taylor +
@@ -1014,6 +1020,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（07:20，续1180）**：**`g4port-w1` 发车（用户令「发」）——CertTM2 引擎原型 + 三件 pilot，判 GO/NO-GO**。
+① 目标：把 `g4hol-w1` 找到的 HOL `formal_ineqs` 算法杠杆（二阶 Taylor + `mono_depth=200` 逐子盒局部导数剪枝 + 凸性/凹性 glue + 自适应搜索）做成 Python 原型；**只借算法，不借 digest 信任**，最终每叶仍须 Lean `decide +kernel`。
+② 四杠杆（缺一不可）：M2 节点（值/梯度/Hessian 包络/余项，复用 `g4feas/scripts/jet2.py`）；逐子盒导数符号剪枝（γ4 全局不单调，必须局部）；逐子盒 Hessian 半定性/凸性 glue；优先队列自适应切分（导数变号维 / |g|·width 最大维）。
+③ pilot：`bank_ZTGIJCF4_0_0_0_0`（+7.8e−4；HOL 17.8 h/139 叶）、`_0_1_0_0`（+0.02677；凹性破；HOL 22.1 h/75 叶）、ox3q1h `#147`（3.0205e−4；g4feas `conjuncts.json`）。判停：每件叶数 ≤2× HOL（≲300）、内核 ≤3 CPU·h、≤5k 行 ⇒ GO；任一超 10× ⇒ NO-GO 并写负结果。
+④ 纯 Python、≤2 worker、`nice -n 19`、24 h 止损；不起 lean、不碰全局锁、不改主仓、不 commit。kernel 波同刻 195/5,212（07:11，ETA ~37.9 h）。交付 `ENGINE.md`/`PILOT.tsv`/`PILOT_RESULTS.md`/`CERTTM2_DESIGN.md`(GO)/`LEAN_PLAN.md`。下一条：续1181。
 
 - **2026-11-16（07:10，续1179）**：**`g4hol-w1` 收线——HOL 没有更便宜的 γ4 形式化路线，只有更便宜的信任路线；真杠杆 = 二阶 Taylor + 局部单调 + 凸性引擎**。
 ① 两层结构：**合并层**（`gamma4fgcy_div_sqrtdelta` + WLOG/Simplex + CRIT/BRANCH）全树形式化、**我们已 100% 移植**（`p21k_tsk_lemma1`/`p21k_wlog`/`p21k_ordered_core`、`ztg4_ALT` PA25:13537、Euler 锚已证 PA21:11558）；**叶子层**（16 ZTGIJCF4、230 ox3q1h、GLFVCVK4 等 6 维盒）**HOL 主树不证**，交给独立 `formal_ineqs` 验证器（二阶 Taylor + `mono_depth=200` 局部导数剪枝 + 凸性 glue + 自适应搜索，**32–139 叶/盒**），再用 **23,242 条 digest + `deserialization` 公理**导入（`serialization.hl:612/623`）——AGENTS §2 禁用，不可照抄。
