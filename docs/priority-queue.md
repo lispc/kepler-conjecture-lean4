@@ -93,7 +93,14 @@
 ---
 
 
-## 1. 在飞（2026-11-15：`rulep-replay-w2` 长任务 + `rulep-fullbox-prescan-w1` + `g4feas-w1`；`ztgmain-w1` Phase 1 待锁）
+## 1. 在飞（2026-11-15：`rulep-replay-w2` + `rulep-fullbox-prescan-w1`；`g4feas-w1` 已收线、`ztgmain-w1` Phase 1 待锁）
+
+> **2026-11-15 21:06 `g4feas-w1` 收线（无 lean）**：`nliOx3q1h` **46 条 LINEAR 可全部
+> `linarith`**（最小余量 1.416e−7）；184 条 γ4 余量全正（3.02e−4…5.37e−3），但
+> **不能拆 `γ4≥G`+`dihY≥D`**（完美每盒界仍有 9.0e−4…0.20 亏空）⇒ 必须做
+> **(盒,签名) 联合角点表**（48 盒 / 1,056 个去重点 / 3,456 次求值；166 角点 + 18 条 y4 内部需一维补丁）。
+> γ4 Taylor：ZTGIJCF4 4 箱 k=2 可行（+0.0503/+0.0741）但要 131k 叶/983 CPU·h，不换路线；
+> ox3q1h 需 16⁶ 子盒/条 ⇒ 不可行。窄盒（r≤0.03）一片 Taylor 可关。详见 §8 续1173。
 
 > **2026-11-15 20:15 双车道发车（用户批准建议）**：
 > `rulep-fullbox-prescan-w1`——TSKAJXY 全盒非族 B **5,112 叶** Rule P 预扫（4 worker、
@@ -970,6 +977,15 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-15（21:06，续1173）**：**`g4feas-w1` 收线——`nliOx3q1h` 46 条线性可全关；γ4 必须走 (盒,签名) 联合角点表；Taylor 对 ox3q1h 不可行**。
+① 普查：230 = **46 LINEAR + 184 GAMMA4**；48 个 γ4 盒（与旧口径一致），但完整签名是 **22 个 dihY 系数 / 44 个 (γ4,dih) 对 / 71 个 (盒,对) / 125 个全签名 / 144 个 (盒,全签名)**——旧「19/67」是只看了 a/b/bump 的部分签名，记 ERRATA。`y2/y3/y5/y6` 恒 `[2,2h−]`；`y1` 12 种区间、`y4` 15 种。
+② 余量：**LINEAR 46/46 精确有理、最小 1.4156e−7**（`linarith` 级）；**GAMMA4 184/184 为正**，最小 **3.0205e−4**（#147/#149）、中位 1.975e−3（ESTIMATE：60 dps + 角点/5⁶/坐标下降 + argmin 40 dps 区间佐证）。
+③ 共享界判死：`γ4≥0` 在 18/48 盒为假（`γ4(2.52,2⁵)=−0.0055589`）；`dihY≥arccos(1/3)` 在 25/48 盒为假；C0/C1/C2 覆盖 **0/184**；**即使用每盒完美 γ4 下界**，残差仍 9.0e−4…0.2005（中位 0.0678）——γ4 最小点与 dihY 极值点不同点。⇒ **不能拆两条侧条件**，唯一形状是每 (盒,签名) 联合下界（理想界覆盖 184/184）。
+④ 角点诊断：166/184 极小在 kink 角点；**18/184 在 y4 内部**，角点表高估至多 **6.018e−4**（16 条 >1e−4）⇒ 18 条非分段凹，需一维补丁。角点表很小：64/96/128 点/盒，48 盒 **3,456 次求值、去重 1,056 点**（比旧估 10,368 便宜 3×）。
+⑤ γ4 Taylor（centered form，二阶 AD）：ZTGIJCF4 4 条解耦箱 **k=2（4 段/维）可行**——下界 +0.050292（G=0.0403）/ +0.074140（G=0.0703），但 32,768 叶/箱、4 箱 131,072 叶 ⇒ 裸区间 36 CPU·h / Rule P **983 CPU·h**、生成 1.3–5×10⁷ 行；比角点表（~10⁵ 行/4 条）贵 2–3 个数量级，**不换路线**，只留 fallback。ox3q1h 需 **16⁶=1.68×10⁷ 子盒/条**，184 条 = 3.1×10⁹ 叶 ≈ **8.6×10⁵ CPU·h（≈98 CPU·年）⇒ 不可行**。正面结论：半径 ≤0.03 的盒（QITNPEA1/TSKAJXY 类）**一片 Taylor 叶**即可给 γ4 下界；朴素区间算术在宽盒上爆（`deltaX` 区间 [−619,1422]），今后须走 atom 级 Taylor model。
+⑥ 交付：`OX3Q1H_MARGINS.tsv`(230)、`OX3Q1H_SUMMARY.md`、`G4_FEASIBILITY.md`、`BOXSTATS/CENSUS/SIGS`、`TAYLOR_*`、`scripts/`（`jet2.py`/`margin_engine.py` 等）。零 lean、零仓库改动。
+⑦ 判读：ox3q1h 下一步 = **先落 46 条 LINEAR**（零风险），再拿 #147 所在盒做单盒联合角点表 pilot；ZTGIJCF4 仍走 Kit A + 216 角点表。下一条：续1174。
 
 - **2026-11-15（20:20，续1172）**：**修 `tmexact.arctanINegP` 的 `neg`→`ineg`（`2d9eb9cc`，recost 发现的真 bug）**。
 ① 缺陷：`pipeline/interval/tmexact.py:1172` 对 `DInterval` 调用 `neg`（Dyadic 函数）⇒ `TypeError`；Lean 正本 `CertTM.lean:6549` 是 `J.neg`（= `ineg`）。recost 实测真 emitter 在 27 条里 12 条直接崩。
