@@ -93,14 +93,15 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶 + `g4hol-w1` 只读考古；w2/famsplit/prescan/g4feas 已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶；`g4hol-w1` 已收线）
 
-> **2026-11-16 06:40 `g4hol-w1` 发车（用户选「2」）**：只读考古 Flyspeck HOL 的 γ4
-> 解析链（`merge_ineq.hl:1160-1780` 的 `gamma4fgcy_div_sqrtdelta` / `tsk_lemma1` /
-> `REAL_WLOG_SIMPLEX*` / `CRIT_TAC` + `ineq.hl` 的 interval/CFSQP），回答
-> **HOL 有没有比「216 角点表/10 万行」或「TM 1,100 CPU·h/条」更便宜的路线**；
-> 产出 `HOL_G4_ROUTE.md` / `LEAN_MAP.tsv` / `RECOMMENDATION.md`。纯只读、1 核、2–4 h，
-> 不占 lean。
+> **2026-11-16 07:10 `g4hol-w1` 收线（只读）**：**HOL 没有更便宜的 γ4 形式化路线，
+> 只有更便宜的信任路线**——叶子层不在主树证，走独立 `formal_ineqs`（二阶 Taylor +
+> `mono_depth=200` 局部单调剪枝 + 凸性 glue + 自适应搜索，**32–139 叶/盒**）再用
+> **23,242 条 digest + `deserialization` 公理**导入（AGENTS §2 禁用）。合并层我们已
+> 100% 移植（`ztg4_ALT` / Euler 锚已证）。真杠杆 = 把引擎升级为 `CertTM2`。
+> 实测 HOL 成本：ZTGIJCF4 16 条 76.0 CPU·h/556 叶（剩余 10 ≈72.5）、ox3q1h 230 条
+> 757.3 CPU·h/7,318 叶。建议立 `g4port-w1`（引擎车道，非合并层）做 pilot。
 
 > **2026-11-16 05:36 全盒内核波发车**：`rulep-fullbox-kernel-w1`——**5,212 叶**
 > （5,012 旧叶 + 200 族 A 子叶）+ 1,400 B 已编译 = 6,612 叶池；15 叶/块 + checkpoint，
@@ -1013,6 +1014,15 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（07:10，续1179）**：**`g4hol-w1` 收线——HOL 没有更便宜的 γ4 形式化路线，只有更便宜的信任路线；真杠杆 = 二阶 Taylor + 局部单调 + 凸性引擎**。
+① 两层结构：**合并层**（`gamma4fgcy_div_sqrtdelta` + WLOG/Simplex + CRIT/BRANCH）全树形式化、**我们已 100% 移植**（`p21k_tsk_lemma1`/`p21k_wlog`/`p21k_ordered_core`、`ztg4_ALT` PA25:13537、Euler 锚已证 PA21:11558）；**叶子层**（16 ZTGIJCF4、230 ox3q1h、GLFVCVK4 等 6 维盒）**HOL 主树不证**，交给独立 `formal_ineqs` 验证器（二阶 Taylor + `mono_depth=200` 局部导数剪枝 + 凸性 glue + 自适应搜索，**32–139 叶/盒**），再用 **23,242 条 digest + `deserialization` 公理**导入（`serialization.hl:612/623`）——AGENTS §2 禁用，不可照抄。
+② 实测成本（azure `Time` 行，23,237 叶）：全库非线性 **5,002.6 CPU·h**、中位 404 s/叶；**ZTGIJCF4 16 条 76.0 CPU·h/556 叶**（剩余 10 ≈**72.5**；`0_0_0_0` 17.8 h、`0_1_0_0` 22.1 h、`1_1_1_1` 0.29 h）；**ox3q1h 230 条 757.3 CPU·h/7,318 叶**；XLLIPLS 2.96 h/2 叶；WKGUESB sym 256.8 h；GLFVCVK4 127.9 h/846 叶。
+③ 机制判词：`gamma4fgcy_div_sqrtdelta`（merge:1160）只适用**两长四短窄型盒**（长槽 `lmfun(√x/2)=0` 杀两项），**不适用 ZTGIJCF4 宽盒**；WLOG/Simplex 三条对合覆盖全盒、**不降维**（适用 ztg4，不适用 ox3q1h）；CRIT 只是路由到预计算记录，capstone `ineq` 引用 10/18 条、不是 10³。
+④ Yes/no：照抄 HOL + digest 公理 = **NO 且禁止**；只移合并层 = **NO（零收益）**；引擎升级（`CertTM2`：二阶 Taylor + 局部单调 + 凸性 + 自适应）⇒ **≤10² CPU·h = YES（有条件）**；**≤10³ 行/10 条全债 = NO（≈10⁴ 行）**，**≤10³ 行/盒 = YES**；现行一阶 Taylor/角点表直上宽盒 = **NO**（需 4⁶–16⁶ 叶）。
+⑤ 建议：立 **`g4port-w1` 引擎车道**（不是合并层），pilot `bank_ZTGIJCF4_0_0_0_0` + `_0_1_0_0` + ox3q1h `#147`；判停线 **pilot 三件 ≤3 CPU·h 内核、≤5k 行/件**；零风险并行项 = ox3q1h **46 条线性立刻 `linarith`**。明确不做：再移植 ztg4/WLOG/CRIT、逐分量包络、全局单调/折面、centered-form 直上、digest 公理。
+⑥ 勘误（只读核对）：`NliBanks17.lean:12-14` / `NliBanksZTGIJCF4Route.lean:57-60` 仍称 Euler 锚未证（已过时）；`PackingAuto25.lean:12031` “两处 sorry”注释过时（当前 PA25 裸 sorry=0）；Route 头注把 γ4 桥不可用归因于锚未证，真因是该桥只适用两窄型盒。
+⑦ 交付：`HOL_G4_ROUTE.md`(30 KB)、`LEAN_MAP.tsv`(43 行)、`RECOMMENDATION.md`、`EVIDENCE.md`；零 lean/零编译/零仓库改动。kernel 波同刻 **195/5,212**（07:11，27.2 s/叶，0 FAIL，ETA ~37.9 h）。下一条：续1180。
 
 - **2026-11-16（06:40，续1178）**：**`g4hol-w1` 发车（用户选「2」）——HOL γ4 解析链只读考古，判定是否有比角点表/TM 更便宜的路线**。
 ① 唯一问题：Flyspeck HOL 如何证 γ4 型不等式？有没有比我们「宽盒逐片凹性 + 216 角点表 / 10 万行」或「TM ~1,100 CPU·h/条」更便宜的 Lean 移植路线？

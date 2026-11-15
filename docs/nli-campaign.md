@@ -117,6 +117,33 @@
 - **下一步**：先落 46 条 LINEAR；再拿 #147 所在盒做单盒联合角点表 pilot；
   ZTGIJCF4 仍走 Kit A + 216 角点表。
 
+### 1.5 HOL γ4 考古裁决（`g4hol-w1`，2026-11-16）
+
+- **HOL 没有更便宜的 γ4 形式化路线，只有更便宜的信任路线**：叶子层（ZTGIJCF4 16、
+  ox3q1h 230、GLFVCVK4 等 6D 盒）不在主树证，走独立 `formal_ineqs` 验证器
+  （二阶 Taylor + `mono_depth=200` 局部导数剪枝 + 凸性 glue + 自适应搜索，
+  **32–139 叶/盒**），再用 **23,242 条 digest + `deserialization` 公理**导入
+  （`serialization.hl:612/623`）。后者违反 AGENTS §2，**不可照抄**。
+- **合并层我们已 100% 移植**：`gamma4fgcy_div_sqrtdelta`、`tsk_lemma1`、
+  `REAL_WLOG_SIMPLEX`、`CRIT/BRANCH`、`ztg4_ALT`（PA25:13537）、Euler 锚
+  （PA21:11558 已证）。剩余债就是 10 条 `bank_ZTGIJCF4_*` + `GLFVCVK4` 4 条 +
+  ox3q1h 的 46 线性 + 184 γ4。
+- **实测 HOL 成本**（azure `Time` 行）：ZTGIJCF4 16 条 **76.0 CPU·h/556 叶**
+  （剩余 10 ≈72.5；`0_0_0_0` 17.8 h、`0_1_0_0` 22.1 h）；ox3q1h 230 条
+  **757.3 CPU·h/7,318 叶**；GLFVCVK4 127.9 h/846 叶；中位 404 s/叶。
+- **可移植的真杠杆**：`CertTM2` = 二阶 Taylor 节点 + **逐子盒局部导数符号剪枝** +
+  凸性对接 + 自适应搜索。我们现有 `Gamma4WideD`/`Gamma4Mono0` 是全局手写引理，
+  而 γ4 全局不单调；HOL 用的是局部符号，所以成立，并把叶数从 10⁴–10⁵ 压到 10²。
+- **判词**：照抄 HOL+digest 公理 = 禁止；只移合并层 = 零收益；引擎升级 ⇒
+  ≤10² CPU·h 有条件 YES；≤10³ 行/盒 YES，≤10³ 行/10 条全债 NO（≈10⁴ 行）；
+  现行一阶 Taylor/角点表直上宽盒 = NO（4⁶–16⁶ 叶）。
+- **建议**：立 `g4port-w1`（引擎车道，非合并层），pilot `ZTGIJCF4_0_0_0_0` +
+  `_0_1_0_0` + ox3q1h `#147`；判停线 ≤3 CPU·h 内核、≤5k 行/件。零风险并行：
+  ox3q1h 46 条线性立刻 `linarith`。
+- **勘误**：`NliBanks17.lean:12-14` / `NliBanksZTGIJCF4Route.lean:57-60` 的
+  “Euler 锚未证”已过时；`PackingAuto25.lean:12031` 的“两处 sorry”注释过时；
+  Route 头注把 γ4 桥不可用归因于锚，真因是该桥只适用两长四短窄型盒。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒
@@ -219,6 +246,10 @@
   （critical 槽不含 y=2），去重后 216/144/96；`0_0_0_0` 的 γ4 角点 min
   **−0.0055589** 与 `Gamma4ValCorner0` 吻合。**不要**再按“折面最小”设计
   （`g4w_gamma4_fold_min_y1` 前提在本箱为假）。
+- **`g4hol-w1` 补充（2026-11-16）**：HOL 合并层已 100% 移植；剩余 10 条的真正
+  杠杆是**引擎**（二阶 Taylor + 局部单调剪枝 + 凸性 + 自适应），HOL 实测
+  ZTGIJCF4 16 条仅 76 CPU·h/556 叶。建议立 `g4port-w1` 引擎车道，pilot
+  `0_0_0_0` + `0_1_0_0` + ox3q1h `#147`，判停线 ≤3 CPU·h/≤5k 行每件。
 
 ## 6. hLP / LP（与 nli* 同账本，但独立）
 
