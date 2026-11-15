@@ -1,17 +1,17 @@
 ROOT Kepler.Assembly.the_kepler_conjecture_from_interfaces
-K_REACH 2101084
-K_SORRIED 54
+K_REACH 2101085
+K_SORRIED 53
 K_AXIOM 585
-K_MODULES 5317
-K_UNIVERSE 2113085
-COVERAGE 2101084 / 2113085
-K_UNIVERSE_XCASES 49422
-K_REACH_XCASES 38978
-K_SORRIED_XCASES 54
+K_MODULES 5318
+K_UNIVERSE 2113086
+COVERAGE 2101085 / 2113086
+K_UNIVERSE_XCASES 49423
+K_REACH_XCASES 38979
+K_SORRIED_XCASES 53
 K_AXIOM_XCASES 585
-TOTAL_VALUE_DECLS 2100399
-LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2100399
-SORRIED 54
+TOTAL_VALUE_DECLS 2100400
+LEGACY_TOTAL_REACHABLE_KEPLER_DECLS 2100400
+SORRIED 53
 AXIOMS 585
 --- SORRIED ---
 Kepler.Assembly	Kepler.Assembly.lpArchiveCertificatesDebt	parent=Kepler.Assembly.lpArchiveCertificates
@@ -42,7 +42,6 @@ Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA1_1_2	parent=Kepler.Assembly.nliPa
 Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA1_2_0	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA2134082733	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA3848804089	parent=Kepler.Assembly.nliPackNonlinearRest
-Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA4003532128a	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA5400790175a	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA5400790175b	parent=Kepler.Assembly.nliPackNonlinearRest
 Kepler.Assembly	Kepler.Assembly.nliRestQITNPEA5653753305	parent=Kepler.Assembly.nliPackNonlinearRest
@@ -5908,6 +5907,7 @@ Kepler.Graphs.CertTri	Kepler.Graphs.tri_shard_4._native.native_decide.ax_1_1
 1	Kepler.Text.LocalAuto7W22dK
 1	Kepler.Text.LocalFanStepW19
 1	Kepler.Text.LocalFanStepW30
+1	Kepler.Text.NliQitnpea
 1	Kepler.Text.PackIneqBiefjhuClose
 1	Kepler.Text.PolyAuto1
 1	Kepler.Text.Reduction1Aqt2

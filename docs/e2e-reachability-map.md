@@ -797,6 +797,22 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AO：`nliRestQITNPEA4003532128a` 真证（SORRIED 54→53）@ `06285994`（2026-11-15）
+
+> 触发：`qitnpea-w1` 交付——纯代数真证（`NliQitnpea.lean` +142；`Assembly` 1 import + body；
+> `y3=y4=y5=√2 ⇒ x3=x4=x5=2`；`δ4=x1(x2+x6−x1)`、`δ=(x2x6)(8−x1)−2(x1−(x2+x6))²`；
+> u/t 凹二次 + 弦线 cut；`δ>0.14` 余量 **0.1759**，数值真 min **0.31759**；零证书、零新增公理）。
+>
+> 实测（`e2e_reach_map` 原样，5,975 行）：`K_REACH` **2,101,085（+1）** /
+> **SORRIED 53**（−1；`--- SORRIED ---` 清单 diff：closed 恰
+> `{Kepler.Assembly.nliRestQITNPEA4003532128a}`、added ∅）/ **`K_AXIOM 585`（0/0）** /
+> `K_MODULES` **5,318（+1）** / `K_UNIVERSE` **2,113,086（+1）** /
+> COVERAGE **99.432063%**（+0.0000002pp，几乎不变）；口径 II **38,979 / 53 / 585 / 49,423**；
+> `TOTAL_VALUE_DECLS` 2,100,400（+1）。
+>
+> 构成：**SORRIED 53 = Assembly 53（52 `nli*` + 1 hLP），Text 0**。
+> TSV 换装 **5,975 行**；`trust_manifest.py --check` PASS；根面 589 逐字节同（md5 `246e952c…`）。
+
 ### 基线 AN：`nliPackIneqDefA` 接线（SORRIED 55→54）@ `a09ad494`（2026-11-15）
 
 > 触发：`nli-triage-w1` 交付——`Assembly.lean` +14/−2（1 行 import `PackingAuto22PackIneqA`

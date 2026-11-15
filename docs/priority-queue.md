@@ -17,19 +17,16 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AN @`a09ad494`（2026-11-15，`nliPackIneqDefA` 接线；Text 0）**
-> cone `K_REACH 2,101,084` / **SORRIED 54** / **`K_AXIOM 585`** / MODULES 5,317 /
-> UNIVERSE 2,113,085 / COVERAGE **99.432063%**；口径 II 38,978 / 54 / 585 / 49,422。
-> `docs/e2e-reachability-map.tsv` 已按基线 AN 重写（5,975 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AO @`06285994`（2026-11-15，`nliRestQITNPEA4003532128a` 真证；Text 0）**
+> cone `K_REACH 2,101,085` / **SORRIED 53** / **`K_AXIOM 585`** / MODULES 5,318 /
+> UNIVERSE 2,113,086 / COVERAGE **99.432063%**；口径 II 38,979 / 53 / 585 / 49,423。
+> `docs/e2e-reachability-map.tsv` 已按基线 AO 重写（5,975 行）；manifest `--check` PASS。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
 > （md5 `246e952c…` 逐字节同）。
-> **SORRIED 54 构成**：**Assembly 54（53 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
-> 较基线 AM：SORRIED 55→54（清单 diff：closed 恰 `{nliPackIneqDefA}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +412、UNIVERSE +425、MODULES +4；COVERAGE 微降 = universe 涨得更快。
-> 同批资产：`nli-triage-w1` `a09ad494`（Assembly +14/−2 纯接线；审计 0 假陈述 / 3 条锥外影子
-> VACUOUS）；`nli-precision-w1` `2fd799ff`（`atan1_box` 两叶内核 PASS）；`tmparams-w1` `02839181`
-> （pipeline 外部 `TMParams` 生成器 +1,533，生成 5.9 s/叶 vs 镜像 333 s，不入锥）。
-> 在飞：`qitnpea-w1`（`nliRestQITNPEA4003532128a` 纯代数）。
+> **SORRIED 53 构成**：**Assembly 53（52 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
+> 较基线 AN：SORRIED 54→53（清单 diff：closed 恰 `{nliRestQITNPEA4003532128a}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +1、UNIVERSE +1、MODULES +1；COVERAGE 几乎不变。
+> 同批资产：`qitnpea-w1` `06285994`（`NliQitnpea` +142 纯代数）；在飞 `guardcons-w1` + `lp-pilot-w1`。
 > **孤儿**：`TameLp.fully_surrounded_perimeter_bound` + LA23 四条（`taum_attains_inf_p23` 等）
 > 文件级 sorry 仍在（锥外、不删不改）；LA23 的 `taum_attains_inf_p23` 陈述缺 HOL `JOTSWIX.hl:9`
 > 六条箱约束（y4 槽不连续），SF 补箱候选。
@@ -106,7 +103,7 @@
 > **2026-11-15 07:47 收线（`06285994`）**：`qitnpea-w1` 落库——`nliRestQITNPEA4003532128a`
 > 纯代数真证（`NliQitnpea` +142；Assembly 1 import + body）；新模块 34 s / 5.81 GB
 > RC=0/0 err/0 warn，探针标准三；Assembly 岛编 rc=0/0 err（59 个 `:= sorry`）；
-> 根面 589 md5 同；锥内 nli* **53→52**（SORRIED 54→53，基线 AO 待仪器）。
+> 根面 589 md5 同；锥内 nli* **53→52**（SORRIED 54→53；基线 AO 已实测）。
 
 > **2026-11-15 07:30 发车（用户令「发」）**：`qitnpea-w1` — `nliRestQITNPEA4003532128a`
 > 纯代数真证（3 变量、余量 0.819、PICK-2 骨架）；零农场、单文件 ≤450 行；成功 SORRIED 54→53。
@@ -891,6 +888,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（08:02，续1157）**：**基线 AO 落地——`nliRestQITNPEA4003532128a` 真证（SORRIED 54→53，Text 0）**。
+① 仪器（`e2e_reach_map` 原样，5,975 行）：`K_REACH` **2,101,085（+1）** / **SORRIED 53（−1；清单 diff：closed 恰 `{Kepler.Assembly.nliRestQITNPEA4003532128a}`、added ∅）** / `K_AXIOM` **585（0/0）** / `MODULES` **5,318（+1）** / `UNIVERSE` **2,113,086（+1）** / COVERAGE **99.432063%**；口径 II **38,979 / 53 / 585 / 49,423**；`TOTAL_VALUE_DECLS` 2,100,400（+1）。
+② 构成：**SORRIED 53 = Assembly 53（52 `nli*` + 1 hLP），Text 0**。`trust_manifest.py --check` **PASS**；TSV 5,975 行；根面 589 md5 `246e952c…` 同。
+③ 文档六件已刷：map AO 节 + TSV + pq 头/本条 + `AGENTS.md` §1 + `README`×2 + `hf-proof-map` 25 + handoff §8。
+④ 在飞：`guardcons-w1` + `lp-pilot-w1`。下一条：续1158。
 - **2026-11-15（07:50，续1156）**：**`qitnpea-w1` 收线 `06285994`（`nliRestQITNPEA4003532128a` 纯代数真证）；双车道发车（`guardcons-w1` + `lp-pilot-w1`）**。
 ① **qitnpea 交付**：`NliQitnpea.lean` **+142**（`y3=y4=y5=√2 ⇒ x3=x4=x5=2`；`δ4=x1(x2+x6−x1)`、`δ=(x2x6)(8−x1)−2(x1−(x2+x6))²`；u/t 凹二次 + 弦线 cut，`δ>0.14` 余量 **0.1759**，数值真 min **0.31759**）+ Assembly 1 import + body。新模块直编 **34 s / 5.81 GB，RC=0/0 err/0 warn**；模块/Assembly 探针 = 标准三；Assembly 岛编 **rc=0/0 err（59 个 `:= sorry`）**；根面 589 md5 `246e952c…` 同。锥内 nli* **53→52**（SORRIED 54→53；基线 AO 待仪器）。
 ② **`guardcons-w1`**：族 B 1,400 叶 `iteHullTM2` 跳变——Phase 0 用复刻在 guard 零集采样比较两支，判定**分支一致性**；成立则给精确引理陈述（交编排者评估 bounded hold release），不成立则 ≤20 叶**超平面/guard 定号切分**原型量 m/成本；不碰 certtm/D/BBTree。
