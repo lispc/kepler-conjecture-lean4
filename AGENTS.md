@@ -102,7 +102,8 @@
   **续批 4（2026-11-15 用户明批「批」）**：`guardrule-w1` 的 bounded certtm 解冻——**仅**
   `iteHullTM2` Rule P opt-in + point 证书字段 + emitter；**TM3 量产扫全库、Mono\*、D 证书层
   其它项、585 信任基座仍 hold**。**已收线 `058b2c12`**（Rule P 规则落库，4 叶内核 PASS；
-  全量回放不改 certtm），certtm 回 hold。
+  全量回放不改 certtm），certtm 回 hold。**Rule P 优化已落库 `229f731f`**（点求值 11–20×，
+  4 叶 26.7–27.1 s / 10.2–10.3 GB；旧 checker 零改动）。
 
 ## 5. 落库流程
 

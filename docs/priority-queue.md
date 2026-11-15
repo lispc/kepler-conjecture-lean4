@@ -93,7 +93,12 @@
 ---
 
 
-## 1. 在飞（2026-11-15：1 条 —— `rulep-opt-w1`；`ztgijcf4-w1` 已收线 `1b401275`）
+## 1. 在飞（2026-11-15：**空**；`rulep-opt-w1` 已收线 `229f731f`）
+
+> **2026-11-15 12:11 收线（`229f731f`）**：`rulep-opt-w1` 落库——Rule P 点求值 **11–20×** 降本：
+> 4 叶内核 **26.66–27.09 s / 10.24–10.32 GB**（基线 297–550 s / 21–28 GB），全部 <20 GB 护栏；
+> 1,400 回放从 120–210 CPU·h 降到 **≈15 CPU·h**（内核 10.2–10.5 + 生成 4.6），单 lean ~10.3 h；
+> 旧 checker/旧证书/`transOn` 零改动，旧 leaf657 回归标准三；根面 589 md5 `246e952c…` 同。
 
 > **2026-11-15 11:24 收线（`1b401275`）**：`ztgijcf4-w1` 落库——10 条 ZTGIJCF4 的 **rad2 模板
 > 路线被机器证伪**（角点 `H=rhoX−8deltaX` = −51…−188；已证 6 条恰是正角点那 6 个）；新增主支
@@ -926,6 +931,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（12:11，续1164）**：**`rulep-opt-w1` 收线 `229f731f`——Rule P 点求值降本 11–20×；1,400 回放从 120–210 CPU·h 降到 ≈15 CPU·h（单 lean ~10.3 h）**。
+① **Phase 0 勘误**：π/2 `halfPiI` 只占单节点 0.3%，真正大头是 `arctanInterval` 的精确 `npow`（206-bit 参数 × 8191 项）；但 `halfPiI` 是低 rung 精度瓶颈（宽 3.9e−3），π/2 杠杆仍必需。
+② **三杠杆**：`twoPi4D` 精确 π/2（宽 2⁻⁶³）；`rungOf` 自适应 rung（1/2→32 … 127/128→2048，余项 ≤1e−13，任意 N sound）；**π/4 近 1 归约** `arctan y = π/4 + arctan((y−1)/(y+1))`（叶 5348 参数 0.998925/1.001076 的卡点必需）。`transOnP` + `evalPointTM` 换走；旧 checker/`transOn` 零改动。
+③ 闸（亲跑）：CertTM 岛编 **13.06 s / 6.44 GB，RC=0/0 err**；10 条新 soundness + 旧 Rule P 声张**全标准三**；4 叶内核：4471 **26.66 s/10.24 GB**、4495 26.92/10.32、5087 27.09/10.32、5348 26.76/10.31（基线 297–550 s/21–28 GB，**11.3–20.6×**，全部 <20 GB）；旧 leaf657 回归 25.75 s/10.06 GB 标准三；默认生成器 params0 逐字节同；根面 589 md5 `246e952c…` 同。
+④ 外推 1,400：内核 **10.2–10.5 CPU·h** + 生成 **4.6** = **≈15 CPU·h**，单 lean **≈10.3 h**；25 叶抽样 25/25 PASS、rung 全 `{32}`、余量 +3.15e−4…+9.44e−4（最低叶 +4.88e−3）。下一步：Python 预扫 1,400 + 内核回放（可一个夜间窗口）。
+⑤ 下一条：续1165。
 - **2026-11-15（11:24，续1163）**：**`ztgijcf4-w1` 收线 `1b401275`——10 条 ZTGIJCF4 的 rad2 模板路线被机器证伪；新增主支归约资产 567 行；零 debt 闭环**。
 ① **ER（推翻工单前提）**：`H = rhoX − 8·deltaX` 的 16 个下角点有理实算：已证 6 条 = **正角点**（+16.9…+226.1）；剩余 10 条 = **负角点（−51.31…−187.77）**。`H` 在箱上逐变量单调不减 ⇒ 角点是箱上最小值 ⇒ **`rad2 > 2` 第二析取支在整个箱上为假**；唯一活路是第一析取支 `gamma4fgcy` 主支。与 `nli-triage` 的 min rad2=1.67–1.94 独立一致。
 ② 交付：`NliBanksZTGIJCF4Route.lean`（436 行，21 声张）：`ztg_of_main`（主支 `>0` ⇒ bank）、10 条 `_rad2_refuted`（有理见证点，rad2=1.678–1.952）、10 条 `_main_forced`（bank ⇒ 见证点主支 `>0`）；`NliBanksZTGIJCF4Bounds.lean`（131 行，7 声张）：`ztg_of_global_bounds`（`γ4≥G ∧ dihY≥D ⇒ bank`）+ 4 条条件归约。
