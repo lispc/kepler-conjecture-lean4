@@ -171,9 +171,18 @@
   **+3.526e−3**、P50 +5.060e−3、max +9.460e−3）；100/100 父叶翻正；
   **0 Rule C fallback**；0.728 CPU·h / 22 min；200 个未编译模块在快照 `modules/`。
   ⇒ 全盒内核波 = **5,012 + 200 = 5,212 叶**，单 lean **≈39–45 h**。
-- 当前：`rulep-replay-w2` 内核 **993/1,400**（02:25，~29 s/叶，ETA ~05:35）；
-  收线后接 **5,212 叶内核补叶** → 装配 → `packIneqTskXLLIPLS_of_hull` →
-  `Assembly.nliTskXLLIPLS`。
+- **2026-11-16 05:36 族 B 1,400 叶收线**（`rulep-replay-w2`）：预扫 + 内核
+  **1,400/1,400 PASS、0 FAIL**；`_check` 全 `[propext, Quot.sound]`、`_pos` 全标准三；
+  `sorryAx/error/warning` 0；总 **15.78 CPU·h**（预扫 4.81 + 内核 10.97）；内核
+  P50/P95 **28/30 s**、max RSS **9.620 GiB**；pool 374 MB（1,400 olean 258 KB/叶，
+  已备份 `rulep-replay-w1/pool_olean/` 341 MB）。1,400 olean 经 MANIFEST 0 不符 +
+  3 叶端到端消费探针复核。
+- **2026-11-16 05:36 全盒内核波发车**：`rulep-fullbox-kernel-w1`——**5,212 叶**
+  （5,012 旧 + 200 族 A）+ 1,400 B = 6,612 叶池；15 叶/块 + checkpoint + 每批
+  axiom probe；单 lean **39–45 h**；preflight 3 叶后量产。
+- **命名空间注意**：叶定理在模块根命名空间（`namespace Kepler.Interval.Cases`
+  已闭合）⇒ 消费/探针写 `tskaJXY_xllipls_p_leaf<idx>_check/_pos`；辅助 def
+  `kParams*/kBox*` 才在 `Kepler.Interval.Cases` 下。
 - **不要**再做 guard 超平面切分：分支恒等让切分零收益（`guardcons-w1` 判定）。
 - **不要**把“130 GB olean”当真：TSKAJXY 叶 olean 实测 ~0.2 MB/叶 ⇒ 全盒 ~1.3–1.5 GB；
   130 GB 是混入 LP 叶 16–21 MB/叶 的误估。

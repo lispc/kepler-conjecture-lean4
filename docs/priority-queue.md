@@ -93,7 +93,18 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-replay-w2`；fullbox prescan/famsplit/g4feas 已收线、`ztgmain-w1` Phase 1 待锁）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶；w2/famsplit/prescan/g4feas 已收线、`ztgmain-w1` Phase 1 待锁）
+
+> **2026-11-16 05:36 全盒内核波发车**：`rulep-fullbox-kernel-w1`——**5,212 叶**
+> （5,012 旧叶 + 200 族 A 子叶）+ 1,400 B 已编译 = 6,612 叶池；15 叶/块 + checkpoint，
+> 单 lean 25.5–31 s/叶 ≈ **39–45 h**；preflight 3 叶后量产；72 h 止损。
+
+> **2026-11-16 05:36 `rulep-replay-w2` 收线**：族 B **1,400/1,400 PASS、0 FAIL**；
+> 1,400 `_check` = `[propext, Quot.sound]`、1,400 `_pos` = 标准三；`sorryAx/error/warning` 0；
+> 总 **15.78 CPU·h**（预扫 4.81 + 内核 10.97；w2 span 14.14 h）；内核 P50/P95 **28/30 s**、
+> max RSS **9.620 GiB**；pool **374 MB**（1,400 src + 1,400 olean，258 KB/叶）；
+> 1,400 olean 已备份到 w1 快照 `pool_olean/`（341 MB）。w1 的 `make_report.py` 有字节/GiB
+> 单位 bug，w2 已修（测量数据未动）；`prescan.py`/`replay_farm.sh` 哈希未变。
 
 > **2026-11-16 02:20 `famsplit-w1` 收线（无 lean）**：族 A **100 父叶 → 200 子盒，
 > Rule P 200/200 PASS**（lb min **+3.526e−3**、P50 +5.060e−3、max +9.460e−3）；
@@ -995,6 +1006,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（05:36，续1177）**：**`rulep-replay-w2` 收线（族 B 1,400/1,400 PASS）+ 全盒内核波 `rulep-fullbox-kernel-w1` 发车**。
+① w2 结果：预扫 1,400/1,400 PASS、内核 1,400/1,400 PASS、0 FAIL、0 未尝试；1,400 `_check` = `[propext, Quot.sound]`、1,400 `_pos` = `[propext, Classical.choice, Quot.sound]`；`sorryAx/error/warning` 全 0。总 **15.78 CPU·h**（预扫 4.81 + 内核 10.97；w2 span 14.14 h）；内核 mean 28.21 s、P50/P95=28/30、min/max 26/40；max RSS **9.620 GiB**（均值 9.581）；pool **374 MB**（1,400 src + 1,400 olean 258 KB/叶 + 30,653 个零字节 symlink）。
+② 验收：`MANIFEST.sha256` 2,802 行（1,400 src + 1,400 olean + CertTM + Base）对 SUMMARY 哈希 **0 不符**；独立扫 1,400 内核日志 `error:`/`error(`/`sorryAx`/warning 全 0；端到端消费探针 3 叶（4496/5866/6472）6 条 axioms 逐字一致。1,400 olean 已备份 `rulep-replay-w1/pool_olean/`（341 MB）。
+③ **勘误**：w1 的 `make_report.py` 把字节 `/2^20` 却标 GB（“maxRSS 9850.69 GB”），w2 改为 `/2^30` GiB 并补 campaign wall/真实体积/生成器注记；测量数据未动；`prescan.py`/`replay_farm.sh` 哈希未变。
+④ **命名空间注意**：叶定理在**模块根命名空间**（`namespace Kepler.Interval.Cases` 已在其前闭合）⇒ 消费/探针写 `tskaJXY_xllipls_p_leaf<idx>_check/_pos`，辅助 def（`kParams*`/`kBox*`）才在 `Kepler.Interval.Cases` 下。
+⑤ **全盒内核波**：05:36 发车 `rulep-fullbox-kernel-w1`——5,212 叶（5,012 旧 + 200 族 A）+ 1,400 B = **6,612 叶池**；15 叶/块 + `DONE/` checkpoint + 每批 axiom probe；单 lean 25.5–31 s/叶 ≈ **39–45 h**；preflight 3 叶后量产；72 h 止损。下一条：续1178。
 
 - **2026-11-16（02:20，续1176）**：**`famsplit-w1` 收线——族 A 100 父叶 → 200 子盒，Rule P 200/200 PASS；全盒内核波补齐**。
 ① 方法：每父叶沿**最宽实数宽度维**做一次精确 dyadic 二分（中点自动约分奇数 mantissa）；`SPLIT_CHECK.tsv` 100/100 全 true（两半非空、并集=父盒、交集=中点切片、端点 dyadic）。Rule P @ 4096 逐子盒 `--box` 预扫，200/200 PASS（in-process oracle `checkPosTMHullP = True`）。
