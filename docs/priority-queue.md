@@ -93,15 +93,20 @@
 ---
 
 
-## 1. 在飞（2026-11-15：**空**；`guardcons-w1` 已收线）
+## 1. 在飞（2026-11-15：1 条 —— `guardrule-w1`；`guardcons-w1`/`lp-pilot-w1` 已收线）
+
+> **2026-11-15 09:25 `guardrule-w1` 发车（用户批 bounded certtm 解冻）**：Rule P（点锚定
+> `iteHullTM2`）opt-in 实现 + point 证书字段 + soundness；2–4 族 B 叶内核验收；1,400 全量
+> 留给后续窗口。仅解冻 `iteHullTM2`/point 字段/emitter；**TM3 量产/Mono\*/D 其它项仍 hold**。
 
 > **2026-11-15 08:46 收线（`guardcons-w1`）**：族 B 分支一致性 **YES（精确恒等）**——只有 **6 个
 > 全局 ite 节点**（HOL `atn2` 分支树），1,400 叶 **7,245/7,245** 个 ite-hull 节点 gate 核内可判；
 > 数值 `max|t−e| = 1.56e−61`、guard 零集 `t=e=π/4`。规则原型：base **0/1400**；E **1386/1400**；
 > meet_e/PE/**P 1400/1400**；**P（点锚定，无条件 sound，无数学引理）min 余量 +0.00306**。
 > 超平面切分**零收益**（不触发）。成本：1,400 叶 ≈9.9 CPU·h（+5,012 重编 ≈35）= **~45 CPU·h**；
-> 全盒 6,512 olean ≈130 GB < 237 GB free ⇒ **TSKAJXY 本地可行**。下一步需 **bounded certtm
-> 解冻（Rule P opt-in）**，批了发 `guardrule-w1`。
+> 全盒 6,512 叶 olean 实测 **~0.2 MB/叶 ⇒ ~1.3–1.5 GB**（130 GB 是混入 LP 叶 16–21 MB 的误估，
+> ERRATA）⇒ **TSKAJXY 本地可行**。下一步需 **bounded certtm 解冻（Rule P opt-in）**，批了发
+> `guardrule-w1`。
 
 > **2026-11-15 08:37 收线（`lp-pilot-w1`）**：LP 43,078 定标完成——**42,889 bound 叶
 > ≈795 CPU·h**（生成 120.6 + 编译/内核 674.2）；1 lean 15–20 天、2 lean×10 叶批 ≈7.8 天；
@@ -901,12 +906,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（09:26，续1160）**：**`guardrule-w1` 发车（用户批 bounded certtm 解冻）——Rule P 点锚定 `iteHullTM2` opt-in 实现**。
+① 范围：`CertTM` 加 `iteHullTM2P` + `valid_iteHull2P`（旧规则逐字不动、soundness 标准三）；`TMParams` 增 point sqrt 证书字段；`evalTMHullFill2D`/emitter/`tmexact` 产出 point certs；2–4 族 B 叶内核验收；给 1,400 回放模板，**不跑全量**。
+② 用户批准边界：仅 `iteHullTM2` Rule P + point 字段 + emitter；**TM3 量产扫全库、Mono\*、D 其它项、585 基座仍 hold**。
+③ 纪律：不 commit/push；不 `lake build`/`auto_gate`/地图/root；单 lean + 全局锁；≤20 次内核检查；6 h 止损；patch 落快照。
+④ **ERRATA（olean 体积）**：`guardcons-w1` 报告“全盒 6,512 olean ≈130 GB”是误估——TSKAJXY 叶 olean 实测 **~0.2 MB/叶**（Leaf0 223,200 B / Leaf657 201,392 B / Base 1.25 MB）⇒ 全盒 **~1.3–1.5 GB**；130 GB 来自 LP 叶 16–21 MB/叶 的口径混用。**LP 的 0.83 TB 估算不变**。
+⑤ 下一条：续1161。
 - **2026-11-15（08:46，续1159）**：**`guardcons-w1` 收线——族 B 分支一致性 YES（精确恒等）；Rule P 全 1,400 叶 PASS、无条件 sound；TSKAJXY 本地可行（~45 CPU·h / ~130 GB）；待 bounded certtm 解冻**。
 ① **判定**：族 B 上触发的 `ite-hull` 只有 **6 个全局 ite 节点**（索引 0/9/18/27/37/49），逐 token 是 HOL `atn2` 分支树：`guard=|E|−S`、`then=atan((−E)/S)`、`else=atn2 嵌套`，最内层 `4·atan1=π`；签名统一 223/223/611。全 1,400 叶索引覆盖证实只有这 6 个（分组 `{0,9,18,27,37,49}` 1,015 / `{0,9,37}` 234 / `{18,27,49}` 151）。
 ② **恒等证据**：729 个 (叶,节点)×4 内部点 `max|t−e| = 1.56e−61`；75 个 guard 零集点 `t=e=0.785398163398…=π/4`，`|t−e| ≤ 7.8e−62`；**反例 0**。gate 核内可判：全 1,400 叶 **7,245/7,245** 个 ite-hull 节点的 else 子节点严格负守卫（`C2.hi.isNeg ⇒ E<0 ⇒ N:=−E>0`），`evalIParams_mem` 直接可证。jump_sum 每叶 0.0088–0.0395，真值差 0 ⇒ jump 项 100% 是区间依赖松弛。
 ③ **引理**：Lemma 1（桥）复用本仓 `A2QITNPEAGlue.iteTree_eq_atn2`（private，抄 ~10 行）；Lemma 2（collapse，新 ~12 行）：`∀ N>0,S, (if |N|−S<0 then atan(N/S) else …) = π/2 − atan(S/N)`，只用 `Real.arctan_one` + `Real.arctan_inv_of_pos` + `ring`，Mathlib 已在 import 链内。
 ④ **规则原型（复刻，全 1,400 叶；base 与 `scan_full.tsv` 逐叶一致）**：base **0/1400**（min −0.112）；E（嵌套臂，Lemma 2+gate）**1386/1400**（min −0.00067，14 叶全是 6-ite 叶）；meet_e **1400/1400**（+0.00354）；PE **1400/1400**（+0.00640）；**P（纯点锚定，无条件 sound、无数学引理、只要 point cert）1400/1400（+0.00306）**。point rung 需 ≥4096（8192 舒适）；主 box 求值不动。
-⑤ **建议**：**Rule P** 作为最小改动（新 `iteHullTM2` 点锚定 opt-in 变体 + point sqrt 证书字段；`valid_iteHull2` 同构证明，不需要分支恒等）；PE 作为余量优化备选。超平面切分判定**不触发**（零集只在部分盒真实穿过；分支恒等让切分零收益）。成本：1,400 叶 ×25.5 s ≈ **9.9 CPU·h**；若 checker 定义变更需重编 5,012 PASS 叶 +≈35 CPU·h ⇒ **~45 CPU·h**；全盒 6,512 olean ≈130 GB（当前 237 GiB free）⇒ **本地窗口可行**，不需要农场。
+⑤ **建议**：**Rule P** 作为最小改动（新 `iteHullTM2` 点锚定 opt-in 变体 + point sqrt 证书字段；`valid_iteHull2` 同构证明，不需要分支恒等）；PE 作为余量优化备选。超平面切分判定**不触发**（零集只在部分盒真实穿过；分支恒等让切分零收益）。成本：1,400 叶 ×25.5 s ≈ **9.9 CPU·h**；若 checker 定义变更需重编 5,012 PASS 叶 +≈35 CPU·h ⇒ **~45 CPU·h**；**全盒 olean 实测 ~0.2 MB/叶 ⇒ ~1.3–1.5 GB**（130 GB 是混入 LP 叶 16–21 MB 的误估，ERRATA）⇒ **本地窗口可行**，不需要农场。
 ⑥ **待用户裁决**：bounded certtm 解冻（仅 `iteHullTM2` Rule P opt-in + soundness；TM3 量产/Mono*/D 层其它项仍 hold）。批后发 `guardrule-w1`：实现规则 + 叶级验收 → 1,400 族 B 回放（+必要时 5,012 重编）→ 全盒装配。下一条：续1160。
 - **2026-11-15（08:41，续1158）**：**`lp-pilot-w1` 收线——LP 43,078 定标：42,889 bound 叶 ≈795 CPU·h；磁盘 0.83 TB 是硬墙；189/189 infeasible 已闭合（ERRATA）**。
 ① 样本：Phase 0 单条复跑（生成 5.63 s + 编译 30.93 s / 7.82 GB）；Phase 1 **26 条**（root 10 / easy 分支 5 / easy infeas 1 / hard 5 / hard infeas 5），**20 feasible 全 PASS**，socert 中位 root **8.99** / easy **7.84** / hard **11.31 s**，RSS 201–349 MB；6 infeasible 按预期在 socert 失败（发射侧无 Farkas 通道，**非证明缺口**）。
