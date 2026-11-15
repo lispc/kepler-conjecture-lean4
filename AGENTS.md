@@ -101,7 +101,8 @@
   内核 PASS，+225/−3，全盒复刻 0→5012/6512），certtm 回 hold；TM3/Mono\*/D 仍 hold。
   **续批 4（2026-11-15 用户明批「批」）**：`guardrule-w1` 的 bounded certtm 解冻——**仅**
   `iteHullTM2` Rule P opt-in + point 证书字段 + emitter；**TM3 量产扫全库、Mono\*、D 证书层
-  其它项、585 信任基座仍 hold**。
+  其它项、585 信任基座仍 hold**。**已收线 `058b2c12`**（Rule P 规则落库，4 叶内核 PASS；
+  全量回放不改 certtm），certtm 回 hold。
 
 ## 5. 落库流程
 

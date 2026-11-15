@@ -93,7 +93,16 @@
 ---
 
 
-## 1. 在飞（2026-11-15：1 条 —— `guardrule-w1`；`guardcons-w1`/`lp-pilot-w1` 已收线）
+## 1. 在飞（2026-11-15：**空**；`guardrule-w1` 已收线 `058b2c12`）
+
+> **2026-11-15 10:48 收线（`058b2c12`）**：`guardrule-w1` 落库——Rule P 点锚定 `iteHullTM2`
+> opt-in 实现（`CertTM` +701 纯追加；`TMParamsP`/`valid_iteHull2P`/`evalPointTM`/
+> `evalTMHullD2P`/`checkPosTMHullP` + smoke test）；新声张全**标准三**；旧 `TMParams`/
+> 旧 checker/旧证书零改动，旧叶 657 回归 25.7 s/10.05 GB 标准三；族 B 叶 4471 内核
+> **292.85 s / 28.74 GB PASS**（4 叶全过）；根面 589 md5 `246e952c…` 同。
+> **成本更正（ERRATA）**：1,400 回放 **120–210 CPU·h**（5–9 min/叶，21–29 GB），单 lean
+> 5–9 天；旧 5,012 叶**无需**重编。全量前建议先 Python 预扫（2–3 CPU·h）确认 rung 4096
+> 下 1400/1400，并评估 `pi4D`/自适应 rung 降本。
 
 > **2026-11-15 09:25 `guardrule-w1` 发车（用户批 bounded certtm 解冻）**：Rule P（点锚定
 > `iteHullTM2`）opt-in 实现 + point 证书字段 + soundness；2–4 族 B 叶内核验收；1,400 全量
@@ -906,6 +915,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（10:48，续1161）**：**`guardrule-w1` 收线 `058b2c12`——Rule P 点锚定 `iteHullTM2` opt-in 落库；4 叶内核 PASS；1,400 回放成本更正为 120–210 CPU·h**。
+① 实现（`CertTM` +701 纯追加）：`TMParamsP`/`.ofBase`/`.empty`、`iteHullTM2P`、`valid_iteHull2P`、`evalPointTM`+`evalPointTM_mem`、`evalTMHullD2P`+`evalTMHullD2P_sound`、`checkPosTMHullP`+`checkPosTMHullP_sound`、`exPRule_*` smoke（旧规则拒绝、Rule P 接受同一 ite 叶）。旧 `TMParams`/旧 checker/旧证书零改动；**未给 `TMParams` 加字段**（`TMParamsP` 包 base + pointCerts，避免打断已落库 3 元证书）。
+② 闸（亲跑 @`5fbb1b72`）：apply 纯追加 4 文件 **+1370/−0**；CertTM 岛编 RC=0/0 err（13.45 s/6.44 GB）；`valid_iteHull2P`/`evalPointTM_mem`/`evalTMHullD2P_sound`/`checkPosTMHullP_sound`/`exPRule_*` 全标准三；旧叶 657 回归 25.70 s/10.05 GB 标准三；族 B 叶 4471 内核 **292.85 s/28.74 GB，check=[propext,Quot.sound]、pos=标准三**（车道 4 叶全过：4471/4495/5087/5348）；Final 重编 rc=0；根面 589 md5 `246e952c…` 同。
+③ **成本更正（ERRATA，推翻续1159⑤/guardcons 的 ~45 CPU·h 估计）**：Rule P 的 point 求值使内核单叶 **5–9 min、21–29 GB RSS**（非 25.5 s）⇒ 1,400 族 B 回放 **120–210 CPU·h**，生成 16–33 CPU·h；单 lean 串行 **5–9 天**，且 21–29 GB 已超 20 GB 护栏，必须严格单 lean。旧 5,012 叶**无需重编**（旧 checker 未动）。R=8192 在 4471 上 510.67 s/20.65 GB 未收敛 ⇒ 运营 rung 取 4096。
+④ 全量前建议：先 `--rule P --rung 4096 --no-verify` 预扫 1,400 叶（≈2–3 CPU·h）确认 1400/1400；再评估 `pi4D` + per-node 自适应 rung 降内核成本（soundness 不变）；最后 1,400 内核批（可后台长窗口）。
+⑤ 下一条：续1162。`certtm` 回 hold（Rule P 已落库，回放不改 certtm）。
 - **2026-11-15（09:26，续1160）**：**`guardrule-w1` 发车（用户批 bounded certtm 解冻）——Rule P 点锚定 `iteHullTM2` opt-in 实现**。
 ① 范围：`CertTM` 加 `iteHullTM2P` + `valid_iteHull2P`（旧规则逐字不动、soundness 标准三）；`TMParams` 增 point sqrt 证书字段；`evalTMHullFill2D`/emitter/`tmexact` 产出 point certs；2–4 族 B 叶内核验收；给 1,400 回放模板，**不跑全量**。
 ② 用户批准边界：仅 `iteHullTM2` Rule P + point 字段 + emitter；**TM3 量产扫全库、Mono\*、D 其它项、585 基座仍 hold**。
