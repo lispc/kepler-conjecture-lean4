@@ -61,6 +61,35 @@
 - `nliCell3QZECFICwt0sqrt8` / `wt0corner`：3 轴单调拼接，一轮 ≥ 数百行，
   不是“小证书”。
 
+### 1.3 FARM 34 条重排结论（`nli-recost-w1`，2026-11-15）
+
+- 34 = 30 case-mapped + 4 接口级。分层：**≤10 只有 1 条**
+  `nliRestIXPOTPA`（0.59 CPU·h；前 6 个析取支全是多项式，99,915/100,000 叶走
+  poly 档，**区间 0.17–28.9**，若 poly 叶实际要 ~1 s 则回到 ~28 h）；10–50 三条
+  （`PEMKWU`/`TEWNSCJ` 27.8、`QITNPEAv24003532128` 33.8）；50–200 三条；
+  **>200 共 20**（19 条 case-mapped 典型 1,100–1,170 + `nliOx3q1h` ≈64.6k）。
+  26 条实测合计 **21,156 CPU·h**，外推 30 条 **≈25.6k**（单核 ≈2.9 年）。
+- **根因：宽盒叶树是 ~10⁵，不是 10³**（二叉树恒等式 `leaves=(nodes+1)/2`，
+  TSKAJXY 6,512/13,023 交叉验证）；Rule P 单叶生成 6.7–13.4 s、内核 27–50 s。
+  TSKAJXY 便宜是因为盒宽只有 0.01；一般 FARM 盒宽 0.4–0.65 ⇒ 差两个数量级。
+- **3 条 cell3 = BLOCKED（规则缺失，不是贵）**：case 含 `log`（matan 负分支）⇒
+  `tmexact.transOn` 无此 kind；bb_arb 实测 50% 尝试 `sqrt/log 底非正`
+  （Lean `Real.sqrt` 负支=0，检查器无此规则）。`TskWKGUESBsym` 1200 s TIMEOUT。
+- **盒超集陷阱**：`out/cases` 把 `hminus` 展开成 `[1.2,1.3]`（choice），而 Lean
+  真盒被两条标准三定理钉在 `[1.23175,1.23176]` ⇒ `2hminus ∈ [2.4635,2.46352]`；
+  必须用 `cases_narrow/`，否则主支数值为负、证书不可能闭合。
+- 4 个 `QITNPEA1` case 原缺失（HOL OCaml 模板生成），已用
+  `parse_body_raw + emit_rpn.translate_record` 重建。
+- 编排者复核：`get_main_nonlinear` **109 显式分支 ↔ 109 ids 精确双射、
+  零 `|_ => True` 命中**（AUDIT A-3 的 SUSPECT 关闭；旧「108」漏了字母开头的
+  `OMKYNLT 3336871894`）。
+- 发现 `pipeline/interval/tmexact.py:1172` 的 `arctanINegP` 用 `neg`（Dyadic）
+  而非 `ineg`（DInterval），真 emitter 在 27 条里 12 条直接崩——待修。
+- **判读**：FARM 本地量产判死；`IXPOTPA` 是唯一 FARM-MATH 候选。后续优先
+  MATH/MATH-FARM（ZTGIJCF4 γ4/dihY 套件）与 `nliOx3q1h` 的
+  「每盒标量界 + 角点/折点」路线（230 合取 → 46 线性 + 184 γ4；
+  184 条只有 **19 种函数签名 / 48 个 y-盒 / 67 个 (盒,签名) 组合**）。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒
@@ -165,4 +194,7 @@
 4. `nli-triage` 的 PICK-3：`get_main_nonlinear` 109 vs 108 对表；ZTGIJCF4
    `betaBumpLb` SF 记档。
 5. LP 路线裁决（外部盘/农场/冻结）。
-6. 回放/补叶都吃完后，按 `nli-recost-w1` 的分层继续 `tmparams` 波次。
+6. FARM 34 条：**不再排本地证书波次**（见 §1.3）；唯一候选 `nliRestIXPOTPA`
+   （poly 档，0.59 CPU·h 起）；3 条 cell3 先补 `log`/负底规则；其余转 MATH/MATH-FARM。
+7. `nliOx3q1h` 另立数学路线讨论（每盒 γ4/dihY 标量下界 + 角点/折点；
+   230 → 46 线性 + 184 γ4 → 19 签名 / 48 盒 / 67 组合）。

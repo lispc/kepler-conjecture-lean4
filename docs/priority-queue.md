@@ -93,7 +93,14 @@
 ---
 
 
-## 1. 在飞（2026-11-15：2 条 —— `rulep-replay-w2` 长任务 + `nli-recost-w1` 纯 Python 排产）
+## 1. 在飞（2026-11-15：1 条长任务 —— `rulep-replay-w2`；`nli-recost-w1` 已收线）
+
+> **2026-11-15 18:47 `nli-recost-w1` 收线（纯 Python，无 patch）**：34 条 FARM 重排——
+> 只有 `nliRestIXPOTPA` 在 ≤10 层（0.59 CPU·h，poly/plain 档，区间 0.17–28.9）；
+> 26 条实测中位 **1,122 CPU·h**（19 条 >200，典型 1,100–1,170）；3 条 cell3 **BLOCKED**
+> （`log` 规则缺失）、`TskWKGUESBsym` TIMEOUT；`nliOx3q1h` 另计 **≈64.6k CPU·h**。
+> ⇒ **FARM 本地量产判死**；转 MATH/MATH-FARM/角点标量界。另：109/109 getter 双射已核、
+> `tmexact.arctanINegP` 有 `neg`/`ineg` bug。详见 §8 续1168。
 
 > **2026-11-15 16:14 `nli-recost-w1` 发车（用户令「B」）**：34 条 FARM 债按 Rule P 新成本模型
 > 重排——`bb_arb` 叶数 + AST 规模 + 可表达性审计 → 预扫/内核 CPU·h 分层（≤10 / 10–50 /
@@ -944,6 +951,14 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-15（18:47，续1168）**：**`nli-recost-w1` 收线——34 条 FARM 新成本重排：只有 1 条进 ≤10 CPU·h，FARM 本地量产判死**。
+① 分层（`RECOST.tsv`，34 行）：**≤10 = 1**（`nliRestIXPOTPA` 0.59 CPU·h，poly/plain 档，区间 0.17–28.9）；**10–50 = 3**（`PEMKWU` 27.8、`TEWNSCJ` 27.8、`QITNPEAv24003532128` 33.8）；**50–200 = 3**（`BIXPCGW7274157868a` 149、`QITNPEA5400790175b` 99.8、`TXQTPVC` 79.9）；**>200 = 20**（19 条 case-mapped 典型 1,100–1,170 + 接口级 `nliOx3q1h` 64,553）；**BLOCKED = 3**（cell3 `QZECFIC wt0/wt1/wt2A`）；**TIMEOUT = 1**（`TskWKGUESBsym`）；N/A = 3（`nliLpIneqs` LP / `nliKcblrqcIneqDef` / `nliMainNonlinearTerminalV11`）。26 条实测合计 **21,156 CPU·h**，外推 30 条 **≈25.6k**（单核串行 ≈2.9 年）。
+② 关键实测/纠偏：**叶数是 ~10⁵，不是 10³**——由二叉树恒等式 `leaves=(processed+1)/2` 得 100,000 叶（交叉验证 TSKAJXY 6,512/13,023）；Rule P 单叶生成 **6.7–13.4 s**、内核 **27–50 s**（SCALED ±2×）。`out/cases` 的 `hminus` 是 choice 超集盒 `[1.2,1.3]`，真盒被两条标准三定理钉在 `[2.4635,2.46352]`；必须在 `cases_narrow/` 上跑，否则主支数值为负。4 个 `QITNPEA1` case 原缺失（HOL OCaml 模板生成），已重建。
+③ 三个硬阻塞：cell3 三条 case 含 `log`（matan 负分支）⇒ `tmexact.transOn` 无此 kind，且 bb_arb 实测 50% 尝试 `sqrt/log 底非正`（Lean `Real.sqrt` 负支=0，检查器无规则）⇒ **不是贵，是发不出证书**；`TskWKGUESBsym` 1200 s 超时。**`tmexact.arctanINegP` bug**（`pipeline/interval/tmexact.py:1172` 用 `neg` 而非 `ineg`，DInterval 传入 Dyadic 函数）——真 emitter 在 27 条里 12 条直接崩，待修。
+④ 编排者复核：`get_main_nonlinear` **109 显式分支 ↔ 109 ids 精确双射、零 `|_ => True` 命中**（`mainNonlinearTerminalV11` 的 AUDIT A-3 SUSPECT 关闭；旧「108」漏数了 `OMKYNLT 3336871894`）。车道零仓库改动、无 patch、零 lean。
+⑤ 判读：**34 条 FARM 不可能靠本机证书扫完**（TSKAJXY 是「薄盒 0.01 宽」特例）；`IXPOTPA` 因前 6 支全是多项式、99,915/100,000 叶走 poly 档才便宜，可作唯一 FARM-MATH 候选。下一步优先 MATH/MATH-FARM（ZTGIJCF4 γ4/dihY 套件）与 `nliOx3q1h` 的「每盒标量界/角点」路线；cell3 先补 `log`/负底规则或另立规则。w2 同刻：预扫 **1,400/1,400 PASS**、内核 **56/1,400**（lean 8.7 GB，单进程）。
+⑥ 下一条：续1169。
 
 - **2026-11-15（16:14，续1167）**：**`nli-recost-w1` 发车（用户令「B」）——34 条 FARM 按 Rule P 新成本模型重排；纯 Python/C++，不占 lean**。
 ① 用户选 B（选项：A 全盒预扫 / B FARM 重排 / C 全盒内核回放 / D ztgmain / E 打包审计 / F LP 裁决）。本单输入 = `nli-triage-w1/NLI_MAP.md` §7 的 34 条 FARM（cell3 3 + tsk 3 + 接口级 4 + rest 24）。
