@@ -93,7 +93,11 @@
 ---
 
 
-## 1. 在飞（2026-11-15：1 条长任务 —— `rulep-replay-w2`，接管 w1 checkpoint）
+## 1. 在飞（2026-11-15：2 条 —— `rulep-replay-w2` 长任务 + `nli-recost-w1` 纯 Python 排产）
+
+> **2026-11-15 16:14 `nli-recost-w1` 发车（用户令「B」）**：34 条 FARM 债按 Rule P 新成本模型
+> 重排——`bb_arb` 叶数 + AST 规模 + 可表达性审计 → 预扫/内核 CPU·h 分层（≤10 / 10–50 /
+> 50–200 / >200），产出前 5 短名单。**纯 Python/C++，不占 lean**（w2 独占至明晨）；24 h 止损。
 
 > **2026-11-15 15:27 `rulep-replay-w2` 接管续跑（用户令「续跑」）**：w1 停在预扫 **610/1,400**
 > （**0 FAIL**）、内核 3 叶 PASS（4471/4487/4495）；checkpoint/pool 完整。w2 复用
@@ -940,6 +944,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-15（16:14，续1167）**：**`nli-recost-w1` 发车（用户令「B」）——34 条 FARM 按 Rule P 新成本模型重排；纯 Python/C++，不占 lean**。
+① 用户选 B（选项：A 全盒预扫 / B FARM 重排 / C 全盒内核回放 / D ztgmain / E 打包审计 / F LP 裁决）。本单输入 = `nli-triage-w1/NLI_MAP.md` §7 的 34 条 FARM（cell3 3 + tsk 3 + 接口级 4 + rest 24）。
+② 关键事实（本轮复核）：**5,012「PASS」是 Python 复刻扫描，不是内核**；全仓只有 pilot 叶 olean（`Atan1Leaf0/657`）+ 4 个 P 叶快照，**旧 5,012 叶从未内核编译**（`tskajxy-tm-w1` 实测 454–480 s/叶 ≈36 CPU·天，NO-GO）。⇒ 全盒收线除 1,400 族 B 外，还需补 **5,112 叶内核**：Rule P ≈ **37.6 CPU·h**（27 s/叶），旧 Rule C ≈ **464 CPU·h**，Rule P 是唯一本地可行路线。续1161「旧 5,012 叶无需重编」是指**无需重新生成/重扫**，不是已有内核证明（ERRATA 口径）。
+③ 方法：`pipeline/interval/out/cases/*.json`（176）→ 34 条映射 + AST 统计 + **可表达性审计**（IExpr 构造 vs emitter）；`bb_arb --tm --ite-hull2 --tm-div2`（必须带 `DYLD_LIBRARY_PATH=prep-p2/{flint,mpfr,gmp}/lib`，已实测可跑）拿叶数；每 case 抽 3 叶测 `emit_tm_params.py --rule P` 预扫秒数；内核按 TSKAJXY 19,614 节点 ↔ 27 s 缩放并标 `SCALED`。
+④ 交付：`RECOST.tsv` / `RECOST.md`（分层 + 前 5 短名单 + 不确定性）/ `SAMPLES.tsv` / `EVIDENCE.md` / `DELIVERY.md`；bb_arb ≤4 并发、`nice -n 19`、单 case 20 min 止损、24 h 止损；不 commit/push、不跑 lake build/auto_gate/地图/root、不起 lean。
+⑤ 下一条：续1168。
 
 - **2026-11-15（15:27，续1166）**：**`rulep-replay-w2` 接管续跑（用户令「续跑」）——w1 停在预扫 610/1,400（0 FAIL），checkpoint 完整**。
 ① w1 停止状态：预扫 **610/1,400 PASS、0 FAIL**；内核 **3 叶 PASS**（4471/4487/4495）；`pool/Kepler` 已建；0 lean/0 python/无锁；`PRESCAN.tsv` 611 行、`prescan_done/` 610、`SUMMARY.tsv` 4 行。

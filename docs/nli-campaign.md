@@ -98,9 +98,14 @@
   - **Rule P**（点锚定，无条件 sound）1,400/1,400 PASS，min 余量 +0.00306；
     实现 `058b2c12`，优化 `229f731f`（点求值 11–20×，单叶 26.7–27.1 s /
     10.2–10.3 GB）。1,400 回放 ≈ **15 CPU·h**（单 lean ~10.3 h）。
+- **口径校正（2026-11-15 复核）**：上面的 5,012/6,512 是 **Python 复刻扫描**，
+  不是内核验收；仓库里只有 pilot 叶 `Atan1Leaf0/657` 的 olean。**全盒内核收线 =
+  1,400（族 B，在飞）+ 5,112 叶（5,012 旧叶 + 族 A 100 叶）**：
+  Rule P ≈ **37.6 CPU·h**（27 s/叶），旧 Rule C ≈ **464 CPU·h**（333 s/叶），
+  Rule P 是唯一本地可行路线。装配前必须补完这 5,112 叶的内核模块（~1.3–1.5 GB olean）。
 - 当前：`rulep-replay-w2` 正在续跑 w1 checkpoint（预扫 610/1,400 0 FAIL、内核 3 叶；
-  实时进度以 pq 续1166/后续条目为准）。回放完成后做全盒装配
-  （5,012 old + 1,400 P 叶）→ `packIneqTskXLLIPLS_of_hull` →
+  实时进度以 pq 续1166/后续条目为准）。回放完成后做全盒内核补叶
+  （5,112 叶，~38 CPU·h）+ 装配 → `packIneqTskXLLIPLS_of_hull` →
   `Assembly.nliTskXLLIPLS`。
 - **不要**再做 guard 超平面切分：分支恒等让切分零收益（`guardcons-w1` 判定）。
 - **不要**把“130 GB olean”当真：TSKAJXY 叶 olean 实测 ~0.2 MB/叶 ⇒ 全盒 ~1.3–1.5 GB；
@@ -152,10 +157,12 @@
 
 ## 8. 下一步清单
 
-1. 等 `rulep-replay-w2` 收线（1,400 叶）→ 全盒装配 → `Assembly.nliTskXLLIPLS`
-   （SORRIED 再 −1）。
-2. 回放后发 `ztgmain-w1`（γ4/dihY 套件，10 条 ZTGIJCF4）。
-3. `nli-triage` 的 PICK-3：`get_main_nonlinear` 109 vs 108 对表；ZTGIJCF4
+1. 等 `rulep-replay-w2` 收线（1,400 叶）→ **全盒内核补叶 5,112 叶（~38 CPU·h，
+   Rule P）** → 装配 → `Assembly.nliTskXLLIPLS`（SORRIED 再 −1）。
+2. 并行（纯 Python）：`nli-recost-w1` 重排 34 条 FARM，产出 ≤10 CPU·h 短名单
+   （2026-11-15 16:14 发车）。
+3. 回放后发 `ztgmain-w1`（γ4/dihY 套件，10 条 ZTGIJCF4）。
+4. `nli-triage` 的 PICK-3：`get_main_nonlinear` 109 vs 108 对表；ZTGIJCF4
    `betaBumpLb` SF 记档。
-4. LP 路线裁决（外部盘/农场/冻结）。
-5. 其余 34 条 FARM：按 `tmparams`/Rule P 新成本重排，优先找 ≤10 CPU·h 的小盒。
+5. LP 路线裁决（外部盘/农场/冻结）。
+6. 回放/补叶都吃完后，按 `nli-recost-w1` 的分层继续 `tmparams` 波次。
