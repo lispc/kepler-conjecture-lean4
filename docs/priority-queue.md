@@ -93,7 +93,12 @@
 ---
 
 
-## 1. 在飞（2026-11-15：**空**；`rulep-opt-w1` 已收线 `229f731f`）
+## 1. 在飞（2026-11-15：1 条长任务 —— `rulep-replay-w1`）
+
+> **2026-11-15 12:48 发车（用户令「1400 回放」）**：`rulep-replay-w1`——TSKAJXY 族 B **1,400 叶**
+> Rule P 全量：Phase 0 Python 预扫（~4.6 CPU·h）→ Phase 1 内核回放 + campaign farm
+> （~10.3 CPU·h，单 lean ~10–13 h）；产出 `PRESCAN.tsv` / `SUMMARY.tsv` / `MANIFEST.sha256` /
+> 每叶 olean；**严格单 lean**（10.3 GB/叶）、24 h 止损；任何预扫非 PASS 即停。
 
 > **2026-11-15 12:11 收线（`229f731f`）**：`rulep-opt-w1` 落库——Rule P 点求值 **11–20×** 降本：
 > 4 叶内核 **26.66–27.09 s / 10.24–10.32 GB**（基线 297–550 s / 21–28 GB），全部 <20 GB 护栏；
@@ -931,6 +936,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（12:48，续1165）**：**`rulep-replay-w1` 发车（用户令「1400 回放」）——族 B 1,400 叶 Rule P 全量（预扫 + 内核 + campaign pool）**。
+① 输入：HEAD `7f9ce6df`（优化 CertTM）；`familyB.idx` 1,400；`tskajxy-tm-w1/certs/full.cert.json`；`emit_tm_params.py --rule P --rung 4096`。
+② Phase 0 预扫（带 oracle，~4.6 CPU·h）→ `PRESCAN.tsv`；**任何非 PASS 立即停**。
+③ Phase 1 内核（~10.3 CPU·h，单叶 26.7–27.1 s/10.2–10.3 GB，严格单 lean）→ campaign farm + 每叶 olean；`SUMMARY.tsv` / `MANIFEST.sha256`；`DONE` checkpoint 可续跑；24 h 止损。
+④ 约束：不 commit/push；不改 certtm/旧 checker/旧证书/陈述；不碰 5,012 PASS 叶；新增公理/sorry 为零；不伪造 PASS。ORDERS 已落快照。
+⑤ 下一条：续1166。
 - **2026-11-15（12:11，续1164）**：**`rulep-opt-w1` 收线 `229f731f`——Rule P 点求值降本 11–20×；1,400 回放从 120–210 CPU·h 降到 ≈15 CPU·h（单 lean ~10.3 h）**。
 ① **Phase 0 勘误**：π/2 `halfPiI` 只占单节点 0.3%，真正大头是 `arctanInterval` 的精确 `npow`（206-bit 参数 × 8191 项）；但 `halfPiI` 是低 rung 精度瓶颈（宽 3.9e−3），π/2 杠杆仍必需。
 ② **三杠杆**：`twoPi4D` 精确 π/2（宽 2⁻⁶³）；`rungOf` 自适应 rung（1/2→32 … 127/128→2048，余项 ≤1e−13，任意 N sound）；**π/4 近 1 归约** `arctan y = π/4 + arctan((y−1)/(y+1))`（叶 5348 参数 0.998925/1.001076 的卡点必需）。`transOnP` + `evalPointTM` 换走；旧 checker/`transOn` 零改动。
