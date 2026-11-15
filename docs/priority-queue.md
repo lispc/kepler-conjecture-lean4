@@ -93,7 +93,13 @@
 ---
 
 
-## 1. 在飞（2026-11-15：2 条 —— `rulep-opt-w1` + `ztgijcf4-w1`）
+## 1. 在飞（2026-11-15：1 条 —— `rulep-opt-w1`；`ztgijcf4-w1` 已收线 `1b401275`）
+
+> **2026-11-15 11:24 收线（`1b401275`）**：`ztgijcf4-w1` 落库——10 条 ZTGIJCF4 的 **rad2 模板
+> 路线被机器证伪**（角点 `H=rhoX−8deltaX` = −51…−188；已证 6 条恰是正角点那 6 个）；新增主支
+> 归约资产 **567 行**（`ztg_of_main` / 10 `rad2_refuted` / 10 `main_forced` + γ4/dihY 双标量归约），
+> 36/36 探针标准三；**零 debt 闭环**（SORRIED 53 不变）。下一步 = γ4 下界 + dihY 下界套件；
+> 10/10 主支最小点在 kink 增广角点集（96–216 点/条）。
 
 > **2026-11-15 11:01 双车道发车（用户令「先做 2 和 ztgijcf4-w1」）**：`rulep-opt-w1`（Rule P
 > 点求值降本：π/2 用 `pi4D` 精确组合 + per-node 自适应 rung；主 box/旧 checker 零改动；目标
@@ -920,6 +926,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-15（11:24，续1163）**：**`ztgijcf4-w1` 收线 `1b401275`——10 条 ZTGIJCF4 的 rad2 模板路线被机器证伪；新增主支归约资产 567 行；零 debt 闭环**。
+① **ER（推翻工单前提）**：`H = rhoX − 8·deltaX` 的 16 个下角点有理实算：已证 6 条 = **正角点**（+16.9…+226.1）；剩余 10 条 = **负角点（−51.31…−187.77）**。`H` 在箱上逐变量单调不减 ⇒ 角点是箱上最小值 ⇒ **`rad2 > 2` 第二析取支在整个箱上为假**；唯一活路是第一析取支 `gamma4fgcy` 主支。与 `nli-triage` 的 min rad2=1.67–1.94 独立一致。
+② 交付：`NliBanksZTGIJCF4Route.lean`（436 行，21 声张）：`ztg_of_main`（主支 `>0` ⇒ bank）、10 条 `_rad2_refuted`（有理见证点，rad2=1.678–1.952）、10 条 `_main_forced`（bank ⇒ 见证点主支 `>0`）；`NliBanksZTGIJCF4Bounds.lean`（131 行，7 声张）：`ztg_of_global_bounds`（`γ4≥G ∧ dihY≥D ⇒ bank`）+ 4 条条件归约。
+③ 闸（亲跑）：apply 纯新增 2 文件 **+567/−0**；两文件直编 **RC=0/0 error/0 warning**（4.58/4.05 s，5.79/5.73 GB）；**36/36 探针标准三**；Assembly/陈述零改动；零 `sorryAx`。
+④ **零 debt 闭环**（SORRIED 53 不变）；资产用于下一步：10 条主支最小点全在 **kink 增广角点集**（候选 96–216 点/条，与 `NliBanks9` 有限候选归约吻合）；逐条数值余量：`1_1_0_0`/`0_1_1_0`/`0_1_0_1` +0.03698（可解耦 `γ4≥0.06`+`dihY≥1.1`）、`0_0_1_1` +0.02434、`1_0_0_1` +0.00754、`1_0_0_0`/`0_0_1_0`/`0_0_0_1` +0.00359、`0_1_0_0` +0.02677、`0_0_0_0` +0.00078（最紧）。**下一步应建 γ4 下界 + dihY 下界套件**，不要重派“套 NliBanks4/5 模板”。
+⑤ 下一条：续1164。`rulep-opt-w1` 仍在飞。
 - **2026-11-15（11:01，续1162）**：**双车道发车（用户令「先做 2 和 ztgijcf4-w1」）——`rulep-opt-w1` + `ztgijcf4-w1`**。
 ① **`rulep-opt-w1`**：只改 Rule P 点求值（π/2 用库内 `pi4D` 精确组合 + per-node 自适应 rung；主 box 求值/旧 checker/旧证书零改动）；目标单叶 **5–9 min → 1–3 min**（≥2× 或精确卡点）；4 叶内核验收 + 1,400 外推。
 ② **`ztgijcf4-w1`**：10 条剩余实例（`1_1_0_0`/`1_0_0_1`/`1_0_0_0`/`0_1_1_0`/`0_1_0_1`/`0_1_0_0`/`0_0_1_1`/`0_0_1_0`/`0_0_0_1`/`0_0_0_0`）按 `NliBanks4/5` 的 6 条已证模板收线；新模块 + Assembly 1 import + body；部分交付允许，未闭给精确 blocker；不许 `sorry`/假桩。
