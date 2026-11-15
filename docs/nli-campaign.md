@@ -159,10 +159,16 @@
   1,400（族 B，在飞）+ 5,112 叶（5,012 旧叶 + 族 A 100 叶）**：
   Rule P ≈ **37.6 CPU·h**（27 s/叶），旧 Rule C ≈ **464 CPU·h**（333 s/叶），
   Rule P 是唯一本地可行路线。装配前必须补完这 5,112 叶的内核模块（~1.3–1.5 GB olean）。
-- 当前：`rulep-replay-w2` 正在续跑 w1 checkpoint（预扫 610/1,400 0 FAIL、内核 3 叶；
-  实时进度以 pq 续1166/后续条目为准）。回放完成后做全盒内核补叶
-  （5,112 叶，~38 CPU·h）+ 装配 → `packIneqTskXLLIPLS_of_hull` →
-  `Assembly.nliTskXLLIPLS`。
+- **2026-11-16 01:46 全盒预扫收线**（`rulep-fullbox-prescan-w1`，4 worker，无 lean）：
+  非族 B **5,112 叶** = 5,010 旧叶 + 100 族 A + 2 pilot；**5,012 PASS / 100 FAIL**
+  （98.04%）；FAIL **恰好 = 族 A 100/100**（`oracle-reject`，非族 A 零 FAIL）。
+  PASS lb min **+3.858e−6**（叶 2078）、P50 +3.62e−3；**516 叶 <1e−3、3 叶 <1e−5**。
+  族 A 的 lb 与旧 C-rule 最大差 5e−14 ⇒ **Rule P 不收紧族 A，必须按 CALIB2 切叶**
+  （100 → 200 子叶）。总 18.88 CPU·h；`kernel_worklist_pass.idx` 5,012 叶，
+  27–31 s/叶 ≈ **37.6–43.2 h 单 lean**。
+- 当前：`rulep-replay-w2` 内核 **919/1,400**（01:50，~29 s/叶，ETA ~05:35）；
+  收线后接 **5,012 叶内核补叶** + 族 A 切叶（200 子叶）→ 装配 →
+  `packIneqTskXLLIPLS_of_hull` → `Assembly.nliTskXLLIPLS`。
 - **不要**再做 guard 超平面切分：分支恒等让切分零收益（`guardcons-w1` 判定）。
 - **不要**把“130 GB olean”当真：TSKAJXY 叶 olean 实测 ~0.2 MB/叶 ⇒ 全盒 ~1.3–1.5 GB；
   130 GB 是混入 LP 叶 16–21 MB/叶 的误估。

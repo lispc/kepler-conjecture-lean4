@@ -93,7 +93,14 @@
 ---
 
 
-## 1. 在飞（2026-11-15：`rulep-replay-w2` + `rulep-fullbox-prescan-w1`；`g4feas-w1` 已收线、`ztgmain-w1` Phase 1 待锁）
+## 1. 在飞（2026-11-16：`rulep-replay-w2`；`rulep-fullbox-prescan-w1`/`g4feas-w1` 已收线、`ztgmain-w1` Phase 1 待锁）
+
+> **2026-11-16 01:46 `rulep-fullbox-prescan-w1` 收线（无 lean）**：非族 B **5,112 叶**
+> Rule P 预扫——**5,012 PASS / 100 FAIL**（98.04%）；FAIL **恰好=族 A 100/100**
+> （`oracle-reject`，与 CALIB2 一致），非族 A **零 FAIL**；PASS lb min **+3.858e−6**
+> （叶 2078）、P50 +3.62e−3；总 18.88 CPU·h、4 worker、5.47 h（harness 70 min 上限杀 4 次，
+> checkpoint 零丢失）。内核 worklist：`kernel_worklist_pass.idx` **5,012 叶**，
+> 按 27–31 s/叶 ≈ **37.6–43.2 h 单 lean**；族 A 100 叶须先切叶（→200 子叶）再预扫/内核。
 
 > **2026-11-15 21:06 `g4feas-w1` 收线（无 lean）**：`nliOx3q1h` **46 条 LINEAR 可全部
 > `linarith`**（最小余量 1.416e−7）；184 条 γ4 余量全正（3.02e−4…5.37e−3），但
@@ -977,6 +984,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（01:46，续1174）**：**`rulep-fullbox-prescan-w1` 收线——全盒非族 B 5,112 叶：5,012 PASS / 100 FAIL，FAIL 恰好=族 A**。
+① 构成：5,112 = **5,010 旧叶 + 100 族 A + 2 pilot（0/657）**（= 6,512 − 族 B 1,400；校验恰好 5,112、无重复、交空、并集 0..6511）。PASS **5,012（98.04%）**、FAIL **100（1.96%）**；**FAIL 集合恰好 = 族 A 100/100**（`oracle-reject`），**非族 A 零 FAIL**，0 infra / 0 timeout。
+② 余量：PASS lb min **+3.858434e−6**（叶 2078）、P50 **+3.620e−3**、max +1.908e−2；**516 叶 <1e−3、3 叶 <1e−5**；旧叶 5,010/5,010 全 PASS；pilot 0/657 PASS 且与 CALIB2 Lean `.atan1K` 值一致。族 A FAIL lb min −3.525e−4、P50 −6.26e−5、max −2.37e−6，与旧 C-rule 最大差 5.0e−14 ⇒ **Rule P 不收紧族 A，必须按 CALIB2 切叶**。
+③ 成本：leaf wall **18.88 CPU·h**、mean 13.30 s/叶、max RSS 52.4 MiB；4 worker、lane 墙钟 **5.47 h**（20:18→01:46；harness 70 min 上限杀 4 次，checkpoint 续跑零重复/零缺行）。全程零 lean、主仓干净、w2 未受影响（DONE 225→918）。
+④ 交付：`PRESCAN_FULL.tsv`(5,112×15)、`PRESCAN_FAILS.tsv`(100)、`kernel_worklist_pass.idx`(5,012)/`kernel_worklist_fail.idx`(100)、`SUMMARY.md`/`summary.json`/`MANIFEST.sha256`(85/85 OK)、`fullbox.idx`/`famA.idx`/`pilot.idx`、`DELIVERY.md`/`Evidence.md`/`STATUS.md`。口径：**预扫 verdict ≠ 内核验收**。
+⑤ 下一步：w2 同刻 **919/1,400**（01:50，~29 s/叶，ETA ~05:35）；收线后接 **5,012 叶内核补叶（37.6–43.2 h 单 lean）**；族 A 100 叶先切叶（→200 子叶）再预扫/内核，Rule P 可优先、失败回退 C-rule（2×333 s×100≈18.5 CPU·h）。下一条：续1175。
 
 - **2026-11-15（21:06，续1173）**：**`g4feas-w1` 收线——`nliOx3q1h` 46 条线性可全关；γ4 必须走 (盒,签名) 联合角点表；Taylor 对 ox3q1h 不可行**。
 ① 普查：230 = **46 LINEAR + 184 GAMMA4**；48 个 γ4 盒（与旧口径一致），但完整签名是 **22 个 dihY 系数 / 44 个 (γ4,dih) 对 / 71 个 (盒,对) / 125 个全签名 / 144 个 (盒,全签名)**——旧「19/67」是只看了 a/b/bump 的部分签名，记 ERRATA。`y2/y3/y5/y6` 恒 `[2,2h−]`；`y1` 12 种区间、`y4` 15 种。
