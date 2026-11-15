@@ -155,6 +155,67 @@ theorem tskaJXY_xllipls_leaf%s_pos (ρ : Fin %d → ℝ) (hρ : boxMem kBox%s ρ
         box_text(tag, box) + tail
 
 
+def params_text_p(tag, entries, n_inv, n_tr, point_entries):
+    """The landed 3-field literal + the Rule P wrapper with point certs."""
+    base = params_text(tag, entries, n_inv, n_tr)
+    if point_entries:
+        certs = ",\n    ".join(fmt_triple(t) for t in point_entries)
+        pbody = "[" + certs + "]"
+    else:
+        pbody = "[]"
+    return (base +
+            "\n/-- Rule P wrapper: point-evaluation sqrt certs. -/\n"
+            "def kParams%sP : TMParamsP := ⟨kParams%s, %s⟩\n"
+            % (tag, tag, pbody))
+
+
+def module_text_p(tag, expr_name, leaf_label, entries, n_inv, n_tr,
+                  point_entries, box, base_mod, rung):
+    head = '''import Kepler.Interval.Cases.%s
+import Kepler.Interval.CertTM
+
+set_option maxHeartbeats 0
+set_option maxRecDepth 1000000
+
+/-! TSKAJXY-XLLIPLS `atan1_box` leaf %s — kernel-checked leaf, **Rule P**.
+
+`TMParams.sqrtCerts` (main box) and `TMParamsP.pointCerts` (degenerate
+center box) were produced off-kernel by the bit-exact Python replica of
+`evalTMHullD2P` (`emit_tm_params.py` + `tmexact.py`, point rung %d);
+the kernel `decide` below is the acceptance criterion. -/
+
+open Kepler.Interval
+namespace Kepler.Interval.Cases
+
+-- `private` mangles the name per module, so generated leaf modules do not
+-- clash on import.
+private instance : Inhabited DInterval := ⟨⟨⟨0, 0⟩, ⟨0, 0⟩⟩⟩
+
+''' % (base_mod, leaf_label, rung)
+    tail = '''
+end Kepler.Interval.Cases
+
+open Kepler.Interval Kepler.Interval.Cases
+
+/-- **Leaf %s passes** under the Rule P hull checker. -/
+theorem tskaJXY_xllipls_p_leaf%s_check :
+    checkPosTMHullP %d %s kBox%s kParams%sP = true := by
+  decide +kernel
+
+/-- Positivity of the expression everywhere in the box
+(`checkPosTMHullP_sound`, opt-in Rule P checker). -/
+theorem tskaJXY_xllipls_p_leaf%s_pos (ρ : Fin %d → ℝ) (hρ : boxMem kBox%s ρ) :
+    0 < %s.evalReal ρ :=
+  checkPosTMHullP_sound tskaJXY_xllipls_p_leaf%s_check ρ hρ
+
+#print axioms tskaJXY_xllipls_p_leaf%s_check
+#print axioms tskaJXY_xllipls_p_leaf%s_pos
+''' % (leaf_label, tag, rung, expr_name, tag, tag, tag, len(box), tag,
+       expr_name, tag, tag, tag)
+    return head + params_text_p(tag, entries, n_inv, n_tr, point_entries) + \
+        "\n" + box_text(tag, box) + tail
+
+
 def fval(d):
     return float(F(d[0]) * F(2) ** d[1])
 
@@ -171,6 +232,12 @@ def main():
     ap.add_argument("--module")
     ap.add_argument("--base-mod", default="TskXLLIPLSAtan1Base")
     ap.add_argument("--label", default=None)
+    ap.add_argument("--rule", choices=["C", "P"], default="C",
+                    help="C = landed df-hull checker; P = opt-in point-anchored "
+                         "Rule P (point certs + point rung)")
+    ap.add_argument("--rung", type=int, default=8192,
+                    help="point-evaluation trans rung R (Rule P only; the "
+                         "landed AST rung is ignored on the point path)")
     ap.add_argument("--no-verify", action="store_true",
                     help="skip the in-process kernel replay oracle")
     args = ap.parse_args()
@@ -194,6 +261,48 @@ def main():
         expr_name = m.group(1)
 
     t0 = time.time()
+    if args.rule == "P":
+        r = T.evalFill2DP(ast, box, caps, args.rung)
+        dt = time.time() - t0
+        if r is None:
+            path, reason = T.blame_path(ast, box, caps)
+            print("GENERATION FAILED (Rule P): %s" % reason)
+            print("  node path: %s" % ("/".join(path) if path else "<root>"))
+            return 2
+        M, loa, ps, entries, pentries, salv = r
+        lb = T.loBound(M, box)
+        tv = time.time()
+        ok = True if args.no_verify else T.checkPosTMHullP(
+            ast, box, {"sqrt": entries, "inv": counts["div"],
+                       "trans": counts["trans"], "point": pentries},
+            args.rung)
+        dv = time.time() - tv
+        print("box %s (Rule P, R=%d): lb=%s (%.10g) salv=%d sqrtCerts=%d "
+              "pointCerts=%d invSlots=%d transSlots=%d" %
+              (tag, args.rung, lb, fval(lb), salv, len(entries),
+               len(pentries), counts["div"], counts["trans"]))
+        print("kernel replay oracle checkPosTMHullP = %s   gen %.3f s + "
+              "verify %.3f s" % (ok, dt, dv))
+        if not ok:
+            print("WARNING: replica replay rejects the generated params "
+                  "(do not ship this leaf)")
+            return 2
+        params = params_text_p(tag, entries, counts["div"], counts["trans"],
+                               pentries)
+        boxdef = box_text(tag, box)
+        if args.out:
+            open(args.out, "w").write(params + "\n" + boxdef)
+            print("wrote", args.out)
+        if args.module:
+            open(args.module, "w").write(
+                module_text_p(tag, expr_name, label, entries, counts["div"],
+                              counts["trans"], pentries, box, args.base_mod,
+                              args.rung))
+            print("wrote", args.module)
+        if not args.out and not args.module:
+            sys.stdout.write(params + "\n" + boxdef)
+        return 0
+
     r = T.evalFill2D(ast, box, caps)
     dt = time.time() - t0
     if r is None:

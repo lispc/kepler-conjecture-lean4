@@ -1074,3 +1074,451 @@ def blame_path(ast, box, caps):
     if ok(ast):
         return ([], "no failure")
     return walk(ast, [])
+
+# ------------------------------------------------ Rule P (point-anchored)
+# Mirrors `iteHullTM2P` / `evalPointTM` / `evalTMHullD2P` / `checkPosTMHullP`
+# (CertTM, opt-in 2026-11-15).  All arithmetic is the same integer replica;
+# the point rung `R` replaces the AST rung at every `trans` node in the point
+# path only.
+def iteHullTM2P(Pt, Pe, Mt, Me):
+    """`iteHullTM2P Pt Pe Mt Me`: `fB = Pt.hull Pe`, point jump."""
+    return M(Mt.y, Mt.w, ihull(Pt, Pe),
+             [ihull(Mt.dfB[i], Me.dfB[i]) for i in range(len(Mt.y))],
+             dmax(add(dmax(Mt.err, Me.err), jumpBound(Pt, Pe)), ZERO))
+
+
+def pbox_of(box):
+    """The degenerate center box `i ↦ [mid_i, mid_i]`."""
+    return [(c, c) for c in boxCenter(box)]
+
+
+def evalPointFill(ast, pbox, R):
+    """Mirror of `evalPointTM R pbox`: returns `(I, triples)` where the
+    triples are `(slo, shi, 0)` in consumption order (computed mantissas)."""
+    op, args = ast
+    if op == ".const":
+        d = _const(args)
+        return ((d, d), [])
+    if op == ".var":
+        return (pbox[_i(args[0])], [])
+    if op == ".neg":
+        r = evalPointFill(args[0], pbox, R)
+        return None if r is None else (ineg(r[0]), r[1])
+    if op == ".abs":
+        r = evalPointFill(args[0], pbox, R)
+        return None if r is None else (iabs(r[0]), r[1])
+    if op in (".add", ".sub", ".mul"):
+        a = evalPointFill(args[0], pbox, R)
+        if a is None:
+            return None
+        b = evalPointFill(args[1], pbox, R)
+        if b is None:
+            return None
+        if op == ".add":
+            I = iadd(a[0], b[0])
+        elif op == ".sub":
+            I = isub(a[0], b[0])
+        else:
+            I = imul(a[0], b[0])
+        return (I, a[1] + b[1])
+    if op == ".div":
+        a = evalPointFill(args[0], pbox, R)
+        if a is None:
+            return None
+        b = evalPointFill(args[1], pbox, R)
+        if b is None:
+            return None
+        I = idiv(a[0], b[0], _i(args[2]))
+        return None if I is None else (I, a[1] + b[1])
+    if op == ".sqrt":
+        a = evalPointFill(args[0], pbox, R)
+        if a is None:
+            return None
+        I = a[0]
+        if isNeg(I[1]):
+            return None
+        slo = sqrtMantissa(I[0])
+        shi = sqrtMantissa(I[1])
+        Jh = sqrtI(I[1], shi)
+        if Jh is None:
+            return None
+        if isNN(I[0]):
+            Jl = sqrtI(I[0], slo)
+            if Jl is None:
+                return None
+            L = Jl[0]
+        else:
+            L = ZERO
+        return ((L, Jh[1]), a[1] + [(slo, shi, 0)])
+    if op == ".trans":
+        v = evalPointFill(args[1], pbox, R)
+        if v is None:
+            return None
+        I = transOn(args[0], v[0], R, _i(args[3]))
+        return None if I is None else (I, v[1])
+    if op == ".ite":
+        C = evalPointFill(args[0], pbox, R)
+        if C is None:
+            return None
+        if isNeg(C[0][1]):
+            r = evalPointFill(args[1], pbox, R)
+            return None if r is None else (r[0], C[1] + r[1])
+        if isNN(C[0][0]):
+            r = evalPointFill(args[2], pbox, R)
+            return None if r is None else (r[0], C[1] + r[1])
+        t = evalPointFill(args[1], pbox, R)
+        if t is None:
+            return None
+        e = evalPointFill(args[2], pbox, R)
+        if e is None:
+            return None
+        return (ihull(t[0], e[0]), C[1] + t[1] + e[1])
+    raise ValueError(op)
+
+
+def evalFill2DP(ast, box, ps, R, ctx=None):
+    """Mirror of `evalTMHullD2P R box`.
+
+    Returns `(M, loa, ps', main_entries, point_entries, salv)`:
+    `main_entries` = one `(slo, shi, sc)` per consumed base sqrt cert (the
+    `TMParams.sqrtCerts` to bake in); `point_entries` = one `(slo, shi, 0)`
+    per consumed point cert (the `TMParamsP.pointCerts` to bake in)."""
+    if ctx is None:
+        ctx = (boxCenter(box), boxW(box))
+    y, w = ctx
+    op, args = ast
+    n_sq, n_iv, n_tr = ps
+    if op == ".const":
+        d = _const(args)
+        return (constTM(ctx, d), loaLower((d, d)), ps, [], [], 0)
+    if op == ".var":
+        k = _i(args[0])
+        return (varTM(ctx, k), loaLower(box[k]), ps, [], [], 0)
+    if op == ".neg":
+        r = evalFill2DP(args[0], box, ps, R, ctx)
+        if r is None:
+            return None
+        return (mneg(r[0]), r[1], r[2], r[3], r[4], r[5])
+    if op in (".add", ".sub", ".mul"):
+        a = evalFill2DP(args[0], box, ps, R, ctx)
+        if a is None:
+            return None
+        b = evalFill2DP(args[1], box, a[2], R, ctx)
+        if b is None:
+            return None
+        if op == ".add":
+            Mres, loa = madd(a[0], b[0]), ZERO
+        elif op == ".sub":
+            Mres, loa = msub(a[0], b[0]), ZERO
+        else:
+            Mres, loa = mmul(a[0], b[0]), ZERO
+        return (Mres, loa, b[2], a[3] + b[3], a[4] + b[4], a[5] + b[5])
+    if op == ".div":
+        a = evalFill2DP(args[0], box, ps, R, ctx)
+        if a is None:
+            return None
+        b = evalFill2DP(args[1], box, a[2], R, ctx)
+        if b is None:
+            return None
+        if b[2][1] <= 0:
+            return None
+        ps2 = (b[2][0], b[2][1] - 1, b[2][2])
+        Mi = minv(b[0], -80, -80, -80)
+        if Mi is not None:
+            return (mmul(a[0], Mi), ZERO, ps2,
+                    a[3] + b[3], a[4] + b[4], a[5] + b[5])
+        if isPos(b[1]):
+            Mi = invCore(b[0], b[1], -80, -80, -80)
+            if Mi is not None:
+                return (mmul(a[0], Mi), ZERO, ps2,
+                        a[3] + b[3], a[4] + b[4], a[5] + b[5] + 1)
+        I = ieval(ast, box)
+        if I is None:
+            return None
+        return (fallbackTM(ctx, I), loaLower(I), ps2,
+                a[3] + b[3], a[4] + b[4], a[5] + b[5])
+    if op == ".sqrt":
+        a = evalFill2DP(args[0], box, ps, R, ctx)
+        if a is None:
+            return None
+        if a[2][0] <= 0:
+            return None
+        ps1 = (a[2][0] - 1, a[2][1], a[2][2])
+        M0 = a[0]
+        c = sub(M0.fB[0], W(M0))
+        res = None
+        if isPos(c):
+            sl = sqrtMantissaRel(M0.fB[0])
+            sh = sqrtMantissaRel(M0.fB[1])
+            sc = sqrtMantissaRel(c)
+            res = msqrt(M0, sl, sh, sc, -80, -80)
+            if res is None:
+                raise AssertionError("sqrt TM must succeed when c > 0")
+        if res is not None:
+            Mres, Jc = res
+            return (Mres, Jc[0], ps1, a[3] + [(sl, sh, sc)], a[4], a[5])
+        I = ieval(ast, box)
+        if I is None:
+            return None
+        return (fallbackTM(ctx, I), loaLower(I), ps1,
+                a[3] + [PLACEHOLDER], a[4], a[5])
+    if op == ".trans":
+        if is_closed(args[1]):
+            I = ieval(ast, box)
+            if I is None:
+                return None
+            return (closedTM(ctx, I), loaLower(I), ps, [], [], 0)
+        a = evalFill2DP(args[1], box, ps, R, ctx)
+        if a is None:
+            return None
+        if a[2][2] <= 0:
+            return None
+        ps1 = (a[2][0], a[2][1], a[2][2] - 1)
+        Mt = mtrans(args[0], a[0], _i(args[2]), _i(args[3]), -80, -80)
+        if Mt is not None:
+            return (Mt, ZERO, ps1, a[3], a[4], a[5])
+        I = ieval(ast, box)
+        if I is None:
+            return None
+        return (fallbackTM(ctx, I), loaLower(I), ps1, a[3], a[4], a[5])
+    if op == ".abs":
+        a = evalFill2DP(args[0], box, ps, R, ctx)
+        if a is not None:
+            vr = valueRange(a[0])
+            if isNN(vr[0]):
+                return (a[0], loaLower(vr), a[2], a[3], a[4], a[5])
+            if isNeg(vr[1]):
+                return (mneg(a[0]), loaLower(vr), a[2], a[3], a[4], a[5])
+        I = ieval(ast, box)
+        if I is None:
+            return None
+        return (fallbackTM(ctx, I), loaLower(I), ps, [], [], 0)
+    if op == ".ite":
+        C = evalIParams(args[0], box, ps)
+        if C is None:
+            return None
+        if isNeg(C[0][1]):
+            r = evalFill2DP(args[1], box, C[1], R, ctx)
+            if r is None:
+                return None
+            return (r[0], r[1], r[2], C[2] + r[3], r[4], r[5])
+        if isNN(C[0][0]):
+            r = evalFill2DP(args[2], box, C[1], R, ctx)
+            if r is None:
+                return None
+            return (r[0], r[1], r[2], C[2] + r[3], r[4], r[5])
+        t = evalFill2DP(args[1], box, C[1], R, ctx)
+        if t is None:
+            return None
+        e = evalFill2DP(args[2], box, t[2], R, ctx)
+        if e is None:
+            return None
+        pb = pbox_of(box)
+        pt = evalPointFill(args[1], pb, R)
+        if pt is None:
+            return None
+        pe = evalPointFill(args[2], pb, R)
+        if pe is None:
+            return None
+        return (iteHullTM2P(pt[0], pe[0], t[0], e[0]), dmin(t[1], e[1]), e[2],
+                C[2] + t[3] + e[3],
+                t[4] + e[4] + pt[1] + pe[1],
+                t[5] + e[5])
+    raise ValueError(op)
+
+
+# --------------------------------------- kernel consumer replay (Rule P)
+def _evalPointCq(ast, pbox, pq, pi, R):
+    """Positional replay of `evalPointTM` (kernel consumer order)."""
+    op, args = ast
+    if op == ".const":
+        d = _const(args)
+        return ((d, d), pi)
+    if op == ".var":
+        return (pbox[_i(args[0])], pi)
+    if op == ".neg":
+        r = _evalPointCq(args[0], pbox, pq, pi, R)
+        return None if r is None else (ineg(r[0]), r[1])
+    if op == ".abs":
+        r = _evalPointCq(args[0], pbox, pq, pi, R)
+        return None if r is None else (iabs(r[0]), r[1])
+    if op in (".add", ".sub", ".mul"):
+        a = _evalPointCq(args[0], pbox, pq, pi, R)
+        if a is None:
+            return None
+        b = _evalPointCq(args[1], pbox, pq, a[1], R)
+        if b is None:
+            return None
+        if op == ".add":
+            return (iadd(a[0], b[0]), b[1])
+        if op == ".sub":
+            return (isub(a[0], b[0]), b[1])
+        return (imul(a[0], b[0]), b[1])
+    if op == ".div":
+        a = _evalPointCq(args[0], pbox, pq, pi, R)
+        if a is None:
+            return None
+        b = _evalPointCq(args[1], pbox, pq, a[1], R)
+        if b is None:
+            return None
+        I = idiv(a[0], b[0], _i(args[2]))
+        return None if I is None else (I, b[1])
+    if op == ".sqrt":
+        a = _evalPointCq(args[0], pbox, pq, pi, R)
+        if a is None:
+            return None
+        if a[1] >= len(pq):
+            return None
+        t = pq[a[1]]
+        I = a[0]
+        if isNeg(I[1]):
+            return None
+        Jh = sqrtI(I[1], t[1])
+        if Jh is None:
+            return None
+        if isNN(I[0]):
+            Jl = sqrtI(I[0], t[0])
+            if Jl is None:
+                return None
+            L = Jl[0]
+        else:
+            L = ZERO
+        return ((L, Jh[1]), a[1] + 1)
+    if op == ".trans":
+        v = _evalPointCq(args[1], pbox, pq, pi, R)
+        if v is None:
+            return None
+        I = transOn(args[0], v[0], R, _i(args[3]))
+        return None if I is None else (I, v[1])
+    if op == ".ite":
+        C = _evalPointCq(args[0], pbox, pq, pi, R)
+        if C is None:
+            return None
+        if isNeg(C[0][1]):
+            r = _evalPointCq(args[1], pbox, pq, C[1], R)
+            return None if r is None else (r[0], r[1])
+        if isNN(C[0][0]):
+            r = _evalPointCq(args[2], pbox, pq, C[1], R)
+            return None if r is None else (r[0], r[1])
+        t = _evalPointCq(args[1], pbox, pq, C[1], R)
+        if t is None:
+            return None
+        e = _evalPointCq(args[2], pbox, pq, t[1], R)
+        if e is None:
+            return None
+        return (ihull(t[0], e[0]), e[1])
+    raise ValueError(op)
+
+
+def _evalCqP(ast, box, bq, bi, pq, pi, n_iv, n_tr, R, ctx):
+    """Positional replay of `evalTMHullD2P` (base sqrt queue + point queue)."""
+    op, args = ast
+    if op == ".const":
+        return (constTM(ctx, _const(args)), bi, pi, n_iv, n_tr)
+    if op == ".var":
+        return (varTM(ctx, _i(args[0])), bi, pi, n_iv, n_tr)
+    if op == ".neg":
+        r = _evalCqP(args[0], box, bq, bi, pq, pi, n_iv, n_tr, R, ctx)
+        return None if r is None else (mneg(r[0]), r[1], r[2], r[3], r[4])
+    if op in (".add", ".sub", ".mul"):
+        a = _evalCqP(args[0], box, bq, bi, pq, pi, n_iv, n_tr, R, ctx)
+        if a is None:
+            return None
+        b = _evalCqP(args[1], box, bq, a[1], pq, a[2], a[3], a[4], R, ctx)
+        if b is None:
+            return None
+        if op == ".add":
+            return (madd(a[0], b[0]), b[1], b[2], b[3], b[4])
+        if op == ".sub":
+            return (msub(a[0], b[0]), b[1], b[2], b[3], b[4])
+        return (mmul(a[0], b[0]), b[1], b[2], b[3], b[4])
+    if op == ".div":
+        a = _evalCqP(args[0], box, bq, bi, pq, pi, n_iv, n_tr, R, ctx)
+        if a is None:
+            return None
+        b = _evalCqP(args[1], box, bq, a[1], pq, a[2], a[3], a[4], R, ctx)
+        if b is None:
+            return None
+        if b[4] <= 0:
+            return None
+        Mi = minv(b[0], -80, -80, -80)
+        if Mi is not None:
+            return (mmul(a[0], Mi), b[1], b[2], b[3], b[4] - 1)
+        I = ieval(ast, box)
+        return None if I is None else (fallbackTM(ctx, I), b[1], b[2], b[3],
+                                       b[4] - 1)
+    if op == ".sqrt":
+        a = _evalCqP(args[0], box, bq, bi, pq, pi, n_iv, n_tr, R, ctx)
+        if a is None:
+            return None
+        if a[1] >= len(bq):
+            return None
+        t = bq[a[1]]
+        res = msqrt(a[0], t[0], t[1], t[2], -80, -80)
+        if res is not None:
+            return (res[0], a[1] + 1, a[2], a[3], a[4])
+        I = ieval(ast, box)
+        return None if I is None else (fallbackTM(ctx, I), a[1] + 1, a[2],
+                                       a[3], a[4])
+    if op == ".trans":
+        if is_closed(args[1]):
+            I = ieval(ast, box)
+            return None if I is None else (closedTM(ctx, I), bi, pi, n_iv, n_tr)
+        a = _evalCqP(args[1], box, bq, bi, pq, pi, n_iv, n_tr, R, ctx)
+        if a is None:
+            return None
+        if a[4] <= 0:
+            return None
+        Mt = mtrans(args[0], a[0], _i(args[2]), _i(args[3]), -80, -80)
+        if Mt is not None:
+            return (Mt, a[1], a[2], a[3], a[4] - 1)
+        I = ieval(ast, box)
+        return None if I is None else (fallbackTM(ctx, I), a[1], a[2], a[3],
+                                       a[4] - 1)
+    if op == ".abs":
+        a = _evalCqP(args[0], box, bq, bi, pq, pi, n_iv, n_tr, R, ctx)
+        if a is not None:
+            vr = valueRange(a[0])
+            if isNN(vr[0]):
+                return (a[0], a[1], a[2], a[3], a[4])
+            if isNeg(vr[1]):
+                return (mneg(a[0]), a[1], a[2], a[3], a[4])
+        I = ieval(ast, box)
+        return None if I is None else (fallbackTM(ctx, I), bi, pi, n_iv, n_tr)
+    if op == ".ite":
+        C = _guard(ast_guard=args[0], box=box, q=bq, st=(bi, n_iv, n_tr))
+        if C is None:
+            return None
+        (I, bi1, iv1, tr1) = C
+        if isNeg(I[1]):
+            return _evalCqP(args[1], box, bq, bi1, pq, pi, iv1, tr1, R, ctx)
+        if isNN(I[0]):
+            return _evalCqP(args[2], box, bq, bi1, pq, pi, iv1, tr1, R, ctx)
+        t = _evalCqP(args[1], box, bq, bi1, pq, pi, iv1, tr1, R, ctx)
+        if t is None:
+            return None
+        e = _evalCqP(args[2], box, bq, t[1], pq, t[2], t[3], t[4], R, ctx)
+        if e is None:
+            return None
+        pb = pbox_of(box)
+        pt = _evalPointCq(args[1], pb, pq, e[2], R)
+        if pt is None:
+            return None
+        pe = _evalPointCq(args[2], pb, pq, pt[1], R)
+        if pe is None:
+            return None
+        return (iteHullTM2P(pt[0], pe[0], t[0], e[0]), e[1], pe[1], e[3], e[4])
+    raise ValueError(op)
+
+
+def checkPosTMHullP(ast, box, params, R):
+    """Kernel replay oracle for `checkPosTMHullP R e box ps` with a generated
+    params dict {"sqrt": [...], "inv": n, "trans": n, "point": [...]}."""
+    if not all(ble(lo, hi) for lo, hi in box):
+        return False
+    r = _evalCqP(ast, box, list(params["sqrt"]), 0, list(params["point"]), 0,
+                 params["inv"], params["trans"], R,
+                 (boxCenter(box), boxW(box)))
+    if r is None:
+        return False
+    return isPos(loBound(r[0], box))

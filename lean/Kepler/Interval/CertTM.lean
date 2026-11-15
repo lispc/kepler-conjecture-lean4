@@ -6184,4 +6184,705 @@ theorem exA_centered_err_lt_hull : exACenteredErrLtHull = true := by decide
 #print axioms evalTMHullD2C_sound
 #print axioms checkPosTMHullC_sound
 
+/-! ## Rule P (opt-in): point-anchored df-hull `ite` composite
+
+Bounded certtm hold release, 2026-11-15.  The guard-straddle `ite` arm of
+`evalTMHullD2`/`evalTMHullD2C` uses the df-hull composite `iteHullTM2`: the
+branch **value-range** hull `valueRange Mt ∪ valueRange Me` as `fB`, the
+branch `fB` distance as the jump term.  That is sound for *any* guard
+behavior, but on the TSKAJXY family-B leaves the value-range hull is a pure
+interval-dependency relaxation (`|valueRange| ≈ 0.08–0.20` while the true
+function margin is `≈ +0.03`), so the composite certifies NEG even though
+the expression is positive.
+
+Rule P keeps the unconditional-soundness argument but anchors `fB` at the
+*point* branch values: evaluating the two branch expressions on the
+degenerate center box (plain interval evaluation with point sqrt mantissas
+recomputed at the center and the open `trans` rung raised to `R`) yields
+`Pt ∋ ft(y)`, `Pe ∋ fe(y)`, and the composite is
+
+* `fB := Pt.hull Pe` (instead of `valueRange Mt ∪ valueRange Me`);
+* `dfB i := (Mt.dfB i).hull (Me.dfB i)` (unchanged);
+* `err := max Mt.err Me.err + jumpBound Pt Pe` (point jump, not `fB` jump).
+
+`valid_iteHull2P` repeats `valid_iteHull2` verbatim; the only new inputs are
+the point-enclosure soundness facts `Pt.mem (ft y)` / `Pe.mem (fe y)`.  No
+guard-identity, no continuity, no branch-collapse lemma: the rule is sound
+for any guard behavior, like `valid_iteHull2`.
+
+### Opt-in boundary
+
+`TMParams`, `evalTMHullD2`/`evalTMHullD2C`, `checkPosTMHullC` and every
+landed certificate stay byte-identical.  The new bundle `TMParamsP` wraps
+the old `TMParams` and adds the point sqrt queue, consumed only by
+`evalPointTM`/`evalTMHullD2P`/`checkPosTMHullP`.  A field on `TMParams`
+itself was rejected on purpose: the Lean anonymous constructor requires the
+exact field count, so every landed
+`⟨sqrtCerts, invCerts, transCerts⟩` literal would stop elaborating; the
+sibling structure is the zero-churn equivalent. -/
+
+/-- Rule P certificate bundle: the landed per-leaf `TMParams` plus a queue
+of sqrt mantissa pairs for the point evaluation (traversal order of
+`evalPointTM`; a triple uses `slo`/`shi`, `sc` is unused, `o1`/`o2` are
+ignored).  Consumed only by the opt-in Rule P path. -/
+structure TMParamsP where
+  /-- The landed certificate (main-box evaluation, unchanged). -/
+  base : TMParams
+  /-- Point-evaluation sqrt certificates (Rule P only). -/
+  pointCerts : List SqrtTMP
+  deriving Repr
+
+/-- Lift a landed certificate into the opt-in bundle (no point certs). -/
+def TMParamsP.ofBase (ps : TMParams) : TMParamsP := ⟨ps, []⟩
+
+/-- Empty opt-in bundle. -/
+def TMParamsP.empty : TMParamsP := ⟨TMParams.empty, []⟩
+
+/-- Rule P df-hull composite: as `iteHullTM2`, but `fB` is the point hull
+`Pt.hull Pe` (branch point enclosures at the shared center) and the jump
+term is the point distance `jumpBound Pt Pe`. -/
+def iteHullTM2P {n : ℕ} (Pt Pe : DInterval) (Mt Me : TaylorM n) : TaylorM n :=
+  ⟨Mt.y, Mt.w, Pt.hull Pe,
+    fun i => (Mt.dfB i).hull (Me.dfB i),
+    Dyadic.dmax ((Dyadic.dmax Mt.err Me.err).add
+      (Pt.jumpBound Pe)) ⟨0, 0⟩⟩
+
+/-- **Validity of the Rule P composite**: if both branch models are valid
+on the box (same center, same envelope) and `Pt`/`Pe` enclose the branch
+center values, the composite is valid for the guard-selected function.
+Per box point the witnessed slope is the selected branch's own (∈ the
+component hull); the residual splits into that branch's remainder plus —
+only when the guard selects the other branch at the center — the point jump
+`|ft(y) − fe(y)| ≤ jumpBound Pt Pe`.  No guard hypothesis. -/
+theorem valid_iteHull2P {n : ℕ} {Mt Me : TaylorM n} {box : Fin n → DInterval}
+    {ft fe : (Fin n → ℝ) → ℝ} (c : IExpr n)
+    {Pt Pe : DInterval}
+    (ht : Mt.Valid box ft) (he : Me.Valid box fe)
+    (hy : Mt.y = Me.y) (_hw : Mt.w = Me.w)
+    (hPt : Pt.mem (ft (fun i => (Mt.y i).toReal)))
+    (hPe : Pe.mem (fe (fun i => (Mt.y i).toReal))) :
+    (iteHullTM2P Pt Pe Mt Me).Valid box
+      (fun ρ => if c.evalReal ρ < 0 then ft ρ else fe ρ) := by
+  obtain ⟨htmem, htw, _htfB, htrem⟩ := ht
+  obtain ⟨_, _, _hefB, herem⟩ := he
+  rw [← hy] at herem
+  have hjump : |ft (fun i => (Mt.y i).toReal) - fe (fun i => (Mt.y i).toReal)|
+      ≤ (Pt.jumpBound Pe).toReal := DInterval.jumpBound_ge hPt hPe
+  have hjump' : |fe (fun i => (Mt.y i).toReal) - ft (fun i => (Mt.y i).toReal)|
+      ≤ (Pt.jumpBound Pe).toReal := by
+    rw [abs_sub_comm]
+    exact hjump
+  have hJ0 : 0 ≤ (Pt.jumpBound Pe).toReal := DInterval.jumpBound_nonneg _ _
+  have herr : (iteHullTM2P Pt Pe Mt Me).err.toReal
+      = max (max Mt.err.toReal Me.err.toReal + (Pt.jumpBound Pe).toReal) 0 := by
+    show Dyadic.toReal (Dyadic.dmax
+      ((Dyadic.dmax Mt.err Me.err).add (Pt.jumpBound Pe)) ⟨0, 0⟩) = _
+    rw [Dyadic.toReal_dmax, Dyadic.toReal_add, Dyadic.toReal_dmax, Dyadic.toReal_zero]
+  have hm1 : Mt.err.toReal ≤ max Mt.err.toReal Me.err.toReal := le_max_left _ _
+  have hm2 : Me.err.toReal ≤ max Mt.err.toReal Me.err.toReal := le_max_right _ _
+  have hm3 : max Mt.err.toReal Me.err.toReal + (Pt.jumpBound Pe).toReal
+      ≤ max (max Mt.err.toReal Me.err.toReal + (Pt.jumpBound Pe).toReal) 0 :=
+    le_max_left _ _
+  refine ⟨htmem, htw, ?_, ?_⟩
+  · show (Pt.hull Pe).mem
+      (if c.evalReal (fun i => (Mt.y i).toReal) < 0
+        then ft (fun i => (Mt.y i).toReal)
+        else fe (fun i => (Mt.y i).toReal))
+    by_cases hlt : c.evalReal (fun i => (Mt.y i).toReal) < 0
+    · rw [if_pos hlt]
+      exact DInterval.mem_hull_left hPt
+    · rw [if_neg hlt]
+      exact DInterval.mem_hull_right hPe
+  · intro ρ hρ
+    dsimp only
+    rw [show (iteHullTM2P Pt Pe Mt Me).y = Mt.y from rfl]
+    by_cases hlt : c.evalReal ρ < 0
+    · rw [if_pos hlt]
+      obtain ⟨a, ha, hb⟩ := htrem ρ hρ
+      refine ⟨a, fun i => DInterval.mem_hull_left (ha i), ?_⟩
+      by_cases hcy : c.evalReal (fun i => (Mt.y i).toReal) < 0
+      · rw [if_pos hcy]
+        rw [herr]
+        linarith
+      · rw [if_neg hcy]
+        have hsplit : ft ρ - fe (fun i => (Mt.y i).toReal)
+            - ∑ i, a i * (ρ i - (Mt.y i).toReal)
+            = (ft ρ - ft (fun i => (Mt.y i).toReal)
+                - ∑ i, a i * (ρ i - (Mt.y i).toReal))
+              + (ft (fun i => (Mt.y i).toReal)
+                - fe (fun i => (Mt.y i).toReal)) := by ring
+        rw [hsplit, herr]
+        refine le_trans (abs_add_le _ _) ?_
+        linarith
+    · rw [if_neg hlt]
+      obtain ⟨b, hb, hbe⟩ := herem ρ hρ
+      refine ⟨b, fun i => DInterval.mem_hull_right (hb i), ?_⟩
+      by_cases hcy : c.evalReal (fun i => (Mt.y i).toReal) < 0
+      · rw [if_pos hcy]
+        have hsplit : fe ρ - ft (fun i => (Mt.y i).toReal)
+            - ∑ i, b i * (ρ i - (Mt.y i).toReal)
+            = (fe ρ - fe (fun i => (Mt.y i).toReal)
+                - ∑ i, b i * (ρ i - (Mt.y i).toReal))
+              + (fe (fun i => (Mt.y i).toReal)
+                - ft (fun i => (Mt.y i).toReal)) := by ring
+        rw [hsplit, herr]
+        refine le_trans (abs_add_le _ _) ?_
+        linarith
+      · rw [if_neg hcy]
+        rw [herr]
+        linarith
+
+/-- Rule P point evaluator: plain interval evaluation of an `IExpr` on the
+degenerate center box, consuming one `SqrtTMP` per `sqrt` node from
+`pointCerts` (traversal order) and evaluating every `trans` node at the
+point rung `R` (the AST's own rung is ignored; soundness holds for any
+`R`).  `ite` nodes use the guard interval's sign, hulling both branches
+when it straddles.  Kernel-decidable; no Taylor-model layer. -/
+def evalPointTM {n : ℕ} (R : ℕ) (pbox : Fin n → DInterval) :
+    IExpr n → List SqrtTMP → Option (DInterval × List SqrtTMP)
+  | .const d, q => some (⟨d, d⟩, q)
+  | .var k, q => some (pbox k, q)
+  | .neg e, q => (evalPointTM R pbox e q).map fun (I, q') => (I.neg, q')
+  | .abs e, q => (evalPointTM R pbox e q).map fun (I, q') => (I.abs, q')
+  | .add e₁ e₂, q =>
+      (evalPointTM R pbox e₁ q).bind fun (I₁, q₁) =>
+      (evalPointTM R pbox e₂ q₁).map fun (I₂, q₂) => (I₁.add I₂, q₂)
+  | .sub e₁ e₂, q =>
+      (evalPointTM R pbox e₁ q).bind fun (I₁, q₁) =>
+      (evalPointTM R pbox e₂ q₁).map fun (I₂, q₂) => (I₁.sub I₂, q₂)
+  | .mul e₁ e₂, q =>
+      (evalPointTM R pbox e₁ q).bind fun (I₁, q₁) =>
+      (evalPointTM R pbox e₂ q₁).map fun (I₂, q₂) => (I₁.mul I₂, q₂)
+  | .div e₁ e₂ out, q =>
+      (evalPointTM R pbox e₁ q).bind fun (I₁, q₁) =>
+      (evalPointTM R pbox e₂ q₁).bind fun (I₂, q₂) =>
+      (DInterval.div I₁ I₂ out).map fun I => (I, q₂)
+  | .sqrt e _ _, q =>
+      (evalPointTM R pbox e q).bind fun (I, q₀) =>
+      q₀.head?.bind fun p =>
+      if I.hi.isNeg then none
+      else
+        (Dyadic.sqrtI I.hi p.shi).bind fun Jh =>
+        (if I.lo.isNN then
+          (Dyadic.sqrtI I.lo p.slo).map fun Jl => (⟨Jl.lo, Jh.hi⟩, q₀.tail)
+        else some (⟨⟨0, 0⟩, Jh.hi⟩, q₀.tail))
+  | .trans k e _ out, q =>
+      (evalPointTM R pbox e q).bind fun (I, q₀) =>
+      (transOn k I R out).map fun J => (J, q₀)
+  | .ite c t e, q =>
+      (evalPointTM R pbox c q).bind fun (C, q₀) =>
+      if C.hi.isNeg then evalPointTM R pbox t q₀
+      else if C.lo.isNN then evalPointTM R pbox e q₀
+      else
+        (evalPointTM R pbox t q₀).bind fun (T, q₁) =>
+        (evalPointTM R pbox e q₁).map fun (E, q₂) => (T.hull E, q₂)
+
+/-- **Soundness of the point evaluator**: on a degenerate point box
+`i ↦ [yᵢ, yᵢ]`, every successful interval contains `e.evalReal y`. -/
+theorem evalPointTM_mem {n : ℕ} (R : ℕ) (y : Fin n → Dyadic) (e : IExpr n) :
+    ∀ (q q' : List SqrtTMP) (I : DInterval),
+      evalPointTM R (fun i => ⟨y i, y i⟩) e q = some (I, q') →
+      I.mem (e.evalReal (fun i => (y i).toReal)) := by
+  induction e with
+  | const d =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨le_rfl, le_rfl⟩
+  | var k =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨le_rfl, le_rfl⟩
+  | neg e ih =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨J, q₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact DInterval.mem_neg (ih q q₀ J he)
+  | abs e ih =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨J, q₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact DInterval.mem_abs (ih q q₀ J he)
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, q₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨I₂, q₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact DInterval.mem_add (ih₁ q q₁ I₁ h₁) (ih₂ q₁ q₂ I₂ h₂)
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, q₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨I₂, q₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact DInterval.mem_sub (ih₁ q q₁ I₁ h₁) (ih₂ q₁ q₂ I₂ h₂)
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, q₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨I₂, q₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact DInterval.mem_mul (ih₁ q q₁ I₁ h₁) (ih₂ q₁ q₂ I₂ h₂)
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, q₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₂, q₂⟩, h₂, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I₀, hdiv, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact DInterval.div_sound hdiv (ih₁ q q₁ I₁ h₁) (ih₂ q₁ q₂ I₂ h₂)
+  | sqrt e s₁ s₂ ih =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨J, q₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      by_cases hneg : J.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        simp at h
+      · rw [if_neg hneg] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨Jh, hJh, h⟩ := h
+        obtain ⟨hy1, hy2⟩ := ih q q₀ J he
+        by_cases hlo : J.lo.isNN = true
+        · rw [if_pos hlo] at h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨Jl, hJl, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          exact ⟨le_trans (Dyadic.sqrtI_sound hJl).1 (Real.sqrt_le_sqrt hy1),
+            le_trans (Real.sqrt_le_sqrt hy2) (Dyadic.sqrtI_sound hJh).2⟩
+        · rw [if_neg hlo] at h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+          exact ⟨by rw [Dyadic.toReal_zero]; exact Real.sqrt_nonneg _,
+            le_trans (Real.sqrt_le_sqrt hy2) (Dyadic.sqrtI_sound hJh).2⟩
+  | trans k e N out ih =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨J, q₀⟩, he, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨K, hK, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact IExpr.transOn_sound k (ih q q₀ J he) hK
+  | ite c t e ihc iht ihe =>
+      intro q q' I h
+      simp only [evalPointTM] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, q₀⟩, hc, h⟩ := h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        have hC := ihc q q₀ C hc
+        have hlt : c.evalReal (fun i => (y i).toReal) < 0 :=
+          lt_of_le_of_lt hC.2 ((Dyadic.isNeg_iff C.hi).mp hneg)
+        show I.mem (if c.evalReal (fun i => (y i).toReal) < 0
+          then t.evalReal (fun i => (y i).toReal)
+          else e.evalReal (fun i => (y i).toReal))
+        rw [if_pos hlt]
+        exact iht q₀ q' I h
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          have hC := ihc q q₀ C hc
+          have hge : 0 ≤ c.evalReal (fun i => (y i).toReal) :=
+            le_trans ((Dyadic.isNN_iff C.lo).mp hnn) hC.1
+          have hnot : ¬ c.evalReal (fun i => (y i).toReal) < 0 := not_lt.mpr hge
+          show I.mem (if c.evalReal (fun i => (y i).toReal) < 0
+            then t.evalReal (fun i => (y i).toReal)
+            else e.evalReal (fun i => (y i).toReal))
+          rw [if_neg hnot]
+          exact ihe q₀ q' I h
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Tp, q₁⟩, ht, h⟩ := h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨Ep, q₂⟩, he, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          have hC := ihc q q₀ C hc
+          show (Tp.hull Ep).mem
+            (if c.evalReal (fun i => (y i).toReal) < 0
+              then t.evalReal (fun i => (y i).toReal)
+              else e.evalReal (fun i => (y i).toReal))
+          by_cases hlt : c.evalReal (fun i => (y i).toReal) < 0
+          · rw [if_pos hlt]
+            exact DInterval.mem_hull_left (iht q₀ q₁ Tp ht)
+          · rw [if_neg hlt]
+            exact DInterval.mem_hull_right (ihe q₁ q₂ Ep he)
+
+/-- Rule P main evaluator: `evalTMHullD2C` with the guard-straddle `ite` arm
+replaced by the point-anchored composite `iteHullTM2P`.  The branch models
+are computed exactly as in `evalTMHullD2C` (same Taylor rules, same
+fallbacks); the two **point** enclosures are computed on the degenerate
+center box with `evalPointTM` and consume `TMParamsP.pointCerts`.  All other
+arms are verbatim `evalTMHullD2C`. -/
+def evalTMHullD2P {n : ℕ} (R : ℕ) (box : Fin n → DInterval) :
+    IExpr n → TMParamsP → Option (TaylorM n × TMParamsP)
+  | .const d, ps => some (constTM box d, ps)
+  | .var k, ps => some (varTM box k, ps)
+  | .neg e, ps => (evalTMHullD2P R box e ps).map fun (M, ps') => (M.neg, ps')
+  | .add e₁ e₂, ps =>
+      (evalTMHullD2P R box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2P R box e₂ ps₁).map fun (M₂, ps₂) => (M₁.add M₂, ps₂)
+  | .sub e₁ e₂, ps =>
+      (evalTMHullD2P R box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2P R box e₂ ps₁).map fun (M₂, ps₂) => (M₁.sub M₂, ps₂)
+  | .mul e₁ e₂, ps =>
+      (evalTMHullD2P R box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2P R box e₂ ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div e₁ e₂ out, ps =>
+      (evalTMHullD2P R box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2P R box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.base.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi =>
+          (M₁.mul Mi, ⟨⟨ps₂.base.sqrtCerts, ps₂.base.invCerts.tail,
+            ps₂.base.transCerts⟩, ps₂.pointCerts⟩)).orElse
+        (fun _ => ((IExpr.div e₁ e₂ out).eval box).map fun I =>
+          (fallbackTM box I, ⟨⟨ps₂.base.sqrtCerts, ps₂.base.invCerts.tail,
+            ps₂.base.transCerts⟩, ps₂.pointCerts⟩))
+  | .sqrt e s₁ s₂, ps =>
+      (evalTMHullD2P R box e ps).bind fun (M₀, ps₀) =>
+      ps₀.base.sqrtCerts.head?.bind fun p =>
+      ((M₀.sqrt p).map fun M' =>
+          (M', ⟨⟨ps₀.base.sqrtCerts.tail, ps₀.base.invCerts,
+            ps₀.base.transCerts⟩, ps₀.pointCerts⟩)).orElse
+        (fun _ => ((IExpr.sqrt e s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨⟨ps₀.base.sqrtCerts.tail, ps₀.base.invCerts,
+            ps₀.base.transCerts⟩, ps₀.pointCerts⟩))
+  | .abs e, ps =>
+      ((evalTMHullD2P R box e ps).bind fun (M₀, ps₀) =>
+        if M₀.valueRange.lo.isNN then some (M₀, ps₀)
+        else if M₀.valueRange.hi.isNeg then some (M₀.neg, ps₀)
+        else ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps₀)).orElse
+        (fun _ => ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps))
+  | .trans k e N out, ps =>
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps)
+      else
+        (evalTMHullD2P R box e ps).bind fun (M₀, ps₀) =>
+        ps₀.base.transCerts.head?.bind fun p =>
+        ((M₀.trans k N out p).map fun M' =>
+            (M', ⟨⟨ps₀.base.sqrtCerts, ps₀.base.invCerts,
+              ps₀.base.transCerts.tail⟩, ps₀.pointCerts⟩)).orElse
+          (fun _ => ((IExpr.trans k e N out).eval box).map fun I =>
+            (fallbackTM box I, ⟨⟨ps₀.base.sqrtCerts, ps₀.base.invCerts,
+              ps₀.base.transCerts.tail⟩, ps₀.pointCerts⟩))
+  | .ite c t e, ps =>
+      (evalIParams box c ps.base).bind fun (C, ps₀) =>
+      if C.hi.isNeg then evalTMHullD2P R box t ⟨ps₀, ps.pointCerts⟩
+      else if C.lo.isNN then evalTMHullD2P R box e ⟨ps₀, ps.pointCerts⟩
+      else
+        (evalTMHullD2P R box t ⟨ps₀, ps.pointCerts⟩).bind fun (Mt, ps₁) =>
+        (evalTMHullD2P R box e ps₁).bind fun (Me, ps₂) =>
+        (evalPointTM R (fun i => ⟨boxCenter box i, boxCenter box i⟩) t
+            ps₂.pointCerts).bind fun (Pt, q₁) =>
+        (evalPointTM R (fun i => ⟨boxCenter box i, boxCenter box i⟩) e
+            q₁).map fun (Pe, q₂) =>
+          (iteHullTM2P Pt Pe Mt Me, ⟨ps₂.base, q₂⟩)
+
+/-- **Soundness of the Rule P evaluator** (same conclusion as
+`evalTMHullD2C_sound`): the non-`ite` cases repeat `evalTMHullD2C_sound`'s
+arguments; the `ite` case uses `valid_iteHull2P` with the point-enclosure
+facts discharged by `evalPointTM_mem` (the point box is the degenerate
+center cell, so `boxCenter box` is the shared center). -/
+theorem evalTMHullD2P_sound {n : ℕ} {R : ℕ} {box : Fin n → DInterval} :
+    ∀ (e : IExpr n) (ps ps' : TMParamsP) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHullD2P R box e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_const (cellOK_of_wf hwf) d, rfl, rfl⟩
+  | var k =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_var (cellOK_of_wf hwf) k, rfl, rfl⟩
+  | neg e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      exact ⟨valid_neg hV, hy, hw⟩
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_add hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_sub hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_mul hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      cases hi : M₂.inv p with
+      | none =>
+        rw [hi] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some Mi =>
+        rw [hi] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        refine ⟨?_, hy₁, hw₁⟩
+        exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
+  | sqrt e s₁ s₂ ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      cases hs : M₀.sqrt p with
+      | none =>
+        rw [hs] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some M' =>
+        rw [hs] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        obtain ⟨hV', hyy, hww⟩ := valid_sqrt hV p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
+  | abs e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      cases he : evalTMHullD2P R box e ps with
+      | none =>
+          simp only [he, Option.bind_none, Option.orElse_none,
+            Option.map_eq_some_iff] at h
+          obtain ⟨I, hI, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some Mp =>
+          obtain ⟨M₀, ps₀⟩ := Mp
+          simp only [he, Option.bind_some] at h
+          obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+          by_cases hnn : M₀.valueRange.lo.isNN = true
+          · simp only [if_pos hnn, Option.orElse_some] at h
+            obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+            have hge : 0 ≤ M₀.valueRange.lo.toReal := (Dyadic.isNN_iff _).mp hnn
+            refine ⟨hV.congr_box ?_, hy, hw⟩
+            intro ρ hρ
+            show |e.evalReal ρ| = e.evalReal ρ
+            exact abs_of_nonneg
+              (le_trans hge (TaylorM.Valid.valueRange_mem hV ρ hρ).1)
+          · simp only [if_neg hnn] at h
+            by_cases hneg : M₀.valueRange.hi.isNeg = true
+            · simp only [if_pos hneg, Option.orElse_some] at h
+              obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+              have hlt : M₀.valueRange.hi.toReal < 0 := (Dyadic.isNeg_iff _).mp hneg
+              refine ⟨(valid_neg hV).congr_box ?_, hy, hw⟩
+              intro ρ hρ
+              show |e.evalReal ρ| = -e.evalReal ρ
+              exact abs_of_neg
+                (lt_of_le_of_lt (TaylorM.Valid.valueRange_mem hV ρ hρ).2 hlt)
+            · simp only [if_neg hneg] at h
+              cases hI : (IExpr.abs e).eval box with
+              | none => simp [hI] at h
+              | some I =>
+                  simp only [hI, Option.map_some, Option.orElse_some] at h
+                  obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+                  exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+  | trans k e N out ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      by_cases hcl : e.isClosed = true
+      · rw [if_pos hcl] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_closed (cellOK_of_wf hwf) hcl hI, rfl, rfl⟩
+      · rw [if_neg hcl] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨p, _hp, h⟩ := h
+        obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+        cases ht : M₀.trans k N out p with
+        | none =>
+          rw [ht] at h
+          rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+          obtain ⟨I, hI, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+        | some M' =>
+          rw [ht] at h
+          rw [Option.map_some, Option.orElse_some] at h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+          obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p ht
+          refine ⟨hV', ?_, ?_⟩
+          · show M'.y = boxCenter box
+            exact hyy.trans hy
+          · show M'.w = boxW box
+            exact hww.trans hw
+  | ite c t e _ihc iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2P] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, ps₀⟩, hc, h⟩ := h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        obtain ⟨hVt, hyt, hwt⟩ := iht ⟨ps₀, ps.pointCerts⟩ ps' M hwf h
+        refine ⟨valid_iteHullD hVt
+          (fun ρ hρ => evalIParams_mem hρ c ps.base ps₀ C hc) hneg, hyt, hwt⟩
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          obtain ⟨hVe, hye, hwe⟩ := ihe ⟨ps₀, ps.pointCerts⟩ ps' M hwf h
+          refine ⟨valid_iteHullD_else hVe
+            (fun ρ hρ => evalIParams_mem hρ c ps.base ps₀ C hc) hnn, hye, hwe⟩
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Mt, ps₁⟩, ht, h⟩ := h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Me, ps₂⟩, he, h⟩ := h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Pt, q₁⟩, hpt, h⟩ := h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨Pe, q₂⟩, hpe, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          obtain ⟨hVt, hyt, hwt⟩ := iht ⟨ps₀, ps.pointCerts⟩ ps₁ Mt hwf ht
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₁ ps₂ Me hwf he
+          have hPt : Pt.mem (t.evalReal (fun i => (Mt.y i).toReal)) := by
+            simpa only [hyt] using evalPointTM_mem R (boxCenter box) t
+              ps₂.pointCerts q₁ Pt hpt
+          have hPe : Pe.mem (e.evalReal (fun i => (Mt.y i).toReal)) := by
+            simpa only [hyt] using evalPointTM_mem R (boxCenter box) e q₁ q₂ Pe hpe
+          refine ⟨valid_iteHull2P c hVt hVe (hyt.trans hye.symm)
+            (hwt.trans hwe.symm) hPt hPe, hyt, hwt⟩
+
+/-- **Rule P checker**: box well-formedness + the Rule P evaluator succeeds
+with a positive Taylor lower bound.  Opt-in: the landed `checkPosTMHullC`
+is untouched. -/
+def checkPosTMHullP {n : ℕ} (R : ℕ) (e : IExpr n) (box : Fin n → DInterval)
+    (ps : TMParamsP) : Bool :=
+  (List.finRange n).all (fun i => (box i).wf) &&
+    (match evalTMHullD2P R box e ps with
+    | some (M, _) => (M.loBound box).isPos
+    | none => false)
+
+/-- **Soundness of the Rule P checker**. -/
+theorem checkPosTMHullP_sound {n : ℕ} {R : ℕ} {e : IExpr n}
+    {box : Fin n → DInterval} {ps : TMParamsP}
+    (h : checkPosTMHullP R e box ps = true) (ρ : Fin n → ℝ) (hρ : boxMem box ρ) :
+    0 < e.evalReal ρ := by
+  unfold checkPosTMHullP at h
+  simp only [Bool.and_eq_true, List.all_eq_true] at h
+  obtain ⟨hwfB, h⟩ := h
+  have hwf : ∀ i, (box i).wf = true := fun i => hwfB i (List.mem_finRange i)
+  cases hE : evalTMHullD2P R box e ps with
+  | none => rw [hE] at h; simp at h
+  | some Mp =>
+      obtain ⟨M, ps'⟩ := Mp
+      rw [hE] at h
+      have hpos := Dyadic.toReal_pos_of_isPos h
+      obtain ⟨hV, _, _⟩ := evalTMHullD2P_sound e ps ps' M hwf hE
+      exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
+
+/-! ### Rule P smoke test (kernel `decide` only)
+
+A guard-straddling `ite` over two sloped branches: `x₀ ∈ [-1,1]`,
+`x₁ ∈ [1,2]`, expression `if x₀ < 0 then 5·x₁ else 7·x₁` (true minimum
+`5 > 0`).  The landed df-hull composite pays the branch value-range hull
+and the `fB` jump (`err = 9`, `loBound = -7.5`) and rejects; Rule P anchors
+at the center point (`fB = [7.5, 10.5]`, `err = 3`, `loBound = 1`) and
+accepts. -/
+
+/-- Two-cell box: `x₀ ∈ [-1,1]`, `x₁ ∈ [1,2]`. -/
+def exPRuleBox : Fin 2 → DInterval :=
+  fun i => if i = 0 then ⟨⟨-1, 0⟩, ⟨1, 0⟩⟩ else ⟨⟨1, 0⟩, ⟨2, 0⟩⟩
+
+/-- `if x₀ < 0 then 5·x₁ else 7·x₁`. -/
+def exPRuleExpr : IExpr 2 :=
+  .ite (.var 0) (.mul (.const ⟨5, 0⟩) (.var 1)) (.mul (.const ⟨7, 0⟩) (.var 1))
+
+/-- The landed df-hull composite rejects this leaf. -/
+theorem exPRule_old_fails :
+    checkPosTMHullC exPRuleExpr exPRuleBox TMParams.empty = false := by
+  decide
+
+/-- Rule P accepts it. -/
+theorem exPRule_check :
+    checkPosTMHullP 1024 exPRuleExpr exPRuleBox TMParamsP.empty = true := by
+  decide
+
+/-- ... and the checker soundness gives the real positivity. -/
+theorem exPRule_pos (ρ : Fin 2 → ℝ) (hρ : boxMem exPRuleBox ρ) :
+    0 < exPRuleExpr.evalReal ρ :=
+  checkPosTMHullP_sound exPRule_check ρ hρ
+
+#print axioms valid_iteHull2P
+#print axioms evalPointTM_mem
+#print axioms evalTMHullD2P_sound
+#print axioms checkPosTMHullP_sound
+#print axioms exPRule_old_fails
+#print axioms exPRule_check
+#print axioms exPRule_pos
+
 end Kepler.Interval
