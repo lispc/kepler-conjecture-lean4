@@ -93,7 +93,14 @@
 ---
 
 
-## 1. 在飞（2026-11-15：`rulep-replay-w2` 长任务 + `ztgmain-w1` Phase 1 待锁；`nli-recost-w1` 已收线）
+## 1. 在飞（2026-11-15：`rulep-replay-w2` 长任务 + `rulep-fullbox-prescan-w1` + `g4feas-w1`；`ztgmain-w1` Phase 1 待锁）
+
+> **2026-11-15 20:15 双车道发车（用户批准建议）**：
+> `rulep-fullbox-prescan-w1`——TSKAJXY 全盒非族 B **5,112 叶** Rule P 预扫（4 worker、
+> ~4–5 h、无 lean；补集 = 6,512 − 1,400，FAIL 行照记；明晨直接接内核补叶）；
+> `g4feas-w1`——`nliOx3q1h` 余量审计（230 = 46 线性 + 184 γ4；19 签名/48 盒/67 组合）
+> + γ4 Hessian/Taylor 可行性（≤2 worker、2–4 h、无 lean；决定 216 角点表 vs Taylor 路线）。
+> `tmexact.arctanINegP` 修复由编排者同批做（`2d9eb9cc`，续1172）。
 
 > **2026-11-15 19:49 `ztgmain-w1` Phase 0 收线（无 lean）**：**dihY 半边有新便宜路线**
 > ——`dihY ≥ π/4 ⟺ Δ4 ≤ √(4x1Δ)` 化成纯多项式，`F'` 逐变量凹 ⇒ 64 角 + 6 条凹性步；
@@ -963,6 +970,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-15（20:20，续1172）**：**修 `tmexact.arctanINegP` 的 `neg`→`ineg`（`2d9eb9cc`，recost 发现的真 bug）**。
+① 缺陷：`pipeline/interval/tmexact.py:1172` 对 `DInterval` 调用 `neg`（Dyadic 函数）⇒ `TypeError`；Lean 正本 `CertTM.lean:6549` 是 `J.neg`（= `ineg`）。recost 实测真 emitter 在 27 条里 12 条直接崩。
+② 修复：`arctanIPosP(ineg(J), …)` + 输出 `ineg(L)`（2 行）。smoke：`arctanIPosP([3,4], out=-64)` = `[1.249045772,1.325817664]`；`arctanINegP([-4,-3])` = `[-1.325817664,-1.249045772]`，与 `Real.arctan` 一致。
+③ `python3 -I -m py_compile` PASS；`test_tm_unit.py` 需 `pipeline/interval/bb_arb` 二进制（本机不在该路径），与本修无关。commit `2d9eb9cc`，已 push。
+④ 影响：后续 emitter 波次不再因负大参数 atan 崩；w2 的 1,400 叶未受影响。下一条：续1173。
+
+- **2026-11-15（20:15，续1171）**：**双车道发车（用户批准建议）——`rulep-fullbox-prescan-w1` + `g4feas-w1`；tmexact 修复由编排者做（见续1172）**。
+① **A `rulep-fullbox-prescan-w1`**：TSKAJXY 全盒**非族 B 的 5,112 叶**（5,012 旧叶 + 族 A 100 叶，含 pilot 0/657）Rule P @ 4096 预扫；4 worker、~17.6 CPU·h ≈ 4–5 h、~1 GB 盘；补集 = `0..6511` − `familyB.idx`（1,400），校验 5,112/无重复/交空；FAIL 行照记（旧叶 C-rule 余量最小 +3.9e−6，Rule P 可能更紧），前 200 叶 FAIL >5% 暂停；明晨直接接 5,112 叶内核补叶。
+② **B/C `g4feas-w1`**：`nliOx3q1h` 余量审计（230 = 46 线性 + 184 γ4；19 签名/48 盒/67 组合；测 `γ4≥0`/`dihY≥arccos(1/3)`/bump/每盒角点界的覆盖率）+ γ4 **Hessian/Taylor** 可行性（ZTGIJCF4 4 解耦箱 + 4 个 ox3q1h 箱；单盒 centered-form，必要时 2^k 细分；对照 216 角点表 10 万行 vs TM 1,100 CPU·h/条）。≤2 worker、2–4 h、无 lean。
+③ 两车道均纯 Python、不占全局 lean 锁（w2 20:10 内核 227/1,400，ETA 明晨 ~06:00）；不改主仓、不 commit。
+④ 下一条：续1172。
 
 - **2026-11-15（19:49，续1170）**：**`ztgmain-w1` Phase 0 收线——dihY 半边找到便宜可证路线；γ4 半边是阻塞，4 条解耦本窗口未关**。
 ① **新发现（dihY 多项式化）**：`dihY ≥ π/4 ⟺ Δ4 ≤ √(4x1Δ)`（`Δ>0`；`Δ4≤0` 自动成立）⇒ 对任意有理 `s`，`dihY ≥ arctan(s) ⟺ s²Δ4² ≤ 4x1Δ`。`F'(x)=4·x1lo·Δ − s²Δ4²` 逐变量凹（`Δ` 二次凹、`Δ4` 仿射、`−Δ4²` 凹）⇒ 只需 64 个箱角 + 6 条凹性步。区间实测：`s=11/5` min F' = **+619.99**、`D_lb=1.143674897`；`s=6/5` min F' = **+684.85**、`D_lb=0.849988714`。

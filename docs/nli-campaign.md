@@ -83,8 +83,9 @@
 - 编排者复核：`get_main_nonlinear` **109 显式分支 ↔ 109 ids 精确双射、
   零 `|_ => True` 命中**（AUDIT A-3 的 SUSPECT 关闭；旧「108」漏了字母开头的
   `OMKYNLT 3336871894`）。
-- 发现 `pipeline/interval/tmexact.py:1172` 的 `arctanINegP` 用 `neg`（Dyadic）
-  而非 `ineg`（DInterval），真 emitter 在 27 条里 12 条直接崩——待修。
+- `pipeline/interval/tmexact.py:1172` 的 `arctanINegP` 曾用 `neg`（Dyadic）
+  而非 `ineg`（DInterval），真 emitter 在 27 条里 12 条直接崩——已修
+  `2d9eb9cc`（smoke `[3,4] → [1.2490,1.3258]` 正确）。
 - **判读**：FARM 本地量产判死；`IXPOTPA` 是唯一 FARM-MATH 候选。后续优先
   MATH/MATH-FARM（ZTGIJCF4 γ4/dihY 套件）与 `nliOx3q1h` 的
   「每盒标量界 + 角点/折点」路线（230 合取 → 46 线性 + 184 γ4；
