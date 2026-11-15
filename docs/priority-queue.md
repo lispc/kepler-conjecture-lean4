@@ -93,7 +93,12 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-replay-w2`；`rulep-fullbox-prescan-w1`/`g4feas-w1` 已收线、`ztgmain-w1` Phase 1 待锁）
+## 1. 在飞（2026-11-16：`rulep-replay-w2` + `famsplit-w1`；fullbox prescan/g4feas 已收线、`ztgmain-w1` Phase 1 待锁）
+
+> **2026-11-16 01:50 `famsplit-w1` 发车（编排者，A 波必要子步）**：族 A **100 叶
+> 沿最宽维二分 → 200 子叶**，Rule P @ 4096 逐子盒预扫（`--box`）；PASS 子叶进
+> `famsplit_worklist_pass.idx`，FAIL 记 `P_FAIL` 并用 `--rule C` 探 lb。纯 Python、
+> ≤2 worker、~1 h、不占 lean；为 05:35 后的全盒内核波补齐族 A。
 
 > **2026-11-16 01:46 `rulep-fullbox-prescan-w1` 收线（无 lean）**：非族 B **5,112 叶**
 > Rule P 预扫——**5,012 PASS / 100 FAIL**（98.04%）；FAIL **恰好=族 A 100/100**
@@ -984,6 +989,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（01:50，续1175）**：**`famsplit-w1` 发车——族 A 100 叶切叶 → 200 子叶 Rule P 预扫（A 波必要子步）**。
+① 背景：`rulep-fullbox-prescan-w1` 的 100 FAIL 恰好=族 A；Rule P 不收紧族 A（与 C-rule lb 最大差 5e−14），CALIB2 记载“最宽维二分一次 100/100 PASS”。
+② 方法：读 cert 父叶盒 → 选最宽维 → dyadic 中点切两半（端点归一化奇数 mantissa）→ 逐子盒 `emit_tm_params.py --rule P --rung 4096 --box '<literal>'`；校验非空/并集=父/交集={m}；PASS 进 `famsplit_worklist_pass.idx`；P_FAIL 只记并用 `--rule C --rung 2048 --no-verify` 探 lb（不产模块）。
+③ 纯 Python、≤2 worker、~1 h、零 lean（w2 仍占锁）；交付 `FAMSPLIT.tsv`(200)/`FAMSPLIT_BOXES.json`/`FAMSPLIT_SUMMARY.md`/worklist/MANIFEST；不改主仓、不 commit。
+④ w2 同刻 **919/1,400**（01:50，ETA ~05:35）；本单收线后全盒内核波 = 5,012 PASS + 族 A 子叶。下一条：续1176。
 
 - **2026-11-16（01:46，续1174）**：**`rulep-fullbox-prescan-w1` 收线——全盒非族 B 5,112 叶：5,012 PASS / 100 FAIL，FAIL 恰好=族 A**。
 ① 构成：5,112 = **5,010 旧叶 + 100 族 A + 2 pilot（0/657）**（= 6,512 − 族 B 1,400；校验恰好 5,112、无重复、交空、并集 0..6511）。PASS **5,012（98.04%）**、FAIL **100（1.96%）**；**FAIL 集合恰好 = 族 A 100/100**（`oracle-reject`），**非族 A 零 FAIL**，0 infra / 0 timeout。
