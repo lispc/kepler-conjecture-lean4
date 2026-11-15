@@ -93,7 +93,14 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶；w2/famsplit/prescan/g4feas 已收线、`ztgmain-w1` Phase 1 待锁）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶 + `g4hol-w1` 只读考古；w2/famsplit/prescan/g4feas 已收线）
+
+> **2026-11-16 06:40 `g4hol-w1` 发车（用户选「2」）**：只读考古 Flyspeck HOL 的 γ4
+> 解析链（`merge_ineq.hl:1160-1780` 的 `gamma4fgcy_div_sqrtdelta` / `tsk_lemma1` /
+> `REAL_WLOG_SIMPLEX*` / `CRIT_TAC` + `ineq.hl` 的 interval/CFSQP），回答
+> **HOL 有没有比「216 角点表/10 万行」或「TM 1,100 CPU·h/条」更便宜的路线**；
+> 产出 `HOL_G4_ROUTE.md` / `LEAN_MAP.tsv` / `RECOMMENDATION.md`。纯只读、1 核、2–4 h，
+> 不占 lean。
 
 > **2026-11-16 05:36 全盒内核波发车**：`rulep-fullbox-kernel-w1`——**5,212 叶**
 > （5,012 旧叶 + 200 族 A 子叶）+ 1,400 B 已编译 = 6,612 叶池；15 叶/块 + checkpoint，
@@ -1006,6 +1013,12 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（06:40，续1178）**：**`g4hol-w1` 发车（用户选「2」）——HOL γ4 解析链只读考古，判定是否有比角点表/TM 更便宜的路线**。
+① 唯一问题：Flyspeck HOL 如何证 γ4 型不等式？有没有比我们「宽盒逐片凹性 + 216 角点表 / 10 万行」或「TM ~1,100 CPU·h/条」更便宜的 Lean 移植路线？
+② 必读：`merge_ineq.hl` 的 `gamma4fgcy_div_sqrtdelta`(≈1160)、`tsk_lemma1`(≈1383)、`REAL_WLOG_SIMPLEX*`(≈1468-1547)、`ineq_critical_edge`/`CRIT_TAC`(≈1606-1780)、critical-edge/bump 分支(≈1821-2100)；`ineq.hl` 的 `ineq`/CFSQP/interval 数据；`ineqdata3q1h.hl`；Lean 侧 `PackingAuto21` 的 `cell4_from_ineq`/`p21k_tsk_lemma1`/`p21k_gamma4fgcy_div_sqrtdelta`、`NliBanks17.p21k_euler_anchor`、ZTGIJCF4/ox3q1h 资产。
+③ 必答 7 条：γ4 拆分形态、`tsk_lemma1` 步骤、WLOG/Simplex 降维、CRIT 切分规模、`ineq` 引擎成本量级、对 10+184+宽盒 rest 的移植判断、明确 yes/no（能否降到 ≤10³ 行或 ≤10² CPU·h）。
+④ 交付 `HOL_G4_ROUTE.md`/`LEAN_MAP.tsv`/`RECOMMENDATION.md`/`EVIDENCE.md`；纯只读、1 核、2–4 h、24 h 止损；零 lean、零仓库改动；kernel 波 120/5,212 不受影响。下一条：续1179。
 
 - **2026-11-16（05:36，续1177）**：**`rulep-replay-w2` 收线（族 B 1,400/1,400 PASS）+ 全盒内核波 `rulep-fullbox-kernel-w1` 发车**。
 ① w2 结果：预扫 1,400/1,400 PASS、内核 1,400/1,400 PASS、0 FAIL、0 未尝试；1,400 `_check` = `[propext, Quot.sound]`、1,400 `_pos` = `[propext, Classical.choice, Quot.sound]`；`sorryAx/error/warning` 全 0。总 **15.78 CPU·h**（预扫 4.81 + 内核 10.97；w2 span 14.14 h）；内核 mean 28.21 s、P50/P95=28/30、min/max 26/40；max RSS **9.620 GiB**（均值 9.581）；pool **374 MB**（1,400 src + 1,400 olean 258 KB/叶 + 30,653 个零字节 symlink）。
