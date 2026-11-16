@@ -1123,6 +1123,21 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-16（23:25，续1202）**：**首轮定时巡检（用户 22:26 立「每隔半小时看看无头进展」，automation 每 30 min）**。
+① **内核波**：**1,844/5,212 PROBED（35.4%）**，34.5 s/叶、ETA 32.3 h（收线预估
+**11-18 ~07:40**，较原估推后 4–8 h = 二 lean 分摊 + 强杀重启周期）；**FAILED 1 = 叶
+1298**：rc=143 SIGTERM（22 s 外杀、9.93 GB、**零 error 行 = 非证明失败**），车道协议
+自带 `--retry-failed` 末尾重试——无需干预，装配覆盖不受影响。
+② **jet3-g0-w1**：存活活跃（P0 `p0_rho1.py` 23:01、P1 `p1_certbb.py` 23:20、out/
+23:22）——P0/P1 判定行产出中；快照尚无 milestone 落盘（下轮若无改善发一行落盘提醒）。
+③ **math5-w2 真死确认**（22:23 截断后 agent 目录 output.txt 停更 1 h、工作区
+22:15 后无写入、无其 lean 进程）→ **编排者已抢在派单前把 /tmp 现场全量镜像进快照**
+（`math5-w2/wip-tmp-mirror/`：lean/ 工作副本、sec_mu_old/sec78_old、logs/full3.log）。
+④ **`math5-w3` fresh 接管发车**（常设「维护一个车道」指令，w1→w2 先例）：从
+wip-tmp-mirror 最新现场续——w2 死因现场 = 正在重写 §6 的 mu_mpu_br/mp_br 两个证明体；
+w2 资产（MILESTONE-1：infra §0–§5 GREEN、核心件 `nb18_corner_zero` 已证）完好。
+下一条：续1203。
+
 - **2026-11-16（21:18，续1201）**：**`jet3-g0-w1` 发车（用户批「好」——槽位建议采纳：Gate-0 优先于 ztg 续任，math5 编译错峰）**。
 ① 使命：Gate-0 判定 pilot——TM-hull 载体版 C1（P0）→ certified d2B 回灌 B&B 三件
 叶数 N(P)/s*(P)（P1）→ p3 #147 叶 Lean 探针（P2）→ GO/NO-GO 备忘（P3）。
