@@ -204,6 +204,31 @@
   过时注释清理第 4 条候选。
 - hLP 附注：LP-GATED（42,889 bound 叶 + 磁盘 ≥1.2 TB 硬墙，等用户算力裁决）。
 
+### 1.8 Gate-0 预研（`jet3-pre-w1`，2026-11-16）——Gate 定义修正 + 施工图
+
+- **GO 概率 ~60–65%，且比 §1.5/g4port 设想更便宜**：判据不是"三阶导界是否存在"
+  （1-D MVT 伸缩必存在、无四阶项），而是 **d2B 包络紧度**。
+- **Gate-0 重定义（修正 g4port 判词）**：由"evalJet3 紧度 pilot"改为
+  **"d2B 供给器紧度 pilot"**——三供给器同测，**C1（符号 ∂² + 盒区间求值）首选**：
+  HOL `formal_ineqs` 以同一配方量产 23,237 叶（`informal_taylor.hl:31–135`），
+  等效 safety 落我们 s=3–10 区间；C1 的 Lean 侧资产 90% 已在树内量产
+  （`derivIExprM`/`DerivSafeOnM`/`checkPosFaceLo_sound` 在 `C549Mono.lean:52/87/438`、
+  `evalTMHullD2` 在 `CertTM.lean:3814`），**新数学仅 2 件**（`taylor2_faceLo`、
+  `concFace`）。Jet3 三阶 flat 槽（`Fin n → Fin n → Fin n → DInterval`，非嵌套）
+  降级为"C1 太肥时的升级件"。
+- **体量**：C1-最短 GO 路径 ~19 引理/**1,900–2,600 行**；Jet3 全量条件追加
+  +21 引理/+2,600–3,800 行；发射器 400–600 行 Python。
+- **GO 判定表**：主判据 = certified 包络回灌 B&B 叶数（s*≤10 GO / 10–30 灰区 /
+  \>30 NO-GO；等价 2×HOL = p1≤278、p2≤150、p3≤64）；辅 ρ1=cert/true≤3、
+  decide≤3 min/叶、300 点采样零违例。**最大风险** = p1 MONO 宽维叶
+  （w≈0.116、余量 7.8e-4）。
+- **考古**：HOL `formal_ineqs` 止于二阶（`m_taylor_interval` 无三阶层，
+  soundness 用 `has_bounded_second_derivative`）——三阶为本仓新杠杆，
+  无上游死路/活路标记。
+- 工单建议已就绪：**`jet3-g0-w1`**（P0–P3，见 `jet3-pre-w1/DELIVERY.md`）——
+  半天可判 C1；发车时机 = 二 lean 槽空出（ztgmain Kit A 收线后）。
+  详细 `lane_snapshots/jet3-pre-w1/JET3_PLAN.md`（31KB）。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒

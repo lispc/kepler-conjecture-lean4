@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ 调研三车道 `jet3-pre-w1`/`terminal11-census-w1`（零 lean）；nli-map52-w1 已收线；audit/tskasm/g4port/g4hol 已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ `terminal11-census-w1`（零 lean）；jet3-pre/nli-map52 已收线；audit/tskasm/g4port/g4hol 已收线）
 
 > **2026-11-16 14:30 `terminal11-census-w1` 发车（用户批「那就也勘测一下」）**——
 > `nliMainNonlinearTerminalV11` 109 支全普查 + cell3 wt 主盒余量补测；零 lean +
@@ -114,6 +114,8 @@
 > （三阶导界进 safety 预算的数学推导 / Jet3 API 引理逐条签名+行数预估 / Gate-0 施工图
 > 与 GO-NO-GO 阈值表）+ `CERTTM2_WBS.md`（~2k 行引擎的工作分解：模块切分/依赖序/
 > 机械移植 vs 新数学分类）；≤1 个 tiny 探针须走二 lean 护栏（设计工作不依赖探针）。
+> **⇒ 14:37 收线（见 续1192）**：GO 概率 ~60–65%；**Gate-0 重定义为 d2B 供给器紧度
+> pilot（C1 首选，树内资产 90% 已量产，新数学仅 2 件）**；`jet3-g0-w1` 工单建议已就绪。
 > ② `nli-map52-w1`——**剩余 52 条 `nli*` 全量路线地图**：以 map.tsv SORRIED 段 +
 > pq 文件头 + Assembly 债行三方对账起步，逐条贴 `route_tag`（IN-FLIGHT/CERTTM2-ENGINE/
 > MATH-REDUCE/CORNER-TABLE/ZTGIJCF4-KIT/FARM-BLOCKED/LP-GATED/UNRESOLVED）+
@@ -1086,6 +1088,30 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（14:40，续1192）**：**`jet3-pre-w1` 收线（零 lean 零计算，纯读码/考古/设计）——Gate-0 预研 + CertTM2 WBS**。
+① **GO 概率 ~60–65%，且比 g4port 设想更便宜**：判据不是"三阶导界是否存在"（一定存在，
+1-D MVT 伸缩、无四阶项）而是 **d2B 包络紧度**；C1 供给器（符号 ∂² + 既有
+`evalTMHullD2`）的紧度已被 HOL formal_ineqs 同配方量产 23,237 叶背书（等效 safety
+落 s=3–10 区间）。
+② **Gate-0 重定义（ERRATA 级修正 g4port 判词）**：从"evalJet3 紧度 pilot"改为
+**"d2B 供给器紧度 pilot"（三供给器同测、C1 首选）**；Jet3 三阶 T 槽降级为
+"C1 太肥时的升级件"。s-曲线不变、GO/NO-GO 数学不变。
+③ **树内资产 90% 已量产**：`derivIExprM`（C549Mono.lean:52）/`DerivSafeOnM`（:87）/
+`checkPosFaceLo/Hi_sound`（:438/:452）/`evalTMHullD2`（CertTM.lean:3814）；
+**新数学仅 2 件**（`taylor2_faceLo`、`concFace`）。
+④ **体量**：C1-最短 GO 路径 ~19 条引理/**1,900–2,600 行**（单文件 `CertTM2.lean`）；
+Jet3 全量条件追加 +21 条/+2,600–3,800 行（`Jet3.lean`）；发射器 400–600 行 Python。
+**API**：Jet3 = flat 第三阶槽 `Fin n → Fin n → Fin n → DInterval`（非嵌套；嵌套 TM
+实测 190× 紧度污点 + kernel ×28 风险）。
+⑤ **GO 判定表**：主判据 = certified 包络回灌 B&B 叶数（s*≤10 GO / 10–30 灰区 / >30
+NO-GO；等价 2×HOL = p1≤278、p2≤150、p3≤64）；辅 ρ1≤3、decide≤3 min/叶、300 点采样
+零违例。**最大风险** = p1 MONO 宽维叶（w≈0.116、余量 7.8e-4）。
+⑥ **考古（AGENTS §8）**：HOL formal_ineqs 止于二阶（`m_taylor_interval` 无三阶层）——
+三阶确为本仓新杠杆，无上游死路/活路标记。
+⑦ 交付 `lane_snapshots/jet3-pre-w1/`（JET3_PLAN 31KB / CERTTM2_WBS / DELIVERY 含
+可直接派发的 `jet3-g0-w1` 工单建议 P0–P3）。**建议**：等 ztgmain Kit A 收线腾出
+lean 槽后即发 `jet3-g0-w1`（半天可判 C1）。下一条：续1193。
 
 - **2026-11-16（14:30，续1191）**：**`terminal11-census-w1` 发车（用户批「那就也勘测一下」，候选 = map52 空白点①+②）**。
 ① 使命：`nliMainNonlinearTerminalV11`（直挂 4 之一、最粗一条——109 支合取，104 NO-CASE、
