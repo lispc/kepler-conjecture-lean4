@@ -152,6 +152,24 @@
   “Euler 锚未证”已过时；`PackingAuto25.lean:12031` 的“两处 sorry”注释过时；
   Route 头注把 γ4 桥不可用归因于锚，真因是该桥只适用两长四短窄型盒。
 
+### 1.6 剩余 MATH/MATH-FARM 审计（`nli-rest-math-audit-w1`，2026-11-16）
+
+- **ENGINE 三条**：`FHBVYXZa`（**分支改写：主支 ∨ eta126²<1.34² 两支即足，rad2 冗余**；
+  minimax +7.677e−3；80–260 叶/1.4–4.4 CPU·h）、`FHBVYXZv2a`（接缝最紧 +2.124e−3；
+  100–300 叶/1.7–5.0 h）、`QITNPEA5400790175a`（主支 min −7.2693e−3 在双折点角；
+  minimax +4.121e−3；100–280 叶/1.7–4.7 h）——全部在 g4port 判停线内。
+- `RQWUDDU` = ENGINE primary（MATH 备选高风险）：minimax **+2.155e−3** 三支严格等振；
+  **ERRATA**：triage X-1 的 0.00474 → 0.002155（2.2× 紧）。
+- **MATH-REDUCE 三条（纯手工可写）**：`Cell3corner` 300–500 行最便宜（三轴导数
+  +0.017585 全正、matan 全程正支，无需 NliBanks12 拼接）；`Cell3sqrt8` 400–800 行
+  （三轴导数全正，matan 实参变号但导数不变号）；`IYOUOBFsharpv2` 1–1.5k 行 hybrid
+  （hmono min ∂ +0.13110 + h2d 三件套）。
+- **前 3 推荐工单**：`cell3-corner-mono-w1` → `cell3-sqrt8-mono-w1` →
+  `iyou-sharpv2-slots-w1`（各 −1 sorry，纯 MATH）。ENGINE 波（Gate-0 后）顺序
+  **FHBVYXZa → QITNPEA → v2a → RQWUDDU**。
+- CONFIRM：三处角点 dip 精化为 −5.55894e−3/−1.12589e−2/−7.26930e−3（VERIFIED-iv）；
+  NliBanks12 Δ 范围逐位复现；g4hol 外推无矛盾。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒

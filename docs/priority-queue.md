@@ -93,7 +93,16 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` + `nli-rest-math-audit-w1`；tskasm-prep/g4port/g4hol 等已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1`；audit/tskasm/g4port/g4hol 等已收线）
+
+> **2026-11-16 10:36 `nli-rest-math-audit-w1` 收线（纯 Python）**：7 条 MATH/MATH-FARM
+> 判词——**3 条 ENGINE**（`FHBVYXZa` 两支即足（rad2 冗余）、`FHBVYXZv2a`、
+> `QITNPEA5400790175a`；minimax +7.68e−3/+2.12e−3/+4.12e−3，全部在 g4port 判停线内）、
+> **1 条 ENGINE primary**（`RQWUDDU` 等振 +2.155e−3，ERRATA 旧 0.00474→0.002155）、
+> **3 条 MATH-REDUCE 纯手工可写**（`Cell3corner` 300–500 行最便宜、`Cell3sqrt8`
+> 400–800 行/0 CPU·h、`IYOUOBFsharpv2` 1–1.5k 行 hybrid）。**前 3 推荐工单 =
+> `cell3-corner-mono-w1` / `cell3-sqrt8-mono-w1` / `iyou-sharpv2-slots-w1`**（各 −1）；
+> ENGINE 波（Gate-0 后）顺序 FHBVYXZa→QITNPEA→v2a→RQWUDDU。
 
 > **2026-11-16 10:19 `tskasm-prep-w1` 收线（纯 Python）**：装配材料全就绪——
 > **6,612 叶三重核对全过**（划分=cert 0..6511、`_pos`/`_check` 名与源逐条命中、
@@ -1040,6 +1049,14 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（10:36，续1184）**：**`nli-rest-math-audit-w1` 收线——7 条 MATH/MATH-FARM 判词与前 3 推荐工单**。
+① ENGINE 三条：`FHBVYXZa`（**分支结构改写：主支 ∨ eta126²<1.34² 两支即足，rad2 冗余**；minimax +7.677e−3 等振；80–260 叶/1.4–4.4 CPU·h）、`FHBVYXZv2a`（接缝最紧 +2.124e−3；100–300 叶/1.7–5.0 h）、`QITNPEA5400790175a`（主支 min −7.2693e−3 VERIFIED-iv 在双折点角 (2.52,2,2,2.52,2,2)；minimax +4.121e−3；100–280 叶/1.7–4.7 h）。
+② `RQWUDDU` = ENGINE primary（MATH 备选高风险）：minimax **+2.155e−3** 三支严格等振 @ (2hmin,2,2.72720,2.00064,2,2.72720)；ups 全域>0 免 junk 分叉；200–800 叶/3.5–13 h。**ERRATA**：triage X-1 的 0.00474 → **0.002155**（2.2× 紧，argmin y4=2.0006≠2）。
+③ MATH-REDUCE 三条（纯手工，零/低引擎依赖）：`Cell3corner` **300–500 行**最便宜（三轴导数 +0.017585 全正且 matan 全程正支 D∈[31.99,32.00]，无需 NliBanks12 三支拼接）；`Cell3sqrt8` 400–800 行/0 CPU·h（三轴导 +0.00500/+0.00591/+0.00591 全正，matan 实参变号但导数不变号）；`IYOUOBFsharpv2` 1–1.5k 行 hybrid（hmono min ∂ +0.13110 + h2d 三件套：条带 ∂/∂y4≥+0.15、底边线性下桥 1.358e−5·(√8−y1)、上方余量 1.76e−3）。
+④ 前 3 推荐工单：**`cell3-corner-mono-w1`（债7）→ `cell3-sqrt8-mono-w1`（债6）→ `iyou-sharpv2-slots-w1`（债4）**，各 −1 sorry、纯 MATH。ENGINE 波（Gate-0 后）顺序 **FHBVYXZa → QITNPEA → v2a → RQWUDDU**，四条外推全部在 g4port 判停线内。
+⑤ ERRATA/CONFIRM：FHBVYXZa「三支互补」→「两支足够」；hmono 0.1314→0.13110；角点 dip 精化为 −5.55894e−3/−1.12589e−2/−7.26930e−3（VERIFIED-iv）；NliBanks12 Δ∈[−34.24,+13.68] 逐位复现；g4hol 外推无矛盾。
+⑥ 交付：`REST_MATH_AUDIT.tsv`(7 行×14 列)/`REST_MATH_AUDIT.md`/`EVIDENCE.md`/`DELIVERY.md`/`scripts/`(6)/`logs/`(11)；零 lean、零仓库改动，评测器 12 标定 pin 全过。kernel 波同刻 **609/5,212**（10:36，0 FAIL）。下一条：续1185。
 
 - **2026-11-16（10:19，续1183）**：**`tskasm-prep-w1` 收线——TSKAJXY 装配材料全就绪（纯 Python，零 lean）**。
 ① 叶清单：**6,612 = 5,012 old + 200 族 A 子叶 + 1,400 B**；三重核对全过（划分=cert 叶 0..6511 恰好、`_pos`/`_check` 名与模块源逐条命中 6,612/6,612、每叶盒对 canonical 与源内 `kBox<tag>` 字面量两路逐 Fraction 相等）。
