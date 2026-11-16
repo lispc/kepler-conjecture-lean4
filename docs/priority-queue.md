@@ -41,9 +41,9 @@
 
 ## 0. 里程碑对表
 
-| 里程碑 | 定义 | 现状（**当前基线 Z @`75ed6d07`；历史数字见 map 各基线节**） |
+| 里程碑 | 定义 | 现状（**当前基线 AO @`06285994`；历史数字见 map 各基线节**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AI（2026-11-13 @`f5f96b8b`）：SORRIED 62 / K_REACH 2,098,014 / AXIOM 585 / MODULES 5,241 / UNIVERSE 2,110,736 / COVERAGE 99.3973%；口径 II 36,314 / 62 / 585 / 47,479。历史基线 T–AI、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AO（2026-11-15 @`06285994`）：SORRIED 53 / K_REACH 2,101,085 / AXIOM 585 / MODULES 5,318 / UNIVERSE 2,113,086 / COVERAGE 99.4321%；口径 II 38,979 / 53 / 585 / 49,423。历史基线 T–AI、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -53,14 +53,16 @@
 | 里程碑 | 定义 | 现状 / 下一步 | 卡点 |
 |---|---|---|---|
 | **M0b 兑现** | 塔群 capstone + Assembly 接线，闭件转成 K_REACH | **已三件：w1 126 + w2 45 + w3 151 = 322 出口入锥（`b8e64e18`/`68a306ec`、`939b2533`/`da9b5fd4`、`a7bdb571`/`cbfad0cd`），根公理面 628 行始终不变；LA6 的 PROVE_SLICING_FAN/LOFA_HYP 两件待小波补录** | 无（机械） |
-| **M1a 锥内文本债清零** | cone SORRIED **134 → 89**（只剩农场 84+5） | 文本波 35（twin-transfer/装配）+ 移植 7（hTC 3 + LEAF 3 + TameLp 1）+ 接口锚 2 + LP 1 | **勘误：twin 不全是捷径**——`ZLZTHIC_discharged := @ZLZTHIC_p14`、`MHAEYJN_discharged := MHAEYJN_p37` 是**指向塔内 sorry 的正向转发体**；M1a 的 transfer 只对"真证孪生"成立，须逐件 `#print axioms` 核实 |
-| **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | **hTC Assembly 三件已全闭（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`，基线 U 实测 SORRIED 0 命中）**；其 Text 章级债 **18** 条仍在锥（基线 Z，J4-w1 闭 1 + mntdedup 去重 1 + RRCWNSJ 真证 1）；hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导） | hTC 章级移植深（DLWCHEM/XULJEPR 计数 GIANT） |
+| **M1a 锥内文本债清零** | cone SORRIED **134 → 89**（只剩农场 84+5） | **✅ 已达成并超越（2026-11-15 基线 AO：Text 0）**。历史过程：文本波 35（twin-transfer/装配）+ 移植 7（hTC 3 + LEAF 3 + TameLp 1）+ 接口锚 2 + LP 1 | **勘误：twin 不全是捷径**——`ZLZTHIC_discharged := @ZLZTHIC_p14`、`MHAEYJN_discharged := MHAEYJN_p37` 是**指向塔内 sorry 的正向转发体**；M1a 的 transfer 只对"真证孪生"成立，须逐件 `#print axioms` 核实 |
+| **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | **hTC Assembly 三件已全闭（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`，基线 U 实测 SORRIED 0 命中）**；**Text 章级已清零（基线 AO 2026-11-15 实测 Text 0；自基线 Z 的 18 条经多波真证/接线清账，逐笔见 §8）**；hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导） | 无（Text 侧已闭；hLP 等算力裁决） |
 | **M2 信任基座** | 621 shard manifest + 抽样 replay + Docker 一键复现（**原版 Flyspeck 的答案**：见 handoff §0.1） | manifest/harness 本机可做；全量 replay 需算力窗口 | 算力 |
-| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 74 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | 锥内 sorry 的非-LP 部分在攻（general_482 / VASYYAU / mnt11 去重三车道）；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
+| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 74 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | **现役 53 = 52 `nli*` + 1 hLP（基线 AO）**；主攻 = TSKAJXY 装配（6,612 叶内核波在飞）→ Gate-0 → ENGINE 波 + 纯 MATH 三条（`nli-campaign.md` §8）；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
 
-三接口独立债量（**基线 Z @`75ed6d07` 实测 2026-11-12**，取代 2026-10-28 口径）：**hNL（非线性不等式）= 55 条 `nli*`**
-（`nliRest*` 40 + `nliTsk*` 5 + `nliCell3*` 5 + 直挂 5：`nliKcblrqcIneqDef`/`nliLpIneqs`/`nliMainNonlinearTerminalV11`/`nliOx3q1h`/`nliPackIneqDefA`）；**hLP（线性规划）
-= 1 条**（`lpArchiveCertificatesDebt`，纯逻辑部分已真推导）；**hTC（TextCapstone）= 0 条 Assembly 件**（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso` 全闭，SORRIED 0 命中）**+ Text 章级 18 条仍在锥**（J4-w1 闭 `pkLeafRankCriticalEdge` 21→20；mntdedup 去重 `mnt11_anchor` 20→19；RRCWNSJ_p26 真证 19→18）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
+三接口独立债量（**基线 AO @`06285994` 实测 2026-11-15**；基线 Z 的 2026-11-12 版已过时）：**hNL（非线性不等式）= 52 条 `nli*`**
+（逐条清单以 `docs/e2e-reachability-map.md` 基线 AO SORRIED 段为准；基线 Z 时为 55：
+`nliRest*` 40 + `nliTsk*` 5 + `nliCell3*` 5 + 直挂 5）；**hLP（线性规划）
+= 1 条**（`lpArchiveCertificatesDebt`，纯逻辑部分已真推导）；**hTC（TextCapstone）= 0 条**（Assembly 三件
+`fcdjdot`/`jcajydu`/`tameCorrespondenceIso` 全闭，**且 Text 章级已清零 = Text 0**）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
 
 ## 0.2 J 战役后路线图（2026-11-10 用户批准）
