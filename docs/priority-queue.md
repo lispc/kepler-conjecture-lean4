@@ -95,7 +95,17 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ 双调研车道 `jet3-pre-w1`/`nli-map52-w1`（零 lean）；audit/tskasm/g4port/g4hol 已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ 调研三车道 `jet3-pre-w1`/`terminal11-census-w1`（零 lean）；nli-map52-w1 已收线；audit/tskasm/g4port/g4hol 已收线）
+
+> **2026-11-16 14:30 `terminal11-census-w1` 发车（用户批「那就也勘测一下」）**——
+> `nliMainNonlinearTerminalV11` 109 支全普查 + cell3 wt 主盒余量补测；零 lean +
+> 轻量 Python（≤2 worker、≤6 CPU·h，复用 audit 车道评测器 12 pin）。交付 =
+> `TERMINAL11_CENSUS.tsv`（109 行：证书在库性/T11Glue 覆盖/route_tag/余量/成本）+
+> `TERMINAL11_AUDIT.md`（**闭合算术**：关这条 Assembly 声明各路线还差几支 + 语句级
+> 先行步行数估计 + 对 terminal11-scout 20+87+2/recost/map52 口径的 ERRATA 对表）+
+> `WT_CELL3_MARGINS.md`（wt0/wt1/wt2A 主盒单调性，判 MATH-REDUCE 可行性）。
+> 起点判词 = map52 空白点①（104/109 NO-CASE、68 条 MATH 候选无余量）；历史资产
+> = T0 物化 109 具名 + `T11Glue.lean` 20/20 在库粘合（未进锥）。24 h / 6 CPU·h 止损。
 
 > **2026-11-16 14:07 双调研车道发车（用户批「都发」）**——重调研/读代码/轻计算，**零 lean、
 > 不占二 lean 护栏**，24 h 止损，产物进各自快照目录：
@@ -1076,6 +1086,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（14:30，续1191）**：**`terminal11-census-w1` 发车（用户批「那就也勘测一下」，候选 = map52 空白点①+②）**。
+① 使命：`nliMainNonlinearTerminalV11`（直挂 4 之一、最粗一条——109 支合取，104 NO-CASE、
+68 MATH 候选无逐条余量、先行步行数未估）109 支全普查 + cell3 wt0/wt1/wt2A 主盒单调性补测。
+② 对象资产：T0 `a522078c` 物化的 109 条 `mainEstimate_*`（LA1 侧）、`T11Glue.lean`
+20/20 在库证书粘合（未 import、cone ±0）、EMISSION-RUNBOOK/terminal11-scout 历史口径
+（20+87+2，对表出 ERRATA）、recost 34 + audit 7 相关行。
+③ 交付：`TERMINAL11_CENSUS.tsv`（109 行逐支 route_tag + 在库性 + 余量）+
+`TERMINAL11_AUDIT.md`（闭合算术 = 关该声明各路线还差几支 + 先行步估计 + 排产建议）+
+`WT_CELL3_MARGINS.md`（主盒单调性 → MATH-REDUCE 可行性）。
+④ 纪律：零 lean、Python ≤2 worker/≤6 CPU·h（评测器 12 pin 先行）、24 h 止损、
+里程碑落盘。在飞调研车道剩 `jet3-pre-w1`。下一条：续1192。
 
 - **2026-11-16（14:25，续1190）**：**`nli-map52-w1` 收线（纯读码零 lean，发车 2.2 h 后交付）——52 条 `nli*` 全量路线地图**。
 ① 对账零差异：map.tsv SORRIED 段 / pq 文件头 / `Assembly.lean` 债行（:402–:1834 52 条
