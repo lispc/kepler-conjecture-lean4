@@ -383,6 +383,14 @@
   6 条 joint 同阻塞（`main` 凹性余量仅 0.0146，`0_1_0_0` 破）。
   ⇒ 4 条解耦本窗口未关；先落 Kit A（dihY，~600 行，w2 收线后编译），
   γ4 Kit B 另立车道/另裁决。
+- **2026-11-16 21:15 Kit A 落库**（`ztgmain-w1`，`f47d472f`，cone-neutral）：
+  `ZTGDihKit` 8 声明全标准三（编排者岛协议+亲跑 axioms 复验）——
+  `ztg_atn2_ge`（**角度下界化归多项式不等式**：`s·|y|≤x ⇒ atn2 x y ≥ arctan s − π/2`）
+  + 有理 arctan 下界（`arctan(8/5) ≥ 1.008`/`arctan(6/5) ≥ 0.875`）+ 逐线证书多项式
+  `ztgG`（irreducible）。四箱端点未闭：`ztgG_box5` 两条实现路线 `isDefEq` 爆
+  40M heartbeats（数学 32/32 线已验证 +1218/+684；候选解法三条含逐叶 `have` 链
+  ~1k 行）。Phase-0：六条 joint 债 dihY 直接形式不成立（需联合 trade-off ✓）。
+  下一车道清单见 `ztgmain-w1/DELIVERY.md` §4。
 - **ERRATA（`ztgijcf4-w1/TABLE.md`）**：`1_0_0_0`/`0_0_1_0`/`0_0_0_1` 的
   `min γ4` 实为 **0.0139727**（非 0.02257），解耦界改 **−0.01085**；
   `min γ4` 与 `min main` 的 argmin 不同；kink 角点须按槽型过滤

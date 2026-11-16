@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w2`（五债连打续任，单 lean 走护栏）；asm-precheck/certtm2-emitter 已收线；调研三车道已收线）
+## 1. 在飞（2026-11-16：kernel 波（唯一 lean）+ `math5-w2`（五债连打续任）；ztgmain 已收线落库 `f47d472f`；asm-precheck/certtm2-emitter 已收线；调研三车道已收线）
 
 > **2026-11-16 18:45 双零 lean 车道发车（用户批「A b」）**：
 > ① `asm-precheck-w1`——**tskasm 装配预检**：读 202 模块 + 消费端，纸面解决唯二
@@ -1110,6 +1110,30 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（21:15，续1200）**：**`ztgmain-w1` 收线落库 `f47d472f`（用户令「收一下」）——Kit A `ZTGDihKit` 冻结（cone-neutral），四箱 dihY 端点未闭（精确 blocker 已交班）**。
+① **落库**：`lean/Kepler/Text/ZTGDihKit.lean` 新模块 171 行/8 声明——编排者闸三件套
+全过（`apply --check` PASS → 自己从已 apply 源重编译 olean（岛协议 farm 探针 RC=0）
+→ **亲跑 `#print axioms` 8/8 恰 `[propext, Classical.choice, Quot.sound]`**）；
+纯新增零 importer ⇒ cone-neutral，SORRIED 53 不变（预期内）。
+② **Kit A 内容**：`ztg_atn2_ge`（`0<x → 0<s → s·|y|≤x ⇒ atn2 x y ≥ arctan s − π/2`
+——**角度下界完全化归为多项式不等式，无三角常数**）+ `ztg_dihXf/dihY_ge_arctan`
+定义式包装 + 有理 arctan 下界×4（`arctan(8/5) ≥ 1.008`、`arctan(6/5) ≥ 0.875`，
+经 `arctan(8/5)=π/4+arctan(3/13)` 拆分 + order-32 交错 Taylor + `g4v_pi_bounds_d8`）
++ 逐线证书多项式 `ztgG`（**irreducible 防 defeq 爆炸**）。
+③ **未闭部分 = `ztgG_box5`**（32 角点 ⟹ 箱内任意点的凹性归约；数学已数值验证
+32/32 线 +1218/+684）——两条 Lean 实现路线 `isDefEq` 爆 40M heartbeats：
+(a) Bool-∀ + `with_reducible` 挡 ite 归约卡死；(b) 32-fold conjunction 投影沿
+`ztgG→deltaX→deltaX4` 链展开爆炸。**候选解法三条**（(b) 未干净试过/生成器逐叶
+`have hleafN` 链 ~1k 行/`attribute [irreducible]` 触碰共享定义 ✗ 违规不做）。
+④ Phase-0 数值证书：四条解耦债（8/5 档×3 + 6/5 档×1）32 线 Bernstein 全过；
+六条 joint 债的 `dihY` 直接形式不成立（本就需联合 trade-off，不在解耦清单 ✓）。
+⑤ 下一车道工作清单（DELIVERY §4）：(c) 路线 → `NliBanksZTGIJCF4Dih` 四条收口 →
+Kit B（γ4 包络，独立大工程）→ Assembly 接线（等 γ4）。
+⑥ ERRATA 记档：DELIVERY 自纠「attempt 25 标准三误报」（日志截断所致，attempt 35
+已逐条确认）；快照 `ztgmain-w1/`（DELIVERY/Evidence/STATUS/patch/gen_dih.py/g4iv.py）。
+lean 槽现状：kernel 波唯一 lean，**槽已空出**（jet3-g0 待批/ztg 续任/math5 编译竞争）。
+下一条：续1201。
 
 - **2026-11-16（20:25，续1199）**：**`certtm2-emitter-w1` 收线（零 lean，1.5 CPU·h/限 6）+ 发射器落库 `c10e1f6d`（编排者 apply，`apply --check` PASS、fresh-clone 冒烟 PASS）**。
 ① **交付**：`pipeline/interval/certtm2/` 10 文件 2,583 行纯新增（emit_tm2 CLI+schema
