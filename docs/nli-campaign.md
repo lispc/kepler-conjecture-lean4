@@ -245,6 +245,14 @@
   相关性丢失 + 二阶链式 (∂)² 复利 + 19 dihY 项无关联求和）⇒ **`jet3-g0-w1` 的
   C1 判定必须用 TM-hull/Δ-族精确值域作载体**（与 JET3_PLAN 原设计一致），
   纯区间版出局；NO-GO 分支下 engine/dyad/audit/exprs 仍可复用。
+- **2026-11-17 02:10 Gate-0 判定 = NO-GO（边缘、外推口径）**（`jet3-g0-w1`）：
+  TM-hull 版 certOk **132/188**（≥100 线 PASS；g0 还发现并修复了 emitter
+  `exprs.dihXf_t` 置换 radicand floor 缺陷——0/188 的一大半根因，落库 `ca1c7677`）；
+  P2 decide ≤4 s/叶 + axioms [propext] 全 GO；**但 certified B&B 宽前沿 60–120
+  s/节点 → 叶数外推 s*≈35–80 ≫ 30**。ρ1 中位 24.7；瓶颈 = 一阶线性 wrap
+  （每细分级 ~2×）。**后果（§1.7 挂分支）：ENGINE 波四工单搁置，43 条冻结**；
+  无 gate 可清 = 9 条。战略分叉（接受 NO-GO / 质疑外推 / 混合路线：132 叶当场闭 +
+  56 宽叶角点表）**待用户裁决**。详见 `jet3-g0-w1/P3_MEMO.md`。
 
 ### 1.9 TerminalV11 109 支普查（`terminal11-census-w1`，2026-11-16）——闭合算术定案
 

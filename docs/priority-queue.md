@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + `jet3-g0-w1`（Gate-0 判定 pilot）+ `math5-w2`（五债连打续任）；ztgmain 已收线落库 `f47d472f`；asm-precheck/certtm2-emitter 已收线）
+## 1. 在飞（2026-11-17：kernel 波 + `math5-w3`（五债连打续任）；jet3-g0 已收线 = **Gate-0 判 NO-GO（边缘）**；ztgmain/asm-precheck/certtm2-emitter 已收线）
 
 > **2026-11-16 21:18 `jet3-g0-w1` 发车（用户批「好」，槽位建议采纳）**——**Gate-0 判定
 > pilot**（定 52 条 nli 债里 43 条的路线生死，24 h 止损）：
@@ -1122,6 +1122,28 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-17（02:10，续1203）**：**`jet3-g0-w1` 收线——Gate-0 判定 = NO-GO（边缘、外推口径）；修复 patch 落库 `ca1c7677`（编排者 apply+冒烟）**。
+① **判定行（按 jet3-pre §3.3 预定表）**：certOk（TM-hull C1）= **132/188 ≥100 线
+PASS**；P2 decide **≤4 s/叶**（GO 线 3 min）+ axioms **[propext]**；**但 certified
+B&B 宽前沿 60–120 s/节点**（55 min < 100 节点，log 为证）→ 叶数外推
+p3≈250–950 / p1≈440–1700 / p2≈300–1150 → **s*≈35–80 ≫ 30 NO-GO 线**。
+ρ1 中位 24.7（闭合子集）；瓶颈 = **一阶线性 wrap（每细分级 ~2×）**，非 TM 余项
+（s≥1 子盒 err~1e-11）。fail 56 叶集中 f≥4 宽维（"≤测过档位不闭"非"不可闭"）。
+② **后果（map52 Gate-0 挂分支）**：ENGINE/CertTM2 路线出局 → 无 gate 只能整条清
+**9 条**（XLLIPLS 在飞 + 纯 MATH 3–5 + 现行引擎 4 + ox3q1h 角点表）；43 条冻结在
+Gate-0/农场/LP。**ENGINE 波四工单（FHBVYXZa→QITNPEA→v2a→RQWUDDU）随之搁置**。
+③ **落库 `ca1c7677`**（判决无关、必须落）：`exprs.dihXf_t` 置换 radicand floor
+缺陷修复（未置换 xbox[0][0] ⇒ rad 区间倒置 → thin 路径全污染——**emitter
+certOk=0/188 的一大半根因**）+ 新文件 `tmcarry.py`（PM TM-hull 载体，逐点 sound）
++ `engine_cert.py`（certified B&B 骨架，NO-GO 下仍可复用）。
+④ **待用户裁决的战略分叉**：A. 接受 NO-GO → 43 条走角点表/农场/冻结分类；
+B. 质疑外推口径（s* 来自 100 节点采样；节点成本 60–120 s 可工程优化——certified
+包络逐节点重算可缓存）；C. 混合路线——C1-TM 已证 132/188 叶可当场闭，只对 56 宽叶
+走角点表（引擎+角点表混合）。
+⑤ 24 h 内交付（工单 1 天 ✓）、CPU 6.2/8、当前零进程；工件
+`jet3-g0-w1/`（P0_RHO1/P1_VERDICT/P2_LEAN_PROBE/P3_MEMO/patch/out）。
+下一条：续1204。
 
 - **2026-11-16（23:25，续1202）**：**首轮定时巡检（用户 22:26 立「每隔半小时看看无头进展」，automation 每 30 min）**。
 ① **内核波**：**1,844/5,212 PROBED（35.4%）**，34.5 s/叶、ETA 32.3 h（收线预估
