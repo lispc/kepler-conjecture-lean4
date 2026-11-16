@@ -150,6 +150,8 @@
 > **13:20 调度修正（续1186）**：runner 让路判据 `pgrep -x lean == 0` → 二 lean 护栏
 > （≤2 lean ∧ 总 RSS ≤20 GB ∧ pressure<2；与 ztgmain 并行，9.6+6≈15.6 GiB）；
 > 795/5,212 PROBED 0 FAIL。
+> **13:29 并行验证（续1187）**：双 lean 同刻 ~15 GB、pressure 1；28.1 s/叶纯编译，
+> **ETA 35–38 h wall，收线预估 2026-11-18 00:30–03:30**。
 
 > **2026-11-16 05:36 `rulep-replay-w2` 收线**：族 B **1,400/1,400 PASS、0 FAIL**；
 > 1,400 `_check` = `[propext, Quot.sound]`、1,400 `_pos` = 标准三；`sorryAx/error/warning` 0；
@@ -1058,6 +1060,15 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（13:29，续1187）**：**kernel 波并行验证 checkpoint（二 lean 护栏生效）**。
+① 同刻 lean_count=2（ztgmain kit1 5.83 GB + 本道 PLeaf823 9.1 GB）≈15 GB < 20 GB、
+pressure 1；`acquire_lock` 新判据 = (锁) ∧ (lean 数 ≤2) ∧ (现有 RSS + 10.6 GiB 预留 ≤20 GiB)
+∧ (pressure <2)，违例等 20 s 记 `GUARD_WAITS.log`。
+② 进度：**795/5,212 PROBED、800 DONE、0 FAIL**；纯编译 28.1 s/叶（798 DONE 样本，
+剔锁等待）；**ETA = 34.5 h 纯编译、35–38 h wall，收线预估 2026-11-18 00:30–03:30**。
+③ harness ~60–65 min 强杀周期不变，逐叶 checkpoint 无损、20 s 护栏循环内续跑；
+0-FAIL 与 15 叶 axiom-probe 节奏不变。下一条：续1188。
 
 - **2026-11-16（13:20，续1186）**：**kernel 波调度判据修正（二 lean 并行落地）**。
 ① 车道报告调度冲突：其 runner 让路判据含 `pgrep -x lean == 0`（比用户已批的两 lean
