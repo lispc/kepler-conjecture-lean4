@@ -215,6 +215,12 @@
 - **2026-11-16 05:36 全盒内核波发车**：`rulep-fullbox-kernel-w1`——**5,212 叶**
   （5,012 旧 + 200 族 A）+ 1,400 B = 6,612 叶池；15 叶/块 + checkpoint + 每批
   axiom probe；单 lean **39–45 h**；preflight 3 叶后量产。
+- **2026-11-16 10:19 装配材料就绪**（`tskasm-prep-w1`，纯 Python）：6,612 叶
+  三重核对全过；族 A 100→200 替换后树 **6,612 叶/13,223 节点**逐节点精确 tile；
+  **方案 X = 202 模块/23,832 行**（泛型 `PosTree` 134 行 + 199 shard + 骨架/收尾），
+  decide 位点仅 397，可编译源已生成；`VALIDATE_OK` 174,135 项 0 失败；
+  装配净预算 **5–8 h**（kernel 波收线后）；唯二 TODO = `tsk_atan1_eval` 桥与
+  `tsk_box_eq := rfl` 复核。
 - **命名空间注意**：叶定理在模块根命名空间（`namespace Kepler.Interval.Cases`
   已闭合）⇒ 消费/探针写 `tskaJXY_xllipls_p_leaf<idx>_check/_pos`；辅助 def
   `kParams*/kBox*` 才在 `Kepler.Interval.Cases` 下。

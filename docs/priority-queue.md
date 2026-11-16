@@ -93,7 +93,18 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` + `tskasm-prep-w1` + `nli-rest-math-audit-w1`；g4port/g4hol 等已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` + `nli-rest-math-audit-w1`；tskasm-prep/g4port/g4hol 等已收线）
+
+> **2026-11-16 10:19 `tskasm-prep-w1` 收线（纯 Python）**：装配材料全就绪——
+> **6,612 叶三重核对全过**（划分=cert 0..6511、`_pos`/`_check` 名与源逐条命中、
+> 盒两路逐 Fraction 相等）；族 A 100→200 替换后树 **6,612 叶/13,223 节点**，
+> 13,223 节点逐个精确 tile + swap 路同构，`SPLIT_COVERAGE.tsv` 100×True；
+> **方案 X = 202 模块 / 23,832 行**（134 行泛型 `PosTree` + 199 shard(cap 48) +
+> 630 行骨架 + 48 行收尾），decide 位点仅 397，可编译源已生成 `assembly_out/`；
+> `VALIDATE_OK` 174,135 项 0 失败；净预算 **5–8 h**（族 A 200 叶内核 1.4–1.7 h
+> 已含在 kernel 波内）；唯二 TODO = `tsk_atan1_eval` 桥（rfl / simp only 二选一）
+> 与 `tsk_box_eq := rfl` 复核。另：发现 w2 快照 `pool_olean` 缺 58 枚 B olean
+> （6385..6442 仅存 /tmp），已整批备份 `pool_missing58/`。
 
 > **2026-11-16 09:45 双车道发车（用户批「发 A E」）**：
 > `tskasm-prep-w1`——TSKAJXY 最终装配生成器：6,612 叶清单/族 A 覆盖树重建/
@@ -1029,6 +1040,14 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（10:19，续1183）**：**`tskasm-prep-w1` 收线——TSKAJXY 装配材料全就绪（纯 Python，零 lean）**。
+① 叶清单：**6,612 = 5,012 old + 200 族 A 子叶 + 1,400 B**；三重核对全过（划分=cert 叶 0..6511 恰好、`_pos`/`_check` 名与模块源逐条命中 6,612/6,612、每叶盒对 canonical 与源内 `kBox<tag>` 字面量两路逐 Fraction 相等）。
+② 树校验：T6512 直接重建复现 cert.json 的 6,512 叶/13,023 节点（规则=bb_arb 最宽维精确 dyadic 中点，同 `emit_hull_tree.rebuild`，最大深度 21）；族 A 100→200 替换后 **T6612 = 6,612 叶/13,223 节点**，13,223 节点逐个精确 tile + swap 路与直接重建路规范形全同构；`SPLIT_COVERAGE.tsv` 100×True；famA 切维分布 4/4/8/26/35/23 与 famsplit 逐维吻合。
+③ 装配方案 X：**134 行泛型 `PosTree`**（叶=已证 `_pos`，`HullTree.lean` 机械孪生，零 axiom/sorry）+ **199 shard（cap 48；cap 24 会切 402 个）** + 630 行骨架 + 48 行收尾 = **202 模块/23,832 行**，decide 位点仅 397；先例 = 主仓 `C1965189142aHull`（HullTree+splitOKB 同形）；可编译源已生成 `assembly_out/`（`PosTree.lean`/`TskXLLIPLS.lean`/`PackIneqTskXLLIPLSClose.lean`/shards）。
+④ 编译策略：岛协议单 lean 串行、shard 逐个直编（**禁 lake build**），import 探针 100/500/6,612 分级先行；装配净预算 **5–8 h**（族 A 200 叶内核 1.4–1.7 h 已含 kernel 波）。唯二 TODO（骨架已标注）：`tsk_atan1_eval` 桥（`rfl`/`simp only [IExpr.evalReal, transReal]` 二选一）与 `tsk_box_eq := rfl` 复核。
+⑤ `validate.py` → `VALIDATE_OK`：174,135 项断言、0 失败；**发现并缓解**：w2 快照 `pool_olean` 缺 58 枚 B 族 olean（6385..6442 仅存 /tmp），已整批备份 `pool_missing58/`。
+⑥ 交付：`LEAVES.tsv`/`TREE.json`/`SPLIT_COVERAGE.tsv`/`IMPORT_TEMPLATE.lean`/`SHARDS.tsv`/`ASSEMBLY_PLAN.md`/`CLOSE_SKELETON.lean`/`assembly_out/`(202 源)/`b_src/`(B 1,400 源备份)/`MANIFEST.sha256`(1,885 全 OK)。kernel 波同刻 **574/5,212**（10:19，0 FAIL）。下一条：续1184。
 
 - **2026-11-16（09:45，续1182）**：**双车道发车（用户批「发 A E」）——`tskasm-prep-w1` + `nli-rest-math-audit-w1`**。
 ① `tskasm-prep-w1`：TSKAJXY 最终装配生成器——6,612 叶清单（5,012 旧 + 200 族 A 子叶 + 1,400 B）、cert 树族 A 父叶→双子叶替换与划分校验、`IMPORT_TEMPLATE.lean`、装配方案（BBTree vs 扁平合取，参照 `C1965189142aHull`/`WAZLDCD` 先例）、`CLOSE_SKELETON.lean`；kernel 波收线后 ≤1 天落地装配（SORRIED 53→52）。
