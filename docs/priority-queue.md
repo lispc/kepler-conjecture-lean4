@@ -1102,6 +1102,19 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-16（18:15，续1195）**：**ztgmain 迭代慢诊断 + 四条加速令（用户问「怎么这么慢，有办法就告诉他」）**。
+① 诊断：Kit A 自 12:34 磨 ~5.5 h；`ZTGDihKit.lean`（470→510 行）每轮全量重编
+5–10 min；**`NliBanksZTGIJCF4Dih.lean` 未建**——全部内容单文件滚（主因）；
+min_le_left 四块同型若逐块修逐轮编则 4× 放大；kernel 波带宽分摊为设计内成本。
+② 加速令（SendMessage 已达）：错误批量修（同型四块一轮清族）；类型错误阶段用
+**sorry 探针工作副本**（/tmp 内临时 sorry 换慢证明体 → 全文件类型检查秒级，
+交付 patch 绝不含 sorry）；**冻结通用 kit、逐箱内容挪第二个文件**（kit olean 只编
+一次，迭代成本 ≈1/4）；重尾 `decide`/`norm_num` 拆逐顶点小引理独立缓存。
+③ **快照警告**：`$S` 停在昨日 19:49——Phase 1 全部工作只在 /tmp，已令立刻镜像
+ZTGDihKit/gen_dih.py/日志到快照并每轮干净编译后覆盖写。同刻实测：本轮（18:10 起）
+log 5 min 0 字节 = 已过旧错误行；18:14 lean = kernel 波 8.1 GiB + ztgmain 5.5 GiB
+（二 lean 护栏内）。下一条：续1196。
+
 - **2026-11-16（17:07，续1194）**：**`math5-w1` 发车（用户批「维护一个车道做这五条，顺序你自己定」）**。
 ① 五债（全部零引擎/零农场/零 Gate-0 依赖，各 −1）：`nliCell3QZECFICwt0corner`
 （+0.017585 三轴正+matan 正支）→ `nliCell3QZECFICwt0sqrt8`（三轴正）→
