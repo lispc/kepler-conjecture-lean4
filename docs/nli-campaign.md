@@ -236,6 +236,15 @@
 - 工单建议已就绪：**`jet3-g0-w1`**（P0–P3，见 `jet3-pre-w1/DELIVERY.md`）——
   半天可判 C1；发车时机 = 二 lean 槽空出（ztgmain Kit A 收线后）。
   详细 `lane_snapshots/jet3-pre-w1/JET3_PLAN.md`（31KB）。
+- **2026-11-16 20:20 发射器落库 + Gate-0 判定精化**（`certtm2-emitter-w1`，
+  落库 `c10e1f6d`）：生产发射器 `pipeline/interval/certtm2/`（10 文件 2,583 行，
+  纯新增）——3 叶校验 **81/60/47 与 g4port s=10 零失配**、采样 **0 违例**
+  （float 300 点×188 叶 + mpmath 60dps 复核 98 叶块）、确定性 SHA 双跑一致。
+  **关键测量 `certOk = 0/188`**：C1 纯区间求值在 s=10 宽叶 wrap 严重
+  （GB ~500×、HB ~5000×；2^s 细分每级仅 ×2 收敛不可行；归因 = rad 分子/分母
+  相关性丢失 + 二阶链式 (∂)² 复利 + 19 dihY 项无关联求和）⇒ **`jet3-g0-w1` 的
+  C1 判定必须用 TM-hull/Δ-族精确值域作载体**（与 JET3_PLAN 原设计一致），
+  纯区间版出局；NO-GO 分支下 engine/dyad/audit/exprs 仍可复用。
 
 ### 1.9 TerminalV11 109 支普查（`terminal11-census-w1`，2026-11-16）——闭合算术定案
 

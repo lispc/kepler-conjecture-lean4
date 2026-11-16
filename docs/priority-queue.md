@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w2`（五债连打续任，单 lean 走护栏）+ `certtm2-emitter-w1`（零 lean）；asm-precheck 已收线；调研三车道已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w2`（五债连打续任，单 lean 走护栏）；asm-precheck/certtm2-emitter 已收线；调研三车道已收线）
 
 > **2026-11-16 18:45 双零 lean 车道发车（用户批「A b」）**：
 > ① `asm-precheck-w1`——**tskasm 装配预检**：读 202 模块 + 消费端，纸面解决唯二
@@ -1110,6 +1110,25 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（20:25，续1199）**：**`certtm2-emitter-w1` 收线（零 lean，1.5 CPU·h/限 6）+ 发射器落库 `c10e1f6d`（编排者 apply，`apply --check` PASS、fresh-clone 冒烟 PASS）**。
+① **交付**：`pipeline/interval/certtm2/` 10 文件 2,583 行纯新增（emit_tm2 CLI+schema
+`certtm2-leaf-cert/1.0` / engine 确定性 B&B / dyad dyadic 后端 / **symtree = C1 供给器**
+（符号 ∂² 树×盒区间求值）/ jetlib/nav/exprs/pilots / audit）。行数 2,583 vs WBS 估
+400–600（+2k = C1 供给器与 pilot 表达式库在 WBS 中计入 Lean 侧对应物，偏差已记档）。
+② **3 叶校验全绿**：叶数 **81/60/47** 与 g4port s=10 零失配（float 逐位一致，
+原型基线本机重跑排除平台浮动）；采样 **0 违例**（float 300 点×188 叶全过 + mpmath
+60dps 精确复核 98 叶块）；**确定性 = 同命令双跑 SHA-256 一致、diff 空**。
+③ **关键测量（Gate-0 判定输入）**：`certOk = 0/188`——C1 纯区间求值在 s=10 宽叶
+（自由维 0.12–0.23）wrap 严重：GB ~500×、HB ~5000×（宽 MONO 叶 HB[2][2]=[−655,+1200]
+vs 真值 −0.369）；2^s 细分每级仅 ×2 收敛（28.07→10.55→4.08→1.96）不可行；归因 =
+rad 分子/分母相关性丢失 + 二阶链式 (∂)² 复利 + 19 dihY 项无关联求和。soundness
+无恙（证书保守、零违例）。⇒ **`jet3-g0-w1` 的 C1 判定必须用 TM-hull/Δ-族精确值域
+作载体**（JET3_PLAN 原设计被量化确认），纯区间版出局；NO-GO 分支 engine/dyad/
+audit/exprs 仍可复用。
+④ 入档：nli-campaign §1.8 增补、hf-map **四十四**；证书样例
+`certtm2-emitter-w1/out/{p1,p2,p3}_s10.json`（SHA 记 VALIDATION §4）。
+下一条：续1200。
 
 - **2026-11-16（19:25，续1198）**：**`asm-precheck-w1` 收线（零 lean，1.5 h）——装配预检抓到阻断级缺陷 + 双 TODO 判 `rfl`；三缺陷编排者当场修复**。
 ① **双 TODO 判定 = 均 `rfl`（HIGH 置信，纸面对拍）**：TODO 1 决定性证据 =
