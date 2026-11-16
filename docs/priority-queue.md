@@ -95,7 +95,19 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波（唯一 lean）+ `math5-w2`（五债连打续任）；ztgmain 已收线落库 `f47d472f`；asm-precheck/certtm2-emitter 已收线；调研三车道已收线）
+## 1. 在飞（2026-11-16：kernel 波 + `jet3-g0-w1`（Gate-0 判定 pilot）+ `math5-w2`（五债连打续任）；ztgmain 已收线落库 `f47d472f`；asm-precheck/certtm2-emitter 已收线）
+
+> **2026-11-16 21:18 `jet3-g0-w1` 发车（用户批「好」，槽位建议采纳）**——**Gate-0 判定
+> pilot**（定 52 条 nli 债里 43 条的路线生死，24 h 止损）：
+> **P0**（3–4 h）TM-hull 载体版 C1（昨日 emitter 测量 certOk=0/188 ⇒ 裸盒区间出局；
+> 起点 = 已落库 `pipeline/interval/certtm2/` 包改造，不重写）→ 188 叶 ρ1 表（分层采
+> 宽盒 MONO/CONC ×12 重点）；验收线 = TM-hull 版 certOk 显著 >0（如 ≥100/188），
+> 仍 ~0 则直接 NO-GO 备忘（有效结论）。
+> **P1**（1–2 h）certified d2B 回灌 B&B（只换 L3 来源）→ 三件 N(P) → s*(P) 判定行
+> （s*≤10 GO / 10–30 灰区 / >30 NO-GO；等价 2×HOL p1≤278/p2≤150/p3≤64）。
+> **P2**（2–3 h）p3 #147 最松叶的 Lean C1 数据模块探针（decide ≤3 min/叶 行 + axioms
+> 恰标准三；卡 2 轮即止损不影响判定）。**P3** 备忘回填 §3.3 全表。
+> lean 纪律：P2 时与 kernel 波共 2/2（~15 GB < 20 GB）；math5-w2 编译窗口错峰走护栏。
 
 > **2026-11-16 18:45 双零 lean 车道发车（用户批「A b」）**：
 > ① `asm-precheck-w1`——**tskasm 装配预检**：读 202 模块 + 消费端，纸面解决唯二
@@ -1110,6 +1122,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（21:18，续1201）**：**`jet3-g0-w1` 发车（用户批「好」——槽位建议采纳：Gate-0 优先于 ztg 续任，math5 编译错峰）**。
+① 使命：Gate-0 判定 pilot——TM-hull 载体版 C1（P0）→ certified d2B 回灌 B&B 三件
+叶数 N(P)/s*(P)（P1）→ p3 #147 叶 Lean 探针（P2）→ GO/NO-GO 备忘（P3）。
+定 52 条 nli 债里 43 条的路线生死（map52 endgame 分支），24 h 止损。
+② 工单两处按今日实测更新：C1 起点 = 已落库 `pipeline/interval/certtm2/` 包改造
+（不重写）；**裸盒区间版出局**（certOk=0/188 实测），P0 验收线 = TM-hull 版
+certOk 显著 >0（如 ≥100/188），仍 ~0 即直接 NO-GO 备忘（有效结论）。
+③ GO/NO-GO 判据（jet3-pre §3.3）：主 = s*(P) ≤10 GO / 10–30 灰区 / >30 NO-GO
+（等价 2×HOL p1≤278/p2≤150/p3≤64）；辅 = ρ1≤3、decide≤3 min/叶、采样零违例。
+④ lean 纪律：P2 探针与 kernel 波共 2/2（~15 GB）；math5-w2 编译窗口错峰走护栏。
+下一条：续1202。
 
 - **2026-11-16（21:15，续1200）**：**`ztgmain-w1` 收线落库 `f47d472f`（用户令「收一下」）——Kit A `ZTGDihKit` 冻结（cone-neutral），四箱 dihY 端点未闭（精确 blocker 已交班）**。
 ① **落库**：`lean/Kepler/Text/ZTGDihKit.lean` 新模块 171 行/8 声明——编排者闸三件套
