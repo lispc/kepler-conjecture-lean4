@@ -172,6 +172,14 @@
 
 ### 1.7 全量路线地图（`nli-map52-w1`，2026-11-16）
 
+> **ERRATA（2026-11-16 16:39，`terminal11-census-w1` 实测对表，详见 §1.9）**：
+> 本节 TerminalV11 相关判词修正——① 「104 NO-CASE」→ 实为 **83**（漏 cases_prep/
+> 18 + 库内证书 21，全层覆盖 26/109）；② 「4717061266 补粘合」「语句级先行步未估」
+> 双双 **STALE**（T0 语句级展开已落库 LA1:1900–2158）；③ 「68 MATH 候选」shape 口径
+> CONFIRM 但 route 口径 6→3（574/183 测后改判机器分割）；④ 本条 route_tag
+> MATH-REDUCE → 实为 **FARM 主导**（109 支 = 85 FARM-EMIT / 21 ENGINE-LEAF /
+> 3 MATH）。其余 51 条不受影响。
+
 - **对账零差异**：52 条 `nli*` + 1 hLP 在 map.tsv SORRIED 段 / pq 文件头 /
   `Assembly.lean` 债行（:402–:1834 52 条 + :7104 hLP）三方逐名吻合；
   族分解 rest 38（含 ZTGIJCF4×10）+ tsk 5 + cell3 5 + 直挂 4 = 52。
@@ -228,6 +236,35 @@
 - 工单建议已就绪：**`jet3-g0-w1`**（P0–P3，见 `jet3-pre-w1/DELIVERY.md`）——
   半天可判 C1；发车时机 = 二 lean 槽空出（ztgmain Kit A 收线后）。
   详细 `lane_snapshots/jet3-pre-w1/JET3_PLAN.md`（31KB）。
+
+### 1.9 TerminalV11 109 支普查（`terminal11-census-w1`，2026-11-16）——闭合算术定案
+
+- **109 支全判零 UNRESOLVED**（`TERMINAL11_CENSUS.tsv` 109×18，快照
+  `terminal11-census-w1/`）：结构 = 74 显式 HOL add（`main_estimate_ineq.hl` 71 条带
+  Main_estimate tag 全命中 + `ineq.hl` 3）+ 35 hex 循环族（`make_hex_ear`，C(7,3)）；
+  `get_main_nonlinear` 109↔109 双射复核通过、`|_ => True` 回落零命中。
+- **route_tag**：**ENGINE-LEAF 21**（20 支 T11Glue 已粘 + `8405387449` 在库未粘
+  40,785 叶/498 分片——scout「20」之后的增量）/ **FARM-EMIT 85**（5 case JSON 在库 +
+  35 hex 模板 + 40 直发 atan + 2 高维 prep + 3 多项式分割）/ **MATH-REDUCE 3**。
+- **闭合算术**：关 `nliMainNonlinearTerminalV11` 还差 **88 支证明 + 接线** = 85 农场
+  （scout 口径 500–700 mh；TM 层视 Gate-0）+ 3 MATH（余量已测：num1 顶点极小
+  **+52.512319 / +11.734635** 精确有理、645 slab deltaY **−0.46104538** 精确——三者皆
+  「multiaffine + 单变量凹 ⇒ 64 顶点枚举」即完整证明）+ 1 补粘（8405387449）；
+  **部分证明不减 SORRIED**（合取债）；20 支已粘但 T11Glue 未 import 进锥；
+  语句级展开 T0 已落库（LA1:1900–2158），剩的是接线与证明、不是语句缺口。
+  另：574/183 已被 iv 分割**全闭**（uncovered=0）、717 disj1 支配 99.1% 网格
+  （剩余条带归机器分割）。
+- **cell3 wt 三条补测**（map52 空白点③解除，`WT_CELL3_MARGINS.md`）：三 prog 对
+  hminus 偏导恒 0；**wt0** farm 盒全局最小 **+1.783e-4**（iv，角点 (2.01,2,2)），
+  无反例但三轴导数变号 ⇒ corner 单调模板不能照搬、**FARM-BLOCKED 维持**
+  （阻塞在 log/matan 规则层非负值）；**wt1/wt2A** Lean 盒 y5/y6 严格单调增 ⇒
+  「单调归约 + y4 一维证书」**MATH 可行**（极小 +4.514e-5 / +3.011e-3，iv 包围）——
+  cell3 工单族 **+2 候选**（`cell3-wt1-mono-w1` / `cell3-wt2a-mono-w1`）。
+- **ERRATA（对 map52/recost/scout，§1.7 已注）**：① 104 NO-CASE→83；② 「5 γ4」→
+  109 支无 γ4（实为 taum×4 + deltaY-disj×1）；③ 补粘合/先行步两条 STALE；
+  ④ recost「引用型 36」→ 35；⑤ route 口径 6→3；⑥ scout「89 vs 87」内部不一致 →
+  现行 FARM-EMIT 85。求值器 4 组 pin 全过（restcore.c3 逐点吻合、nb11
+  3.7446884e-3 复现、recost DISJUNCTS 独立复现）。
 
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 

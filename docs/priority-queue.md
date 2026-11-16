@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ `terminal11-census-w1`（零 lean）；jet3-pre/nli-map52 已收线；audit/tskasm/g4port/g4hol 已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）；调研三车道 jet3-pre/nli-map52/terminal11-census 已收线；audit/tskasm/g4port/g4hol 已收线）
 
 > **2026-11-16 14:30 `terminal11-census-w1` 发车（用户批「那就也勘测一下」）**——
 > `nliMainNonlinearTerminalV11` 109 支全普查 + cell3 wt 主盒余量补测；零 lean +
@@ -106,6 +106,9 @@
 > `WT_CELL3_MARGINS.md`（wt0/wt1/wt2A 主盒单调性，判 MATH-REDUCE 可行性）。
 > 起点判词 = map52 空白点①（104/109 NO-CASE、68 条 MATH 候选无余量）；历史资产
 > = T0 物化 109 具名 + `T11Glue.lean` 20/20 在库粘合（未进锥）。24 h / 6 CPU·h 止损。
+> **⇒ 16:39 收线（见 续1193）**：109 支零 UNRESOLVED；闭合还差 88 支 = 85 农场 +
+> 3 MATH + 1 补粘；wt1/wt2A MATH 可行（工单 +2 候选）；ERRATA 六条打在
+> map52/recost/scout 上。
 
 > **2026-11-16 14:07 双调研车道发车（用户批「都发」）**——重调研/读代码/轻计算，**零 lean、
 > 不占二 lean 护栏**，24 h 止损，产物进各自快照目录：
@@ -1088,6 +1091,31 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（16:45，续1193）**：**`terminal11-census-w1` 收线（零 lean、CPU ≈1.5h/限 6h，194 调用）——TerminalV11 109 支全普查 + cell3 wt 补测**。
+① **109 支零 UNRESOLVED**（`TERMINAL11_CENSUS.tsv` 109×18）：结构 = 74 显式 HOL add
+（main_estimate_ineq.hl 71 全命中 + ineq.hl 3）+ 35 hex 循环族（`make_hex_ear`，C(7,3)）；
+109↔109 双射复核、`|_ => True` 零命中。route_tag = **ENGINE-LEAF 21**（20 支 T11Glue
+已粘 + `8405387449` 在库未粘 40,785 叶/498 分片）/ **FARM-EMIT 85**（5 case JSON +
+35 hex 模板 + 40 直发 atan + 2 高维 prep + 3 多项式分割）/ **MATH-REDUCE 3**。
+② **闭合算术定案**：关 `nliMainNonlinearTerminalV11` 还差 **88 支证明 + 接线** =
+85 农场（scout 口径 500–700 mh，TM 层视 Gate-0）+ 3 MATH（余量精确已测：num1
+**+52.512319/+11.734635**、645 slab **−0.46104538**——皆「multiaffine+单变量凹 ⇒
+64 顶点枚举」即完整证明）+ 1 补粘；**部分证明不减 SORRIED**（合取债）；T0 语句级
+展开已落库（LA1:1900–2158）——剩的是接线与证明，不是语句缺口；574/183 已被 iv
+分割全闭（uncovered=0）、717 disj1 支配 99.1% 网格。
+③ **wt 三条**（map52 空白点③解除）：wt0 FARM-BLOCKED **维持**（farm 盒最小
++1.783e-4 无反例但三轴导变号，corner 模板不能照搬；阻塞在 log/matan 规则层）；
+**wt1/wt2A MATH 可行**（Lean 盒 y5/y6 严格单调增 ⇒「单调归约 + y4 一维证书」；
+极小 +4.514e-5/+3.011e-3 iv 包围）——**cell3 工单族 +2 候选**
+（`cell3-wt1-mono-w1`/`cell3-wt2a-mono-w1`，待用户批）。
+④ **ERRATA 六条**（§1.7 已注）：map52 104→83；「5 γ4」→ 无 γ4（taum×4+
+deltaY-disj×1）；「补粘合」「先行步未估」STALE；recost 引用型 36→35；route 6→3；
+scout 89/87 内部不一致→85。求值器 4 组 pin 全过（restcore.c3 逐点、nb11
+3.7446884e-3、recost DISJUNCTS 独立复现）。
+⑤ 入档：nli-campaign §1.9 新建 + §1.7 ERRATA 注、hf-map 状态**四十三**；
+交付 `lane_snapshots/terminal11-census-w1/`（TSV/AUDIT/WT_MARGINS/脚本+json）；
+主仓零改动。kernel 波/ztgmain 照常在飞。下一条：续1194。
 
 - **2026-11-16（14:40，续1192）**：**`jet3-pre-w1` 收线（零 lean 零计算，纯读码/考古/设计）——Gate-0 预研 + CertTM2 WBS**。
 ① **GO 概率 ~60–65%，且比 g4port 设想更便宜**：判据不是"三阶导界是否存在"（一定存在，
