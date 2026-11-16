@@ -8,8 +8,9 @@
 > 端到端形式化证明**，并沉淀一条可复用的"求解器 → 证书 → 形式化 checker"流水线。
 > **⚠️ 本文是 2026-10-10 的计划快照，不是当前状态。** 文中全部数字（含
 > "Phase 2/3 ✅ 100%"、"624/628 shard 公理"、"LP 100%"）均为 2026-10-10 时点值，
-> **不得脱离本横幅引用**——当前口径（2026-11-09：585 shard 信任基座 / 根面 589 /
-> 锥内 78 sorry / 终局=AGENTS §1 裁决）以 `docs/priority-queue.md` 文件头为准。
+> **不得脱离本横幅引用**——当前口径（2026-11-16：585 shard 信任基座 / 根面 589 /
+> 锥内 53 sorry = 52 `nli*` + 1 hLP、Text 0 / 终局=AGENTS §1 裁决）以
+> `docs/priority-queue.md` 文件头为准。
 > 当前的实时进度、在飞车道、排队项与塔群债务一律以 `docs/priority-queue.md` 为准；
 > 长期决策以 `DECISIONS.md` 为准；端到端对象 = `lean/Kepler/Final.lean` 的
 > `the_kepler_conjecture_e2e`（2026-10-10 立）。

@@ -4,6 +4,9 @@
 > 依赖图。§6.6：引理级进度用本文件的勾选表维护。
 > 对照基准：`reference/flyspeck/text_formalization/`（其 README 说明该目录
 > 按 flypaper 蓝皮书章节组织）。
+>
+> **2026-11-16 注**：§6.6 勾选表为写作时点进度（停更于 2026-10-12）；现役进度以
+> `priority-queue.md` / `hf-proof-map.md` 为准（Text 锥内已清零）。
 
 ## 模块依赖图
 

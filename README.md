@@ -81,13 +81,14 @@ Note: heavy recomputation (LP re-run, nonlinear certificate replays) is
 currently deferred pending a strong machine; see the compute-constraint table
 in `PLAN.md` §5. Pure Lean compilation work runs on the baseline laptop.
 
-## Status (as of 2026-11-09)
+## Status (as of 2026-11-16)
 
 The end-to-end object `Kepler.the_kepler_conjecture_e2e` stands. Its live axiom
 face is **589 lines** = **585 `native_decide` graph shard axioms** (the declared
 trust base, frozen 2026-11-09: 580 shard-range + 5 tri-single-seed, two shapes
-only) + `propext` + `Classical.choice` + `Quot.sound` + `sorryAx` (53 cone
-sorries — the only real debt; baseline AO `06285994`, 2026-11-15).
+only) + `propext` + `Classical.choice` + `Quot.sound` + `sorryAx` (**53 cone
+sorries = 52 `nli*` + 1 hLP, all in Assembly; Text layer 0** — the only real
+debt; baseline AO `06285994`, 2026-11-15).
 
 **Terminal standard (user ruling 2026-11-06, `AGENTS.md` §1)**: no worse than
 Flyspeck/Isabelle — i.e. the 585 declared shard axioms (same class and same
@@ -102,9 +103,9 @@ Phase-level status (qualitative — **live numbers live in one place only**):
 | 1 | Theorem statement | ✅ statement fixed |
 | 2 | Tame plane graph enumeration | ✅ 19,715 graphs + completeness proved; 585 shard axioms = declared trust base (data three-way reconciled SAME with the original) |
 | 3 | Linear programming | ✅ 43,078 terminal LP certificates checked; LP checkers kernel-proved; fill debt = `lpArchiveCertificatesDebt` (in cone) |
-| 4 | Nonlinear inequalities | 🟡 hNL six-component: 5 interface sorries (`nli*`); sqrt/atan-tier heavy farm replay deferred (the original used a farm too) |
-| 5 | Text proof porting | 🟡 geometry towers largely collapsed (LA engine layer: 16 files at zero sorries); §5 two roots under attack (J campaign `jcajydu` + WSEWPCH program) |
-| 6 | Integration & delivery | 🟡 e2e stands, assembly chain proved; root face 589; trust-base manifest `--check` green |
+| 4 | Nonlinear inequalities | 🟡 **52 `nli*` cone sorries (the main front)**: TSKAJXY full-box assembly ready (6,612-leaf kernel wave in flight), CertTM2 engine route pending Gate-0, three pure-MATH work orders queued; sqrt/atan-tier heavy farm replay deferred (the original used a farm too) |
+| 5 | Text proof porting | ✅ **zero cone sorries in Text** (baseline AO, 2026-11-15); 5 out-of-cone file-level sorries (TameLp 1 + LA23 4) kept honestly, not deleted |
+| 6 | Integration & delivery | 🟡 e2e stands, assembly chain proved; root face 589; SORRIED 53 = 52 `nli*` + 1 hLP (all Assembly); trust-base manifest `--check` green |
 
 **Where to read the numbers.** There is exactly one live ledger:
 [`docs/priority-queue.md`](docs/priority-queue.md) — in-flight lanes, queue,

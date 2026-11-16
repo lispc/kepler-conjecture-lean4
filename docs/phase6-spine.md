@@ -3,6 +3,9 @@
 > 目标：把 `Statement.lean` 的 sanctioned sorry 替换为真实证明项，
 > 代价是若干条**显式、可枚举、逐个保真审查过**的接口 sorry。
 > 落地后 `#print axioms the_kepler_conjecture` 的 sorryAx 清单 = 全项目债务图。
+>
+> **2026-11-16 注**：§6 现状盘点为 2026-09-28 时点值；装配脊柱现役以
+> `priority-queue.md` 与 `handoff-2026-11-16.md` 为准。
 
 ## 1. HOL 原版装配结构（考古：`reference/flyspeck/text_formalization/general/the_kepler_conjecture.hl`）
 

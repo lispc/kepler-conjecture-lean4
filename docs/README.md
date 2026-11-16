@@ -17,6 +17,10 @@
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
 - [`handoff-2026-11-16.md`](handoff-2026-11-16.md) — **2026-11-15/16 两日收获总览**
   （TSKAJXY 全盒战役、CertTM2 引擎路线、ox3q1h/ZTGIJCF4/recost/audit 判词、排产队列）。
+- 历次 session 交接：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（裁决/死路/环境坑正本）、
+  [`handoff-2026-11-12.md`](handoff-2026-11-12.md)、
+  [`handoff-2026-11-13.md`](handoff-2026-11-13.md)、
+  [`handoff-2026-11-14.md`](handoff-2026-11-14.md)（OCBICBY 移交）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
 - [`DECISIONS.md`](../DECISIONS.md) — 用户裁决与长期政策（根级唯一 current 文档）。
@@ -49,8 +53,9 @@
 - [`global-reachability-map.md`](global-reachability-map.md) — union 多根快照。
 - [`e2e-tree-visualization.md`](e2e-tree-visualization.md) — 本地树页面数据口径与重建。
 - [`e2e-reachability-map.tsv`](e2e-reachability-map.tsv) — 生成物；
-  **当前 = 基线 T（2026-11-09：2,088,969 / SORRIED 78 / AXIOM 585）**，
-  与 `docs/priority-queue.md` 文件头同口径；历史基线叙事看 md 的对应节。
+  **当前 = 基线 AO @`06285994`（2026-11-15：K_REACH 2,101,085 / SORRIED 53 /
+  AXIOM 585；Text 0）**，与 `docs/priority-queue.md` 文件头同口径；
+  历史基线叙事看 md 的对应节。
 
 ### 怎么跑闸 / 怎么开工
 

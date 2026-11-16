@@ -17,7 +17,8 @@ checker** 支撑——不信任任何生成器/求解器的代码本身。
   Arb/FLINT）产出证书，Lean 侧 checker 在内核中核验。可信基 = Lean 内核 +
   小 checker，仅此而已。
 - **`native_decide` 全项目禁用**（它会把编译器纳入可信基），唯一特许例外 =
-  Phase 2 图枚举分片（624 个 shard 公理，足迹登记于 `DECISIONS.md`）。
+  Phase 2 图枚举分片（**585 条 shard 公理**，2026-11-09 定格；足迹登记于
+  `DECISIONS.md` / `docs/trust-base.md`）。
 - **陈述保真是唯一质量阀门**：终版陈述与 Flyspeck `the_kepler_conjecture`
   语义一致；所有折算登记于 `docs/statement-fidelity.md`；陈述改动仅经 SF 通道
   （`docs/statement-fix-proposals.md`）。
@@ -69,12 +70,13 @@ make reprove   # 从零重建 + 审计——Definition of Done
 注：重型重计算（LP 重跑、非线性证书重放）当前挂起等强机器，见 `PLAN.md`
 §5 计算约束表；纯 Lean 编译工作在本机基线（笔记本）上全部可行。
 
-## 状态（2026-11-09）
+## 状态（2026-11-16）
 
 端到端对象 `Kepler.the_kepler_conjecture_e2e` 已立。实时公理面 = **589 行**
 = **585 个 `native_decide` 图枚举 shard 公理**（信任基座，2026-11-09 定格：
 580 shard-range + 5 tri-single-seed，仅 2 种形状）+ `propext` + `Classical.choice` +
-`Quot.sound` + `sorryAx`（锥内 53 条，唯一真债；基线 AO `06285994`，2026-11-15）。
+`Quot.sound` + `sorryAx`（锥内 **53 条 = 52 `nli*` + 1 hLP，全在 Assembly；Text 层 0**
+——唯一真债；基线 AO `06285994`，2026-11-15）。
 
 **终局标准（用户 2026-11-06 裁决，见 `AGENTS.md` §1）**：不比 Flyspeck/Isabelle 更差——
 即 585 条声明信任基座（与 Isabelle `by eval` 同类、同数据）+ 零 `sorryAx` 目标，
@@ -87,9 +89,9 @@ make reprove   # 从零重建 + 审计——Definition of Done
 | 1 | 定理陈述 | ✅ 陈述已定稿 |
 | 2 | tame 平面图枚举 | ✅ 19,715 图 + 完备性真证；585 条 shard 公理 = 声明信任基座（数据与原版三路对账 SAME） |
 | 3 | 线性规划 | ✅ 43,078 终端 LP 证书已核；LP 检查器内核 soundness 真证；灌装债 = `lpArchiveCertificatesDebt`（锥内） |
-| 4 | 非线性不等式 | 🟡 hNL 六分量 5 条接口 sorry（`nli*`）；sqrt/atan 档重型农场重放挂起（原版同为农场） |
-| 5 | 文字证明移植 | 🟡 几何塔群大部分已塌（LA 系引擎层 16 文件零 sorry）；§5 两根在攻（J 战役 `jcajydu` + WSEWPCH 程序） |
-| 6 | 集成与交付 | 🟡 e2e 已立且总装链真证；根面 589；信任基座 manifest `--check` 全绿 |
+| 4 | 非线性不等式 | 🟡 **锥内 52 条 `nli*`（主战场）**：TSKAJXY 全盒装配就绪（6,612 叶内核波在飞）、CertTM2 引擎路线等 Gate-0、纯 MATH 三条排队；sqrt/atan 档重型农场重放挂起（原版同为农场） |
+| 5 | 文字证明移植 | ✅ **Text 锥内 sorry 清零**（基线 AO，2026-11-15）；锥外孤儿 5 条文件级 sorry（TameLp 1 + LA23 4）诚实保留不删 |
+| 6 | 集成与交付 | 🟡 e2e 已立且总装链真证；根面 589；SORRIED 53 = 52 `nli*` + 1 hLP（全 Assembly）；信任基座 manifest `--check` 全绿 |
 
 **数字在哪读**：唯一实时账本是
 [`docs/priority-queue.md`](docs/priority-queue.md)——在飞车道、排队、最近落库、
