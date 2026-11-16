@@ -183,11 +183,23 @@ def dihY_t(N, y, ybox=None):
     return dihXf_t(N, [J.mul(v, v) for v in y], xbox)
 
 
+def _pbox(ybox, pm):
+    """Permute a box alongside the permuted y list (the dihY radicand
+    floor must be anchored at the ATOM's own first coordinate; delta is
+    invariant under the lane perms, so the corner-min is unchanged, but
+    the x1-box lo is not)."""
+    if ybox is None:
+        return None
+    return tuple(ybox[k] for k in pm)
+
+
 def solY_t(N, y, ybox=None):
     y1, y2, y3, y4, y5, y6 = y
     return J.sub(J.add(J.add(dihY_t(N, [y1, y2, y3, y4, y5, y6], ybox),
-                             dihY_t(N, [y2, y3, y1, y5, y6, y4], ybox)),
-                       dihY_t(N, [y3, y1, y2, y6, y4, y5], ybox)),
+                             dihY_t(N, [y2, y3, y1, y5, y6, y4],
+                                    _pbox(ybox, (1, 2, 0, 4, 5, 3)))),
+                       dihY_t(N, [y3, y1, y2, y6, y4, y5],
+                              _pbox(ybox, (2, 0, 1, 5, 3, 4)))),
                  J.const(N, N.pi()))
 
 
@@ -233,18 +245,26 @@ def lmfun_side(N, y_jet, side):
 
 def gamma4_t(N, y, sides, ybox=None):
     y1, y2, y3, y4, y5, y6 = y
-    dy = lambda a, b, c, d, e, f: dihY_t(N, [a, b, c, d, e, f], ybox)
+    def dyf(idx):
+        yy = [y[k] for k in idx]
+        return dihY_t(N, yy, _pbox(ybox, idx))
     S = J.add(J.add(J.add(solY_t(N, [y1, y2, y3, y4, y5, y6], ybox),
-                          solY_t(N, [y1, y5, y6, y4, y2, y3], ybox)),
-                    solY_t(N, [y4, y5, y3, y1, y2, y6], ybox)),
-              solY_t(N, [y4, y2, y6, y1, y5, y3], ybox))
+                          solY_t(N, [y1, y5, y6, y4, y2, y3],
+                                 _pbox(ybox, (0, 4, 5, 3, 1, 2)))),
+                    solY_t(N, [y4, y5, y3, y1, y2, y6],
+                           _pbox(ybox, (3, 4, 2, 0, 1, 5)))),
+              solY_t(N, [y4, y2, y6, y1, y5, y3],
+                     _pbox(ybox, (3, 1, 5, 0, 4, 2))))
+    D_PERMS = ((0, 1, 2, 3, 4, 5), (1, 2, 0, 4, 5, 3), (2, 0, 1, 5, 3, 4),
+               (3, 2, 4, 0, 5, 1), (4, 0, 5, 1, 3, 2), (5, 0, 4, 2, 3, 1))
+    dterms = [dyf(pm) for pm in D_PERMS]
     D = J.add(J.add(J.add(J.add(J.add(
-        J.mul(lmfun_side(N, y1, sides[0]), dy(y1, y2, y3, y4, y5, y6)),
-        J.mul(lmfun_side(N, y2, sides[1]), dy(y2, y3, y1, y5, y6, y4))),
-        J.mul(lmfun_side(N, y3, sides[2]), dy(y3, y1, y2, y6, y4, y5))),
-        J.mul(lmfun_side(N, y4, sides[3]), dy(y4, y3, y5, y1, y6, y2))),
-        J.mul(lmfun_side(N, y5, sides[4]), dy(y5, y1, y6, y2, y4, y3))),
-        J.mul(lmfun_side(N, y6, sides[5]), dy(y6, y1, y5, y3, y4, y2)))
+        J.mul(lmfun_side(N, y1, sides[0]), dterms[0]),
+        J.mul(lmfun_side(N, y2, sides[1]), dterms[1])),
+        J.mul(lmfun_side(N, y3, sides[2]), dterms[2])),
+        J.mul(lmfun_side(N, y4, sides[3]), dterms[3])),
+        J.mul(lmfun_side(N, y5, sides[4]), dterms[4])),
+        J.mul(lmfun_side(N, y6, sides[5]), dterms[5]))
     mm1, mm2 = mm12(N)
     xbox = None if ybox is None else tuple((lo * lo, hi * hi) for lo, hi in ybox)
     dxj = deltaX_jet(N, [J.mul(v, v) for v in y], xbox)
