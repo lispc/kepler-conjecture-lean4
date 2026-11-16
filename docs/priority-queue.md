@@ -93,7 +93,14 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶；g4port/g4hol/prescan/famsplit/w2 已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` + `tskasm-prep-w1` + `nli-rest-math-audit-w1`；g4port/g4hol 等已收线）
+
+> **2026-11-16 09:45 双车道发车（用户批「发 A E」）**：
+> `tskasm-prep-w1`——TSKAJXY 最终装配生成器：6,612 叶清单/族 A 覆盖树重建/
+> `IMPORT_TEMPLATE.lean`/`ASSEMBLY_PLAN.md`/`CLOSE_SKELETON.lean`（纯 Python，
+> kernel 波收线后 ≤1 天落地装配）；
+> `nli-rest-math-audit-w1`——剩余 3 条 MATH-FARM + 4 条 MATH 的区间余量/分支结构/
+> 路线三选一排序（`MATH-REDUCE`/`ENGINE`/`CORNER-TABLE`），给 g4port 之后排产。
 
 > **2026-11-16 09:39 `g4port-w1` 收线（纯 Python）**：**GO（条件式）**——四杠杆全部复现，
 > 三件 pilot 全部闭合：叶数 **81/60/47**（s=10）/ **30/22/10**（s=3），估计内核
@@ -1022,6 +1029,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（09:45，续1182）**：**双车道发车（用户批「发 A E」）——`tskasm-prep-w1` + `nli-rest-math-audit-w1`**。
+① `tskasm-prep-w1`：TSKAJXY 最终装配生成器——6,612 叶清单（5,012 旧 + 200 族 A 子叶 + 1,400 B）、cert 树族 A 父叶→双子叶替换与划分校验、`IMPORT_TEMPLATE.lean`、装配方案（BBTree vs 扁平合取，参照 `C1965189142aHull`/`WAZLDCD` 先例）、`CLOSE_SKELETON.lean`；kernel 波收线后 ≤1 天落地装配（SORRIED 53→52）。
+② `nli-rest-math-audit-w1`：7 条（FHBVYXZa/FHBVYXZv2a/QITNPEA5400790175a + IYOUOBFsharpv2/RQWUDDU/Cell3sqrt8/Cell3wt0corner）逐支区间余量/接缝/路线三选一（`MATH-REDUCE`/`ENGINE`/`CORNER-TABLE`）+ 前 3 推荐工单；衔接 `g4hol` 引擎成本（FHBVYXZa 81 h 等）与 `g4port` Gate-0。
+③ 两车道均纯 Python、≤2 worker、不占 lean（kernel 波 507/5,212 独占）；24 h 止损。下一条：续1183。
 
 - **2026-11-16（09:39，续1181）**：**`g4port-w1` 收线——CertTM2 引擎原型 GO（条件式）；三件 pilot 全闭合，叶数杠杆成立，唯一 Gate = Lean 侧 Jet3 三阶导界紧度**。
 ① 结果（s=10 / s=3）：`bank_ZTGIJCF4_0_0_0_0` **81/30 叶**、`_0_1_0_0` **60/22**、ox3q1h `#147` **47/10**；估计内核（60 s/叶）**1.35/1.00/0.78 CPU·h**；行数 **4.15k/3.10k/2.45k**。三点校准逐位一致（+7.799126e−4 / +2.677111e−2 / +3.020488e−4）；逐叶 300 点采样最小值 ≥ 声称界，零负样本/零 kink 跨界。
