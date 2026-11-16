@@ -6,6 +6,8 @@
 >
 > ## 状态更新
 >
+> - **2026-11-16（09:39，编排者，三十八）**：**`g4port-w1` 收线——CertTM2 引擎原型 GO（条件式）**。四杠杆全部复现（二阶 Taylor + 逐子盒局部导数剪枝 + 凹/凸 glue + 自适应 PQ）；pilot 叶数 **81/60/47**（s=10）/ **30/22/10**（s=3），估计内核 **1.35/1.00/0.78 CPU·h**、行数 **4.15k/3.10k/2.45k**；对比 HOL 139/75/~32 叶、bb_arb ~10⁵ 叶/1,100 CPU·h、centered-form 131k/16⁶ 叶；vs HOL CPU 少 ~7×（单叶 27–50s vs 442s）。三点校准逐位一致；逐叶 300 点采样校验全过；全部叶数为 ESTIMATE（L3 三阶导采样界，s=10 时 Hessian 包络 ~1.2% 探针越界）。**唯一 Gate = Lean `Jet3` 三阶导界等效 safety ≲10**；Gate-0（1 天）= `Jet3.lean` dyadic 三阶区间 AD 紧度 pilot；过关 ⇒ `CertTM2.lean`(~2k 行)+`BBTree2` ⇒ 落地 #147(47)→p1(81)→p2(60)，逐件标准三。零 lean、零仓库改动。kernel 波同刻 507/5,212（0 FAIL，ETA ~36.8 h）。
+
 > - **2026-11-16（07:10，编排者，三十七）**：**`g4hol-w1` 收线——HOL 没有更便宜的 γ4 形式化路线，只有更便宜的信任路线；真杠杆是二阶 Taylor + 局部单调 + 凸性引擎**。两层：合并层（`gamma4fgcy_div_sqrtdelta`/`tsk_lemma1`/`REAL_WLOG_SIMPLEX`/`CRIT`/`ztg4_ALT`）**已 100% 移植**（Euler 锚 PA21:11558 已证）；叶子层（ZTGIJCF4/ox3q1h/GLFVCVK4）HOL 主树不证，走独立 `formal_ineqs`（二阶 Taylor + `mono_depth=200` 局部导数剪枝 + 凸性 glue + 自适应搜索，32–139 叶/盒）再用 23,242 条 digest + `deserialization` 公理导入——AGENTS §2 禁用，不可照抄。实测 HOL 成本：全库 5,002.6 CPU·h；ZTGIJCF4 16 条 76.0 h/556 叶（剩余 10 ≈72.5；0_0_0_0 17.8、0_1_0_0 22.1）；ox3q1h 230 条 757.3 h/7,318 叶；GLFVCVK4 127.9 h；中位 404 s/叶。判词：照抄=禁止；只移合并层=零收益；引擎升级⇒≤10² CPU·h 有条件 YES；≤10³ 行/盒 YES、≤10³ 行/10 条 NO（≈10⁴ 行）；现行一阶/角点表直上宽盒=NO。建议立 `g4port-w1` 引擎车道（pilot 0_0_0_0 + 0_1_0_0 + ox3q1h #147；判停 ≤3 CPU·h/≤5k 行每件）；零风险并行 46 条 ox3q1h 线性。勘误：NliBanks17:12-14/Route:57-60 的 Euler 锚“未证”过时；PA25:12031“两处 sorry”注释过时；Route 头注把 γ4 桥归因于锚，真因是窄型盒限定。
 >
 

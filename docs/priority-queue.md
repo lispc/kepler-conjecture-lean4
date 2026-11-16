@@ -93,13 +93,15 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶 + `g4port-w1` CertTM2 引擎原型；g4hol 已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` 5,212 叶；g4port/g4hol/prescan/famsplit/w2 已收线）
 
-> **2026-11-16 07:20 `g4port-w1` 发车（用户令「发」）**：CertTM2 **引擎原型 + 三件 pilot**
-> （纯 Python，不占 lean）——二阶 Taylor + 逐子盒局部导数剪枝（HOL `mono_depth=200`）
-> + 凸性/凹性 glue + 自适应搜索；pilot `ZTGIJCF4_0_0_0_0` / `_0_1_0_0` / ox3q1h `#147`；
-> 判停线：叶数 ≤2× HOL（≲300/件）、内核 ≤3 CPU·h/件、≤5k 行/件 ⇒ GO，
-> 任一超 10× ⇒ NO-GO。**只借算法，不借 digest 信任**。
+> **2026-11-16 09:39 `g4port-w1` 收线（纯 Python）**：**GO（条件式）**——四杠杆全部复现，
+> 三件 pilot 全部闭合：叶数 **81/60/47**（s=10）/ **30/22/10**（s=3），估计内核
+> **1.35/1.00/0.78 CPU·h**、行数 **4.15k/3.10k/2.45k**（s=10）；对比 HOL 139/75/~32 叶、
+> bb_arb ~10⁵ 叶、centered-form 131k/16⁶ 叶。**唯一 Gate = Lean 侧可证三阶导界
+> `Jet3` 要做到等效 safety ≲10**（s=30 时 380/288/134 叶，仍 <10× NO-GO 线但超 2× GO 线；
+> s≥100 不闭合）。落地顺序：Gate-0 `Jet3` 紧度 pilot（1 天）→ `CertTM2`(~2k 行)+`BBTree2`
+> → #147 → p1 → p2。逐叶 300 点采样校验全过；全部叶数为 ESTIMATE。
 
 > **2026-11-16 07:10 `g4hol-w1` 收线（只读）**：**HOL 没有更便宜的 γ4 形式化路线，
 > 只有更便宜的信任路线**——叶子层不在主树证，走独立 `formal_ineqs`（二阶 Taylor +
@@ -1020,6 +1022,13 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（09:39，续1181）**：**`g4port-w1` 收线——CertTM2 引擎原型 GO（条件式）；三件 pilot 全闭合，叶数杠杆成立，唯一 Gate = Lean 侧 Jet3 三阶导界紧度**。
+① 结果（s=10 / s=3）：`bank_ZTGIJCF4_0_0_0_0` **81/30 叶**、`_0_1_0_0` **60/22**、ox3q1h `#147` **47/10**；估计内核（60 s/叶）**1.35/1.00/0.78 CPU·h**；行数 **4.15k/3.10k/2.45k**。三点校准逐位一致（+7.799126e−4 / +2.677111e−2 / +3.020488e−4）；逐叶 300 点采样最小值 ≥ 声称界，零负样本/零 kink 跨界。
+② 四杠杆生效证据：mono 定维 136/97/87 次（s=10）；凹维集非空 42/43/38 叶、CONC 叶出现；T2 叶 180/188；自适应 PQ 按 `|g_i|/R_i`；凸维二次下界 0 触发（如实记）。
+③ 对比：vs HOL 叶数少 1.25–4.6×、CPU 少 ~7×（单叶 27–50s vs 442s）；vs bb_arb ~700×；vs centered-form 低 3–6 个数量级。敏感度：L3 safety 3→10→30 ⇒ p1 30→81→380 叶；s≥100 不闭合。
+④ **Gate**：全部叶数为 ESTIMATE——L3 是三阶导采样界（s=10 时 Hessian 包络 ~1.2% 探针越界，最坏 6.7–12.1×）；形式化必须由 Lean 三阶 Taylor model 重做。**Gate-0（1 天）= `Jet3.lean` dyadic 三阶区间 AD 紧度 pilot**；过关 ⇒ `CertTM2.lean`(~2k 行)+`BBTree2` ⇒ 落地 #147(47)→p1(81)→p2(60)，逐件 `#print axioms` 标准三。
+⑤ 交付：`ENGINE.md`/`PILOT.tsv`/`PILOT_RESULTS.md`/`CERTTM2_DESIGN.md`/`LEAN_PLAN.md`/`EVIDENCE.md`/`DELIVERY.md`/`scripts/`(13)/`out/leaves_p{1,2,3}.tsv`/`logs/`。零 lean、零仓库改动。kernel 波同刻 **507/5,212**（09:40，28.1 s/叶，0 FAIL，ETA ~36.8 h）。下一条：续1182。
 
 - **2026-11-16（07:20，续1180）**：**`g4port-w1` 发车（用户令「发」）——CertTM2 引擎原型 + 三件 pilot，判 GO/NO-GO**。
 ① 目标：把 `g4hol-w1` 找到的 HOL `formal_ineqs` 算法杠杆（二阶 Taylor + `mono_depth=200` 逐子盒局部导数剪枝 + 凸性/凹性 glue + 自适应搜索）做成 Python 原型；**只借算法，不借 digest 信任**，最终每叶仍须 Lean `decide +kernel`。
