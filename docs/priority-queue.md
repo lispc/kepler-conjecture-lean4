@@ -147,6 +147,9 @@
 > **2026-11-16 05:36 全盒内核波发车**：`rulep-fullbox-kernel-w1`——**5,212 叶**
 > （5,012 旧叶 + 200 族 A 子叶）+ 1,400 B 已编译 = 6,612 叶池；15 叶/块 + checkpoint，
 > 单 lean 25.5–31 s/叶 ≈ **39–45 h**；preflight 3 叶后量产；72 h 止损。
+> **13:20 调度修正（续1186）**：runner 让路判据 `pgrep -x lean == 0` → 二 lean 护栏
+> （≤2 lean ∧ 总 RSS ≤20 GB ∧ pressure<2；与 ztgmain 并行，9.6+6≈15.6 GiB）；
+> 795/5,212 PROBED 0 FAIL。
 
 > **2026-11-16 05:36 `rulep-replay-w2` 收线**：族 B **1,400/1,400 PASS、0 FAIL**；
 > 1,400 `_check` = `[propext, Quot.sound]`、1,400 `_pos` = 标准三；`sorryAx/error/warning` 0；
@@ -1055,6 +1058,20 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（13:20，续1186）**：**kernel 波调度判据修正（二 lean 并行落地）**。
+① 车道报告调度冲突：其 runner 让路判据含 `pgrep -x lean == 0`（比用户已批的两 lean
+规则保守），ztgmain Kit A 编译期间整段让路（实测单次阻塞 1,777 s）。编排者同刻实测：
+恰 1 lean @5.6 GiB（ZTGDihKit）、pressure=1、swap 2.8/4 GB（非告警指标）、
+`/tmp/lean_global_lock` 空闲（让路时已释放）。
+② **判据修正（SendMessage 同批已达）**：kernel 波 runner 改为「持
+`/tmp/lean_global_lock` ∧ lean 进程数 ≤2 ∧ 总 lean RSS ≤20 GB ∧ pressure <2」；
+kernel 叶峰值 9.6 GiB + ztgmain ~6 GiB ≈ 15.6 GiB < 20 GB，包络内可并行；
+出现第三 lean 或 pressure ≥2 仍让路（硬闸不变）。ztgmain Kit A 仅 2 文件，干扰有界。
+③ 进度（车道 13:15 自报）：**795/5,212 PROBED、0 FAIL**；preflight OK（旧叶 0、
+famA A10_0、B 回归 4471 olean sha 与 w2 逐字节一致）；逐叶 checkpoint 无损，
+harness ~60–65 min 强杀后自重启续跑；要求下个 checkpoint 附新判据下 ETA 重算。
+下一条：续1187。
 
 - **2026-11-16（10:45，续1185）**：**收获总览落档 + `ztgmain-w1` Phase 1 复跑（用户批「整体更新文档；二 lean 也行，挑轻负载保持一个 lane」）**。
 ① **`docs/handoff-2026-11-16.md` 新建**：两日窗口 consolidated 收获——状态快照（SORRIED 53/根面不变）、TSKAJXY 战役全程（成本轨迹 333s→27s、回放/预扫/切叶/内核波/装配就绪）、引擎路线（g4hol 判词 + g4port GO 条件式 + Gate-0 Jet3）、ox3q1h（46 线性/联合角点/CertTM2 备选）、ZTGIJCF4（dihY 多项式路线 + Kit A）、recost/audit 判词、审计副产物、排产队列；`docs/README.md` 导航补指针。
