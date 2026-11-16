@@ -11,13 +11,14 @@
 
 | 目录 | 内容 | 件数 |
 |---|---|---|
-| `scouts/` | 一次性侦察报告（覆盖测绘、可行性、翻案） | 56 |
+| `scouts/` | 一次性侦察报告（覆盖测绘、可行性、翻案） | 58 |
 | `handoffs/` | 车道交接单（含 549 系列长日志） | 18 |
 | `projects/` | 专项计划与裁决批次（含其自身的 `archive/`） | 21 |
 | `lane-archives/` | 已结车道的正式归档（DELIVERY/Evidence/README） | 8 |
 | `maps/` | 旧版地图快照（`e2e-debt-map-2026-09-29.md`） | 1 |
 | `design/` | 已过时的设计文档（`hard-cases.md`） | 1 |
 | `templates/` | 旧版工单模板（`phase5-worker-template.md`） | 1 |
+| `workorders-2026-11-06/` | 已执行完毕的工单 5 张（2026-11-16 自 `docs/workorders/` 迁入） | 5 |
 
 ## 仍被当前文档引用的归档件
 
@@ -26,6 +27,14 @@
 
 ### 债与可达性（最常被引用）
 
+- `scouts/axiom-ledger-2026-10-28.md` — 逐声明 axiom 台账**点时快照**
+  （2026-10-28 合成，151-SORRIED/624-axiom 时代；**2026-11-16 自 `docs/axiom-ledger.md`
+  归档迁入**——现役债面以 `priority-queue.md` 文件头 + `e2e-reachability-map.md` 为准）。
+- `scouts/main-theorem-trust-audit-2026-10-22.md` — 主定理锥结构/弱形风险审计
+  （**2026-11-16 自 `docs/main-theorem-trust-audit.md` 归档迁入**）。
+- `workorders-2026-11-06/` — 2026-11-06 批次工单 5 张，全部执行完毕
+  （`w1-pa22-10-chain` 等；`handoff-2026-11-06.md` §3/§5 与
+  `def-fix-charters/pa22-10-chain/` 指向此处）。
 - `scouts/debt-ledger-w1.md` — 全库证书债/证明债总账本（SORRIED 134 逐条 7 列挂账）。
   **注意：其中的塔群表已过期**（写作时五塔 170 件；2026-11-05 实测五塔 8 件 / 八塔 31 件）。
 - `scouts/orphan-scout.md` — ORPHANS 量级口径与上行空间测算。

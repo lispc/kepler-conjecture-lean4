@@ -29,9 +29,14 @@
 
 ### 债在哪
 
-- [`axiom-ledger.md`](axiom-ledger.md) — 逐声明 axiom / sorryAx / 标准三状态。
-- [`main-theorem-trust-audit.md`](main-theorem-trust-audit.md) — 主定理锥结构、
-  弱形 / 替身风险（历史审计，2026-10-22）。
+- **现役**：`priority-queue.md` 文件头（基线 AO：SORRIED 53 = 52 `nli*` + 1 hLP、
+  Text 0、AXIOM 585）+ [`trust-base.md`](trust-base.md)（信任基座依据与逐类对照）+
+  [`e2e-reachability-map.md`](e2e-reachability-map.md)（逐基线 SORRIED/AXIOM 清单，
+  tsv 为仪器原样输出）。
+- [`archive/scouts/axiom-ledger-2026-10-28.md`](archive/scouts/axiom-ledger-2026-10-28.md) —
+  逐声明 axiom 台账（**点时快照 2026-10-28**，151-SORRIED/624-axiom 时代；已归档）。
+- [`archive/scouts/main-theorem-trust-audit-2026-10-22.md`](archive/scouts/main-theorem-trust-audit-2026-10-22.md) —
+  主定理锥结构、弱形/替身风险审计（历史，2026-10-22）。
 - [`archive/scouts/debt-ledger-w1.md`](archive/scouts/debt-ledger-w1.md) —
   SORRIED 134 逐条 7 列挂账（历史；**塔群表已过期**，见文件头注）。
 - [`statement-fix-proposals.md`](statement-fix-proposals.md) — SF 通道提案账本

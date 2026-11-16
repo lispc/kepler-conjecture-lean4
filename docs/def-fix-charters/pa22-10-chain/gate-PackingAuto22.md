@@ -5,7 +5,7 @@
 
 车道：`pa22-10-chain`。基线 HEAD `da8c2df2`（2026-11-06，实测）。
 用户 2026-11-06 已批：`#10 EXISTS_M_POLYHEDRON` 走路线 (a) 全做；
-工单 `docs/workorders/2026-11-06/w1-pa22-10-chain.md`。
+工单 `docs/archive/workorders-2026-11-06/w1-pa22-10-chain.md`（2026-11-16 归档迁入）。
 
 HOL 锚（本笔定义/陈述的来源行）：
 `packing/counting_spheres.hl:1527`（`weak_saturation`）、

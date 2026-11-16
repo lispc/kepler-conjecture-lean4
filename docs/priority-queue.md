@@ -1063,6 +1063,28 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-16（14:05，续1188）**：**文档全面重组（用户批「假设新人踏勘后分类/归档/合并/覆盖/删除」）——3 笔 commit，零 `.lean` 改动、零编译、在飞两车道不受影响**。
+① **踏勘判词**：病灶三类 = 入口层漂移（README 中英/PLAN 横幅/docs-README 停在
+11-09/78-sorry 时代，违反 §6.1 同口径）＋ 点时快照被当现役（`axiom-ledger` 10-28、
+`main-theorem-trust-audit` 10-22 挂 docs 根）＋ 账本层内部残留旧基线（pq §0 基线 Z/AI、
+三接口 55 条）。现役件（pq 文件头/11-16 handoff/nli-campaign/hf-map/trust-base/SF 账本/
+history/archive/charters）判健康不动。
+② **`5d8d45db`（A+D 入口层）**：README 中英 Phase 表刷 AO 口径（Phase 5 → ✅ Text 0
+（锥外孤儿 5 条文件级 sorry 诚实保留）、Phase 4 → 52 `nli*` 主战场、zh 624→585）；
+PLAN 横幅 → 53/Text 0；docs/README 基线行 → AO + 历次 session 交接索引；
+playbook 权威序注（与 AGENTS §3/§7.1 冲突以 AGENTS 为准）＋ architecture/phase6/
+module-map 时点注。
+③ **`4bf0db7b`（B 账本层）**：pq §0 里程碑表刷 AO（M0 行 AI→AO 53、M1a/M1b ✅
+Text 0、M3 现役 53、三接口 **52+1+0**）；`handoff-2026-11-06` 顶部现役横幅 +
+「最新交接」→ 11-16；`heavy-scout` 分工注（11-10 后重计算实测在 nli-campaign
+§1.3–1.5，消双出处）；`lanes-landed` 停更注（11-05 后见 pq §8）。
+④ **本笔（C 归档搬迁，纯 `git mv` 内容零改）**：`docs/axiom-ledger.md` →
+`archive/scouts/axiom-ledger-2026-10-28.md`、`docs/main-theorem-trust-audit.md` →
+`archive/scouts/main-theorem-trust-audit-2026-10-22.md`、`docs/workorders/2026-11-06/`（5 张
+已执行工单）→ `archive/workorders-2026-11-06/`；现役引用改写 4 处（docs/README 债在哪
+重写为「现役 pq/trust-base/map + 归档指针」、handoff-2026-11-06 §3/§5 两处、
+charters/pa22-10-chain 一处）；`archive/README.md` 目录表 + 引用件登记。下一条：续1189。
+
 - **2026-11-16（13:29，续1187）**：**kernel 波并行验证 checkpoint（二 lean 护栏生效）**。
 ① 同刻 lean_count=2（ztgmain kit1 5.83 GB + 本道 PLeaf823 9.1 GB）≈15 GB < 20 GB、
 pressure 1；`acquire_lock` 新判据 = (锁) ∧ (lean 数 ≤2) ∧ (现有 RSS + 10.6 GiB 预留 ≤20 GiB)
