@@ -95,7 +95,20 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` + `ztgmain-w1` Phase 1 Kit A（二 lean 并行）；audit/tskasm/g4port/g4hol 已收线；`handoff-2026-11-16` 收获总览已落）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ 双调研车道 `jet3-pre-w1`/`nli-map52-w1`（零 lean）；audit/tskasm/g4port/g4hol 已收线）
+
+> **2026-11-16 14:07 双调研车道发车（用户批「都发」）**——重调研/读代码/轻计算，**零 lean、
+> 不占二 lean 护栏**，24 h 止损，产物进各自快照目录：
+> ① `jet3-pre-w1`——**Gate-0 Jet3 预研 + CertTM2 WBS**（第二交付）：精读 `CertTM.lean`
+> Jet2 基建 + `g4port-w1`/`g4hol-w1` 交付 + HOL `formal_ineqs` 对照 → `JET3_PLAN.md`
+> （三阶导界进 safety 预算的数学推导 / Jet3 API 引理逐条签名+行数预估 / Gate-0 施工图
+> 与 GO-NO-GO 阈值表）+ `CERTTM2_WBS.md`（~2k 行引擎的工作分解：模块切分/依赖序/
+> 机械移植 vs 新数学分类）；≤1 个 tiny 探针须走二 lean 护栏（设计工作不依赖探针）。
+> ② `nli-map52-w1`——**剩余 52 条 `nli*` 全量路线地图**：以 map.tsv SORRIED 段 +
+> pq 文件头 + Assembly 债行三方对账起步，逐条贴 `route_tag`（IN-FLIGHT/CERTTM2-ENGINE/
+> MATH-REDUCE/CORNER-TABLE/ZTGIJCF4-KIT/FARM-BLOCKED/LP-GATED/UNRESOLVED）+
+> HOL 锚 + 成本估计 + gate 依赖 → `NLI52_MAP.tsv` + endgame 排产序两分支
+> （Gate-0 过/挂）。衔接 recost 34 FARM + audit 7 判词 + g4feas ox3q1h。
 
 > **2026-11-16 10:45 `ztgmain-w1` Phase 1 发车（用户批「二 lean 也行，挑轻负载」）**：
 > Kit A 编译——`ZTGDihKit.lean`（~250 行通用）+ `NliBanksZTGIJCF4Dih.lean`（4 箱 dihY
@@ -1062,6 +1075,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（14:07，续1189）**：**双调研车道发车（用户批「都发」，候选 A/B）**。
+① `jet3-pre-w1`：Gate-0 Jet3 预研（`JET3_PLAN.md`：三阶导界 safety 数学推导/API 引理
+清单/Gate-0 施工图与阈值表）+ CertTM2 WBS（`CERTTM2_WBS.md`）——把 Gate-0 从
+「1 天探索」压成「半天施工」；读物 = `CertTM.lean` Jet2 基建 + g4port/g4hol 快照 +
+HOL `formal_ineqs`（AGENTS §8 考古纪律）；零 lean（≤1 tiny 探针走二 lean 护栏）。
+② `nli-map52-w1`：52 条 `nli*` 全量路线地图（`NLI52_MAP.tsv` 逐条 route_tag +
+`NLI52_MAP.md` endgame 排产序 Gate-0 过/挂两分支）——map.tsv/pq/Assembly 三方对账
+起步，衔接 recost/audit/g4feas/g4port 四份既有判词；零 lean 零重计算。
+③ 两车道均异步 background、`/tmp/<lane>/` 工作、产物进 `lane_snapshots/`、里程碑落盘制、
+24 h 止损；机器面 = 纯读码，kernel 波与 ztgmain 不受影响。同刻 kernel 波 ~800/5,212。
+下一条：续1190。
 
 - **2026-11-16（14:05，续1188）**：**文档全面重组（用户批「假设新人踏勘后分类/归档/合并/覆盖/删除」）——3 笔 commit，零 `.lean` 改动、零编译、在飞两车道不受影响**。
 ① **踏勘判词**：病灶三类 = 入口层漂移（README 中英/PLAN 横幅/docs-README 停在
