@@ -170,6 +170,40 @@
 - CONFIRM：三处角点 dip 精化为 −5.55894e−3/−1.12589e−2/−7.26930e−3（VERIFIED-iv）；
   NliBanks12 Δ 范围逐位复现；g4hol 外推无矛盾。
 
+### 1.7 全量路线地图（`nli-map52-w1`，2026-11-16）
+
+- **对账零差异**：52 条 `nli*` + 1 hLP 在 map.tsv SORRIED 段 / pq 文件头 /
+  `Assembly.lean` 债行（:402–:1834 52 条 + :7104 hLP）三方逐名吻合；
+  族分解 rest 38（含 ZTGIJCF4×10）+ tsk 5 + cell3 5 + 直挂 4 = 52。
+- **路线全判、零 UNRESOLVED**（`NLI52_MAP.tsv` 53 行×11 列，快照 `nli-map52-w1/`）：
+  **CERTTM2-ENGINE 31 / ZTGIJCF4-KIT 10 / MATH-REDUCE 4 / FARM-BLOCKED 3**
+  （cell3 wt0/wt1/wt2A，log+负底规则缺失）**/ LP-GATED 2**（`nliLpIneqs`/
+  `nliKcblrqcIneqDef`）**/ CORNER-TABLE 1**（`nliOx3q1h`）**/ IN-FLIGHT 1**
+  （`nliTskXLLIPLS`）。本车道新判 0 条——52 条全部落在 recost 34 + audit 7 +
+  g4feas/g4port 12 + 在飞上下文的覆盖内；本图价值 = 判词首次逐条对齐到债单本体
+  （Assembly 行号 + ineq.hl 锚 + gate 依赖 + 排产位）。24 条锚逐条开文件核过
+  （发现 HOL id `PEMKWKU` 比 Lean `PEMKWU` 多一 K）。
+- **endgame 两分支**：
+  - **Gate-0 过** ⇒ ENGINE 波可吃 **43/52**：XLLIPLS 收尾（在飞）→ 纯 MATH 3 →
+    现行引擎 4（IXPOTPA 0.59 CPU·h 起，共 ~90 h）→ audit 序 4 条
+    （FHBVYXZa→QITNPEA→v2a→RQWUDDU，1.4–13 h/条）→ ox3q1h 46 线性立即 linarith →
+    ZTGIJCF4 γ4 10 + ox3q1h 184 γ4 + P5 大批 23 条（1,100–1,170 h 压到 0.8–2 h
+    量级，**ESTIMATE**，形式化须 Lean 重做）。
+  - **Gate-0 挂** ⇒ 无 gate 只能整条清 **9 条**（XLLIPLS + MATH 3 + 现行引擎 4 +
+    ox3q1h 走 48 盒联合角点表）；ZTGIJCF4 Kit A dihY 半边可落但非整条 sorry；
+    其余 43 条冻结在 Gate-0/农场/LP 三类 gate。
+- **空白点（UNRESOLVED-类风险，如实标注）**：
+  ① `nliMainNonlinearTerminalV11` 最粗——109 清单 104 条 NO-CASE、68 条 MATH 候选
+  无逐条余量 ⇒ **下一个审计车道候选**；
+  ② cell3 wt0/wt1/wt2A 主盒单调性未测量（audit 只测 corner/sqrt8 子盒；当前按
+  FARM-BLOCKED 记）；
+  ③ **锥外 5 条 `*Ids` sorry**（Assembly:1905/1926/1961/1988/2005）不在任何债单
+  （§1.1 有记；锥扩展则 SORRIED +5，3 VACUOUS + 2 真债清单侧）；
+  ④ `Assembly.lean:1897` 注释「ox3q1hP25 本体即 sorry 型 opaque def」过时
+  （本体 2026-11-06 DEF-FIX 已显式化 PA25:94，nliOx3q1h 是纯证书债）——
+  过时注释清理第 4 条候选。
+- hLP 附注：LP-GATED（42,889 bound 叶 + 磁盘 ≥1.2 TB 硬墙，等用户算力裁决）。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒

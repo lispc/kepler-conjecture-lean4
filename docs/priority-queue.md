@@ -109,6 +109,7 @@
 > MATH-REDUCE/CORNER-TABLE/ZTGIJCF4-KIT/FARM-BLOCKED/LP-GATED/UNRESOLVED）+
 > HOL 锚 + 成本估计 + gate 依赖 → `NLI52_MAP.tsv` + endgame 排产序两分支
 > （Gate-0 过/挂）。衔接 recost 34 FARM + audit 7 判词 + g4feas ox3q1h。
+> **⇒ 14:21 收线（见 续1190）**：53 行零 UNRESOLVED；Gate-0 过 ⇒ 43/52 可吃。
 
 > **2026-11-16 10:45 `ztgmain-w1` Phase 1 发车（用户批「二 lean 也行，挑轻负载」）**：
 > Kit A 编译——`ZTGDihKit.lean`（~250 行通用）+ `NliBanksZTGIJCF4Dih.lean`（4 箱 dihY
@@ -1075,6 +1076,25 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（14:25，续1190）**：**`nli-map52-w1` 收线（纯读码零 lean，发车 2.2 h 后交付）——52 条 `nli*` 全量路线地图**。
+① 对账零差异：map.tsv SORRIED 段 / pq 文件头 / `Assembly.lean` 债行（:402–:1834 52 条
++ :7104 hLP）三方逐名吻合；族分解 rest 38（含 ZTGIJCF4×10）+ tsk 5 + cell3 5 + 直挂 4。
+② route_tag（`NLI52_MAP.tsv` 53 行×11 列）：**CERTTM2-ENGINE 31 / ZTGIJCF4-KIT 10 /
+MATH-REDUCE 4 / FARM-BLOCKED 3 / LP-GATED 2 / CORNER-TABLE 1 / IN-FLIGHT 1，
+零 UNRESOLVED**；新判 0 条（全部落在 recost 34 + audit 7 + g4feas/g4port + 在飞上下文
+覆盖内），价值 = 判词首次逐条对齐债单本体（Assembly 行号 + ineq.hl 锚 + gate 依赖 +
+排产位）；24 条锚逐条核过（HOL id `PEMKWKU` 比 Lean `PEMKWU` 多一 K）。
+③ **endgame**：Gate-0 过 ⇒ ENGINE 波可吃 **43/52**（XLLIPLS→MATH 3→现行引擎 4（~90 h）
+→audit 4 条→ox3q1h 46 linarith→ZTGIJCF4 γ4 10 + ox3q1h 184 + P5 23 条引擎化）；
+挂 ⇒ 只能整条清 **9 条**（其余 43 条冻结 Gate-0/农场/LP）。
+④ 勘误/知悉项：`Assembly.lean:1897` 注释过时（ox3q1hP25 本体 2026-11-06 已显式化
+PA25:94；过时注释清理第 4 条候选）；**锥外 5 条 `*Ids` sorry**（:1905/:1926/:1961/
+:1988/:2005）不在债单——锥扩展 SORRIED +5；`nliMainNonlinearTerminalV11` 104/109
+NO-CASE ⇒ **下一审计车道候选**；cell3 wt0/wt1/wt2A 主盒单调性未测。
+⑤ 入档：`nli-campaign.md` §1.7 新建、hf-map 状态**四十一**；交付
+`lane_snapshots/nli-map52-w1/`（TSV/MD/DELIVERY）；主仓零改动、零 lean。
+kernel 波 13:29 = 800 DONE 0 FAIL（本轮未取新 checkpoint）。下一条：续1191。
 
 - **2026-11-16（14:07，续1189）**：**双调研车道发车（用户批「都发」，候选 A/B）**。
 ① `jet3-pre-w1`：Gate-0 Jet3 预研（`JET3_PLAN.md`：三阶导界 safety 数学推导/API 引理
