@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w1`（五债连打，单 lean 走护栏）+ `asm-precheck-w1`/`certtm2-emitter-w1`（零 lean）；调研三车道已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w2`（五债连打续任，单 lean 走护栏）+ `asm-precheck-w1`/`certtm2-emitter-w1`（零 lean）；math5-w1 交班、调研三车道已收线）
 
 > **2026-11-16 18:45 双零 lean 车道发车（用户批「A b」）**：
 > ① `asm-precheck-w1`——**tskasm 装配预检**：读 202 模块 + 消费端，纸面解决唯二
@@ -1112,6 +1112,24 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（19:06，续1197）**：**`math5-w1` 交班（上下文预算有序收束，非结构性卡死）→ `math5-w2` fresh 续任**。
+① **主仓完整性事故（已自愈，编排者已亲核）**：前代因 shell cwd 重置一次相对路径写入
+误覆盖主仓 `lean/Kepler/NliBanks17.lean`（他车道已落库文件）——车道自用
+`git checkout --` 恢复；编排者实测 `git status` 空、该文件与 HEAD 逐字节一致、无杂散
+commit。**教训记档：车道写文件一律绝对路径；每次写后 `git status` 必查**（§7.1 候选）。
+车道模块改名 `NliBanks18`（17 被占）。
+② 前代资产（快照 `math5-w1/` 全齐）：件 1 scout 定案（Assembly:408 → PA21:214、HOL
+锚 ineq.hl:1389 [Sharp; Eps 1e-8]，原版走外部 verifier 须自建）；**数学核心原创发现
+= 角点值恰为零**（`arctan(√2)−arctan(3−2√2)=π/4`、`arccos(1/3)=π−2·arctan(√2)`，
+余 ring 代数）；三轴单调证书干跑验证（∂F/∂y4 ≥ +0.0054，真值 +0.0175850，FD ALL
+MATCH）；`NliBanks18.wip.lean` 315 行剩 9 错（§D 逐条修法）+ §4–§10 施工骨架；
+**勘误：件 1 实际结构 ~1000 行**（审计原估 300–500 已过时）。
+③ `math5-w2` 发车：fresh 接管从蓝图续（修九错 → §4–§10 ~700 行 → 双检 → patch 停轮
+交闸）；**新增省行数提示 = 核查 `Gamma4Sharp`/`Gamma4SharpRoute`（`eb9e0987`）同族
+恒等式复用**；绝对路径硬纪律；五债账不变（预期 SORRIED 53→48）。
+④ 其余在飞不变：kernel 波 / ztgmain（加速令后）/ asm-precheck / certtm2-emitter。
+下一条：续1198。
 
 - **2026-11-16（18:45，续1196）**：**双零 lean 车道发车（用户批「A b」）**。
 ① `asm-precheck-w1`：tskasm 装配预检——202 模块结构审计 + 唯二 TODO 纸面解析
