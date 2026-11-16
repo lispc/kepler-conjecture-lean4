@@ -95,7 +95,17 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）；调研三车道 jet3-pre/nli-map52/terminal11-census 已收线；audit/tskasm/g4port/g4hol 已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ `math5-w1`（五债连打，单 lean 走护栏）；调研三车道已收线；audit/tskasm/g4port/g4hol 已收线）
+
+> **2026-11-16 17:07 `math5-w1` 发车（用户批「维护一个车道做这五条」）**——五债连打
+> 滚动车道，顺序 = **corner → sqrt8 → wt2a → wt1 → iyou**（同族配方先易后难，
+> 最紧余量 wt1 +4.514e-5 放倒数第二，最大异族件 iyou 1–1.5k 行收尾）。
+> 单车道逐件循环：scout 消费链（Assembly 债行 → bank 条件件 → HOL 锚）→ /tmp 副本
+> 写证 → 整文件 RC=0 + 0 error + 新件 `#print axioms` 恰标准三 → patch（Kit+Assembly
+> 接线草案）→ **停轮交编排者闸/落库** → resume 下一件。纪律：主仓零改动（编排者
+> apply）、单 lean 走二 lean 护栏（kernel 波常驻，ztgmain 腾槽后即有空位）、零新
+> sorry/axiom、陈述冻结、精确有理/dyadic 证书、每件 3 轮止损转下件、总 72 h。
+> 预期 SORRIED 53→48（每件 −1，编排者逐件亲跑 `#print axioms` 验收）。
 
 > **2026-11-16 14:30 `terminal11-census-w1` 发车（用户批「那就也勘测一下」）**——
 > `nliMainNonlinearTerminalV11` 109 支全普查 + cell3 wt 主盒余量补测；零 lean +
@@ -1091,6 +1101,21 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（17:07，续1194）**：**`math5-w1` 发车（用户批「维护一个车道做这五条，顺序你自己定」）**。
+① 五债（全部零引擎/零农场/零 Gate-0 依赖，各 −1）：`nliCell3QZECFICwt0corner`
+（+0.017585 三轴正+matan 正支）→ `nliCell3QZECFICwt0sqrt8`（三轴正）→
+`nliCell3QZECFICwt2A`（y5/y6 单调 ⇒ y4 一维证书，+3.011e-3）→
+`nliCell3QZECFICwt1`（同配方，**+4.514e-5 最紧**）→ `nliIYOUOBFsharpv2`
+（hmono +0.13110 + h2d 三件套，1–1.5k 行）。
+② 顺序理由：corner/sqrt8 最便宜且先验证 64 顶点/单调归约配方；wt2a 先于 wt1
+（同一配方先在宽余量件上跑通）；iyou 异族最大件收尾（止损时可独立移交）。
+③ 施工形态：单车道逐件循环，/tmp 副本写证 + patch 交付，**编排者逐件跑闸落库
+（一笔一 commit）+ 亲跑 `#print axioms`**；主仓在车道工作期零改动；单 lean 过
+二 lean 护栏（kernel 波常驻、ztgmain 腾槽后有位）。
+④ 止损：每件 3 轮结构卡死即记 UNRESOLVED 转下件；总 72 h。
+依据 = audit `$Sa/REST_MATH_AUDIT` + census `$Sc/WT_CELL3_MARGINS`（评测器 12 pin）。
+下一条：续1195。
 
 - **2026-11-16（16:45，续1193）**：**`terminal11-census-w1` 收线（零 lean、CPU ≈1.5h/限 6h，194 调用）——TerminalV11 109 支全普查 + cell3 wt 补测**。
 ① **109 支零 UNRESOLVED**（`TERMINAL11_CENSUS.tsv` 109×18）：结构 = 74 显式 HOL add
