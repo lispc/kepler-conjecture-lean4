@@ -95,7 +95,18 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean 并行）+ `math5-w1`（五债连打，单 lean 走护栏）；调研三车道已收线；audit/tskasm/g4port/g4hol 已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w1`（五债连打，单 lean 走护栏）+ `asm-precheck-w1`/`certtm2-emitter-w1`（零 lean）；调研三车道已收线）
+
+> **2026-11-16 18:45 双零 lean 车道发车（用户批「A b」）**：
+> ① `asm-precheck-w1`——**tskasm 装配预检**：读 202 模块 + 消费端，纸面解决唯二
+> TODO（`tsk_atan1_eval` 桥 rfl/simp 判定、`tsk_box_eq := rfl` 核对，各带置信度与
+> fallback）+ 落地 runbook（编译序/分级探针/闸 checklist/逐段时间预算）+ 风险表。
+> 目标：kernel 波收线后的装配窗口从「5–8 h 探索」压成「照单施工」。零 lean。
+> ② `certtm2-emitter-w1`——**CertTM2/d2B 生产发射器 Python 化**：按 `jet3-pre` WBS +
+> g4port 原型 13 脚本生产化（C1 供给器优先、s 档参数化、复用 `tmexact.py`），
+> 对 3 pilot 叶自校验（叶数一致/300 点采样零违例/确定性逐字节 diff）+ SCHEMA 文档
+> （逐字段对齐未来 Lean checker 消费面）。成品 = `pipeline/` patch 交编排者落库。
+> Gate-0 判 GO 后 Lean 侧开工时发射器即现成。零 lean、≤6 CPU·h、确定性硬要求。
 
 > **2026-11-16 17:07 `math5-w1` 发车（用户批「维护一个车道做这五条」）**——五债连打
 > 滚动车道，顺序 = **corner → sqrt8 → wt2a → wt1 → iyou**（同族配方先易后难，
@@ -1101,6 +1112,20 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（18:45，续1196）**：**双零 lean 车道发车（用户批「A b」）**。
+① `asm-precheck-w1`：tskasm 装配预检——202 模块结构审计 + 唯二 TODO 纸面解析
+（`tsk_atan1_eval` 桥判定 `rfl` vs `simp only [IExpr.evalReal, transReal]`、
+`tsk_box_eq := rfl` 核对；各带置信度 + fallback + 首探验证声明）+ LANDING_RUNBOOK
+（编译序/分级探针/闸 checklist/逐段时间预算）+ 风险表。读物 = tskasm-prep 快照 +
+`PackIneqTskXLLIPLS`/`HullTree`/`C1965189142aHull` 先例/CertTM `atan1_box`。
+② `certtm2-emitter-w1`：CertTM2/d2B 生产发射器 Python 化——按 jet3-pre WBS +
+g4port 原型 13 脚本生产化（C1 供给器优先、s 档参数化、复用 `tmexact.py`）；
+对 3 pilot 叶自校验（叶数 81/60/47 一致性、300 点采样零违例、确定性逐字节 diff）；
+SCHEMA 逐字段对齐未来 Lean checker 消费面；成品以 `pipeline/` patch 交编排者落库。
+计算 ≤6 CPU·h/≤2 worker、确定性硬要求、24 h 止损。
+③ 在飞盘点：lean = kernel 波 + ztgmain（2，满）；零 lean = math5-w1（等编译窗口）+
+本双车道；总 5 车道。下一条：续1197。
 
 - **2026-11-16（18:15，续1195）**：**ztgmain 迭代慢诊断 + 四条加速令（用户问「怎么这么慢，有办法就告诉他」）**。
 ① 诊断：Kit A 自 12:34 磨 ~5.5 h；`ZTGDihKit.lean`（470→510 行）每轮全量重编
