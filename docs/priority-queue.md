@@ -95,18 +95,16 @@
 ---
 
 
-## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w2`（五债连打续任，单 lean 走护栏）+ `asm-precheck-w1`/`certtm2-emitter-w1`（零 lean）；math5-w1 交班、调研三车道已收线）
+## 1. 在飞（2026-11-16：kernel 波 + ztgmain Kit A（二 lean）+ `math5-w2`（五债连打续任，单 lean 走护栏）+ `certtm2-emitter-w1`（零 lean）；asm-precheck 已收线；调研三车道已收线）
 
 > **2026-11-16 18:45 双零 lean 车道发车（用户批「A b」）**：
 > ① `asm-precheck-w1`——**tskasm 装配预检**：读 202 模块 + 消费端，纸面解决唯二
 > TODO（`tsk_atan1_eval` 桥 rfl/simp 判定、`tsk_box_eq := rfl` 核对，各带置信度与
 > fallback）+ 落地 runbook（编译序/分级探针/闸 checklist/逐段时间预算）+ 风险表。
 > 目标：kernel 波收线后的装配窗口从「5–8 h 探索」压成「照单施工」。零 lean。
-> ② `certtm2-emitter-w1`——**CertTM2/d2B 生产发射器 Python 化**：按 `jet3-pre` WBS +
-> g4port 原型 13 脚本生产化（C1 供给器优先、s 档参数化、复用 `tmexact.py`），
-> 对 3 pilot 叶自校验（叶数一致/300 点采样零违例/确定性逐字节 diff）+ SCHEMA 文档
-> （逐字段对齐未来 Lean checker 消费面）。成品 = `pipeline/` patch 交编排者落库。
-> Gate-0 判 GO 后 Lean 侧开工时发射器即现成。零 lean、≤6 CPU·h、确定性硬要求。
+> **⇒ 19:07 收线（见 续1198）**：双 TODO 判 `rfl`（HIGH，AST 逐字节对拍）；**抓到
+> 阻断级缺陷 A**（6,612 条 `.leaf` 首实参=模块名）+ B（203 stale shard）+ C（Close
+> 缺 set_option）——三缺陷编排者已按其命令当场修复（`tskasm-prep-w1/FIXES-APPLIED.md`）。
 
 > **2026-11-16 17:07 `math5-w1` 发车（用户批「维护一个车道做这五条」）**——五债连打
 > 滚动车道，顺序 = **corner → sqrt8 → wt2a → wt1 → iyou**（同族配方先易后难，
@@ -1112,6 +1110,28 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（19:25，续1198）**：**`asm-precheck-w1` 收线（零 lean，1.5 h）——装配预检抓到阻断级缺陷 + 双 TODO 判 `rfl`；三缺陷编排者当场修复**。
+① **双 TODO 判定 = 均 `rfl`（HIGH 置信，纸面对拍）**：TODO 1 决定性证据 =
+`TskXLLIPLSAtan1Base` AST 体 `.atan1K→.arctanK` 归一后与 `TskXLLIPLSBase` 的
+`TskXLLIPLSExpr` **逐字节相同**（各 164,385 字符 diff=0）；fallback 序 rfl → dsimp
+only → simp only 写死。TODO 2 = `TskXLLIPLSBox` 是平铺字面量 def 与 `tskCertBox`
+体逐字节同（12 组全同），rfl 微秒级。最终裁决 = runbook P0 分钟级探针（探针文件已交付）。
+② **缺陷 A（阻断级）**：生成器 `03_emit_assembly.py:252` 把全部 **6,612 条 `.leaf`
+首实参写成模块名**（`PosTree.leaf` 需要 `Fin 6 → DInterval` 盒项 `kBox<tag>`）⇒
+199 shard 首编必炸 unknown identifier；validate.py 只查第二实参故漏检。
+**缺陷 B**：shards/ 混入 203 个 cap-24 stale 残file（T200..T402）。
+**缺陷 C**：Close 文件缺深 AST 所需的两行 `set_option`。
+③ **编排者当场修复（按车道逐字符命令）**：sed 199 shard → `.leaf kBox` 6,612 处、
+残留 0；删 T200..T402 → shards 199；Close 补 `maxHeartbeats 0`/`maxRecDepth 1000000`。
+记录 = `tskasm-prep-w1/FIXES-APPLIED.md`（MANIFEST 402 条勘误为 199；落地以修复后
+现场重算 sha）。**装配前置 0.5 h 已完成，落地起点 = P0 探针。**
+④ **runbook 关键路径**：净装配 **≈3–5.5 h 串行**（原估 5–8 h 下缘）——shard 波
+199×10–60 s = 1.7–3.3 h 是唯一大头；全程 1-lean + orch_guard + PPID 自检；闸
+checklist 含双 `#print axioms` 亲跑、SORRIED 53→52 对账、585 native 集不变断言。
+⑤ 其余审计零意外：import DAG 无环逐边核对、6,612 tag 集合双向差 0、命名空间无撞名、
+PosTree↔HullTree 七件同构、消费端签名核对无误。交付 `asm-precheck-w1/` 五件。
+下一条：续1199。
 
 - **2026-11-16（19:06，续1197）**：**`math5-w1` 交班（上下文预算有序收束，非结构性卡死）→ `math5-w2` fresh 续任**。
 ① **主仓完整性事故（已自愈，编排者已亲核）**：前代因 shell cwd 重置一次相对路径写入

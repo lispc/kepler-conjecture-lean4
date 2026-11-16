@@ -335,6 +335,12 @@
   decide 位点仅 397，可编译源已生成；`VALIDATE_OK` 174,135 项 0 失败；
   装配净预算 **5–8 h**（kernel 波收线后）；唯二 TODO = `tsk_atan1_eval` 桥与
   `tsk_box_eq := rfl` 复核。
+- **2026-11-16 19:25 装配预检收线**（`asm-precheck-w1`，零 lean）：双 TODO 纸面判定
+  **均 `rfl`**（HIGH 置信；AST 逐字节对拍，最终裁决 = P0 分钟级探针）；**抓到阻断级
+  缺陷 A**——6,612 条 `.leaf` 首实参被生成器写成模块名（validate.py 漏检），另
+  203 个 cap-24 stale shard 与 Close 缺 set_option——**三缺陷已由编排者按车道命令
+  当场修复**（`tskasm-prep-w1/FIXES-APPLIED.md`）；落地 runbook 净装配
+  **≈3–5.5 h 串行**（shard 波 1.7–3.3 h 为大头），落地起点 = P0 探针。
 - **命名空间注意**：叶定理在模块根命名空间（`namespace Kepler.Interval.Cases`
   已闭合）⇒ 消费/探针写 `tskaJXY_xllipls_p_leaf<idx>_check/_pos`；辅助 def
   `kParams*/kBox*` 才在 `Kepler.Interval.Cases` 下。
