@@ -15,6 +15,8 @@
   [`history/changelog-archive.md`](history/changelog-archive.md)。旧队列/战术/J 战役表在
   [`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
+- [`handoff-2026-11-16.md`](handoff-2026-11-16.md) — **2026-11-15/16 两日收获总览**
+  （TSKAJXY 全盒战役、CertTM2 引擎路线、ox3q1h/ZTGIJCF4/recost/audit 判词、排产队列）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
 - [`DECISIONS.md`](../DECISIONS.md) — 用户裁决与长期政策（根级唯一 current 文档）。

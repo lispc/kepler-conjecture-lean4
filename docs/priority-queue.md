@@ -93,7 +93,13 @@
 ---
 
 
-## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1`；audit/tskasm/g4port/g4hol 等已收线）
+## 1. 在飞（2026-11-16：`rulep-fullbox-kernel-w1` + `ztgmain-w1` Phase 1 Kit A（二 lean 并行）；audit/tskasm/g4port/g4hol 已收线；`handoff-2026-11-16` 收获总览已落）
+
+> **2026-11-16 10:45 `ztgmain-w1` Phase 1 发车（用户批「二 lean 也行，挑轻负载」）**：
+> Kit A 编译——`ZTGDihKit.lean`（~250 行通用）+ `NliBanksZTGIJCF4Dih.lean`（4 箱 dihY
+> 下界，s=11/5 与 s=6/5）；**自锁 `/tmp/lean_lock_ztg`，不占 kernel 波的
+> `/tmp/lean_global_lock`**；护栏 = 总 lean RSS ≤20 GB 且 pressure <2；单文件
+> 5–15 min / 5–7 GB。γ4 侧（Kit B）等 Gate-0 Jet3 裁决。
 
 > **2026-11-16 10:36 `nli-rest-math-audit-w1` 收线（纯 Python）**：7 条 MATH/MATH-FARM
 > 判词——**3 条 ENGINE**（`FHBVYXZa` 两支即足（rad2 冗余）、`FHBVYXZv2a`、
@@ -1049,6 +1055,11 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-16（10:45，续1185）**：**收获总览落档 + `ztgmain-w1` Phase 1 复跑（用户批「整体更新文档；二 lean 也行，挑轻负载保持一个 lane」）**。
+① **`docs/handoff-2026-11-16.md` 新建**：两日窗口 consolidated 收获——状态快照（SORRIED 53/根面不变）、TSKAJXY 战役全程（成本轨迹 333s→27s、回放/预扫/切叶/内核波/装配就绪）、引擎路线（g4hol 判词 + g4port GO 条件式 + Gate-0 Jet3）、ox3q1h（46 线性/联合角点/CertTM2 备选）、ZTGIJCF4（dihY 多项式路线 + Kit A）、recost/audit 判词、审计副产物、排产队列；`docs/README.md` 导航补指针。
+② **`ztgmain-w1` Phase 1 复跑**（resume 原 agent）：Kit A 编译（`ZTGDihKit`+4 箱 dihY，~600 行）；**调度变更 = 二 lean 并行**：自锁 `/tmp/lean_lock_ztg`、不占 kernel 波全局锁、护栏总 lean RSS ≤20 GB 且 pressure <2（AGENTS §4 2026-11-13 规则）；单文件 5–15 min/5–7 GB；γ4 侧（Kit B）不做，等 Gate-0。
+③ kernel 波同刻 ~600/5,212（0 FAIL）。下一条：续1186。
 
 - **2026-11-16（10:36，续1184）**：**`nli-rest-math-audit-w1` 收线——7 条 MATH/MATH-FARM 判词与前 3 推荐工单**。
 ① ENGINE 三条：`FHBVYXZa`（**分支结构改写：主支 ∨ eta126²<1.34² 两支即足，rad2 冗余**；minimax +7.677e−3 等振；80–260 叶/1.4–4.4 CPU·h）、`FHBVYXZv2a`（接缝最紧 +2.124e−3；100–300 叶/1.7–5.0 h）、`QITNPEA5400790175a`（主支 min −7.2693e−3 VERIFIED-iv 在双折点角 (2.52,2,2,2.52,2,2)；minimax +4.121e−3；100–280 叶/1.7–4.7 h）。
