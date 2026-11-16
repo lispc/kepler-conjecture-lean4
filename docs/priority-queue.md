@@ -95,7 +95,20 @@
 ---
 
 
-## 1. 在飞（2026-11-17：kernel 波 + `math5-w3`（五债连打续任）；jet3-g0 已收线 = **Gate-0 判 NO-GO（边缘）**；ztgmain/asm-precheck/certtm2-emitter 已收线）
+## 1. 在飞（2026-11-17：kernel 波 + `math5-w3`/`ztgmain-w2`（二 lean 护栏竞争）+ `ox3q1h-nogate-w1`（零 lean）；jet3-g0 已收线 = Gate-0 判 NO-GO（边缘））
+
+> **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
+> ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
+> linarith-ready 线性源生成 + 接线设计；前线 2 = 184 条 γ4 的 **48 盒联合角点表证书**
+> （g4feas 数字：3,456 求值/1,056 去重点/18 条 y4 一维补丁）+ Lean 形状提案
+> （**逐叶 have 链，避免大 conjunction 投影**——ztgmain box5 教训）。大部分零 lean；
+> 36 h 止损。角点表产物对 ZTGIJCF4 γ4 半边可复用同套路。
+> ② `ztgmain-w2`——**ztg 续任**：`ztgG_box5` (c) 路线主攻（生成器逐叶
+> `have hleafN` 链 ~1k 行，一轮可编；(b) 干净重试为备选；`[irreducible]` 禁止）+
+> `NliBanksZTGIJCF4Dih` 四箱收口（`dihY ≥ 1.008/0.875` 落地）。数值证书
+> 32 线 +1218/+684/+684.5 已验证；与 Gate-0 无关；48 h 止损；>15 min/轮触发
+> sorry 探针策略（w3 实战有效）。推荐把 box5 链放 `NliBanksZTGIJCF4Dih` 私有化
+> （不动已落库 Kit A，零回归风险）。
 
 > **2026-11-16 21:18 `jet3-g0-w1` 发车（用户批「好」，槽位建议采纳）**——**Gate-0 判定
 > pilot**（定 52 条 nli 债里 43 条的路线生死，24 h 止损）：
@@ -1122,6 +1135,17 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ① **实测偏差（推翻续1041②）**：15:08 的「0 车道进程、0 lean」在 15:11 后即失效——`urrcellbody-w7` 15:11 直编 r1（`s2_fix_r1.log`，RC=1：`p13u_erInter`/`p13u_cballEr` 把 `Prop` 当 `V3` 传，属小类型修复）、15:19 又起 `s3_full_r0` 全量编译；`tmxllipls-w1` 15:11/15:12/15:14/15:19 四次自重启（`pkill -f A00.lean` 后重跑 smoke_seq，console5–8），**probe_A0 样本每轮被覆盖，当前 8/48 行、全 NEG**（此前 22/22 NEG 已随重启丢失）。两只均为上代会话残留，非本会话 subagent，只能杀进程不能 resume；按用户令留给 kimi code 侧。
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
+
+- **2026-11-17（06:49，续1204）**：**双车道发车（用户批「都发」）——Gate-0 挂分支后重排，攻无 gate 9 条里的最大两件**。
+① `ox3q1h-nogate-w1`：ox3q1h（230 合取，最大单笔债）双前线——46 线性源生成 +
+184 γ4 的 48 盒联合角点表证书（1,056 去重点 + 18 y4 补丁）；Lean 形状提案吸取
+ztgmain box5 教训（逐叶 have 链）。零 lean 为主、36 h 止损。
+② `ztgmain-w2`：`ztgG_box5` (c) 路线（逐叶 have 链 ~1k 行）+ 四箱 dihY 收口；
+与 Gate-0 判决无关（dihY 半边是共同前置）；48 h 止损；对不起的 `[irreducible]`
+路线明令禁止。
+③ lean 盘面：kernel 波 + math5-w3（§8 收尾）+ ztgmain-w2（护栏窗口竞争）——
+三 lane 二 lean，护栏错峰已验证可行。Gate-0 战略分叉（A/B/C）仍待用户裁决
+（两新车道不依赖它）。下一条：续1205。
 
 - **2026-11-17（02:10，续1203）**：**`jet3-g0-w1` 收线——Gate-0 判定 = NO-GO（边缘、外推口径）；修复 patch 落库 `ca1c7677`（编排者 apply+冒烟）**。
 ① **判定行（按 jet3-pre §3.3 预定表）**：certOk（TM-hull C1）= **132/188 ≥100 线
