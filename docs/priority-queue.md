@@ -1241,7 +1241,7 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
   排产队列与 §7.1 候选；`docs/README.md` 导航补指针。
 ⑥ kernel 波同刻 3,268/5,212（62.7%）。下一条：续1214。
 
-- **2026-11-17（14:55，续1214）**：**巡检轮 14:53 + 15:23 + 16:23 三轮合并，四在飞全存活，零异常**：kernel 波 3,373→3,463→**3,557**/5,212（68.3%，DONE 目录 16:22 持续增长，36 s/叶，ETA ~11-18 09:55，FAIL 2 不变）；math5-w4 件 1 已落库后 resume 件 2（sqrt8 侦察探针 probe_c3f–c3i.py 16:17–21 活跃）；ox3q1h probe v27→v35 迭代中（16:16）；gate0-measure p3/p1 双 worker 持续（16:11）。护栏 pressure 1；三轮均无新 DELIVERY/patch。下一条：续1215。
+- **2026-11-17（14:55，续1214）**：**巡检轮 14:53 + 15:23 + 16:23 + 17:23 四轮合并，四在飞全存活**：kernel 波 checkpoint 3,373→3,463→3,478→**3,523**/5,212（67.6%，36.4 s/叶，ETA ~11-18 10:30，FAIL 2 不变；DONE 目录文件名=叶号非序号，进度一律以 STATUS checkpoint 为准）；math5-w4 件 1 落库→件 2 结构停轮（基石已落）→路线 (a) resume（probe10/probe10b.lean + probe_c3j.py 17:19–23 活跃）；ox3q1h S1 落库→S2 resume（probe_rebate_v1→v2 17:03–15）；gate0-measure p3/p1 双 worker CPU 持续 ~97%（p3.log 16:11 后 72 min 无 checkpoint——进程活、深节点中，下轮关注）。护栏 pressure 1。下一条：续1215。
 
 - **2026-11-17（15:55，续1215）**：**🎯 `math5-w4` 件 1/5 收线落库 `83144d4d`——`nliCell3QZECFICwt0corner` 真证接线，**锥内 SORRIED 53→52**（math5 战役首笔 −1；仪器定档在飞）**。
 ① 交付（快照 `math5-w4/` 全齐，patch blob `6e853f3c0c`）：`NliBanks18.lean` 新文件 2,970 行——§8 mega-lemma 按 w3 诊断拆 **15 独立引理**（零 `set`、每件独立 maxHeartbeats，消除 unifier 指数交互）；solA/B/C + dihA/dihY×2 六槽 HasDerivAt → 组合 → pc3-unfold → 单调下界 **0.0094**；新引理 `nb18_dih_swap23`；Assembly.lean +3/−1（import + corner 接线，**删除面恰 = sorry 行、陈述逐字未动**）。
@@ -1259,7 +1259,12 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ② **四条基石落库 `308d0536`**（`nb18_s8_ups_eq`/`dlt_eq`/`ups_pos`/`eta_dlt_neg`，+90/−1，private）：编排者闸全过（apply PASS / RC=0 / 0 err / **文件内探针亲验 4/4 恰标准三零 sorryAx**——private 外部探针不可见，探针行尾插后逐字节还原）；cone-neutral，Assembly:416 未动零新 sorry。
 ③ **负结果与量化**：单调性路线证死（`d/dy5` 在 (2.6508,2.6,2) = **−0.0051<0**；hstep 本身仍真，全盒扫描 0 违反）；证书缺口 = 均匀矩形链 −0.0116 / 单 τ-二分 −0.0072 / 角点邻域 nb12 二次括弧可闭 +0.0035。
 ④ **路线裁决**：**(a) 子区域格 + 联合 nlinarith 电池（est. 600–900 行）= GO**（纯 MATH 纪律内，车道已 resume）；(b) matan 交替级数下界引理 = 备选升级（(a) 预算内失败时启用）；(c) certtm 解冻 = 用户保留不动。**件 3（wt2A）同构（析取+eta，盒更宽）**——准其与件 2 同专班接力。下一条：续1218。
-⑤ **巡检勘误（口径）**：kernel 波 DONE 目录**文件名 = 叶号非序号**——续1214 报「3,557/5,212（68.3%）」有误，16:23 实为 3,463/5,212 = 66.4%；16:53 STATUS checkpoint = 3,478/5,212 = 66.7%（ETA ~11-18 10:15）。后续一律以 STATUS checkpoint 为准。
+⑤ **巡检勘误（口径）**：kernel 波 DONE 目录**文件名 = 叶号非序号**——续1214 报「3,557/5,212（68.3%）」有误，16:23 实为 3,463/5,212 = 66.4%；16:53 STATUS checkpoint = 3,478/5,212 = 66.7%（ETA ~11-18 10:15）。后续一律以 STATUS checkpoint 为准。下一条：续1218。
+
+- **2026-11-17（17:35，续1218）**：**`math5-w4` 件 2 首探失败停轮——裁阶梯 (a1)→(a2)/(a3)，预算帽与升级线明示**。
+① **失败点（UNRESOLVED 特征化）**：路线 (a) per-cell 链在 cell1（y5,y6∈[2,2.05] ∧ ΔT≥0）不可闭——a2 分母多项式矩形下界 7.65（远角 y4=2.83）与 S2-atom 上界（matan θ≈1 → S2≈0.13）**反相关到不可同格**，矩形链 −0.0423 vs 真值 +0.0037（矩形损失 0.046）；联合 nlinarith 的抽象 probe 有语义偏差（u=y5² 连接被抽象掉），真实语境待实测。
+② **裁决**：**(a1) hd-耦合 a2/a1/a3 下界（nlinarith 带 ΔT≥0 假设，NliBanks18 真实语境实测）= GO**（研究性单点试探 ≤1 节）→ 成则 (a2) 9-cell 电池全量（机械 ≤1 节）/ 败则 **(a3) matan 交替级数下界引理**（atan s ≥ s−s³/3+s⁵/5−s⁷/7 + 重试，1–2 节）；(c) certtm 解冻仍用户保留不动。**止损帽：a3 再败 = 件 2 停轮升级用户**（选项：挂起 sqrt8 换 wt2A 先打 / 解冻 (c) / 接受负结果改排产）。
+③ 数值底账不变：全盒扫描 c3Main>0 处处成立（min = 角点 0.003745），数学真、仅证书构造难。车道已 resume (a1)。下一条：续1219。
 
 - **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
 ① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check
