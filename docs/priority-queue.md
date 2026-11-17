@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-17 午后：kernel 波（~65%）+ `math5-w4`（件1 corner 已落 `83144d4d`、件2 sqrt8 续打）+ `ox3q1h-nogate-w1`（角点表 pilot）+ `gate0-measure-w1`（实测 s*）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-17 傍晚：kernel 波（~68%）+ `math5-w4`（件1 corner 已落 `83144d4d`、件2 sqrt8 续打）+ `ox3q1h-nogate-w1`（S1 Lin46 已落 `930d0dd1`、S2 凹性包络续打）+ `gate0-measure-w1`（实测 s*）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1241,13 +1241,18 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
   排产队列与 §7.1 候选；`docs/README.md` 导航补指针。
 ⑥ kernel 波同刻 3,268/5,212（62.7%）。下一条：续1214。
 
-- **2026-11-17（14:55，续1214）**：**巡检轮 14:53 + 15:23 两轮合并，四在飞全存活，零异常**：kernel 波 3,373→3,403/5,212（65.3%，35.4 s/叶，ETA ~11-18 09:10，FAIL 2 不变）；math5-w4 sec8 part1–6 迭代至 compile31 + `NliBanks18.lean` 整编 153 KB 落快照（15:21）；ox3q1h probe v27→v31 迭代中；gate0-measure p3/p1 双 worker 持续（15:08–15:10）。护栏 pressure 1；无新 DELIVERY/patch。下一条：续1215。
+- **2026-11-17（14:55，续1214）**：**巡检轮 14:53 + 15:23 + 16:23 三轮合并，四在飞全存活，零异常**：kernel 波 3,373→3,463→**3,557**/5,212（68.3%，DONE 目录 16:22 持续增长，36 s/叶，ETA ~11-18 09:55，FAIL 2 不变）；math5-w4 件 1 已落库后 resume 件 2（sqrt8 侦察探针 probe_c3f–c3i.py 16:17–21 活跃）；ox3q1h probe v27→v35 迭代中（16:16）；gate0-measure p3/p1 双 worker 持续（16:11）。护栏 pressure 1；三轮均无新 DELIVERY/patch。下一条：续1215。
 
 - **2026-11-17（15:55，续1215）**：**🎯 `math5-w4` 件 1/5 收线落库 `83144d4d`——`nliCell3QZECFICwt0corner` 真证接线，**锥内 SORRIED 53→52**（math5 战役首笔 −1；仪器定档在飞）**。
 ① 交付（快照 `math5-w4/` 全齐，patch blob `6e853f3c0c`）：`NliBanks18.lean` 新文件 2,970 行——§8 mega-lemma 按 w3 诊断拆 **15 独立引理**（零 `set`、每件独立 maxHeartbeats，消除 unifier 指数交互）；solA/B/C + dihA/dihY×2 六槽 HasDerivAt → 组合 → pc3-unfold → 单调下界 **0.0094**；新引理 `nb18_dih_swap23`；Assembly.lean +3/−1（import + corner 接线，**删除面恰 = sorry 行、陈述逐字未动**）。
 ② **编排者闸（亲跑）**：`apply --check` PASS（双侧 a/lean）；NliBanks18 直编 **RC=0 / 0 error**（仅 deprecation/unused linter 警告）；Assembly 岛编 **RC=0 / 46.9 s / 0 error**（sorry 警告恰余 :403 主件 / :416 sqrt8 / :422 wt2A，corner :408 已净）；**`#print axioms` 亲测三件全 = `[propext, Classical.choice, Quot.sound]`**（`nb18_bank` / `nb18_bank_of_mono` / `Assembly.nliCell3QZECFICwt0corner`，零 sorryAx）；`:= sorry` 59→58；根面 `#print axioms` **589 行 = 585 native + 标准三 + sorryAx**（计数与基线一致；sorryAx 因余 52 债仍在，预期）。
 ③ 车道自报四条新坑（拟入 §7.1）：`error(lean.unknownIdentifier):` 格式 `rg "error:"` 抓不到（compile24–29 六轮漏检）；`refine ⟨_, ?_, ?_⟩` 对 `∃ d, HasDerivAt .. ∧ ..` 匿名占位符合成失败（slot-witness 须显式写导数项）；by-block 多 tactic `;` 后换行 parse 断裂 + linarith 不吃未投影 ∧；数学修正一处——solC 槽矩形下确界 0.0412（原 0.0426 为假），slot 边界 −0.0416→−0.0403，终界 0.0094 仍成立（链余量 0.0106−0.0094）。
 ④ **地图定档（基线 AP）**：`reachmap_83144d4d` TSV 5,978 行换装——K_REACH **2,101,198**（+113）/ **SORRIED 52**（清单 diff：closed 恰 `{nliCell3QZECFICwt0corner}`、added ∅）/ K_AXIOM **585**（0/0）/ MODULES 5,322（+4）/ UNIVERSE 2,113,452（+366）/ COVERAGE **99.420190%**（−0.0119pp，证明体入 universe）；口径 II 39,092 / 52 / 585 / 49,789；**52 = Assembly 52（51 `nli*` + 1 hLP）+ Text 0**；入口层六件（pq 头/§0 M3/AGENTS §1/README×2/map.md 基线 AP 节/hf-map 四十八）同批刷。⑤ 车道已 resume 件 2/5 `nliCell3QZECFICwt0sqrt8`（复用全套槽件与配方）。下一条：续1216。
+
+- **2026-11-17（16:50，续1216）**：**`ox3q1h-nogate-w1` S1 停轮收线落库 `930d0dd1`——前线 1 = `Ox3q1hLin46`（46 条 LINEAR 合取纯 linarith 真证，cone-neutral）；前线 2 = 184 条 γ4 角点表证书数据全量就绪**。
+① **S1 落库**：`Ox3q1hLin46.lean` 新文件 875 行/46 定理（`Kepler.Text.ox3q1hLin_000..225`，`ox3q1hP25` LINEAR 合取逐字陈述）——盒多面体纯 linarith，精确有理括号 `hminus∈[1.23175,1.23176]`（NliBanks17 树证）+ π 1e-20 括号 + h0/hplus 常数方程；精确有理余量 46/46>0（min **1.4156e-7**@idx100，与 g4feas float 差 <5e-6）。**编排者闸**：patch 系编排者代抄生成（车道未落 patch.diff，§7.1-23 形态记勘误）；apply PASS 双侧 a/lean；直编 RC=0/0 err 14.2 s；**46/46 `#print axioms` 亲验恰标准三零 sorryAx**；cone-neutral（SORRIED 52 不变）。
+② **前线 2 交付（数据层，未落库）**：48 盒 outward 有理盒 × 64 角点去重 **1,040 点**（比 g4feas 1,056 尖、无分支化更简）；逐点 dyadic 证书 60 dps + 外向 2^-60 舍入，float 交叉校验 1040/1040；**逐合取角点表下界 184/184 全正**（最紧 ≈3.02e-4）；**凹性普查口径修正：46 条凹性破（g4feas 判 18）**——tm1 族 B·∂²dihY 净凸残余，统一解法 = 曲率 rebate（KREBATE/SPLIT_PLAN/Y4_PATCH 三表证明 rebate 后 184/184 全正，min 1.33e-4）；Lean 形状模板 `Ox3q1hCornerPilot.lean` 1,716 行/68 定理——B1 族编译 CLEAN，B3 尾部（P0884 π/4-平移）剩 4 组机械残余（探针 14 轮 v5–v35 留档，修复路径 1–2 轮）。
+③ **施工预算（NOGATE_PLAN §6）**：S2 凹性包络基座（3–6 k 行）→ S3 角点值 bank（~1,350 基础点 + ~10 k 劈分点，30–60 lean-h）→ S4 48 盒装配（8–15 k 行）→ S5 Assembly 接线（230 分量）；总 lean 40–120 h。车道已 resume S2。下一条：续1217。
 
 - **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
 ① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check
