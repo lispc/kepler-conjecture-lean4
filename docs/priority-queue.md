@@ -1280,6 +1280,11 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
 ② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
 ③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
+- **2026-11-18（00:15，续1231）**：**`ox3q1h-s3-fresh-w1` S4 装配停轮落库 `2779a9da`——GateBatchA–D 四新文件（10,627 行，**230/230 gate 全绿**，条件形 cone-neutral）**。
+① 四批 gate：A（0–59）/B（60–119）/C（120–179）/D（180–229）；LIN 46 条闭式 `cN_gate := ox3q1hLin_NNN`，G4 184 条 = 陈述逐字 + 两供给槽（hsl/hcorner = landed chain 原前提形，S2 供给车道接口）；idx41/46/76 按 41b2/46b2/76b3 表忠实版装配；margin 函数去重 125 个 `cX_mfun` 跨批无歧义名。生成器 `emit_gate.py`（陈述逐字取 conj230_verbatim.json）+ S4_MAP.tsv 映射表。
+② **编排者硬结论两条**：① **1230⑤ 算术差未复现**——1104/1104 端点×hminus 双值精确 Fraction 求值 0 mismatch、计数 230 = 46+184 ✓，S5 分量清单无需改；② **19 行 KREBATE INFEASIBLE 是真数据**（unsplit `B−ΣR<0`：1,6,11,16,41,46,51,56,61,66,71,76,96,111,116,121,126,161,216）——gate 已加第三槽 `hfeas`，165 行可行性 gate 内 norm_num 逐条证毕；19 行最终闭合需劈分网格链变体（**S4.5**）。
+③ **编排者闸（亲跑）**：四 patch CHECK PASS（双侧合规）；按序直编 RC=0/0 err；**audit 230/230 恰标准三零 sorryAx**。SORRIED 52 不变。
+④ 剩余排产：S4.5 劈分链车道（19 行）→ S2 供给车道（|f''|≤K 包络 + 角点 bank 的 hsl/hcorner 供给）→ S5 接线（`⟨c0_gate, c1_gate hsl₁ hcorner₁ hfeas₁, …⟩` 230 分量形）→ **−1 落点**。车道已 resume S4.5。下一条：续1232。
 - **2026-11-17（23:59，续1230）**：**`ox3q1h-s3-fresh-w1` S3 全量停轮落库 `6730ea89`——ChainBatch3/4/5/6 四新文件（5,118 行/136 条 chain，cone-neutral），**S3 角点值链全绿收官**（新鲜车道 v1 一轮过零返工）**。
 ① 范围勘正（机器证据）：CONJ_TABLE idx 跳 5 的倍数，工单「idx 60–183 约 124 条」实余 = **idx 61–229 共 136 条**（[60,183] 实有 99），按 S3 全量口径全做；Batch3（61–99）/B4（101–139）/B5（141–179）/B6（181–229），import 链 B6→B5→B4→B3→ChainBatch2。
 ② 生成器 `emit_chain.py`：数值全从 KENV/CONJ_TABLE/BOXES_EXACT.tsv 逐字生成零手写；**副产品 = 136×6 norm_num 桥全过，KENV `R_i` 精确分数对 61–229 全量核验，叠加 landed 1–59 全表核验完毕**（S4 直消费）。唯一撞名 idx 76 与 Chain3 旧试点版 → `chain_idx76b3`（b3K76/b3B76/b3R76，下游消费 b3 版）。
