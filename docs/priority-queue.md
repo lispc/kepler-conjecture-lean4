@@ -1136,6 +1136,23 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-17（10:10，续1208）**：**`housekeeping-w1` 收线落库 `1295d736`——PICK-3 清仓一个 patch（5 文件 92+/8−，全部注释/文档级，SORRIED 与 sorry 面不变）**。
+① betaBumpLb SF **§110 立案待审**：考古 = 源发现 `nli-triage-w1` AUDIT A-4（pq 续1152
+④ SUSPECT-2）；HOL 正本实读证实 Lean 转录逐字忠实（ineq.hl:459-468 模板字面），但
+`:821-823` 变更史注记其 (0,1,0,0) 形 false（2010 年两次改形）——分级 **B**（转录
+忠实·数值真 +0.0274·保真记账级），正本裁决点 = HOL 注记 vs 数值实测的口径张力。
+② 四处过时注释（编排者四文件亲验 0 error + Assembly sorry 面 58 不变）：
+`NliBanks17:13-15` Euler 锚注记（**真证落库点勘误 = `ac1efea1a`，非工单所写
+`1b401275`**）；`NliBanksZTGIJCF4Route`（**工单路径勘误：实为此文件非
+`Text/ZTGIJCF4Route.lean`**）头块注记；`PA25:12029-12032` 两处欠证 → 现况零欠证
+（sym23=:12461、ztg4_ALT=:13537 均真证）；`Assembly:1893-1897` ox3q1hP25 docstring
+→ 纯证书债表述。
+③ **范围外报备**：`PA25:595` 文件头「剩余裸欠证 = 86」同为历史口径（现零）——
+下轮 housekeeping 候选。
+④ 验收：编排者四文件亲验 0 error（lake env 直编）+ Assembly sorry 面 58 不变 +
+车道改前/改后警告多重集 IDENTICAL；comment-depth 前后一致。**PICK-3 挂账全清**。
+（巡检轮 20–23 期间无异常未单独记档；下一条：续1209。）
+
 - **2026-11-17（09:57，续1207）**：**双车道发车（用户批「A b 一起发」）**。
 ① `ixpotpa-poly-w1`——**`nliRestIXPOTPA` poly 档收口**（recost 唯一 ≤10 CPU·h 条目
 0.59；无 gate 9 条之一）——scout 三选一判定（READY/EMIT-THEN-WIRE/BLOCKED）→
