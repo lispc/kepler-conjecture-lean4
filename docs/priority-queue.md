@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-17 晚：kernel 波（~70%）+ `ox3q1h-nogate-w1`（S1 `930d0dd1` + S2 Batch1 `6fc8db4b` 已落、S2 包络余量续打）；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-18 早：kernel 波 **DONE 5,207/5,212**（剩 FAIL 重试/收尾）；`ox3q1h` **S2b Batch1 已落 `8326ca5e`**（`Ox3q1hS2bBox5CornersA–D` 四新文件 42,882 行/1,672 定理全绿，cone-neutral），s2b-close 车道停轮；S2a margin″ 装配等 SF 裁决；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1323,6 +1323,11 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（07:50，续1234）**：**`ox3q1h-s2b-close-w1` 收线落库 `8326ca5e`——S2b Batch1 四角点 bank 全绿（`Ox3q1hS2bBox5CornersA–D` 四新文件，42,882 行/1,672 定理，cone-neutral）**。
+① **编排者闸（亲跑）**：4 patch 双侧 `a/lean… b/lean…` CHECK PASS + 应用后逐字节 cmp 一致；4 文件**岛协议 RC=0/0 err**（A 108 s / B 102 s / C 104 s / D 91 s）+ **模块 build PASS**（A 16:12 含闭包重编 8,730 jobs，B/C/D 1:31–1:49）；每文件 16 角点×{g4_bounds, corner} = **128/128 `#print axioms` 亲验恰标准三零 sorryAx**；`rg 'sorry|native_decide|^axiom'` 仅头注 2 行。主仓 tracked 零改动（唯一提交 = 四新文件）。
+② **前代修错图三处机器证据勘误**：(a) 角点 5755/5759 不是 mm 链级联——是 **B1 `sgn≤0` 分支缺 pi/4-shift 路径**（x=0.6868 的 32 项级数尾部 x⁶⁵/65≈3.8e-13 超 1e-14 窗，`norm_num` 正确拒绝假证书）；全 64 角点普查（census_s2b.py）确认恰 3 处需 shift，else 分支补 `cvp_atan_shift` 后即绿。(b) AB 真病因 = `constructor` 只劈一层 + `rw` 重写目标内**全部** `?≤?/pi` 模式（前代未定位）；改 `refine ⟨?_,?_,?_,?_⟩` + 显式 norm_num 数值桥。(c) mm 链弃 mul_le_mul/裸 nlinarith，改**确定性证明**：`mul_nonneg` + norm_num 桥 + 纯 linarith，端点字面前馈重算（SLO→T_HI→M1_LO→A_LOT→B_LOT 逐级 floor/ceil）使数值桥按构造精确。
+③ **新发现（数值，影响后续批）**：cert_g4 用 landed 松 A/B 常数比紧字面量松 ~2.5e-7 ⇒ 最紧角点 C41M02/C41M04（真 margin 0.0028895843 = 预检值）证书下界差 b2B41 **4.1e-10**；改由紧 A/B 字面量（A_LOT/A_HIT/B_LOT/B_HIT）算 g4 括号后，64 角点 margin slack 全 ≥1e-9（最紧 +2.03e-8），emitter 内逐角点断言 fail-loud。**下一棒注意**：若未来批收更紧 b2B41 或更宽 box，先跑 census + margin tripwire。
+④ **剩余路径**：S2b 其余批（48 盒剩余角点 bank 量产）→ S2a margin″ 装配（等 SF 槽形裁决）→ S5 接线（230 分量形）→ **−1 落点**。S2b 已有 64/1,040 去重点角点（Batch1）× 其余批同发射器。下一条：续1235。
 - **2026-11-18（06:40，续1233f）**：**AGENTS §7.1 雷区表扩充（用户指令"重要结论经验落实到文档中"）——新增 27–35 共 9 条**，全部本日 ox3q1h 战役实证。§7.1 候选待批清单清零（全部入表）。27=长上下文退化→fresh session（用户指令+双向实证）；28=HasDerivAt 链嵌套 add 的 HOF 贪心值拆分+hfun 分组括号对策；29=Mathlib 实参序双坑（const_mul (c)(hc) / hasDerivAt_const (x)(c)——#check 先行铁律）；30=Real.sq_sqrt 错引（pow_two+mul_self_sqrt）；31=整值最外层括号；32=生成器整文件重生成>增量正则；33=编排者接管也退化→早停交回车道；34=sync_lean.sh 轮末固化（车道自管交付物镜像）；35=tactic 块行首 `-` 解析为 case bullet。下一条：续1234。
 - **2026-11-18（06:15，续1233e）**：**`ox3q1h-s2a-interactive-w1` S2b 首批停轮（3/4 完成 + 1 项止损，WIP+精确修法落快照）+ SF_DRAFT.md 交付呈用户裁决**。
 ① **SF_DRAFT.md 四节齐备**（现状/反例 y=(3,2,2,2.53,2,2) margin″=1.386>0.864 study 可复现/建议槽形 `∀ j, y j ∈ Icc (b5lo j) (b5hi j)`/下游影响 S5 形状不变）——呈用户裁决，裁决前 hslp 供给挂起。
