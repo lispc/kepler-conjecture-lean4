@@ -1280,6 +1280,12 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
 ② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
 ③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
+- **2026-11-18（01:30，续1232）**：**`ox3q1h-s3-fresh-w1` S4.5 劈分链停轮落库 `8d6b04a8`——7 patch（3 新文件 + GateBatchA–D 修订），**19 行 INFEASIBLE 劈分网格链全落地，230 gate 的 hfeas 死槽全消**。
+① 新件：ChainSplitKit（120 行/2 定理，`hstep_split_m` = k≤−K 变体 M 归纳通用桥：前缀 m 片 IH + 末片 chord-rebate，候选集 S 参数化）+ ChainSplit1/2（939/848 行，19 行的 msplitN/wsplitN/gsplitN/cands_splitN/RSN/feas_split/chain_split 全链）。GateBatchA–D：19 个 cN_gate 槽位升级（hsl→hslp 逐片、hcorner→劈分网格、删 hfeas 死槽——unsplit 可行性为假永不可证），其余 210 行与全部逐字陈述零改动。
+② 消费对齐：idx41←b2K41/b2B41、idx46←K46/b2B46、idx76←b3K76/b3B76（与 41b2/46b2/76b3 同源）；unsplit R41/R46/R76 对这 19 行不可行已弃用（docstring 注明）。
+③ **编排者闸（亲跑）**：7 patch CHECK PASS；按 import 序直编 7 文件全部 RC=0/0 err；**audit 270/270（38 新 + 230 gate）恰标准三零 sorryAx**。SORRIED 52 不变。
+④ 事故记档：GateBatch /tmp 镜像被恢复波回滚一次（v6 假绿）——处置 = 门模式改读 repo 原文重生成 + 波抗备份 + 原子交付，v7 真绿复验。
+⑤ **剩余 = S2 供给（hslp 逐片 ConcaveOn 证书 + 角点 bank 供 hcorner）→ S5 接线（230 分量形）→ −1 落点**。车道已 resume S2 供给批。下一条：续1233。
 - **2026-11-18（00:15，续1231）**：**`ox3q1h-s3-fresh-w1` S4 装配停轮落库 `2779a9da`——GateBatchA–D 四新文件（10,627 行，**230/230 gate 全绿**，条件形 cone-neutral）**。
 ① 四批 gate：A（0–59）/B（60–119）/C（120–179）/D（180–229）；LIN 46 条闭式 `cN_gate := ox3q1hLin_NNN`，G4 184 条 = 陈述逐字 + 两供给槽（hsl/hcorner = landed chain 原前提形，S2 供给车道接口）；idx41/46/76 按 41b2/46b2/76b3 表忠实版装配；margin 函数去重 125 个 `cX_mfun` 跨批无歧义名。生成器 `emit_gate.py`（陈述逐字取 conj230_verbatim.json）+ S4_MAP.tsv 映射表。
 ② **编排者硬结论两条**：① **1230⑤ 算术差未复现**——1104/1104 端点×hminus 双值精确 Fraction 求值 0 mismatch、计数 230 = 46+184 ✓，S5 分量清单无需改；② **19 行 KREBATE INFEASIBLE 是真数据**（unsplit `B−ΣR<0`：1,6,11,16,41,46,51,56,61,66,71,76,96,111,116,121,126,161,216）——gate 已加第三槽 `hfeas`，165 行可行性 gate 内 norm_num 逐条证毕；19 行最终闭合需劈分网格链变体（**S4.5**）。
