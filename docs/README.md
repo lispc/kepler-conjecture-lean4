@@ -61,7 +61,7 @@
 - [`global-reachability-map.md`](global-reachability-map.md) — union 多根快照。
 - [`e2e-tree-visualization.md`](e2e-tree-visualization.md) — 本地树页面数据口径与重建。
 - [`e2e-reachability-map.tsv`](e2e-reachability-map.tsv) — 生成物；
-  **当前 = 基线 AO @`06285994`（2026-11-15：K_REACH 2,101,085 / SORRIED 53 /
+  **当前 = 基线 AP @`83144d4d`（2026-11-17：K_REACH 2,101,198 / SORRIED 52 /
   AXIOM 585；Text 0）**，与 `docs/priority-queue.md` 文件头同口径；
   历史基线叙事看 md 的对应节。
 

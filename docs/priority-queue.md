@@ -17,16 +17,16 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AO @`06285994`（2026-11-15，`nliRestQITNPEA4003532128a` 真证；Text 0）**
-> cone `K_REACH 2,101,085` / **SORRIED 53** / **`K_AXIOM 585`** / MODULES 5,318 /
-> UNIVERSE 2,113,086 / COVERAGE **99.432063%**；口径 II 38,979 / 53 / 585 / 49,423。
-> `docs/e2e-reachability-map.tsv` 已按基线 AO 重写（5,975 行）；manifest `--check` PASS。
+> **当前实测 = 基线 AP @`83144d4d`（2026-11-17，`nliCell3QZECFICwt0corner` 真证 = math5 件 1/5；Text 0）**
+> cone `K_REACH 2,101,198` / **SORRIED 52** / **`K_AXIOM 585`** / MODULES 5,322 /
+> UNIVERSE 2,113,452 / COVERAGE **99.420190%**；口径 II 39,092 / 52 / 585 / 49,789。
+> `docs/e2e-reachability-map.tsv` 已按基线 AP 重写（5,978 行）。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
-> （md5 `246e952c…` 逐字节同）。
-> **SORRIED 53 构成**：**Assembly 53（52 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
-> 较基线 AN：SORRIED 54→53（清单 diff：closed 恰 `{nliRestQITNPEA4003532128a}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +1、UNIVERSE +1、MODULES +1；COVERAGE 几乎不变。
-> 同批资产：`qitnpea-w1` `06285994`（`NliQitnpea` +142 纯代数）；在飞 `guardcons-w1` + `lp-pilot-w1`。
+> （计数与基线一致）。
+> **SORRIED 52 构成**：**Assembly 52（51 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
+> 较基线 AO：SORRIED 53→52（清单 diff：closed 恰 `{nliCell3QZECFICwt0corner}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +113、UNIVERSE +366、MODULES +4；COVERAGE −0.0119pp（证明体入 universe）。
+> 同批资产：`math5-w4` `83144d4d`（`NliBanks18` 2,970 行，件 2/5 sqrt8 在飞复用同套槽件）。
 > **孤儿**：`TameLp.fully_surrounded_perimeter_bound` + LA23 四条（`taum_attains_inf_p23` 等）
 > 文件级 sorry 仍在（锥外、不删不改）；LA23 的 `taum_attains_inf_p23` 陈述缺 HOL `JOTSWIX.hl:9`
 > 六条箱约束（y4 槽不连续），SF 补箱候选。
@@ -56,7 +56,7 @@
 | **M1a 锥内文本债清零** | cone SORRIED **134 → 89**（只剩农场 84+5） | **✅ 已达成并超越（2026-11-15 基线 AO：Text 0）**。历史过程：文本波 35（twin-transfer/装配）+ 移植 7（hTC 3 + LEAF 3 + TameLp 1）+ 接口锚 2 + LP 1 | **勘误：twin 不全是捷径**——`ZLZTHIC_discharged := @ZLZTHIC_p14`、`MHAEYJN_discharged := MHAEYJN_p37` 是**指向塔内 sorry 的正向转发体**；M1a 的 transfer 只对"真证孪生"成立，须逐件 `#print axioms` 核实 |
 | **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | **hTC Assembly 三件已全闭（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`，基线 U 实测 SORRIED 0 命中）**；**Text 章级已清零（基线 AO 2026-11-15 实测 Text 0；自基线 Z 的 18 条经多波真证/接线清账，逐笔见 §8）**；hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导） | 无（Text 侧已闭；hLP 等算力裁决） |
 | **M2 信任基座** | 621 shard manifest + 抽样 replay + Docker 一键复现（**原版 Flyspeck 的答案**：见 handoff §0.1） | manifest/harness 本机可做；全量 replay 需算力窗口 | 算力 |
-| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 74 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | **现役 53 = 52 `nli*` + 1 hLP（基线 AO）**；主攻 = TSKAJXY 装配（6,612 叶内核波在飞）→ Gate-0 → ENGINE 波 + 纯 MATH 三条（`nli-campaign.md` §8）；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
+| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 74 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | **现役 52 = 51 `nli*` + 1 hLP（基线 AP）**；主攻 = TSKAJXY 装配（6,612 叶内核波在飞）→ math5 五债连打（件 1 已闭）→ Gate-0 实测 → 43 条分类；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
 
 三接口独立债量（**基线 AO @`06285994` 实测 2026-11-15**；基线 Z 的 2026-11-12 版已过时）：**hNL（非线性不等式）= 52 条 `nli*`**
 （逐条清单以 `docs/e2e-reachability-map.md` 基线 AO SORRIED 段为准；基线 Z 时为 55：
@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-17：kernel 波 + `math5-w3`/`ztgmain-w2`（二 lean 护栏竞争）+ `ox3q1h-nogate-w1`（零 lean）；jet3-g0 已收线 = Gate-0 判 NO-GO（边缘））
+## 1. 在飞（2026-11-17 午后：kernel 波（~65%）+ `math5-w4`（件1 corner 已落 `83144d4d`、件2 sqrt8 续打）+ `ox3q1h-nogate-w1`（角点表 pilot）+ `gate0-measure-w1`（实测 s*）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1240,6 +1240,14 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
   负结果（recost ERRATA 升格）、TSKAJXY 装配预检 + 三缺陷修复、文档重组三笔、
   排产队列与 §7.1 候选；`docs/README.md` 导航补指针。
 ⑥ kernel 波同刻 3,268/5,212（62.7%）。下一条：续1214。
+
+- **2026-11-17（14:55，续1214）**：**巡检轮 14:53 + 15:23 两轮合并，四在飞全存活，零异常**：kernel 波 3,373→3,403/5,212（65.3%，35.4 s/叶，ETA ~11-18 09:10，FAIL 2 不变）；math5-w4 sec8 part1–6 迭代至 compile31 + `NliBanks18.lean` 整编 153 KB 落快照（15:21）；ox3q1h probe v27→v31 迭代中；gate0-measure p3/p1 双 worker 持续（15:08–15:10）。护栏 pressure 1；无新 DELIVERY/patch。下一条：续1215。
+
+- **2026-11-17（15:55，续1215）**：**🎯 `math5-w4` 件 1/5 收线落库 `83144d4d`——`nliCell3QZECFICwt0corner` 真证接线，**锥内 SORRIED 53→52**（math5 战役首笔 −1；仪器定档在飞）**。
+① 交付（快照 `math5-w4/` 全齐，patch blob `6e853f3c0c`）：`NliBanks18.lean` 新文件 2,970 行——§8 mega-lemma 按 w3 诊断拆 **15 独立引理**（零 `set`、每件独立 maxHeartbeats，消除 unifier 指数交互）；solA/B/C + dihA/dihY×2 六槽 HasDerivAt → 组合 → pc3-unfold → 单调下界 **0.0094**；新引理 `nb18_dih_swap23`；Assembly.lean +3/−1（import + corner 接线，**删除面恰 = sorry 行、陈述逐字未动**）。
+② **编排者闸（亲跑）**：`apply --check` PASS（双侧 a/lean）；NliBanks18 直编 **RC=0 / 0 error**（仅 deprecation/unused linter 警告）；Assembly 岛编 **RC=0 / 46.9 s / 0 error**（sorry 警告恰余 :403 主件 / :416 sqrt8 / :422 wt2A，corner :408 已净）；**`#print axioms` 亲测三件全 = `[propext, Classical.choice, Quot.sound]`**（`nb18_bank` / `nb18_bank_of_mono` / `Assembly.nliCell3QZECFICwt0corner`，零 sorryAx）；`:= sorry` 59→58；根面 `#print axioms` **589 行 = 585 native + 标准三 + sorryAx**（计数与基线一致；sorryAx 因余 52 债仍在，预期）。
+③ 车道自报四条新坑（拟入 §7.1）：`error(lean.unknownIdentifier):` 格式 `rg "error:"` 抓不到（compile24–29 六轮漏检）；`refine ⟨_, ?_, ?_⟩` 对 `∃ d, HasDerivAt .. ∧ ..` 匿名占位符合成失败（slot-witness 须显式写导数项）；by-block 多 tactic `;` 后换行 parse 断裂 + linarith 不吃未投影 ∧；数学修正一处——solC 槽矩形下确界 0.0412（原 0.0426 为假），slot 边界 −0.0416→−0.0403，终界 0.0094 仍成立（链余量 0.0106−0.0094）。
+④ **地图定档（基线 AP）**：`reachmap_83144d4d` TSV 5,978 行换装——K_REACH **2,101,198**（+113）/ **SORRIED 52**（清单 diff：closed 恰 `{nliCell3QZECFICwt0corner}`、added ∅）/ K_AXIOM **585**（0/0）/ MODULES 5,322（+4）/ UNIVERSE 2,113,452（+366）/ COVERAGE **99.420190%**（−0.0119pp，证明体入 universe）；口径 II 39,092 / 52 / 585 / 49,789；**52 = Assembly 52（51 `nli*` + 1 hLP）+ Text 0**；入口层六件（pq 头/§0 M3/AGENTS §1/README×2/map.md 基线 AP 节/hf-map 四十八）同批刷。⑤ 车道已 resume 件 2/5 `nliCell3QZECFICwt0sqrt8`（复用全套槽件与配方）。下一条：续1216。
 
 - **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
 ① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check

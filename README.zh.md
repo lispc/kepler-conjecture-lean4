@@ -75,8 +75,8 @@ make reprove   # 从零重建 + 审计——Definition of Done
 端到端对象 `Kepler.the_kepler_conjecture_e2e` 已立。实时公理面 = **589 行**
 = **585 个 `native_decide` 图枚举 shard 公理**（信任基座，2026-11-09 定格：
 580 shard-range + 5 tri-single-seed，仅 2 种形状）+ `propext` + `Classical.choice` +
-`Quot.sound` + `sorryAx`（锥内 **53 条 = 52 `nli*` + 1 hLP，全在 Assembly；Text 层 0**
-——唯一真债；基线 AO `06285994`，2026-11-15）。
+`Quot.sound` + `sorryAx`（锥内 **52 条 = 51 `nli*` + 1 hLP，全在 Assembly；Text 层 0**
+——唯一真债；基线 AP `83144d4d`，2026-11-17）。
 
 **终局标准（用户 2026-11-06 裁决，见 `AGENTS.md` §1）**：不比 Flyspeck/Isabelle 更差——
 即 585 条声明信任基座（与 Isabelle `by eval` 同类、同数据）+ 零 `sorryAx` 目标，
@@ -89,9 +89,9 @@ make reprove   # 从零重建 + 审计——Definition of Done
 | 1 | 定理陈述 | ✅ 陈述已定稿 |
 | 2 | tame 平面图枚举 | ✅ 19,715 图 + 完备性真证；585 条 shard 公理 = 声明信任基座（数据与原版三路对账 SAME） |
 | 3 | 线性规划 | ✅ 43,078 终端 LP 证书已核；LP 检查器内核 soundness 真证；灌装债 = `lpArchiveCertificatesDebt`（锥内） |
-| 4 | 非线性不等式 | 🟡 **锥内 52 条 `nli*`（主战场）**：TSKAJXY 全盒装配就绪（6,612 叶内核波在飞）、CertTM2 引擎路线等 Gate-0、纯 MATH 三条排队；sqrt/atan 档重型农场重放挂起（原版同为农场） |
-| 5 | 文字证明移植 | ✅ **Text 锥内 sorry 清零**（基线 AO，2026-11-15）；锥外孤儿 5 条文件级 sorry（TameLp 1 + LA23 4）诚实保留不删 |
-| 6 | 集成与交付 | 🟡 e2e 已立且总装链真证；根面 589；SORRIED 53 = 52 `nli*` + 1 hLP（全 Assembly）；信任基座 manifest `--check` 全绿 |
+| 4 | 非线性不等式 | 🟡 **锥内 51 条 `nli*`（主战场）**：TSKAJXY 全盒装配就绪（6,612 叶内核波在飞）、math5 五债连打（件 1 corner 已闭）、CertTM2 引擎路线等 Gate-0 实测；sqrt/atan 档重型农场重放挂起（原版同为农场） |
+| 5 | 文字证明移植 | ✅ **Text 锥内 sorry 清零**（基线 AP，2026-11-17）；锥外孤儿 5 条文件级 sorry（TameLp 1 + LA23 4）诚实保留不删 |
+| 6 | 集成与交付 | 🟡 e2e 已立且总装链真证；根面 589；SORRIED 52 = 51 `nli*` + 1 hLP（全 Assembly）；信任基座 manifest `--check` 全绿 |
 
 **数字在哪读**：唯一实时账本是
 [`docs/priority-queue.md`](docs/priority-queue.md)——在飞车道、排队、最近落库、

@@ -797,6 +797,26 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AP：`nliCell3QZECFICwt0corner` 真证（SORRIED 53→52）@ `83144d4d`（2026-11-17）
+
+> 触发：`math5-w4` 件 1/5 交付——`NliBanks18.lean` 新文件 2,970 行（§8 mega-lemma
+> 拆 15 独立引理：solA/B/C + dihA/dihY×2 六槽 HasDerivAt → 组合 → pc3-unfold →
+> 单调下界 **0.0094**；新引理 `nb18_dih_swap23`；零 `set`、零 sorry/axiom）+
+> `Assembly` +3/−1（import + `nliCell3QZECFICwt0corner := Kepler.NliBanks18.nb18_bank`；
+> 删除面恰 = sorry 行、陈述逐字未动）。
+>
+> 实测（`e2e_reach_map` 原样，TSV 5,978 行）：`K_REACH` **2,101,198（+113）** /
+> **SORRIED 52**（−1；清单 diff：closed 恰 `{Kepler.Assembly.nliCell3QZECFICwt0corner}`、
+> added ∅）/ **`K_AXIOM 585`（0/0）** / `K_MODULES` **5,322（+4）** /
+> `K_UNIVERSE` **2,113,452（+366）** / COVERAGE **99.420190%**（−0.0119pp，证明体入 universe）；
+> 口径 II **39,092 / 52 / 585 / 49,789**。
+>
+> 构成：**SORRIED 52 = Assembly 52（51 `nli*` + 1 hLP），Text 0**。
+> 编排者闸：NliBanks18 直编 RC=0/0 err；Assembly 岛编 RC=0 46.9s；
+> `#print axioms` 亲测 `nb18_bank`/`nb18_bank_of_mono`/`Assembly.nliCell3QZECFICwt0corner`
+> 全标准三；根面 589 = 585 native + 标准三 + `sorryAx`（计数与基线一致）。
+> 在飞：`math5-w4` 件 2/5 `nliCell3QZECFICwt0sqrt8`（复用同套槽件配方）。
+
 ### 基线 AO：`nliRestQITNPEA4003532128a` 真证（SORRIED 54→53）@ `06285994`（2026-11-15）
 
 > 触发：`qitnpea-w1` 交付——纯代数真证（`NliQitnpea.lean` +142；`Assembly` 1 import + body；
