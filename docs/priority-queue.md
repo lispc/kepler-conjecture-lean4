@@ -1280,6 +1280,10 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
 ② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
 ③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
+- **2026-11-17（23:05，续1227）**：**`ox3q1h-nogate-w1` S3 量产 Batch1 停轮落库 `df42274f`——`Ox3q1hChainBatch1` 新文件（579 行，idx 1–19，16 条 chain 条件定理，cone-neutral）**。
+① 五段结构照 Chain3 模板复制（box0–3 精确分数 defs + K/B/R + cands 三件套 + 16 条 chain）；v3 探针一次清零——**量产教训入 MILESTONE：批量修用生成器整文件重生成而非增量正则补丁**（v50 的 22 错 = kn-wrap 正则截断供给行前缀 12 处 + id_eq-ring 位置 1 处 + 级联；重生成时还原 kn 包装改普通形 + simpa 归一 ALL-CONCAVE hstep 值形）。
+② **编排者闸（亲跑）**：apply CHECK PASS（patch 落快照 ✓）；直编 RC=0/0 err；**16/16 chain `#print axioms` 亲验恰标准三零 sorryAx**。cone-neutral（SORRIED 52 不变）。
+③ **S3 进度：19/184**（idx 0 在 Chain3）。车道已 resume 下批 idx 20–59（40 条，生成器换范围重跑）。下一条：续1228。
 - **2026-11-17（22:15，续1226）**：**`ox3q1h-nogate-w1` S3 首批落库 `062c1799`——`Ox3q1hChain3` 新文件（269 行/6 定理，cone-neutral），三条款整链贯通；编排者接管收口并修正真根因**。
 ① **真根因（推翻续1219 以来的全部 linarith 修法尝试）**：`exists_vertex_grid` 的结论/不变式**方向翻转**——chord-rebate hstep 是"上移受界"形（`f y' ≤ f y + R`），链条需要角点值"不高于 f x + ΣR"（`f v ≤ f x + ΣK`，配 `hcorner: B ≤ f v` 才能闭 `B − ΣK ≤ f x`）；文件原写 `f x ≤ f v + ΣK`（v 续4 的"⟺ 等价"断言不成立）——方向一翻，insert-case 从"不可解的 nlinarith"变成三步 calc（`hle` / linarith / `Finset.sum_insert`+ring），且无需 hK。
 ② 另两处编排者修复：**R41/R76 被引用但从未定义**（"KENV-def 级联 8 错"的主体）——补 exact-fraction def（`K_i·W_i²/8`）；三实例 `final_bound (K := R41/R76)` 具名实例化 + hK 项内联 `div_nonneg` 证明；hstep witness 用 `rw [hcands i]` 钉住 {cands}。
