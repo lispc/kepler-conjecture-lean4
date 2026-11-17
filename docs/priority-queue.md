@@ -1136,6 +1136,22 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-17（13:00，续1210）**：**`ixpotpa-poly-w1` 按止损条款 BLOCKED 收线（~5h，零落库零 sorry）——`nliRestIXPOTPA` v1 普通区间证书收口在预算内不可达**。
+① **证据链（10 配置 × 预算 65k→30M 全 TRUNC）**：bb_arb 裸区间 DFS 在本 case
+**自相似无限阶梯化**——栈恒 ~15–21 叶、每片栈盒单独作迷你根 **1 节点即闭**（树有限
+但 ≥ 数千万节点/数百万叶）；截断不写 cert（bb_arb.c:3209 exit 在 cert 块前）；
+prec-128 不解决（13 pending）；TM 只闭 70 叶；Heron 重写/守卫有理化均不消阶梯。
+**结构性诊断**：阶梯 = eta/delta 支面相切区域的轴对齐二分回归（精确镜 wrap ±0.27~1.08
+vs 真值 +0.05~0.17）。**Lean decide 实测 ~11 s/2000 叶 shard ⇒ 3M 叶 ≈ 500 h**——
+远超预算，recost 的 0.59 CPU·h 估计实测推翻（**ERRATA 候选**）。
+② **可复用资产（后续车道直接拿）**：守卫有理化 eta 改写（IXPOTPA_guard.json——零
+sqrt/零参数化，m41_L3 证书 99,388 叶 **v1 --disj-dummy 发射成功** 97 shards）；glue
+数学 100% 验证（probe9 RC=0）；收窄 case 四版全套 + 500 点布尔等价对拍脚本。
+③ **剩余选项（编排者/用户裁决）**：(a) 周级战役 + 并行编译豁免；(b) certtm 解冻 +
+mixed-tm disj 特性开发（wave-3）；**(c) 数学分解（HOL 侧思路移植，需立项）**。
+④ 同时：lean 实测 3/2 超限（math5-w4 最后启动违规）——已发干预令（kill 让位 +
+重查护栏）。下一条：续1211。
+
 - **2026-11-17（10:58，续1209）**：**`gate0-measure-w1` 发车（用户裁 Gate-0 挂分支 = **B**）——把 NO-GO 的外推 s*≈35–80 换成实测**。
 ① 使命：PROFILE（节点成本分解）→ OPTIMIZE（memoization + warm-start 132 闭叶 +
 2 worker + dyadic 精度恰至 SAFE——**soundness 回归 132 逐位复现是硬闸**）→
