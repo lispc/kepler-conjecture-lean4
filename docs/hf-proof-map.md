@@ -6,6 +6,8 @@
 >
 > ## 状态更新
 >
+> - **2026-11-17（08:15，编排者，四十七）**：**`ztgmain-w2` 收线落库 `decbc61c`——`NliBanksZTGIJCF4Dih`（新模块 6,191 行/143 声明全标准三，cone-neutral），ZTGIJCF4 dihY 半边四箱收口**。`ztgG_box5` (c) 路线一轮成型：32 角点假设显式命名 + 31 步 Jensen 链全 term-mode + 逐坐标二次符号化（`unfold deltaX deltaX4; ring`）/linarith 步——零 defeq 爆炸（w1 的 (a)/(b) 两路全灭后 (c) 一次过）。四条 `ztg_dihY_<bits>`：**1.008/0.875 ≤ dihY**（编排者亲跑四箱 axioms 复验恰标准三）。勘误 w1：字面角点不可证 → `NliBanks7.hminus_ge_123175` + `mi_hminus_lt_h0`（零新 import）；gen_dih.py 三 latent bug 修复。数学新发现：deltaX 每坐标 x2..x6 均二次。γ4 侧等角点表裁决；四箱+Kit A 已是任何 γ4 路线共同前置。
+
 > - **2026-11-17（02:10，编排者，四十六）**：**Gate-0 判定 = NO-GO（边缘、外推口径；`jet3-g0-w1` 24 h 内交付）**。PASS 项：TM-hull C1 certOk **132/188**（≥100 线 ✓；并发现修复 emitter `exprs.dihXf_t` 置换 radicand floor 缺陷 = certOk 0/188 的一大半根因，落库 `ca1c7677`）、P2 decide ≤4 s/叶 + axioms [propext]。FAIL 项：certified B&B 宽前沿 60–120 s/节点 → 叶数外推 **s*≈35–80 ≫ 30**（ρ1 中位 24.7；瓶颈 = 一阶线性 wrap ×2/细分）。**后果：CertTM2/ENGINE 路线出局（pre-agreed 判定表），ENGINE 波四工单搁置、43 条冻结**；无 gate 可清 9 条（XLLIPLS 在飞 + 纯 MATH + 现行引擎 4 + ox3q1h 角点表）。战略分叉（A 接受/ B 质疑外推/ C 混合 132+56）待用户裁决。资产：patch `ca1c7677`（exprs 修复+tmcarry+engine_cert 可复用）、P2 模板（decide 位点模式）、188 叶 ρ1 表。详见 `nli-campaign.md` §1.8。
 
 > - **2026-11-16（21:15，编排者，四十五）**：**`ztgmain-w1` 收线落库 `f47d472f`——Kit A `ZTGDihKit` 冻结（新模块 171 行/8 声明全标准三，cone-neutral）**。核心件 `ztg_atn2_ge`：`s·|y|≤x ⇒ atn2 x y ≥ arctan s − π/2`——**角度下界完全化归多项式不等式、无三角常数**；有理 arctan 下界（8/5≥1.008、6/5≥0.875）+ 逐线证书多项式 `ztgG`（irreducible 防 defeq 爆炸）。未闭：`ztgG_box5`（32 角点凹性归约）两实现路线 isDefEq 爆 40M heartbeats，三条候选解法交班（数学 32/32 线 +1218/+684 已验证）；Phase-0 证书：四解耦债 32 线 Bernstein 全过、六 joint 债直接形式不成立（符合预期）。编排者闸三件套全过（apply-check/自编译岛探针/亲跑 8/8 axioms）。下一车道清单 `ztgmain-w1/DELIVERY.md` §4；lean 槽已空（kernel 波唯一 lean）。

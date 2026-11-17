@@ -399,6 +399,15 @@
   40M heartbeats（数学 32/32 线已验证 +1218/+684；候选解法三条含逐叶 `have` 链
   ~1k 行）。Phase-0：六条 joint 债 dihY 直接形式不成立（需联合 trade-off ✓）。
   下一车道清单见 `ztgmain-w1/DELIVERY.md` §4。
+- **2026-11-17 08:15 四箱收口落库**（`ztgmain-w2`，`decbc61c`，cone-neutral）：
+  `NliBanksZTGIJCF4Dih`（新模块 6,191 行/143 声明全标准三）——**`ztgG_box5` (c) 路线
+  一轮成型**（32 角点假设显式命名 + 31 步 Jensen 链 term-mode + 逐坐标二次符号化/
+  linarith，零 defeq 爆炸）；**`ztg_dihY_1_1_0_0/0_1_1_0/0_1_0_1 : 1.008 ≤ dihY`、
+  `ztg_dihY_0_0_1_1 : 0.875 ≤ dihY`**（编排者亲跑 axioms 复验）。勘误：w1 字面角点
+  不可证 → 改 `NliBanks7.hminus_ge_123175` + `mi_hminus_lt_h0`（零新 import）；
+  gen_dih.py 三 latent bug 修复。数学新发现：`deltaX` 在每个坐标 x2..x6 都是二次。
+  ⛔ γ4 侧仍等角点表路线裁决（Gate-0 NO-GO 后）；四箱+Kit A = ZTGIJCF4 任何 γ4
+  路线的共同前置，已备。
 - **ERRATA（`ztgijcf4-w1/TABLE.md`）**：`1_0_0_0`/`0_0_1_0`/`0_0_0_1` 的
   `min γ4` 实为 **0.0139727**（非 0.02257），解耦界改 **−0.01085**；
   `min γ4` 与 `min main` 的 argmin 不同；kink 角点须按槽型过滤

@@ -1136,6 +1136,25 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-17（08:15，续1205）**：**`ztgmain-w2` 收线落库 `decbc61c`（编排者 apply+自编译岛探针+亲跑四箱 axioms 复验）——ZTGIJCF4 dihY 半边四箱收口**。
+① **`ztgG_box5` (c) 路线一轮成型**：32 角点假设显式命名（`h_lllll…h_hhhhh`）+
+31 步 Jensen 链（16 e5 + 8 e4 + 4 e3 + 2 e2 + final）全 term-mode + 逐坐标一次性
+符号化 `ztdih_quad2..6`（`unfold deltaX deltaX4; ring`）+ `ztdih_step2..6`（纯
+linarith）——零 ztgG 展开、零 ite、零投影、零 defeq 爆炸；全程 8 轮编译均机械修复。
+② **数学新发现**：`deltaX` 在**每个**坐标 x2..x6 都是二次（`-x2²x5`/`-x3²x6`/
+`-x1x4²`），残差系数含 `4x1·x5` 等项——exact 60 点/坐标全过。
+③ **四箱收口**：`ztg_dihY_1_1_0_0/0_1_1_0/0_1_0_1 : 1.008 ≤ dihY`（8/5 档）、
+`ztg_dihY_0_0_1_1 : 0.875 ≤ dihY`（6/5 档）；模块 6,191 行/143 声明全标准三
+（车道程序化防截断 + **编排者亲跑四箱 #print axioms 复验恰标准三**）；整编
+179.8 s/11.35 GB；cone-neutral（零 importer，SORRIED 53 不变）。
+④ **对 w1 交接勘误（DELIVERY §3）**：w1 字面角点不可证（需 hminus ≥1.23176，
+树内只有 1.2313664）→ 改 `NliBanks7.hminus_ge_123175` + `mi_hminus_lt_h0`
+（零新 import）；w1 `gen_dih.py` 三 latent bug 修复（线模板缺 hi 端/deltaY 实参错/
+mi_hminus_prop 误用）。0011 证书偏薄（+45.9）如需加紧须先收紧 hminus 上界（留痕非债）。
+⑤ 后续 gating：γ4 侧 Kit B / Assembly 接线等用户对角点表路线裁决；
+四箱 + Kit A（`ztg_atn2_ge` 等）已是 ZTGIJCF4 任何 γ4 路线的共同前置。
+下一条：续1206。
+
 - **2026-11-17（06:49，续1204）**：**双车道发车（用户批「都发」）——Gate-0 挂分支后重排，攻无 gate 9 条里的最大两件**。
 ① `ox3q1h-nogate-w1`：ox3q1h（230 合取，最大单笔债）双前线——46 线性源生成 +
 184 γ4 的 48 盒联合角点表证书（1,056 去重点 + 18 y4 补丁）；Lean 形状提案吸取
