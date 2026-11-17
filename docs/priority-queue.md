@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-18 早：kernel 波 **DONE 5,207/5,212**（剩 FAIL 重试/收尾）；`ox3q1h` **S2b Batch1 已落 `8326ca5e`**（`Ox3q1hS2bBox5CornersA–D` 四新文件 42,882 行/1,672 定理全绿，cone-neutral），s2b-close 车道停轮；S2a margin″ 装配等 SF 裁决；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-18 早：**kernel 波已收线**——TSKAJXY full box **5,212/5,212 PASS / 0 FAIL**，pool 6,612 leaf oleans 齐全（续1235，编排者亲验）；`ox3q1h` **S2b Batch1 已落 `8326ca5e`**（`Ox3q1hS2bBox5CornersA–D` 四新文件 42,882 行/1,672 定理全绿，cone-neutral），s2b-close 车道停轮；S2a margin″ 装配等 SF 裁决；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1323,6 +1323,12 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（08:10，续1235）**：**🎯 `rulep-fullbox-kernel-w1` 收线——TSKAJXY full box kernel replay 5,212/5,212 PASS、0 FAIL；pool 6,612 leaf oleans 齐全，nliTskXLLIPLS 装配前置全部就绪**。
+① **车道交付**：`SUMMARY.tsv` 5,212 行（old 5,012 + famA 200）全 `probe_ok`；`check_ax` 全 `[propext, Quot.sound]`、`pos_ax` 全 `[propext, Classical.choice, Quot.sound]`；`PROBES.tsv` 5,212 PASS（350 blocks 独立探针）；`DONE`/`PROBED` 各 5,212、`FAILED` 0；`LEAVES_6612.tsv` 6,612 全 PASS（famB 1,400 由 `rulep-replay-w2` 携带，olean sha 复验 0 mismatch）；`MANIFEST.sha256` 13,573 条。
+② **编排者亲验（独立复核，非转述）**：目录计数 5,212/5,212/0；TSV 列值分布双全（5,212 行各只两种定义域）；5,212 份 leaf 日志 `error:` 0 / `sorryAx` 0、axiom 行恰 5,212×2；抽样 3 olean sha256 + 3 src sha256 全 OK；**自写探针**（import Leaf0/500/2680 + FamA10_0/FamA4056_1 + famB 4471）→ 12/12 `#print axioms` 恰标准三、RC=0；6,612 leaf olean 逐个存在性检查 missing=0；主仓 tracked 零改动（leaf 只存 pool）。
+③ **成本实测**：kernel wall **42.59 h**（29.42 s/叶，P50 27 s，P95 43 s）、probe 0.36 h、lane wall 50.07 h、max RSS **9.502 GiB**（<20 GiB 护栏）、olean 1,259.5 MB / pool 1.6 GB。
+④ **两个外部 kill**（tag 1298 rc=143 SIGTERM、tag 2680 rc=137 SIGKILL，均在 22–23 s 处被杀，非证明失败）末尾 `--retry-failed` 重试双绿（各 27 s），最终 FAILED=0。
+⑤ **下一步**：按 `asm-precheck-w1` runbook 做 tskasm 装配（~3–5.5 h）→ `nliTskXLLIPLS` 接线 → **SORRIED 52→51**（首个 kernel 侧 −1）。下一条：续1236。
 - **2026-11-18（07:50，续1234）**：**`ox3q1h-s2b-close-w1` 收线落库 `8326ca5e`——S2b Batch1 四角点 bank 全绿（`Ox3q1hS2bBox5CornersA–D` 四新文件，42,882 行/1,672 定理，cone-neutral）**。
 ① **编排者闸（亲跑）**：4 patch 双侧 `a/lean… b/lean…` CHECK PASS + 应用后逐字节 cmp 一致；4 文件**岛协议 RC=0/0 err**（A 108 s / B 102 s / C 104 s / D 91 s）+ **模块 build PASS**（A 16:12 含闭包重编 8,730 jobs，B/C/D 1:31–1:49）；每文件 16 角点×{g4_bounds, corner} = **128/128 `#print axioms` 亲验恰标准三零 sorryAx**；`rg 'sorry|native_decide|^axiom'` 仅头注 2 行。主仓 tracked 零改动（唯一提交 = 四新文件）。
 ② **前代修错图三处机器证据勘误**：(a) 角点 5755/5759 不是 mm 链级联——是 **B1 `sgn≤0` 分支缺 pi/4-shift 路径**（x=0.6868 的 32 项级数尾部 x⁶⁵/65≈3.8e-13 超 1e-14 窗，`norm_num` 正确拒绝假证书）；全 64 角点普查（census_s2b.py）确认恰 3 处需 shift，else 分支补 `cvp_atan_shift` 后即绿。(b) AB 真病因 = `constructor` 只劈一层 + `rw` 重写目标内**全部** `?≤?/pi` 模式（前代未定位）；改 `refine ⟨?_,?_,?_,?_⟩` + 显式 norm_num 数值桥。(c) mm 链弃 mul_le_mul/裸 nlinarith，改**确定性证明**：`mul_nonneg` + norm_num 桥 + 纯 linarith，端点字面前馈重算（SLO→T_HI→M1_LO→A_LOT→B_LOT 逐级 floor/ceil）使数值桥按构造精确。
