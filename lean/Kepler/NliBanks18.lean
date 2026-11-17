@@ -7,6 +7,7 @@ No `axiom` / `sorry` / `admit` / `native_decide`; audited at the tail.
 -/
 import Kepler.NliBanks11
 import Kepler.NliBanks13
+import Kepler.NliBanks17  -- hminus envelope (math5-w4 sqrt8 groundwork)
 
 set_option maxHeartbeats 4000000
 
@@ -2963,8 +2964,96 @@ theorem nb18_bank_of_mono :
 nonnegative on `[1,1]³ × [2,2.01]³`.** -/
 theorem nb18_bank : bank_QZECFICwt0corner := nb18_bank_of_mono
 
+/-! ## 12. `QZECFIC wt0 sqrt8` groundwork (math5-w4) -/
+
+/-! The disjunctive bank `bank_QZECFICwt0sqrt8` splits along the
+three-coordinate Delta: `deltaX (y4*y4) 2 (y5*y5) 2 (y6*y6) 2 = 2 * ups - P`
+(`P = y4^2*y5^2*y6^2`, `ups = upsX (y4*y4) (y5*y5) (y6*y6)`), while
+`eta_y y4 y5 y6 ^ 2 = P / ups`.  Hence on the box (where `w ≤ √8 ≤ 4 ≤
+y5 + y6` makes `ups > 0`), `deltaX < 0` is *equivalent* to `eta_y ^ 2 > 2`:
+the right disjunct covers exactly the region where the six-slot derivative
+machinery of §8 (whose `matan`/`Posbranch` chains need `deltaX ≥ 0`) does
+not apply. -/
+
+private theorem nb18_s8_ups_eq (a b c : ℝ) :
+    upsX (a * a) (b * b) (c * c) = 4 * (b * b) * (c * c) - (a * a - b * b - c * c) ^ 2 := by
+  rw [upsX]
+  ring
+
+private theorem nb18_s8_dlt_eq (a b c : ℝ) :
+    deltaX (a * a) 2 (b * b) 2 (c * c) 2
+      = 2 * upsX (a * a) (b * b) (c * c) - a * a * (b * b) * (c * c) := by
+  rw [deltaX, upsX]
+  ring
+
+private theorem nb18_s8_ups_pos {y4 y5 y6 : ℝ} (hy4 : 2 * hplus ≤ y4)
+    (hy4' : y4 ≤ Real.sqrt 8) (hy5 : 2 ≤ y5) (hy5' : y5 ≤ 2 * hminus)
+    (hy6 : 2 ≤ y6) (hy6' : y6 ≤ 2 * hminus) :
+    0 < upsX (y4 * y4) (y5 * y5) (y6 * y6) := by
+  have hhm : 2 * hminus ≤ 2.46352 :=
+    Kepler.NliBanks17.nb17_two_hminus_bounds.2
+  have hw8 : y4 * y4 ≤ 8 := by
+    have hsq : (Real.sqrt 8) * (Real.sqrt 8) = 8 := Real.mul_self_sqrt (by norm_num)
+    have hy4pos : (0:ℝ) ≤ y4 := by
+      have hhp : (0:ℝ) < 2 * hplus := by norm_num [hplus]
+      linarith
+    have hpm : y4 * y4 ≤ (Real.sqrt 8) * (Real.sqrt 8) :=
+      mul_le_mul hy4' hy4' (by linarith [hy4pos]) (Real.sqrt_nonneg 8)
+    rw [hsq] at hpm
+    exact hpm
+  have hw7 : (2 * hplus) * (2 * hplus) ≤ y4 * y4 :=
+    mul_self_le_mul_self (by norm_num [hplus] : (0:ℝ) ≤ 2 * hplus) hy4
+  have hw7' : (7.02:ℝ) ≤ y4 * y4 := by
+    have h := hw7
+    rw [show (2 * hplus) * (2 * hplus) = 7.02674064 from by norm_num [hplus]] at h
+    linarith [h]
+  have hb5 : (4:ℝ) ≤ y5 * y5 := by nlinarith [hy5]
+  have hb6 : (4:ℝ) ≤ y6 * y6 := by nlinarith [hy6]
+  have hy5b : y5 ≤ 2.46352 := by linarith [hy5', hhm]
+  have hy6b : y6 ≤ 2.46352 := by linarith [hy6', hhm]
+  have h5sq := mul_self_le_mul_self (by linarith [hy5]) hy5b
+  have h6sq := mul_self_le_mul_self (by linarith [hy6]) hy6b
+  rw [nb18_s8_ups_eq]
+  have hwle : y4 * y4 ≤ y5 * y5 + y6 * y6 := by linarith
+  have hsum0 : (0:ℝ) ≤ y5 * y5 + y6 * y6 - y4 * y4 := by linarith
+  have hsumub : y5 * y5 + y6 * y6 - y4 * y4 ≤ 5.12 := by linarith [h5sq, h6sq, hw7']
+  have hsqle : (y5 * y5 + y6 * y6 - y4 * y4) * (y5 * y5 + y6 * y6 - y4 * y4)
+      ≤ (5.12:ℝ) * (5.12:ℝ) := mul_self_le_mul_self hsum0 hsumub
+  have hprod : (64:ℝ) ≤ 4 * (y5 * y5) * (y6 * y6) := by
+    have h16 : (16:ℝ) ≤ y5 * y5 * (y6 * y6) := by nlinarith [hb5, hb6]
+    linarith
+  have hsqub : ((5.12:ℝ)) * ((5.12:ℝ)) ≤ (26.25:ℝ) := by norm_num
+  linarith [hprod, hsqle, hsqub]
+
+/-- **Right disjunct of `QZECFIC wt0 sqrt8`**: if the three-coordinate Delta
+is negative, then `eta_y y4 y5 y6 ^ 2 > 2`. -/
+private theorem nb18_s8_eta_dlt_neg {y4 y5 y6 : ℝ} (hy4 : 2 * hplus ≤ y4)
+    (hy4' : y4 ≤ Real.sqrt 8) (hy5 : 2 ≤ y5) (hy5' : y5 ≤ 2 * hminus)
+    (hy6 : 2 ≤ y6) (hy6' : y6 ≤ 2 * hminus)
+    (hd : deltaX (y4 * y4) 2 (y5 * y5) 2 (y6 * y6) 2 < 0) :
+    eta_y y4 y5 y6 ^ 2 > 2 := by
+  have hups := nb18_s8_ups_pos hy4 hy4' hy5 hy5' hy6 hy6'
+  have htri := nb18_s8_dlt_eq y4 y5 y6
+  have hy4pos : (0:ℝ) ≤ y4 := by
+    have hhp : (0:ℝ) < 2 * hplus := by norm_num [hplus]
+    linarith
+  have hy5pos : (0:ℝ) ≤ y5 := by linarith [hy5]
+  have hy6pos : (0:ℝ) ≤ y6 := by linarith [hy6]
+  have hP : (0:ℝ) ≤ y4 * y4 * (y5 * y5) * (y6 * y6) :=
+    mul_nonneg (mul_nonneg (mul_nonneg hy4pos hy4pos)
+      (mul_nonneg hy5pos hy5pos)) (mul_nonneg hy6pos hy6pos)
+  have hrel : 2 * upsX (y4 * y4) (y5 * y5) (y6 * y6)
+      < y4 * y4 * (y5 * y5) * (y6 * y6) := by linarith
+  have hquo : (0:ℝ) ≤ y4 * y4 * (y5 * y5) * (y6 * y6)
+      / upsX (y4 * y4) (y5 * y5) (y6 * y6) := div_nonneg hP hups.le
+  have hrw : eta_y y4 y5 y6 ^ 2
+      = y4 * y4 * (y5 * y5) * (y6 * y6)
+        / upsX (y4 * y4) (y5 * y5) (y6 * y6) := by
+    simp only [eta_y, etaY, etaX, pow_two, Real.mul_self_sqrt hquo]
+  rw [hrw, gt_iff_lt, lt_div_iff₀ hups]
+  exact hrel
+
 /-! ## 11. Axiom audit -/
 
 #print axioms nb18_bank_of_mono
 #print axioms nb18_bank
-
