@@ -1233,6 +1233,14 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ④ 后续 gating：四债 γ4 角点表若 GO → 补齐即接线四条 `ztg_of_global_bounds`
 （最多 −4）；六条 joint 债只分类不施工。下一条：续1212。
 
+- **2026-11-17（13:40，续1213）**：**`handoff-2026-11-17.md` 新建（用户批「C」——
+  收官档我自己写，不用车道；farm-ops-w1 与 M2 章程未批）**：Gate-0 三段式战役
+  （NO-GO→B 实测复测在飞）、math5 四代接力（w1 事故/w2 假失败真死/w3 95%+§2 拒收/
+  w4 收官在飞）、ZTGIJCF4 dihY 收口 + γ4 侦察 GO（施工缓建等农场）、ixpotpa BLOCKED
+  负结果（recost ERRATA 升格）、TSKAJXY 装配预检 + 三缺陷修复、文档重组三笔、
+  排产队列与 §7.1 候选；`docs/README.md` 导航补指针。
+⑥ kernel 波同刻 3,268/5,212（62.7%）。下一条：续1214。
+
 - **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
 ① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check
 PASS、RC=0、0 error）——**§0–§7/§9/§10 全实证明**（恒等式全套/corner 恒等式/数值砖/

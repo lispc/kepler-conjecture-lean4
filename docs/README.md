@@ -15,6 +15,9 @@
   [`history/changelog-archive.md`](history/changelog-archive.md)。旧队列/战术/J 战役表在
   [`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
+- [`handoff-2026-11-17.md`](handoff-2026-11-17.md) — **2026-11-16/17 战役收获与现状交接**
+  （Gate-0 NO-GO→实测复测、math5 四代接力、ZTGIJCF4 dihY 收口+γ4 侦察 GO、
+  ixpotpa 负结果、文档重组、排产队列）。
 - [`handoff-2026-11-16.md`](handoff-2026-11-16.md) — **2026-11-15/16 两日收获总览**
   （TSKAJXY 全盒战役、CertTM2 引擎路线、ox3q1h/ZTGIJCF4/recost/audit 判词、排产队列）。
 - 历次 session 交接：[`handoff-2026-11-06.md`](handoff-2026-11-06.md)（裁决/死路/环境坑正本）、
