@@ -1241,7 +1241,7 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
   排产队列与 §7.1 候选；`docs/README.md` 导航补指针。
 ⑥ kernel 波同刻 3,268/5,212（62.7%）。下一条：续1214。
 
-- **2026-11-17（14:55，续1214）**：**巡检轮 14:53→18:23 六轮合并，在飞全存活**：kernel 波 checkpoint 3,373→3,463→3,478→3,523→**3,568**/5,212（68.5%，36.5 s/叶，ETA ~11-18 10:30，FAIL 2 不变；DONE 文件名=叶号非序号，进度以 STATUS checkpoint 为准）；math5-w4 件 1 落库→件 2 三轮探针止损→**用户裁全挂起（续1221），车道退役**；ox3q1h S1 落库→S2（rebate v1→v2 17:03–15→pilot v36→v37 17:30–42 迭代）；gate0-measure p1 实测链完成（17:32）→**19:10 收线 NO-GO 实测确认（续1222）**；ox3q1h 18:00 rebate v3 探针 + Rebate.lean 18:12 续修活跃（S2 Batch1 19 错误修复中）。kernel 18:23 checkpoint **3,628**/5,212（69.6%）。护栏 pressure 1。下一条：续1215。
+- **2026-11-17（14:55，续1214）**：**巡检轮 14:53→19:53 七轮合并，在飞全存活**：kernel 波 checkpoint 3,373→3,463→3,478→3,523→**3,568**/5,212（68.5%，36.5 s/叶，ETA ~11-18 10:30，FAIL 2 不变；DONE 文件名=叶号非序号，进度以 STATUS checkpoint 为准）；math5-w4 件 1 落库→件 2 三轮探针止损→**用户裁全挂起（续1221），车道退役**；ox3q1h S1 落库→S2（rebate v1→v2 17:03–15→pilot v36→v37 17:30–42 迭代）；gate0-measure p1 实测链完成（17:32）→**19:10 收线 NO-GO 实测确认（续1222）**；ox3q1h S1/S2Batch1/S2余量基座/B3 收口四笔已落（`930d0dd1`/`6fc8db4b`/`bc6265b4`）→K 包络续打（kenv.py 19:32 + probe_concavekit v5→v6 19:48–52）。kernel 19:53 checkpoint **3,808**/5,212（73.1%，ETA ~11-18 10:30）。护栏 pressure 1。下一条：续1215。
 
 - **2026-11-17（15:55，续1215）**：**🎯 `math5-w4` 件 1/5 收线落库 `83144d4d`——`nliCell3QZECFICwt0corner` 真证接线，**锥内 SORRIED 53→52**（math5 战役首笔 −1；仪器定档在飞）**。
 ① 交付（快照 `math5-w4/` 全齐，patch blob `6e853f3c0c`）：`NliBanks18.lean` 新文件 2,970 行——§8 mega-lemma 按 w3 诊断拆 **15 独立引理**（零 `set`、每件独立 maxHeartbeats，消除 unifier 指数交互）；solA/B/C + dihA/dihY×2 六槽 HasDerivAt → 组合 → pc3-unfold → 单调下界 **0.0094**；新引理 `nb18_dih_swap23`；Assembly.lean +3/−1（import + corner 接线，**删除面恰 = sorry 行、陈述逐字未动**）。
