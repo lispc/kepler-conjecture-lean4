@@ -6938,3 +6938,80 @@ theorem terminal_pent_taum2_p22 (h : main_nonlinear_terminal_v11)
   Close/LA16 直编 **rc=0/err0**；`#print axioms terminal_pent_taum2_p22` 恰
   `[propext, Classical.choice, Quot.sound]`；`empty_5T1_p22`/`OCBICBY_5T1_p22` 回归标准三；
   Close `  sorry` 体 **3→2**（剩 `empty_6T1_p22`/`OCBICBY_p22`）；根面 md5 `246e952c…` 同。
+
+## 110. ZTGIJCF4 模板 m 槽乘子 `betaBumpLb = −0.005` 沿用 HOL 变更史已弃用的 `beta_bump_lb` 形（ineq.hl:821-823 注记：该形在 `(i3,i4,i5,i6) = (0,1,0,0)` 上为假，2010-06-23 → `beta_bumpA_y`、2010-09-23 → `beta_bump_force_y`；Lean 转录逐字忠实但比 HOL 后续版严格强；数值实测仍真，主支余量 min +0.0274）— 分级 **B**（转录忠实 · 数值真 · 保真记账级 · 唯一 m=1 实例 = 锥内 `nliRestZTGIJCF4_0_1_0_0` · `nli-triage-w1` A-4/SUSPECT-2 发现 · housekeeping-w1 记档 2026-11-17）
+
+### (a) 现状陈述
+
+模板 `lean/Kepler/Text/PackingAuto21.lean:850-862`（逐字，盒前提省略）：
+
+```lean
+def bank_ZTGIJCF4tmpl (i3 i4 i5 i6 : ℕ) : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, … →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun /
+        (1 + bankGenMid i3 + bankGenMid i4 + bankGenMid i5 + bankGenMid i6) +
+      (if 1 + bankGenMid i3 + bankGenMid i4 + bankGenMid i5 + bankGenMid i6 = 2 ∧
+          i4 = 1 then 1 else 0 : ℝ) * betaBumpLb >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 ∨
+    yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+```
+
+乘子常数 `lean/Kepler/Text/IneqClosureDefs.lean:493`：`def betaBumpLb : ℝ := -0.005`
+（镜像 `sphere.hl:636` `beta_bump_lb = -- #0.005`）。16 实例 def `bank_ZTGIJCF4_*`
+（PA21:864-895）与具名投影 `proj_bank_ZTGIJCF4_*`（PA21:3740-3905）全走本模板；
+m 槽 = 1 的实例全 16 中恰一个：`(0,1,0,0)`（唯一满足 `w = 2 ∧ i4 = 1`，
+见 ineq.hl:475 同式）。
+
+### (b) 问题（HOL 对照）
+
+- HOL 正本 `reference/flyspeck/text_formalization/nonlinear/ineq.hl:459-468`
+  `template_F4` 字面 `&m *beta_bump_lb`；`:475` `m = if (w =2) && (i4 = 1)
+  then 1 else 0`；`:495-499` 循环生成 16 实例 ⇒ **Lean 转录与字面逐字一致，
+  非转录 bug**（PA21:843-862 lo/hi/w/m 三件与 `mk_ineq_F4` 逐句同构）。
+- 同文件 `:821-823`（QX 块头）变更史注记：`beta_bump_lb -> beta_bumpA_y
+  2010-06-23, false otherwise on (i3,i4,i5,i6) = (0,1,0,0)`；
+  `beta_bumpA_y -> beta_bump_force_y 2010-09-23`——点名 4 槽索引形 `(0,1,0,0)`
+  上 `beta_bump_lb` 形**为假**；HOL 后续乘子最终为 `beta_bump_force_y`
+  （`sphere.hl:614` = 无条件 `bump (y1/2) − bump (y4/2)`；Lean 对应物
+  `betaBumpForceY`，IneqClosureDefs:485-486）。
+- 勘误：`nli-triage-w1` `AUDIT.md` A-4 把该注记引作 `ineq.hl:450-452`，
+  实为 `:821-823`（housekeeping-w1 实读核对，行号漂移）。
+- 影响面：仅 m=1 的 `(0,1,0,0)`（= 锥内剩余债 `nliRestZTGIJCF4_0_1_0_0`）；
+  其余 15 实例 m=0，乘子不出现，零影响。方向性：Lean 乘子恒 −0.005，HOL
+  后续乘子 `bump(y1/2) − bump(y4/2)` 在该 bank 盒上 ≥ −0.005（桥
+  `betaBumpLb_le_beta_bumpA_yP25`，PA25:12524 真证）⇒ Lean 现形**强于**
+  HOL 后续形，即审计口径的「严格强」。
+- 数值与张力（正本裁决点）：`nli-triage-w1` 数值实测 Lean 现形仍真
+  （扣 0.005 后主支余量 min **+0.0274**）⇒ 不 BLOCKED；但 HOL 注记称该形
+  在同实例上「false」——两口径差（HOL 注记所指常数版次 vs 现库常数）未复核，
+  故本条立案待审而非直接 apply。
+
+### (c) 修法草案
+
+记档默认**不修陈述**，两案供裁决：
+
+1. **按 Lean 现状发射证书**（默认案）：给 `nliRestZTGIJCF4_0_1_0_0`
+   灌证书时必须按 Lean 现形（−0.005 乘子）发射与验收；**不能借用按
+   `force_y` 形发射的 HOL 证书**——余量差 0.005 量级，借用即假绿。
+2. （若裁决对表 HOL 后续版）m 槽乘子 `betaBumpLb` → `betaBumpForceY`
+   （IneqClosureDefs:485）：改 PA21 模板 1 处 + 16 实例 def + 16 投影，
+   下游消费面同批（PA25 `ztg4_ALT` 装配、`NliBanksZTGIJCF4Route`
+   `ztgM`/`ztgMain`、`Gamma4WideBanks:61/:132`、`NliBanks9:22`）——
+   陈述改动，须走完整 SF apply + 消费面重验，爆炸半径显著大于案 1。
+
+### (d) 保真影响
+
+- 真假：无假陈述风险（数值真 + (b) 方向性桥真证）；属保真记账，非移植误植。
+- 证书：方向性风险在案（(c)1）——本实例证书不可跨形借用。
+- 6 个已证 ZTGIJCF4 实例（`ztgijcf4-w1` 收口时核点）全部 m=0，不受影响。
+
+### (e) patch 草案要点
+
+记档件，暂无 patch。若批准 (c)2 另行立项：PA21 模板/实例/投影 +
+下游 4 文件消费面，预计数十处改动，须附消费面回归探针。
+
+### (f) 状态
+
+**立案待审**（housekeeping-w1 记档 2026-11-17；发现源 =
+`nli-triage-w1` `AUDIT.md` A-4 + `DELIVERY.md` #4、pq 续1152 ④
+SUSPECT-2；`docs/nli-campaign.md` §1.1 同口径）。

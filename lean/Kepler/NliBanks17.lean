@@ -11,7 +11,9 @@ The five remaining cone banks `nliTskXLLIPLS` / `nliTskRIBCYXUsym` /
 not apply: `gamma4fgcy` contains `sqrt`/`arctan`/`lmfun`, so the corner-walk
 factorisations cannot be `ring`-expressed, and the only x↔y bridge in-tree
 (PA21 `p21k_gamma4fgcy_div_sqrtdelta`) is `private` and consumes the
-**unproved** Euler anchor `p21k_euler_anchor`.  See `DELIVERY.md` for the
+Euler anchor `p21k_euler_anchor` (**unproved at lane time**; since proved
+in-tree: `p21k_euler_anchor_true`, PA21:11558, landed `ac1efea1a`,
+Euler W5).  See `DELIVERY.md` for the
 per-bank gap table.
 
 The `RIBCYXUsym` box `[2.001,2hminus]×[2,2hminus]⁵` is the one place where an

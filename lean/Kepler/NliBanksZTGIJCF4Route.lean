@@ -50,7 +50,9 @@ proof of `ztgMain > 0` on any of the ten boxes.  `ztgMain` contains
 `sqrt`, `arctan` and `lmfun`, so the x-space ring-algebraic corner walk of
 `NliBanks15/16` does not apply, and the only in-tree x↔y bridge
 (`PackingAuto21.p21k_gamma4fgcy_div_sqrtdelta`) is `private` and consumes the
-unproved `p21k_euler_anchor` (recorded in `Kepler/NliBanks17.lean`).  The
+`p21k_euler_anchor` (recorded in `Kepler/NliBanks17.lean`; unproved at lane
+time, since proved in-tree: `p21k_euler_anchor_true`, PA21:11558, landed
+`ac1efea1a`).  The
 numeric margins of the main branch on these boxes are `+0.0008 … +0.037`
 (exploratory sweep, not verified), so a genuine proof needs a 6-variable
 transcendental minimisation kit that does not exist in the tree.

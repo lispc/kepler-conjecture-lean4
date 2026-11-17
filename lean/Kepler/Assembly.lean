@@ -1890,9 +1890,11 @@ theorem nliPackNonlinearNonOx3q1h : pack_nonlinear_non_ox3q1h :=
 
 /-- 中层骨架 2：HOL `ox3q1h`（Oxl_def.hl；cc_v11 模型 4-基数 quarter case 的
 证书不等式库）接口分量本体。
-资产状态：**真缺口（语句级）**——Lean 对应物 `ox3q1hP25`（PackingAuto25.lean:89）
-本体即 `sorry` 型 opaque def（原注 `NEEDS: exact Oxl_def.hl body`）。
--- NEEDS: ①Oxl_def.hl 本体移植（P6-B 保真审补录）；②与注册表侧骨架
+资产状态：陈述层已定形——`ox3q1hP25`（PackingAuto25.lean:94）已于 DEF-FIX
+`b85eaade`（2026-11-06）显式化为 230 条非线性不等式合取（`ineqdata3q1h.hl`
+46 record × 5 支，构造序 = `merge_ineq.hl:78-92` record-major/case-minor）；
+本骨架 `nliOx3q1h` 的占位主体是**纯证书债**（230 条逐条，无语句级缺口）。
+-- NEEDS: ①230 条逐条证书接线；②与注册表侧骨架
 `nliOx3q1hIds` 的定义级桥（清单常量代入 + 查表语义，量产接线波）。 -/
 theorem nliOx3q1h : ox3q1hP25 := sorry
 
