@@ -1136,6 +1136,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-17（09:57，续1207）**：**双车道发车（用户批「A b 一起发」）**。
+① `ixpotpa-poly-w1`——**`nliRestIXPOTPA` poly 档收口**（recost 唯一 ≤10 CPU·h 条目
+0.59；无 gate 9 条之一）——scout 三选一判定（READY/EMIT-THEN-WIRE/BLOCKED）→
+证书面核查（**certtm hold 不许碰**，需解冻即 BLOCKED）→ bank 模块 + Assembly 接线
+→ 真 −1（53→52）；先例 = qitnpea-w1（`06285994`）；48 h 止损。
+② `housekeeping-w1`——**PICK-3 清仓**（一个 patch 五件）：betaBumpLb SF 记档
+（statement-fix-proposals 追加 §N 立案待审，不碰本体）+ 4 处过时注释修复
+（`NliBanks17:12-14`/`ZTGIJCF4Route:57-60`/`PA25:12031`/`Assembly:1897`；注释级
+改动、逐文件直编验收、sorry 面对账）；24 h 止损。
+③ 在飞盘点（6 lane）：kernel 波（~57%）+ math5-w4（sec8 拆分迭代）+ ox3q1h-nogate
+（v4/DELIVERY 收尾）+ 巡检 + 本双车道。Gate-0 分叉 A/B/C 仍待裁决。下一条：续1208。
+
 - **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
 ① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check
 PASS、RC=0、0 error）——**§0–§7/§9/§10 全实证明**（恒等式全套/corner 恒等式/数值砖/
