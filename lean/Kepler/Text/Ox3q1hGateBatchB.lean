@@ -14,6 +14,9 @@ Generator: scripts/emit_gate.py. No new sorry/axiom/native_decide.
 import Kepler.Text.Ox3q1hChainBatch6
 import Kepler.Text.Ox3q1hChainBatch1
 import Kepler.Text.Ox3q1hLin46
+import Kepler.Text.Ox3q1hChainSplit2
+import Kepler.Text.Ox3q1hChainSplit1
+import Kepler.Text.Ox3q1hChainSplitKit
 
 open Set Filter Topology
 
@@ -38,18 +41,16 @@ theorem c61_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.128506 * dihY y1 y2 y3 y4 y5 y6 + 0.263591 * y1 + 0.003287 * (y2 + y3 + y5 + y6) + (-0.957343) :=
   rfl
 
-/-- Component 61 gate (box 9; chain chain_idx61).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 61 gate (box 9; S4.5 split-grid chain
+`chain_split_idx61`, split factors per SPLIT_PLAN route `Y4PATCH:y2,y3,y4,y5,y6`, m_min =
+3; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c61_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b9lo i) (b9hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit61 i →
+      ConcaveOn ℝ (Set.Icc (gsplit61 i k) (gsplit61 i (k + 1)))
         (fun t => c61_mfunb (Function.update y i t) - K61 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb9 j) → B61 ≤ c61_mfunb v)
-    (hfeas : (0 : ℝ) < B61 - ∑ i, R61 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split61 j) → B61 ≤ c61_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (h0 + hplus) ≤ y1 → y1 ≤ (2 * hplus) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * h0) ≤ y4 → y4 ≤ (2 * hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.128506 * dihY y1 y2 y3 y4 y5 y6 + 0.263591 * y1 + 0.003287 * (y2 + y3 + y5 + y6) + (-0.957343) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -61,13 +62,10 @@ theorem c61_gate
     all_goals
       norm_num [b9lo, b9hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K61 i := by
-    intro i; fin_cases i <;> norm_num [K61]
-  have hR0 : ∀ i, 0 ≤ R61 i := by
-    intro i; fin_cases i <;> norm_num [R61, K61, b9lo, b9hi]
-  have hchain := chain_idx61 c61_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx61 c61_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c61_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx61
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 62 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
@@ -260,18 +258,16 @@ theorem c66_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.128506 * dihY y1 y2 y3 y4 y5 y6 + (-0.066254) * y1 + 0.003287 * (y2 + y3 + y5 + y6) + (-0.104563) :=
   rfl
 
-/-- Component 66 gate (box 9; chain chain_idx66).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 66 gate (box 9; S4.5 split-grid chain
+`chain_split_idx66`, split factors per SPLIT_PLAN route `Y4PATCH:y2,y3,y4,y5,y6`, m_min =
+3; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c66_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b9lo i) (b9hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit66 i →
+      ConcaveOn ℝ (Set.Icc (gsplit66 i k) (gsplit66 i (k + 1)))
         (fun t => c66_mfunb (Function.update y i t) - K66 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb9 j) → B66 ≤ c66_mfunb v)
-    (hfeas : (0 : ℝ) < B66 - ∑ i, R66 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split66 j) → B66 ≤ c66_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (h0 + hplus) ≤ y1 → y1 ≤ (2 * hplus) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * h0) ≤ y4 → y4 ≤ (2 * hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.128506 * dihY y1 y2 y3 y4 y5 y6 + (-0.066254) * y1 + 0.003287 * (y2 + y3 + y5 + y6) + (-0.104563) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -283,13 +279,10 @@ theorem c66_gate
     all_goals
       norm_num [b9lo, b9hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K66 i := by
-    intro i; fin_cases i <;> norm_num [K66]
-  have hR0 : ∀ i, 0 ≤ R66 i := by
-    intro i; fin_cases i <;> norm_num [R66, K66, b9lo, b9hi]
-  have hchain := chain_idx66 c66_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx66 c66_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c66_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx66
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 67 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
@@ -482,18 +475,16 @@ theorem c71_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.127166 * dihY y1 y2 y3 y4 y5 y6 + (-0.07331) * y1 + 0.003788 * (y2 + y3 + y5 + y6) + (-0.105909) :=
   rfl
 
-/-- Component 71 gate (box 13; chain chain_idx71).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 71 gate (box 13; S4.5 split-grid chain
+`chain_split_idx71`, split factors per SPLIT_PLAN route `Y4PATCH:y2,y3,y4,y5,y6`, m_min =
+5; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c71_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b13lo i) (b13hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit71 i →
+      ConcaveOn ℝ (Set.Icc (gsplit71 i k) (gsplit71 i (k + 1)))
         (fun t => c71_mfunb (Function.update y i t) - K71 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb13 j) → B71 ≤ c71_mfunb v)
-    (hfeas : (0 : ℝ) < B71 - ∑ i, R71 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split71 j) → B71 ≤ c71_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (h0 + hplus) ≤ y1 → y1 ≤ (2 * hplus) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (h0 + hplus) ≤ y4 → y4 ≤ (2 * hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.127166 * dihY y1 y2 y3 y4 y5 y6 + (-0.07331) * y1 + 0.003788 * (y2 + y3 + y5 + y6) + (-0.105909) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -505,13 +496,10 @@ theorem c71_gate
     all_goals
       norm_num [b13lo, b13hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K71 i := by
-    intro i; fin_cases i <;> norm_num [K71]
-  have hR0 : ∀ i, 0 ≤ R71 i := by
-    intro i; fin_cases i <;> norm_num [R71, K71, b13lo, b13hi]
-  have hchain := chain_idx71 c71_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx71 c71_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c71_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx71
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 72 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
@@ -714,18 +702,16 @@ theorem c76_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.126777 * dihY y1 y2 y3 y4 y5 y6 + (-0.053069) * y1 + 0.003525 * (y2 + y3 + y5 + y6) + (-0.142652) :=
   rfl
 
-/-- Component 76 gate (box 14; chain chain_idx76b3).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 76 gate (box 14; S4.5 split-grid chain
+`chain_split_idx76`, split factors per SPLIT_PLAN route `Y4PATCH:y2,y3,y4,y5,y6`, m_min =
+5; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c76_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b14lo i) (b14hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit76 i →
+      ConcaveOn ℝ (Set.Icc (gsplit76 i k) (gsplit76 i (k + 1)))
         (fun t => c76_mfunb (Function.update y i t) - b3K76 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb14 j) → b3B76 ≤ c76_mfunb v)
-    (hfeas : (0 : ℝ) < b3B76 - ∑ i, b3R76 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split76 j) → b3B76 ≤ c76_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (1 * h0 / 2 + 3 * hplus / 2) ≤ y1 → y1 ≤ (2 * hplus) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * h0) ≤ y4 → y4 ≤ (h0 + hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + 0.126777 * dihY y1 y2 y3 y4 y5 y6 + (-0.053069) * y1 + 0.003525 * (y2 + y3 + y5 + y6) + (-0.142652) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -737,13 +723,10 @@ theorem c76_gate
     all_goals
       norm_num [b14lo, b14hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ b3K76 i := by
-    intro i; fin_cases i <;> norm_num [b3K76]
-  have hR0 : ∀ i, 0 ≤ b3R76 i := by
-    intro i; fin_cases i <;> norm_num [b3R76, b3K76, b14lo, b14hi]
-  have hchain := chain_idx76b3 c76_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx76 c76_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c76_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx76
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 77 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
@@ -1603,18 +1586,16 @@ theorem c96_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.036939) * dihY y1 y2 y3 y4 y5 y6 + 0.050064 * y1 + (-0.057593) * (y2 + y3 + y5 + y6) + 0.397884 :=
   rfl
 
-/-- Component 96 gate (box 20; chain chain_idx96).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 96 gate (box 20; S4.5 split-grid chain
+`chain_split_idx96`, split factors per SPLIT_PLAN route `Y4PATCH:y4`, m_min =
+2; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c96_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b20lo i) (b20hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit96 i →
+      ConcaveOn ℝ (Set.Icc (gsplit96 i k) (gsplit96 i (k + 1)))
         (fun t => c96_mfunb (Function.update y i t) - K96 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb20 j) → B96 ≤ c96_mfunb v)
-    (hfeas : (0 : ℝ) < B96 - ∑ i, R96 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split96 j) → B96 ≤ c96_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (3 * h0 / 4 + 5 * hplus / 4) ≤ y1 → y1 ≤ (1 * h0 / 2 + 3 * hplus / 2) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * h0) ≤ y4 → y4 ≤ (h0 + hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.036939) * dihY y1 y2 y3 y4 y5 y6 + 0.050064 * y1 + (-0.057593) * (y2 + y3 + y5 + y6) + 0.397884 > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -1626,13 +1607,10 @@ theorem c96_gate
     all_goals
       norm_num [b20lo, b20hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K96 i := by
-    intro i; fin_cases i <;> norm_num [K96]
-  have hR0 : ∀ i, 0 ≤ R96 i := by
-    intro i; fin_cases i <;> norm_num [R96, K96, b20lo, b20hi]
-  have hchain := chain_idx96 c96_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx96 c96_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c96_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx96
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 97 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
@@ -2293,18 +2271,16 @@ theorem c111_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.066935) * dihY y1 y2 y3 y4 y5 y6 + 0.079693 * y1 + 0.066241 * (y2 + y3 + y5 + y6) + (-0.605497) :=
   rfl
 
-/-- Component 111 gate (box 25; chain chain_idx111).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 111 gate (box 25; S4.5 split-grid chain
+`chain_split_idx111`, split factors per SPLIT_PLAN route `Y4PATCH:y4`, m_min =
+2; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c111_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b25lo i) (b25hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit111 i →
+      ConcaveOn ℝ (Set.Icc (gsplit111 i k) (gsplit111 i (k + 1)))
         (fun t => c111_mfunb (Function.update y i t) - K111 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb25 j) → B111 ≤ c111_mfunb v)
-    (hfeas : (0 : ℝ) < B111 - ∑ i, R111 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split111 j) → B111 ≤ c111_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (2 * h0) ≤ y1 → y1 ≤ (h0 + hplus) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * h0) ≤ y4 → y4 ≤ (2 * hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.066935) * dihY y1 y2 y3 y4 y5 y6 + 0.079693 * y1 + 0.066241 * (y2 + y3 + y5 + y6) + (-0.605497) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -2316,13 +2292,10 @@ theorem c111_gate
     all_goals
       norm_num [b25lo, b25hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K111 i := by
-    intro i; fin_cases i <;> norm_num [K111]
-  have hR0 : ∀ i, 0 ≤ R111 i := by
-    intro i; fin_cases i <;> norm_num [R111, K111, b25lo, b25hi]
-  have hchain := chain_idx111 c111_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx111 c111_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c111_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx111
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 112 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
@@ -2525,18 +2498,16 @@ theorem c116_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.066935) * dihY y1 y2 y3 y4 y5 y6 + 0.028887 * y1 + 0.066241 * (y2 + y3 + y5 + y6) + (-0.477466) :=
   rfl
 
-/-- Component 116 gate (box 25; chain chain_idx116).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 116 gate (box 25; S4.5 split-grid chain
+`chain_split_idx116`, split factors per SPLIT_PLAN route `Y4PATCH:y4`, m_min =
+2; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c116_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b25lo i) (b25hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit116 i →
+      ConcaveOn ℝ (Set.Icc (gsplit116 i k) (gsplit116 i (k + 1)))
         (fun t => c116_mfunb (Function.update y i t) - K116 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb25 j) → B116 ≤ c116_mfunb v)
-    (hfeas : (0 : ℝ) < B116 - ∑ i, R116 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split116 j) → B116 ≤ c116_mfunb v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (2 * h0) ≤ y1 → y1 ≤ (h0 + hplus) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * h0) ≤ y4 → y4 ≤ (2 * hplus) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.066935) * dihY y1 y2 y3 y4 y5 y6 + 0.028887 * y1 + 0.066241 * (y2 + y3 + y5 + y6) + (-0.477466) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -2548,13 +2519,10 @@ theorem c116_gate
     all_goals
       norm_num [b25lo, b25hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K116 i := by
-    intro i; fin_cases i <;> norm_num [K116]
-  have hR0 : ∀ i, 0 ≤ R116 i := by
-    intro i; fin_cases i <;> norm_num [R116, K116, b25lo, b25hi]
-  have hchain := chain_idx116 c116_mfunb hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx116 c116_mfunb hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c116_mfunb_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx116
+  linarith [hchain, hpos]
 
 /-- Component 117 gate (box 26; chain chain_idx117; supply slots hsl/hcorner pending the S2-envelope and corner-bank lanes). -/
 

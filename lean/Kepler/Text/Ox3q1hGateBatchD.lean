@@ -14,6 +14,8 @@ Generator: scripts/emit_gate.py. No new sorry/axiom/native_decide.
 import Kepler.Text.Ox3q1hChainBatch6
 import Kepler.Text.Ox3q1hChainBatch1
 import Kepler.Text.Ox3q1hLin46
+import Kepler.Text.Ox3q1hChainSplit2
+import Kepler.Text.Ox3q1hChainSplitKit
 
 open Set Filter Topology
 
@@ -1611,18 +1613,16 @@ theorem c216_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
       gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.036939) * dihY y1 y2 y3 y4 y5 y6 + 0.050064 * y1 + 0.057593 * (y2 + y3 + y5 + y6) + (-0.523604) :=
   rfl
 
-/-- Component 216 gate (box 45; chain chain_idx216).
-KREBATE verdict INFEASIBLE: the unsplit B - sum R is negative, so
-feasibility for this conjunct needs the SPLIT_PLAN/Y4_PATCH grid
-variant (split-grid chain lane); here it stays as the `hfeas` slot.
-Supply slots hsl/hcorner/hfeas pending that lane. -/
+/-- Component 216 gate (box 45; S4.5 split-grid chain
+`chain_split_idx216`, split factors per SPLIT_PLAN route `Y4PATCH:y4`, m_min =
+2; supersedes the hfeas-slot placeholder whose unsplit feasibility is
+FALSE per KREBATE). -/
 
 theorem c216_gate
-    (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
-      ConcaveOn ℝ (Set.Icc (b45lo i) (b45hi i))
+    (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit216 i →
+      ConcaveOn ℝ (Set.Icc (gsplit216 i k) (gsplit216 i (k + 1)))
         (fun t => c216_mfund (Function.update y i t) - K216 i / 2 * t * t))
-    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb45 j) → B216 ≤ c216_mfund v)
-    (hfeas : (0 : ℝ) < B216 - ∑ i, R216 i) :
+    (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split216 j) → B216 ≤ c216_mfund v) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, (3 * h0 / 4 + 5 * hplus / 4) ≤ y1 → y1 ≤ (1 * h0 / 2 + 3 * hplus / 2) → (2) ≤ y2 → y2 ≤ (2 * hminus) → (2) ≤ y3 → y3 ≤ (2 * hminus) → (2 * hminus) ≤ y4 → y4 ≤ (2 * h0) → (2) ≤ y5 → y5 ≤ (2 * hminus) → (2) ≤ y6 → y6 ≤ (2 * hminus) → gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + (bump (y1 / 2) - bump (y4 / 2)) + (-0.036939) * dihY y1 y2 y3 y4 y5 y6 + 0.050064 * y1 + 0.057593 * (y2 + y3 + y5 + y6) + (-0.523604) > 0 := by
   intro y1 y2 y3 y4 y5 y6 hp1 hp2 hp3 hp4 hp5 hp6 hp7 hp8 hp9 hp10 hp11 hp12
   have hmn := Kepler.NliBanks17.nb17_hminus_bounds
@@ -1634,13 +1634,10 @@ theorem c216_gate
     all_goals
       norm_num [b45lo, b45hi]
       constructor <;> linarith [hmn.1, hmn.2, hcon.1, hcon.2]
-  have hK0 : ∀ i, 0 ≤ K216 i := by
-    intro i; fin_cases i <;> norm_num [K216]
-  have hR0 : ∀ i, 0 ≤ R216 i := by
-    intro i; fin_cases i <;> norm_num [R216, K216, b45lo, b45hi]
-  have hchain := chain_idx216 c216_mfund hsl hK0 hR0 hcorner ![y1, y2, y3, y4, y5, y6] hx
+  have hchain := chain_split_idx216 c216_mfund hslp hcorner ![y1, y2, y3, y4, y5, y6] hx
   rw [c216_mfund_at y1 y2 y3 y4 y5 y6] at hchain
-  linarith [hchain, hfeas]
+  have hpos := feas_split_idx216
+  linarith [hchain, hpos]
 
 /-- Margin function of conjunct 217 (verbatim conclusion, vectorized; shared by identical conjuncts). -/
 
