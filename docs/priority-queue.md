@@ -1323,6 +1323,11 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（01:10，续1233c）**：**`ox3q1h-s2a-interactive-w1` S2a 试点停轮落库 `cec2264f`——`Ox3q1hS2aBox5Y4` 新文件（495 行/5 定理，cone-neutral），**四条二阶偏导全绿**（远程八轮 BLOCKED → 交互式 7 轮全收口）**。
+① 五定理：`hasDerivAt_quad_s2a`（二次式导数 helper）+ `dihXf_second_deriv_x4/x5/x6/x1`（∂²dihXf 四方向全绿，**x1 重件超额完成**——原计划后置独立批）。**编排者闸（亲跑）**：patch CHECK PASS（删除主仓 untracked 旧 WIP 后 apply）；岛协议直编 RC=0/0 err；**5/5 `#print axioms` 恰标准三零 sorryAx**。cone-neutral（SORRIED 52 不变）。
+② 方法论沉淀（DELIVERY.md，量产可复制）：**收口范式定型** = 语句值写链原生形（引理输出未归约形状）、终步纯 `exact`、需归一时用具名 hv + `congr_deriv`、杜绝匿名 `by ring` 实参。新雷两条：`Real.sq_sqrt` 是错引（证 √(a²)=a，(√a)²=a 需 `pow_two` + `Real.mul_self_sqrt`）；`Term / (DEN) x1` 中 `(DEN) x1` 被吃成函数应用——整值最外层必须括号。
+③ 交接包三方接力验证：老车道远程八轮 BLOCKED → 编排者接管 7 轮（字符串外科手术路线失败，诊断入 ORCHESTRATOR_NOTE_S2A.md）→ 交互式新鲜车道 7 轮全收口——**用户"长上下文即换新 session"指令的双向验证**（新 session 反馈更快，且编排者接管同样退化时也该早停）。
+④ 剩余：margin″_y4 ≤ 0 ≤ K_y4 装配 + KENV 回填（~350+ 行；四条二阶偏导 = dihXf 侧全部积木）→ 48 盒量产（DELIVERY idiom 清单照单）→ S2 供给余量 → S5 接线（−1 落点）。车道已 resume 装配批。下一条：续1234。
 - **2026-11-18（00:45，续1233b）**：**`ox3q1h-s3-fresh-w1` S2a 发射侧远程迭代判 BLOCKED（v20–v27 八轮不收敛）——按用户长上下文指令启动 S2a 专用新鲜车道接力**。
 ① **BLOCKED 定性（非数学缺口）**：预检 184×6 零缺口已定数学可行；卡点 = `HasDerivAt` 链的 elaborator 对文件上下文（前序 have 的类型赋值）敏感——远程非交互式探针每轮只能看错误信息、不能交互检查中间项形态，五种路线（rw/congr_deriv/unfold/exact/simp）均未一步通过。
 ② 数学面已定案：atan 一阶坍缩 ⇒ 全部二阶偏导初等可证；包络天花板 |dihY″_y4|≤2、|volY″_y4|≤3；19 行 INFEASIBLE 的 SPLIT/Y4PATCH 可能整体过度保守（KENV y4-K 系 census 端点伪信号，S2a 证明后裁决）。
