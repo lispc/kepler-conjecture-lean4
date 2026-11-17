@@ -6,6 +6,8 @@
 >
 > ## 状态更新
 >
+> - **2026-11-17（19:10，编排者，四十九）**：**Gate-0 实测复测收线 = NO-GO 实测确认（p3/p2），CERTTM2-ENGINE 路线出局**。`gate0-measure-w1`（11.7 CPU·h）实测：p3 s*>56.2（N≥248=191 闭+57 开，下界定理）、p2 s*>52.8（N≥548>288 锚）——双双落 jet3-g0 外推带 35–80 内，原判方向与量级证实；p1 灰区（s*>16.7 零闭合，无 GO 证据）。提速落库 `12c81dee`（engine_cert.py ×6.7：T2-dead 预切+sep_early+Hd/Ho 合并；188 叶重放 0 mismatch，证书机器零改动）。后效：43 条 gate 冻结债归口农场/LP 两类；43 条分类计划待排产（与 farm-ops-w1 合流）。§1.3 引擎判定行更新为「NO-GO（实测）」，快照 `gate0-measure-w1/`（MEASURED_VERDICT.md）。
+
 > - **2026-11-17（16:05，编排者，四十八）**：**基线 AP——`nliCell3QZECFICwt0corner` 真证（SORRIED 53→52），math5 五债战役首笔 −1**。`math5-w4` 交付 `NliBanks18.lean`（2,970 行：§8 mega-lemma 拆 15 独立引理，solA/B/C + dihA/dihY×2 六槽 HasDerivAt → 组合 → 单调下界 0.0094；`nb18_dih_swap23` 新引理）+ Assembly 接线（删除面恰= sorry 行）。编排者闸全过（直编 RC=0/0err、Assembly 岛编 RC=0 46.9s、亲跑 `#print axioms` ×3 恰标准三）；地图定档 K_REACH 2,101,198（+113）/ SORRIED **52** = Assembly 52（51 `nli*` + 1 hLP）/ Text 0 / AXIOM 585（0/0）/ COVERAGE 99.420190%。剩余四债 sqrt8→wt2A→wt1→iyou 同套槽件配方续打（件 2 已 resume）。
 
 > - **2026-11-17（08:15，编排者，四十七）**：**`ztgmain-w2` 收线落库 `decbc61c`——`NliBanksZTGIJCF4Dih`（新模块 6,191 行/143 声明全标准三，cone-neutral），ZTGIJCF4 dihY 半边四箱收口**。`ztgG_box5` (c) 路线一轮成型：32 角点假设显式命名 + 31 步 Jensen 链全 term-mode + 逐坐标二次符号化（`unfold deltaX deltaX4; ring`）/linarith 步——零 defeq 爆炸（w1 的 (a)/(b) 两路全灭后 (c) 一次过）。四条 `ztg_dihY_<bits>`：**1.008/0.875 ≤ dihY**（编排者亲跑四箱 axioms 复验恰标准三）。勘误 w1：字面角点不可证 → `NliBanks7.hminus_ge_123175` + `mi_hminus_lt_h0`（零新 import）；gen_dih.py 三 latent bug 修复。数学新发现：deltaX 每坐标 x2..x6 均二次。γ4 侧等角点表裁决；四箱+Kit A 已是任何 γ4 路线共同前置。
