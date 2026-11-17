@@ -1280,6 +1280,11 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
 ② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
 ③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
+- **2026-11-17（22:15，续1226）**：**`ox3q1h-nogate-w1` S3 首批落库 `062c1799`——`Ox3q1hChain3` 新文件（269 行/6 定理，cone-neutral），三条款整链贯通；编排者接管收口并修正真根因**。
+① **真根因（推翻续1219 以来的全部 linarith 修法尝试）**：`exists_vertex_grid` 的结论/不变式**方向翻转**——chord-rebate hstep 是"上移受界"形（`f y' ≤ f y + R`），链条需要角点值"不高于 f x + ΣR"（`f v ≤ f x + ΣK`，配 `hcorner: B ≤ f v` 才能闭 `B − ΣK ≤ f x`）；文件原写 `f x ≤ f v + ΣK`（v 续4 的"⟺ 等价"断言不成立）——方向一翻，insert-case 从"不可解的 nlinarith"变成三步 calc（`hle` / linarith / `Finset.sum_insert`+ring），且无需 hK。
+② 另两处编排者修复：**R41/R76 被引用但从未定义**（"KENV-def 级联 8 错"的主体）——补 exact-fraction def（`K_i·W_i²/8`）；三实例 `final_bound (K := R41/R76)` 具名实例化 + hK 项内联 `div_nonneg` 证明；hstep witness 用 `rw [hcands i]` 钉住 {cands}。
+③ **编排者闸（亲跑）**：直编 RC=0/0 err；文件内 audit **7 声明全恰标准三零 sorryAx**（exists_vertex_grid/hstep_of_shifted_concave/final_bound/chain_idx41/46/76）。cone-neutral（SORRIED 52 不变）。patch_chain3.diff 落快照（279 行）。
+④ S3 量产就绪：Chain3 即模板（ConcaveKit→SliceRebate→grid→final_bound→实例五段照单复制），20–40 条/批分批停轮。车道已 resume 量产首批。下一条：续1227。
 - **2026-11-17（21:00，续1225）**：**`ox3q1h-nogate-w1` K 包络批停轮落库 `ce9174b4`——`Ox3q1hConcaveKit` 新文件（143 行/3 定理，cone-neutral）+ KENV 数据表；S3 量产前置全就绪**。
 ① Lean 侧三定理：`concave_shifted_of_deriv2_le`（f''≤K twice-differentiable 读法 → `concaveOn_of_deriv2_nonpos` 桥）+ `slice_shifted_concave_of_deriv2`（Fin n update 提升）+ `slice_hper_of_deriv2`（直产 SliceRebate 消费的 hper）。**编排者闸**：apply CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**；namespace Kepler.Text ✓。
 ② 数据侧 `KENV.tsv`（1,104 行 = 184 GAMMA4 × 6 坐标，快照 corner184/）：K = ceil(|f''|普查×25/16) @ 2^-40 外向 dyadic；**90 REBATE / 1,014 CONCAVE（K=0）**；最紧 idx 41 y4：K≈0.864、R_i≈1.85e-3；unsplit 172/184 全正、12 行需劈分（与 SPLIT_PLAN 一致）。
