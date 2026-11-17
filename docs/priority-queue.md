@@ -1136,6 +1136,23 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
+① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check
+PASS、RC=0、0 error）——**§0–§7/§9/§10 全实证明**（恒等式全套/corner 恒等式/数值砖/
+hD2 下界/HasDerivAt 链/step0-2/bank；w2 十错全修），**唯一 sorry = §8
+mega-lemma `nb18_axis_deriv` 证明体——elaboration 烧穿（非数学缺口）**：根因 =
+`set` 10 条方程 + 实 p2 在 unifier 指数级交互（诊断已入 DELIVERY）。
+② **拒收依据 = AGENTS §2 最高优先（不许新增 sorry）**：w3 自己也建议烧穿修复后再
+接线（Assembly `nliCell3QZECFICwt0corner` 未动，SORRIED 53 不变——诚实账）。
+③ **`math5-w4` 发车（收官车道）**：主路线 = 把 `nb18_axis_deriv` 拆 3–4 个独立
+lemma（各自心跳预算，消除 unifier 指数交互）；备选 = set→显式 have / 乘积项拆
+mul_le_mul / 证书提前物化；**零 sorry 验收**（`nb18_bank` axioms 恰标准三零
+sorryAx）+ **Assembly:408 接线必做**（w3 未做）→ 真 −1（53→52）；patch 交闸。
+48 h 止损。
+④ 战役账：五债 corner→sqrt8→wt2a→wt1→iyou；w1→w2→w3→w4 四代接力，资产全程
+落盘零丢失（MILESTONE 制实证有效——w2 死亡后 w3 从镜像 45 min 内恢复 §0–§5）。
+下一条：续1207。
+
 - **2026-11-17（08:15，续1205）**：**`ztgmain-w2` 收线落库 `decbc61c`（编排者 apply+自编译岛探针+亲跑四箱 axioms 复验）——ZTGIJCF4 dihY 半边四箱收口**。
 ① **`ztgG_box5` (c) 路线一轮成型**：32 角点假设显式命名（`h_lllll…h_hhhhh`）+
 31 步 Jensen 链（16 e5 + 8 e4 + 4 e3 + 2 e2 + final）全 term-mode + 逐坐标一次性
