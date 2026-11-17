@@ -1280,6 +1280,11 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
 ② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
 ③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
+- **2026-11-17（23:40，续1228）**：**`ox3q1h-nogate-w1` S3 Batch2 落库 `e18cd427`（idx 20–59，32 条 chain，cone-neutral）；编排者接管收口 + 按用户指令换新鲜 session 车道**。
+① 用户裁定入档：**sub agent 长上下文表现退化时启动新 session**——ox3q1h 车道（当日 06:49 起，多轮 resume）近期 micro-turn 化（3 工具用/轮、重报告轻推进）即此形态；本批由编排者接管收口后，S3 余量交新鲜车道。
+② 编排者接管修复（Batch2 全 32 条 hstep Type mismatch）：**统一桥接模式**——逐 chain 插 `RNv_def`（R exact-fraction 数组 def = K·W²/8 公式，`fin_cases+norm_num`）+ hstep lambda `rw [RNv_def i]` 钉值形；另修生成器两缺陷（chain_idx41 结论行 `R41`→`b2R41` 漏替换；idx41/46 与已落库 Chain3 同名冲突 → 重命名 `chain_idx41b2`/`chain_idx46b2`，逐坐标 K vs 统一 K 同合取合法替身，S4 择一）。
+③ **编排者闸（亲跑）**：直编 RC=0/0 err；文件内 audit **32 声明全恰标准三零 sorryAx**。cone-neutral（SORRIED 52 不变）。
+④ **S3 进度：51/184**（Chain3 3 + Batch1 16 + Batch2 32）；剩余 133 条（idx 60–183）+ S4/S5 由新鲜车道接手（交接包 = 已落库六文件模板 + KENV/SPLIT_PLAN/Y4_PATCH 表 + MILESTONE 清单）。老车道退役不 resume。下一条：续1229。
 - **2026-11-17（23:05，续1227）**：**`ox3q1h-nogate-w1` S3 量产 Batch1 停轮落库 `df42274f`——`Ox3q1hChainBatch1` 新文件（579 行，idx 1–19，16 条 chain 条件定理，cone-neutral）**。
 ① 五段结构照 Chain3 模板复制（box0–3 精确分数 defs + K/B/R + cands 三件套 + 16 条 chain）；v3 探针一次清零——**量产教训入 MILESTONE：批量修用生成器整文件重生成而非增量正则补丁**（v50 的 22 错 = kn-wrap 正则截断供给行前缀 12 处 + id_eq-ring 位置 1 处 + 级联；重生成时还原 kn 包装改普通形 + simpa 归一 ALL-CONCAVE hstep 值形）。
 ② **编排者闸（亲跑）**：apply CHECK PASS（patch 落快照 ✓）；直编 RC=0/0 err；**16/16 chain `#print axioms` 亲验恰标准三零 sorryAx**。cone-neutral（SORRIED 52 不变）。
