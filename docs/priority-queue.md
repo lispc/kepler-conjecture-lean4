@@ -1136,6 +1136,18 @@ FILE MAP 注释同步，doc-only）；**不含** LocalConcl 增 import（留给�
 ② **派单**：`jlxfdmj-w4`（fresh 接管 jlxfdmj-w2/w3；上代 agent-29 跨会话不可 resume）——接续包 `~/c17_backup/lane_snapshots/jlxfdmj-w3/`（段1/段2 全绿 + `probes/DevAll3.lean` 52,639 B + `/tmp/jlxfdmj-w2/logs/devall3_err.log`）。目标：段3 `jlxfdmj_ge4` 收口（当前 3 类错误：1097 语法未闭合 / 1089 unsolved goals / 1079+1094 omega 看不见 let 变量 i0,r0,df,dr,db）→ 拼接整文件 → patch。**K4b 三线钥匙 → SCS_6I1 + LA33 两件 = Text 11→8 通道**。工单硬要求：先落盘 b/、1 lean + guard_wait、不碰主仓 tracked、不 commit、k=3 缺口按 PLAN 走 SF 提案不改陈述。
 ③ **下一条**：续1043。
 
+- **2026-11-17（10:58，续1209）**：**`gate0-measure-w1` 发车（用户裁 Gate-0 挂分支 = **B**）——把 NO-GO 的外推 s*≈35–80 换成实测**。
+① 使命：PROFILE（节点成本分解）→ OPTIMIZE（memoization + warm-start 132 闭叶 +
+2 worker + dyadic 精度恰至 SAFE——**soundness 回归 132 逐位复现是硬闸**）→
+MEASURE-p3（全收敛，4–6 h，30 min frontier 快照落盘）→ MEASURE-p1/p2（实测前沿
+衰减率）→ VERDICT（预定表实测版判定行）。
+② 判定表（jet3-pre §3.3，实测输入版）：≤10 GO 候选（→用户终审）/ 10–30 灰区
+（→Jet3.lean 升级决策点）/ >30 NO-GO 实测确认——**三方向都是有效结论**。
+③ 零 lean、≤12 CPU·h/≤2 worker、36 h 止损；包变更以 patch 交付；诚实红线 =
+外推数字一律显式标注与实测区分。
+④ 并行不受影响：9 条无 gate（ixpotpa bb 发射中 / math5-w4 / ox3q1h 角点表 pilot）、
+kernel 波 3,103/5,212（59.6%）。下一条：续1210。
+
 - **2026-11-17（10:10，续1208）**：**`housekeeping-w1` 收线落库 `1295d736`——PICK-3 清仓一个 patch（5 文件 92+/8−，全部注释/文档级，SORRIED 与 sorry 面不变）**。
 ① betaBumpLb SF **§110 立案待审**：考古 = 源发现 `nli-triage-w1` AUDIT A-4（pq 续1152
 ④ SUSPECT-2）；HOL 正本实读证实 Lean 转录逐字忠实（ineq.hl:459-468 模板字面），但
