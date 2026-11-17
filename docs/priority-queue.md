@@ -1198,6 +1198,18 @@ kernel 波 3,103/5,212（59.6%）。下一条：续1210。
 ③ 在飞盘点（6 lane）：kernel 波（~57%）+ math5-w4（sec8 拆分迭代）+ ox3q1h-nogate
 （v4/DELIVERY 收尾）+ 巡检 + 本双车道。Gate-0 分叉 A/B/C 仍待裁决。下一条：续1208。
 
+- **2026-11-17（13:05，续1211）**：**`ztg-g4corner-scout-w1` 发车（用户批「A」）——ZTGIJCF4 γ4 侧角点表真实成本侦察（零 lean，24 h）**。
+① 核心问题：四条解耦债（`1_1_0_0`/`0_1_1_0`/`0_1_0_1`/`0_0_1_1`）的角点有多少落在
+`Gamma4Sharp`（`eb9e0987`）已证恒等式覆盖槽位（`gamma4_at_regular`/`gamma4_at_sqrt8`
+/`2·arctan(1/√2)=arccos(1/3)`）？——此前"~10 万行/5–7 天"是未核实外推。
+② 盘点基础：dihY 半边已全落库（Kit A + 四箱），四债 γ4 ≥ 0.0403/0.0703 余量实测
++2.5e−2/+1.6e−2；角点数据可能已在档（ztgmain-w1 CORNERS.tsv 1.3 MB + ztgijcf4-w1）；
+勘误在案：kink 角点须按槽型过滤、三债解耦失效（min γ4 0.0139727 → 界 −0.01085）。
+③ 交付：`CORNER_CLASS.tsv`（角点×槽型×γ4 值×恒等式覆盖×成本）+ `G4CORNER_PLAN.md`
+（逐债行数 + 施工图 = box5 (c) 逐叶 have 链模式 + 角点表路线 GO/NO-GO 判定）。
+④ 后续 gating：四债 γ4 角点表若 GO → 补齐即接线四条 `ztg_of_global_bounds`
+（最多 −4）；六条 joint 债只分类不施工。下一条：续1212。
+
 - **2026-11-17（08:59，续1206）**：**`math5-w3` 停轮（95% WIP 交付）→ patch 因含 1 个 sorry 按 AGENTS §2 拒收未落库 → `math5-w4` 收官车道发车**。
 ① w3 交付（快照 `math5-w3/` 全齐）：`NliBanks18.lean` 1,273 行 patch（apply --check
 PASS、RC=0、0 error）——**§0–§7/§9/§10 全实证明**（恒等式全套/corner 恒等式/数值砖/
