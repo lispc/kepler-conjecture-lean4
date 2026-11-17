@@ -1144,6 +1144,11 @@ prec-128 不解决（13 pending）；TM 只闭 70 叶；Heron 重写/守卫有�
 **结构性诊断**：阶梯 = eta/delta 支面相切区域的轴对齐二分回归（精确镜 wrap ±0.27~1.08
 vs 真值 +0.05~0.17）。**Lean decide 实测 ~11 s/2000 叶 shard ⇒ 3M 叶 ≈ 500 h**——
 远超预算，recost 的 0.59 CPU·h 估计实测推翻（**ERRATA 候选**）。
+**最终报告增补（决定性实测）**：CM41L3/Shard1（2000 叶 poly shard，L3 证书首 shard）
+**编译 ≥40 min CPU 未完成 ≈ 1.2+ s/叶**，比 recost 模型 5–20 ms/叶差 **60–240×**；
+即便证书压到 2M 叶，decide 墙钟 ≈ **27 天量级**——ERRATA 升格实锤：
+recost 的估算基于 200k 截断跑外推，对落地预算**低估 2–3 个数量级**；
+"≤10 CPU·h 短名单唯一候选"实为 FARM 34 条里隐藏最深的坑。
 ② **可复用资产（后续车道直接拿）**：守卫有理化 eta 改写（IXPOTPA_guard.json——零
 sqrt/零参数化，m41_L3 证书 99,388 叶 **v1 --disj-dummy 发射成功** 97 shards）；glue
 数学 100% 验证（probe9 RC=0）；收窄 case 四版全套 + 500 点布尔等价对拍脚本。
