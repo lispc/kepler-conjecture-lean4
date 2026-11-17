@@ -26,6 +26,7 @@
 -/
 import Kepler.Statement
 import Kepler.NliBanks16
+import Kepler.NliBanks18  -- nliCell3QZECFICwt0corner 真证（math5-w4）
 import Kepler.Graphs
 import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
@@ -405,7 +406,8 @@ theorem nliCell3QZECFICwt0 : bank_QZECFICwt0 := sorry
 `bank_QZECFICwt0corner`，盒 [1,1]³×[2,2.01]³）。资产状态：
 deferred-compute。
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliCell3QZECFICwt0corner : bank_QZECFICwt0corner := sorry
+theorem nliCell3QZECFICwt0corner : bank_QZECFICwt0corner :=
+  Kepler.NliBanks18.nb18_bank
 
 /-- 1a 3/7：HOL ineq entry `QZECFIC wt0 sqrt8`（ineq.hl:1406；PA21
 `bank_QZECFICwt0sqrt8`，盒 [1,1]³×[2hplus,√8]×[2,2hmin]²，析取第二支
