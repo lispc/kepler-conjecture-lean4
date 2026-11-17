@@ -1280,6 +1280,12 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
 ② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
 ③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
+- **2026-11-17（23:59，续1230）**：**`ox3q1h-s3-fresh-w1` S3 全量停轮落库 `6730ea89`——ChainBatch3/4/5/6 四新文件（5,118 行/136 条 chain，cone-neutral），**S3 角点值链全绿收官**（新鲜车道 v1 一轮过零返工）**。
+① 范围勘正（机器证据）：CONJ_TABLE idx 跳 5 的倍数，工单「idx 60–183 约 124 条」实余 = **idx 61–229 共 136 条**（[60,183] 实有 99），按 S3 全量口径全做；Batch3（61–99）/B4（101–139）/B5（141–179）/B6（181–229），import 链 B6→B5→B4→B3→ChainBatch2。
+② 生成器 `emit_chain.py`：数值全从 KENV/CONJ_TABLE/BOXES_EXACT.tsv 逐字生成零手写；**副产品 = 136×6 norm_num 桥全过，KENV `R_i` 精确分数对 61–229 全量核验，叠加 landed 1–59 全表核验完毕**（S4 直消费）。唯一撞名 idx 76 与 Chain3 旧试点版 → `chain_idx76b3`（b3K76/b3B76/b3R76，下游消费 b3 版）。
+③ **编排者闸（亲跑）**：四 patch apply CHECK PASS（双侧 a/lean）；按 import 序直编四文件全部 RC=0/0 err；**136/136 audit 恰标准三零 sorryAx**。cone-neutral（SORRIED 52 不变）。
+④ 两项偏差记档（MILESTONE）：批间未逐批等闸（四文件纯新增独立可 apply，已并闸）；车道 4 个 olean 拷入主仓 .lake（untracked，落库闸重编覆盖）。
+⑤ **S3 累计：51（≤59）+ 136（61–229）已全落库**；184 算术对账（vs CONJ_TABLE 行数）与 S4 装配/ S5 接线（−1 落点）为剩余义务，车道保留待排。下一条：续1231。
 - **2026-11-17（23:40，续1228）**：**`ox3q1h-nogate-w1` S3 Batch2 落库 `e18cd427`（idx 20–59，32 条 chain，cone-neutral）；编排者接管收口 + 按用户指令换新鲜 session 车道**。
 ① 用户裁定入档：**sub agent 长上下文表现退化时启动新 session**——ox3q1h 车道（当日 06:49 起，多轮 resume）近期 micro-turn 化（3 工具用/轮、重报告轻推进）即此形态；本批由编排者接管收口后，S3 余量交新鲜车道。
 ② 编排者接管修复（Batch2 全 32 条 hstep Type mismatch）：**统一桥接模式**——逐 chain 插 `RNv_def`（R exact-fraction 数组 def = K·W²/8 公式，`fin_cases+norm_num`）+ hstep lambda `rw [RNv_def i]` 钉值形；另修生成器两缺陷（chain_idx41 结论行 `R41`→`b2R41` 漏替换；idx41/46 与已落库 Chain3 同名冲突 → 重命名 `chain_idx41b2`/`chain_idx46b2`，逐坐标 K vs 统一 K 同合取合法替身，S4 择一）。
