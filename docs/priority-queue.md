@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-17 晚：kernel 波（~68.5%）+ `ox3q1h-nogate-w1`（S1 Lin46 已落 `930d0dd1`、S2 Rebate 续修）；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-17 晚：kernel 波（~70%）+ `ox3q1h-nogate-w1`（S1 `930d0dd1` + S2 Batch1 `6fc8db4b` 已落、S2 包络余量续打）；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1276,6 +1276,10 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ② **数学事实定档**：`c3Main > 0` 全盒为真（min = 角点 0.003745，16³ 扫描；两支合取失败点 0）——**件 2 是证书构造瓶颈，非数学问题**；eta⟺deltaX 对偶骨架（§12 四引理，`308d0536` 已落库）对任何未来路线（含解冻 certtm）都是正确前置。
 ③ **升级三选项**：(i) certtm 解冻（原版 Clusterlp+Branching 即为此盒存在；AGENTS §4 用户保留）/ (ii) S·a 联合乘积证书新数学（研究性，可行性未知）/ (iii) 挂起 sqrt8 改排产——**编排者注：census 续1193 实测 wt2A 走 y5/y6 严格单调 + y4 一维证书路线可行（余量 +3.011e-3），与 sqrt8 电池路线不同族，"同瓶颈"预期不成立**。Assembly:416 零新 sorry；SORRIED 52 不变。下一条：续1221。
 
+- **2026-11-17（19:05，续1223）**：**`ox3q1h-nogate-w1` S2 Batch1 停轮收线落库 `6fc8db4b`——`Ox3q1hRebate` 新文件（130 行/3 定理，cone-neutral）**。
+① 三定理 `descend_step_le`/`exists_vertex_descend`/`exists_vertex_rebate`（min-形式逐片 rebate 证书 + `Fin n` 坐标下降迭代 + 组合形式，纯 Mathlib）——闭合 NOGATE_PLAN §6 "S2 内 60 行归约引理"义务。**编排者闸**：apply PASS（车道此轮 patch 已落快照 ✓，§7.1-23 教训吸收）；直编 RC=0/0 err 4.2 s；**3/3 `#print axioms` 亲验恰标准三零 sorryAx**。
+② 编排者机械修正一处：namespace 根级 `Ox3q1hRebate` → `Kepler.Text`（与 Ox3q1hLin46 同批惯例，防根命名空间污染；声明全名变更、零消费者）。
+③ S2 余量 = |f''| ≤ K 双侧包络基座（义务接口 = Rebate 的 hper 形态已定义）→ S3 角点值 bank（30–60 lean-h）→ S4 装配 → S5 接线；Pilot B3 尾部 2 根错误已特征化可顺带清。车道已 resume S2 其余批次。下一条：续1224。
 - **2026-11-17（19:10，续1222）**：**`gate0-measure-w1` 收线落库 `12c81dee`——Gate-0 判定由外推升级为实测确认（p3/p2 NO-GO），43 条冻结债的 CERTTM2-ENGINE 路线正式出局**。
 ① **实测判定行**（11.7 CPU·h / 墙钟 6.8 h，预算 ≤12/36 内）：**p3 NO-GO（实测）**——N ≥ 248（191 颗 P0 级 T2 闭叶 min 9.8e-6 = 98×SAFE + 57 开前沿），下界定理给 **s*(p3) > 56.2** 越线；**p2 NO-GO（实测）**——N ≥ 548 > 288(s=30 锚) ⟹ s* > 52.8；**p1 灰区/未定**——N ≥ 181 且增长、零闭合、s* > 16.7，实测衰减率（认证 dead bound 每 40 节点 ×~0.66）外推需 ~2,000+ 节点才进闭合带，无任何 GO 证据。两件实测下界均落 jet3-g0 原外推带 35–80 内——**原 NO-GO 方向与量级被证实**。
 ② **提速落库**：engine_cert.py 仅此一文件（+253/−106）——认证 T2-dead 预切（thin jet 一步判死）+ sep_early 二级预切 + Hd/Ho 合并单次 envelopes；宽前沿 hopeless 节点 **42.13→6.33 s = ×6.7**（主力成本类），闭合叶/conservative 持平。硬闸：188 叶 P0 全量协议重放 **0 mismatch**（certOk 132/132 逐字段精确；p3#0 boundA 与存档逐位相等）；证书机器 tmcarry/emit_tm2/symtree/dyad/exprs 一行未改；编排者复核 patch 双侧 a/pipeline + apply PASS + 语法 OK。
