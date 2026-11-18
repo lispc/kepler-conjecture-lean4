@@ -95,7 +95,7 @@
 ---
 
 
-## 1. 在飞（2026-11-18 早：**`tskasm-land-w1` 装配落地在飞**（续1236，目标 SORRIED 52→51）；kernel 波已收线——TSKAJXY full box **5,212/5,212 PASS / 0 FAIL**，pool 6,612 leaf oleans 齐全（续1235，编排者亲验）；`ox3q1h` **S2b Batch1 已落 `8326ca5e`**（`Ox3q1hS2bBox5CornersA–D` 四新文件 42,882 行/1,672 定理全绿，cone-neutral），s2b-close 车道停轮；S2a margin″ 装配等 SF 裁决；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221 用户裁）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-18 早：**`sf-hslp-box-w1`（SF 111 实施）与 `farm-ops-w1`（排产规划）在飞**；**TSKAJXY 装配已落地**（`58ade83a`+`c940aae7`+`e4c384e6`，`nliTskXLLIPLS` 标准三，SORRIED 待地图仪器确认 52→51）；kernel 波已收线——5,212/5,212 PASS（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`；S2a margin″ 装配在 SF 111 实施后解锁；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1323,6 +1323,13 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（08:40，续1237）**：**SF 111 获批并实施——`sf-hslp-box-w1` 发车（用户「1 推进」）：ox3q1h G4 供给槽 hsl/hslp 加盒前提**。
+① SF 111 已入 `docs/statement-fix-proposals.md`（`3f3b404d`）：184 gate 槽（hsl 165 + hslp 19）+ 184 chain_idxN hsl + 19 chain_split_idxN hslp = **387 处前提**，12 文件；盒前提 `(∀ j, y j ∈ Icc (bNlo j) (bNhi j))`，N 按 `S4_MAP.tsv` box_id；结论/槽序/S5 对位零改动。
+② 依据：盒外反例 y=(3,2,2,2.53,2,2) 使 margin″_y4=1.386 > K=0.864 ⇒ 原槽不可满足，S2 供给 BLOCKED（续1233）。
+③ 车道路线：先验生成器（emit_gate/emit_chain/emit_split）对 12 文件逐字节可复现 → 模板改 + 整文件重生成（§7.1-32）；闸 = 12 文件直编 + 387 处「只多前提、结论逐字不变」脚本断言 + axioms 标准三。6 h 止损。下一条：续1238。
+- **2026-11-18（08:40，续1238）**：**`farm-ops-w1` 发车（用户「3 推进」）——农场/LP 统一排产规划（零 lean）**。
+① 范围：43 条 Gate-0 冻结债逐条对账（含 ox3q1h/math5 已消项更新）+ math5 四债（sqrt8/wt2a/wt1/iyou）；每债判 farm/certtm/解析/BLOCKED 并给优先级、批次、核时区间、解冻请求（certtm/TM3/Mono\*/D 层默认 hold，只列请求不假设获批）。
+② 交付：`FARM_PLAN.md` + `DEBTS.tsv` + `DELIVERY.md`；数字全部标来源或 EST；主仓零改动。下一条：续1239。
 - **2026-11-18（08:25，续1236）**：**`tskasm-land-w1` 发车（用户批「装配吧」）——TSKAJXY 全盒装配落地，目标 SORRIED 52→51**。
 ① 起点：kernel 波 5,212/5,212 + pool 6,612 olean 齐全（续1235 编排者亲验）；装配源 202 模块/23,832 行（`tskasm-prep-w1/assembly_out`，三缺陷已修）；三路 leaf 源（prescan 5,012 / famsplit 200 / replay 1,400）随本车道一并交付落地。
 ② 施工单 = `asm-precheck-w1/LANDING_RUNBOOK.md` 的 P0–P5：PosTree → import 阶梯 100/500/6,612 → 199 shard 串行直编 → 骨架 → Close；两处人拍板位点 `tsk_atan1_eval` / `tsk_box_eq`（`rfl` 优先，`simp only`/`decide +kernel` 兜底，不许改陈述）。
