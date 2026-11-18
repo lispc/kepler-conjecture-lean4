@@ -98,7 +98,7 @@
 ---
 
 
-## 1. 在飞（2026-11-18 早：**`sf-hslp-box-w1`（SF 111 实施）在飞**；**`farm-ops-w1` 已收线**（FARM_PLAN/DEBTS，续1240，解冻请求呈裁决）；**TSKAJXY 装配已落地 `58ade83a`+`c940aae7`+`e4c384e6`，基线 AQ 定档 = SORRIED 51（50 `nli*` + 1 hLP）/ K_REACH 2,108,657 / AXIOM 585，续1239**；kernel 波收线 5,212/5,212（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`，S2a margin″ 装配在 SF 111 实施后解锁；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-18 早：**SF 111 已落地 `b11c1627`**（387 处盒前提，S2a 解锁）；**`farm-ops-w1` 已收线**（FARM_PLAN/DEBTS，续1240，解冻请求呈裁决）；**TSKAJXY 装配已落地，基线 AQ 定档 = SORRIED 51（50 `nli*` + 1 hLP）/ K_REACH 2,108,657 / AXIOM 585，续1239**；kernel 波收线 5,212/5,212（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线；待用户裁：push（~66 commit）/ S2b batch2 / 农场解冻 5 项）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1326,6 +1326,13 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（09:20，续1241）**：**`sf-hslp-box-w1` 收线落库 `b11c1627`——SF 111 全量落地：hsl/hslp 387 处盒前提 + 2 个 `_box` 步骤引理（14 文件，+1,101/−596），S2a margin″ 装配解锁**。
+① **范围**：gate 184 槽（A 40 hsl + 8 hslp / B 41+7 / C 45+3 / D 39+1）+ `chain_idxN` 184 hsl + `chain_split_idxN` 19 hslp = **387**；每处仅插入 `(∀ j : Fin 6, y j ∈ Set.Icc (bNlo j) (bNhi j)) →`，结论/槽序/量化形状逐字未动。
+② **方法**：生成器基线复现 10/12 逐字节一致（GateBatchA–D / ChainBatch3–6 / ChainSplit1–2）；ChainBatch1/2 不可复现（旧发射器）⇒ 统一 in-place 变换（`apply_sf111.py`），并对 10 个可复现文件用修订生成器二次验证与变换输出逐字节同。
+③ **patch 面 14 而非 12**：`hstep_split_m` 确实被链体消费 ⇒ 不改造型，改用**加性** `hstep_split_m_box`（SplitKit +75）+ `hstep_of_shifted_concave_box`（Chain3 +40）；既有 `hstep_*` 签名零改动。
+④ **编排者闸（亲跑）**：14 patch `git apply --check` 14/14 PASS；14 模块按 import 序直编 **RC=0 / 0 err**（Chain3→Batch1–6→SplitKit→Split1/2→GateA–D，合计 ~2.5 min）；我自写探针 **17/17 `#print axioms` 恰标准三**（6 gate + 6 chain + 3 split + 2 新引理）；独立性断言：387 处前提逐文件计数全中，596 行删除**全部**是 `hstep/hsl/hslp` 调用点改写，无结论行删除。
+⑤ **已知尾注（既存，非本批引入）**：ChainBatch2 文件尾 `#print axioms chain_idx41/46` 解析到 Chain3 旧试点定理；`chain_idx41b2/46b2` 由探针显式覆盖（标准三）。
+⑥ 后续：S2a margin″ 装配批可开工（盒前提与供给证书对齐）；S2b 其余批与 push 仍待用户裁决。下一条：续1242。
 - **2026-11-18（09:05，续1240）**：**`farm-ops-w1` 收线（零 lean）——农场/LP 统一排产表交付，43 冻结债 0 已消 / 42 待办 + 3 BLOCKED；非农场可闭 8 条、农场 ~27,000 CPU·h 请求呈裁决**。
 ① 交付：`FARM_PLAN.md`（381 行）+ `DEBTS.tsv`（52 行 × 21 列，脚本生成）+ `DELIVERY.md`；主仓零改动。
 ② **对账（编排者复核）**：SORRIED 51 名单与 DEBTS 集合逐名对齐（51 + 1 已闭 `nliCell3QZECFICwt0corner` 参考行；comm 双向 0 缺漏）；Assembly.lean `:= sorry` 行 57 = **55 声明（50 `nli*` + 5 锥外 `*Ids`）+ 2 注释块命中**；hLP `lpArchiveCertificatesDebt` 另计（匿名 sorry 体，不在 `:= sorry` 面）。

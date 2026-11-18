@@ -7086,5 +7086,9 @@ ChainSplit1/2（hslp 19）。优先走**生成器模板改 + 整文件重生成*
 
 ### (f) 状态
 
-**已批，实施中**（用户 2026-11-18「1 推进」；草案源 =
+**已落地 `b11c1627`**（用户 2026-11-18「1 推进」；草案源 =
 `ox3q1h-s2a-interactive-w1/SF_DRAFT.md`；实施车道 `sf-hslp-box-w1`）。
+387/387 处「只多前提、结论逐字不变」脚本断言通过；14 文件（12 目标 + 2 kit）
+直编 RC=0/0 err，462 + 17 条 `#print axioms` 全部恰标准三；新增
+`hstep_of_shifted_concave_box`（Chain3）/ `hstep_split_m_box`（ChainSplitKit）
+两个加性步骤引理（既有 `hstep_*` 签名零改动）。
