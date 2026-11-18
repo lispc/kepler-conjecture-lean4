@@ -17,16 +17,18 @@
 > - 变更日志 续1–续344 → [`history/changelog-archive.md`](history/changelog-archive.md)
 > - 数字与逐基线明细 → `docs/e2e-reachability-map.md`（各「基线 X」节，唯一出处）
 >
-> **当前实测 = 基线 AP @`83144d4d`（2026-11-17，`nliCell3QZECFICwt0corner` 真证 = math5 件 1/5；Text 0）**
-> cone `K_REACH 2,101,198` / **SORRIED 52** / **`K_AXIOM 585`** / MODULES 5,322 /
-> UNIVERSE 2,113,452 / COVERAGE **99.420190%**；口径 II 39,092 / 52 / 585 / 49,789。
-> `docs/e2e-reachability-map.tsv` 已按基线 AP 重写（5,978 行）。
+> **当前实测 = 基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证 = TSKAJXY 全盒装配落地；Text 0）**
+> cone `K_REACH 2,108,657` / **SORRIED 51** / **`K_AXIOM 585`** / MODULES 12,140 /
+> UNIVERSE 2,140,793 / COVERAGE **98.4989%**；口径 II 39,125 / 51 / 585 / 49,868。
+> `docs/e2e-reachability-map.tsv` 已按基线 AQ 重写（12,795 行）。
 > 根面 `#print axioms the_kepler_conjecture_e2e` = **589** = 585 native + 标准三 + `sorryAx`
 > （计数与基线一致）。
-> **SORRIED 52 构成**：**Assembly 52（51 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
-> 较基线 AO：SORRIED 53→52（清单 diff：closed 恰 `{nliCell3QZECFICwt0corner}`、added ∅）、
-> K_AXIOM 585（0/0）、K_REACH +113、UNIVERSE +366、MODULES +4；COVERAGE −0.0119pp（证明体入 universe）。
-> 同批资产：`math5-w4` `83144d4d`（`NliBanks18` 2,970 行，件 2/5 sqrt8 在飞复用同套槽件）。
+> **SORRIED 51 构成**：**Assembly 51（50 `nli*` + 1 hLP）**；**Text 0**（`--- SORRIED ---` 段实测）。
+> 较基线 AP：SORRIED 52→51（清单 diff：closed 恰 `{nliTskXLLIPLS}`、added ∅）、
+> K_AXIOM 585（0/0）、K_REACH +7,459、UNIVERSE +27,341、MODULES +6,818；
+> COVERAGE −0.9213pp（6,612 叶模块入 universe）。
+> 同批资产：`tskasm-land-w1` 三笔 `58ade83a`/`c940aae7`/`e4c384e6`
+> （6,612 leaf 源 + 202 装配模块 + `nliTskXLLIPLS` 接线）。
 > **孤儿**：`TameLp.fully_surrounded_perimeter_bound` + LA23 四条（`taum_attains_inf_p23` 等）
 > 文件级 sorry 仍在（锥外、不删不改）；LA23 的 `taum_attains_inf_p23` 陈述缺 HOL `JOTSWIX.hl:9`
 > 六条箱约束（y4 槽不连续），SF 补箱候选。
@@ -41,9 +43,9 @@
 
 ## 0. 里程碑对表
 
-| 里程碑 | 定义 | 现状（**当前基线 AO @`06285994`；历史数字见 map 各基线节**） |
+| 里程碑 | 定义 | 现状（**当前基线 AQ @`e4c384e6`；历史数字见 map 各基线节**） |
 |---|---|---|
-| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AO（2026-11-15 @`06285994`）：SORRIED 53 / K_REACH 2,101,085 / AXIOM 585 / MODULES 5,318 / UNIVERSE 2,113,086 / COVERAGE 99.4321%；口径 II 38,979 / 53 / 585 / 49,423。历史基线 T–AI、基线 O 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
+| **M0 / 树主指标** | e2e 根 proof-term 可达真实图（K-REACH / COVERAGE / ORPHANS / SHIMS 为主；SORRIED 信息项） | **当前 = 基线 AQ（2026-11-18 @`e4c384e6`）：SORRIED 51 / K_REACH 2,108,657 / AXIOM 585 / MODULES 12,140 / UNIVERSE 2,140,793 / COVERAGE 98.4989%；口径 II 39,125 / 51 / 585 / 49,868。历史基线 T–AP 的 UNION/ORPHANS/SHIMS 明细与归因全部在 `docs/e2e-reachability-map.md` 各「基线 X」节；本表不再抄录。** |
 | **M1** 全库 sorry 清账 | tactic sorry 清零或逐条记账（含邻近层 PA24 / PackingConcl 整合决策） | 未开；整合时机等用户裁决 |
 | **M2** 信任审计收官 | 621 shard manifest + 抽样 replay（trust-audit P0-2）；43,078 LP 叶户入锥后全链对账；一键复现（Docker + `#print axioms` 断言） | 均未开；不阻塞 M0 |
 
@@ -56,11 +58,12 @@
 | **M1a 锥内文本债清零** | cone SORRIED **134 → 89**（只剩农场 84+5） | **✅ 已达成并超越（2026-11-15 基线 AO：Text 0）**。历史过程：文本波 35（twin-transfer/装配）+ 移植 7（hTC 3 + LEAF 3 + TameLp 1）+ 接口锚 2 + LP 1 | **勘误：twin 不全是捷径**——`ZLZTHIC_discharged := @ZLZTHIC_p14`、`MHAEYJN_discharged := MHAEYJN_p37` 是**指向塔内 sorry 的正向转发体**；M1a 的 transfer 只对"真证孪生"成立，须逐件 `#print axioms` 核实 |
 | **M1b 接口收口** | hTC + hLP 归零 → e2e 只剩 hNL + 585 shard（**信任基座非债**，2026-11-06 裁决后口径） | **hTC Assembly 三件已全闭（`fcdjdot`/`jcajydu`/`tameCorrespondenceIso`，基线 U 实测 SORRIED 0 命中）**；**Text 章级已清零（基线 AO 2026-11-15 实测 Text 0；自基线 Z 的 18 条经多波真证/接线清账，逐笔见 §8）**；hLP 单件（`lpArchiveCertificatesDebt`，纯逻辑已真推导） | 无（Text 侧已闭；hLP 等算力裁决） |
 | **M2 信任基座** | 621 shard manifest + 抽样 replay + Docker 一键复现（**原版 Flyspeck 的答案**：见 handoff §0.1） | manifest/harness 本机可做；全量 replay 需算力窗口 | 算力 |
-| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 74 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | **现役 52 = 51 `nli*` + 1 hLP（基线 AP）**；主攻 = TSKAJXY 装配（6,612 叶内核波在飞）→ math5 五债连打（件 1 已闭）→ Gate-0 实测 → 43 条分类；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
+| **M3 北极限（2026-11-06 裁决重定义；原"624 清偿→真·标准三"已废）** | **585 native 信任基座（已定格 `52275a1c`）+ 锥内 74 sorry 清偿** = 终局「不比 Flyspeck/Isabelle 更差」（AGENTS §1）；"真·标准三"明确不做 | **现役 51 = 50 `nli*` + 1 hLP（基线 AQ；`nliTskXLLIPLS` 已闭）**；主攻 = math5 五债（件 1 已闭、件 2 挂起等排产）→ Gate-0 分类 43 条（farm-ops 排产）→ ox3q1h S2b/S2a；LP 灌装债（`lpArchiveCertificatesDebt`）需农场，原版同为农场 | 重型计算用户保留；基座侧无欠账 |
 
-三接口独立债量（**基线 AO @`06285994` 实测 2026-11-15**；基线 Z 的 2026-11-12 版已过时）：**hNL（非线性不等式）= 52 条 `nli*`**
-（逐条清单以 `docs/e2e-reachability-map.md` 基线 AO SORRIED 段为准；基线 Z 时为 55：
-`nliRest*` 40 + `nliTsk*` 5 + `nliCell3*` 5 + 直挂 5）；**hLP（线性规划）
+三接口独立债量（**基线 AQ @`e4c384e6` 实测 2026-11-18**；基线 AO/Z 版已过时）：**hNL（非线性不等式）= 50 条 `nli*`**
+（逐条清单以 `docs/e2e-reachability-map.md` 基线 AQ SORRIED 段为准；构成 = 38 `nliRest*`
++ 4 `nliTsk*` + 4 `nliCell3*` + 4 直挂（`nliKcblrqcIneqDef`/`nliLpIneqs`/
+`nliMainNonlinearTerminalV11`/`nliOx3q1h`））；**hLP（线性规划）
 = 1 条**（`lpArchiveCertificatesDebt`，纯逻辑部分已真推导）；**hTC（TextCapstone）= 0 条**（Assembly 三件
 `fcdjdot`/`jcajydu`/`tameCorrespondenceIso` 全闭，**且 Text 章级已清零 = Text 0**）。接口完成难度排序与理由见 2026-10-25 战略备忘录（会话记录）：hNL ≳ hLP ≫ hTC。
 
@@ -95,7 +98,7 @@
 ---
 
 
-## 1. 在飞（2026-11-18 早：**`sf-hslp-box-w1`（SF 111 实施）与 `farm-ops-w1`（排产规划）在飞**；**TSKAJXY 装配已落地**（`58ade83a`+`c940aae7`+`e4c384e6`，`nliTskXLLIPLS` 标准三，SORRIED 待地图仪器确认 52→51）；kernel 波已收线——5,212/5,212 PASS（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`；S2a margin″ 装配在 SF 111 实施后解锁；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-18 早：**`sf-hslp-box-w1`（SF 111 实施）与 `farm-ops-w1`（排产规划）在飞**；**TSKAJXY 装配已落地 `58ade83a`+`c940aae7`+`e4c384e6`，基线 AQ 定档 = SORRIED 51（50 `nli*` + 1 hLP）/ K_REACH 2,108,657 / AXIOM 585，续1239**；kernel 波收线 5,212/5,212（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`，S2a margin″ 装配在 SF 111 实施后解锁；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1323,13 +1326,19 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（08:55，续1239）**：**🎯 TSKAJXY 全盒装配落地 + 基线 AQ 定档——SORRIED 52→51（50 `nli*` + 1 hLP），根面 589 逐条集合同基线**。
+① **三笔 commit**：`58ade83a`（6,612 leaf 源：5,012 old + 200 famA + 1,400 famB，与 kernel 波已编源逐字节同）+ `c940aae7`（装配层 202 模块/23,832 行：`PosTree` + 199 shard + 骨架 + Close）+ `e4c384e6`（`Assembly.nliTskXLLIPLS` sorry→`Kepler.Text.packIneqTskXLLIPLS`，Assembly sorry 58→57）。两处人拍板位点 `tsk_atan1_eval`/`tsk_box_eq` 均 `rfl` 一次通过。
+② **编排者亲验**：6,815 文件 MANIFEST `shasum -c` 全 OK；从仓库落地源重编装配全链 RC=0/0 err（PosTree 3.4 s / 5 shard 抽样 3.7 s 个 / 骨架 6 s / Close 4.3 s / Assembly 43 s / Final 6.9 s）；`#print axioms` `TskXLLIPLS_pos`/`packIneqTskXLLIPLS`/`Assembly.nliTskXLLIPLS` 全标准三；根面 `the_kepler_conjecture_e2e` = **589 = 585 native + 标准三 + `sorryAx`**，与基线 AP 逐条集合相同（new∖base=∅、base∖new=∅）。
+③ **地图定档（基线 AQ @`e4c384e6`，`reachmap_e4c384e6.out`，TSV 12,795 行）**：K_REACH **2,108,657（+7,459）** / **SORRIED 51（−1；closed 恰 `{nliTskXLLIPLS}`、added ∅）** / K_AXIOM 585（0/0）/ MODULES 12,140（+6,818）/ UNIVERSE 2,140,793（+27,341）/ COVERAGE 98.4989%（−0.9213pp）；口径 II 39,125/51/585/49,868。构成 = Assembly 51（50 `nli*` + 1 hLP）+ Text 0；50 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + 4 `nliCell3*` + 4 直挂。
+④ **基线刷新八件**：pq 头/§0、map md+tsv、AGENTS §1、README×2、docs/README、hf-map 状态更新五十、handoff-2026-11-06 注。
+⑤ 在飞：`sf-hslp-box-w1`（SF 111）+ `farm-ops-w1`（排产）；push 与 S2b batch2 等用户裁决。下一条：续1240。
+- **2026-11-18（08:40，续1238）**：**`farm-ops-w1` 发车（用户「3 推进」）——农场/LP 统一排产规划（零 lean）**。
+① 范围：43 条 Gate-0 冻结债逐条对账（含 ox3q1h/math5 已消项更新）+ math5 四债（sqrt8/wt2a/wt1/iyou）；每债判 farm/certtm/解析/BLOCKED 并给优先级、批次、核时区间、解冻请求（certtm/TM3/Mono\*/D 层默认 hold，只列请求不假设获批）。
+② 交付：`FARM_PLAN.md` + `DEBTS.tsv` + `DELIVERY.md`；数字全部标来源或 EST；主仓零改动。下一条：续1239。
 - **2026-11-18（08:40，续1237）**：**SF 111 获批并实施——`sf-hslp-box-w1` 发车（用户「1 推进」）：ox3q1h G4 供给槽 hsl/hslp 加盒前提**。
 ① SF 111 已入 `docs/statement-fix-proposals.md`（`3f3b404d`）：184 gate 槽（hsl 165 + hslp 19）+ 184 chain_idxN hsl + 19 chain_split_idxN hslp = **387 处前提**，12 文件；盒前提 `(∀ j, y j ∈ Icc (bNlo j) (bNhi j))`，N 按 `S4_MAP.tsv` box_id；结论/槽序/S5 对位零改动。
 ② 依据：盒外反例 y=(3,2,2,2.53,2,2) 使 margin″_y4=1.386 > K=0.864 ⇒ 原槽不可满足，S2 供给 BLOCKED（续1233）。
 ③ 车道路线：先验生成器（emit_gate/emit_chain/emit_split）对 12 文件逐字节可复现 → 模板改 + 整文件重生成（§7.1-32）；闸 = 12 文件直编 + 387 处「只多前提、结论逐字不变」脚本断言 + axioms 标准三。6 h 止损。下一条：续1238。
-- **2026-11-18（08:40，续1238）**：**`farm-ops-w1` 发车（用户「3 推进」）——农场/LP 统一排产规划（零 lean）**。
-① 范围：43 条 Gate-0 冻结债逐条对账（含 ox3q1h/math5 已消项更新）+ math5 四债（sqrt8/wt2a/wt1/iyou）；每债判 farm/certtm/解析/BLOCKED 并给优先级、批次、核时区间、解冻请求（certtm/TM3/Mono\*/D 层默认 hold，只列请求不假设获批）。
-② 交付：`FARM_PLAN.md` + `DEBTS.tsv` + `DELIVERY.md`；数字全部标来源或 EST；主仓零改动。下一条：续1239。
 - **2026-11-18（08:25，续1236）**：**`tskasm-land-w1` 发车（用户批「装配吧」）——TSKAJXY 全盒装配落地，目标 SORRIED 52→51**。
 ① 起点：kernel 波 5,212/5,212 + pool 6,612 olean 齐全（续1235 编排者亲验）；装配源 202 模块/23,832 行（`tskasm-prep-w1/assembly_out`，三缺陷已修）；三路 leaf 源（prescan 5,012 / famsplit 200 / replay 1,400）随本车道一并交付落地。
 ② 施工单 = `asm-precheck-w1/LANDING_RUNBOOK.md` 的 P0–P5：PosTree → import 阶梯 100/500/6,612 → 199 shard 串行直编 → 骨架 → Close；两处人拍板位点 `tsk_atan1_eval` / `tsk_box_eq`（`rfl` 优先，`simp only`/`decide +kernel` 兜底，不许改陈述）。

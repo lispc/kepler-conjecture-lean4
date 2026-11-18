@@ -35,7 +35,7 @@
   - `nliPackIneqDefA`（WIRE，`a09ad494`）：UKBRPFE/WAZLDCD/BIEFJHU 三组件全在库，
     Assembly 1 import + 1 body；
   - `nliRestQITNPEA4003532128a`（MATH，`06285994`）：纯代数，见 §2。
-- 当前剩余 = 52 条 `nli*` + hLP（见 pq 文件头；SORRIED 构成以 pq 为准）。
+- 当前剩余 = 50 条 `nli*` + hLP（基线 AQ `e4c384e6`；见 pq 文件头；SORRIED 构成以 pq 为准）。
 
 ### 1.1 审计结论（重要）
 

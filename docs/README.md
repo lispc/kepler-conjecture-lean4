@@ -32,7 +32,7 @@
 
 ### 债在哪
 
-- **现役**：`priority-queue.md` 文件头（基线 AO：SORRIED 53 = 52 `nli*` + 1 hLP、
+- **现役**：`priority-queue.md` 文件头（基线 AQ：SORRIED 51 = 50 `nli*` + 1 hLP、
   Text 0、AXIOM 585）+ [`trust-base.md`](trust-base.md)（信任基座依据与逐类对照）+
   [`e2e-reachability-map.md`](e2e-reachability-map.md)（逐基线 SORRIED/AXIOM 清单，
   tsv 为仪器原样输出）。
@@ -61,7 +61,7 @@
 - [`global-reachability-map.md`](global-reachability-map.md) — union 多根快照。
 - [`e2e-tree-visualization.md`](e2e-tree-visualization.md) — 本地树页面数据口径与重建。
 - [`e2e-reachability-map.tsv`](e2e-reachability-map.tsv) — 生成物；
-  **当前 = 基线 AP @`83144d4d`（2026-11-17：K_REACH 2,101,198 / SORRIED 52 /
+  **当前 = 基线 AQ @`e4c384e6`（2026-11-18：K_REACH 2,108,657 / SORRIED 51 /
   AXIOM 585；Text 0）**，与 `docs/priority-queue.md` 文件头同口径；
   历史基线叙事看 md 的对应节。
 

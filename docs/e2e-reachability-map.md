@@ -797,6 +797,34 @@ K_UNIVERSE +28 = `la22ee_vv` + 3 个 mod-arith helper 等私有件（不可达�
 300 叶证书树 + TFITSKC/JCYFMRP_V2/V3/jkqewgv1 证明体入锥；MODULES +20 = 证书模块首次可达。
 剩余 **67** = Assembly 55（54 `nli*` + 1 hLP）+ **Text 12**。
 
+### 基线 AQ：`nliTskXLLIPLS` 真证（SORRIED 52→51）@ `e4c384e6`（2026-11-18）
+
+> 触发：`tskasm-land-w1` 三笔落地——`58ade83a`（6,612 leaf 源：5,012 old + 200
+> famA + 1,400 famB，机械生成 Rule P）、`c940aae7`（装配层 202 模块/23,832 行：
+> `PosTree` 泛型覆盖树 + 199 shard cap48 + `TskXLLIPLS` 骨架 + `PackIneqTskXLLIPLSClose`）、
+> `e4c384e6`（`Assembly.nliTskXLLIPLS` sorry → `Kepler.Text.packIneqTskXLLIPLS`，
+> Assembly sorry 58→57）。两处人拍板位点 `tsk_atan1_eval`/`tsk_box_eq` 均 `rfl` 一次通过。
+>
+> 实测（`e2e_reach_map` 原样，TSV 12,795 行）：`K_REACH` **2,108,657（+7,459）** /
+> **SORRIED 51**（−1；清单 diff：closed 恰 `{Kepler.Assembly.nliTskXLLIPLS}`、
+> added ∅）/ **`K_AXIOM 585`（0/0）** / `K_MODULES` **12,140（+6,818）** /
+> `K_UNIVERSE` **2,140,793（+27,341）** / COVERAGE **98.4989%**（−0.9213pp，
+> 6,612 叶模块入 universe；树指标绝对值增长）/ 口径 II **39,125 / 51 / 585 / 49,868**；
+> `TOTAL_VALUE_DECLS` 2,107,968（+7,568）。
+>
+> 构成：**SORRIED 51 = Assembly 51（50 `nli*` + 1 hLP），Text 0**。
+> 编排者闸：三笔 commit；6,815 文件 MANIFEST sha `-c` 全 OK；装配全链从仓库落地源
+> 重编 RC=0/0 err（PosTree 3.4s / 5 shard 抽样 3.7s 个 / 骨架 6s / Close 4.3s /
+> Assembly 43s / Final 6.9s）；`#print axioms` 亲跑 `TskXLLIPLS_pos` /
+> `packIneqTskXLLIPLS` / `Assembly.nliTskXLLIPLS` 全标准三；根面
+> `the_kepler_conjecture_e2e` = **589 = 585 native + 标准三 + `sorryAx`**，
+> 与基线 AP **逐条集合相同**（new∖base = ∅、base∖new = ∅）。
+>
+> 判读：K_REACH +7,459 显著小于 6,612 叶 × 5 声明，原因 = `decide +kernel` 的证明项
+> 不引用 `kParams`/`kBox` 数据（数据只在类型里，proof-term 遍历不展开类型）；
+> 入树的是每叶 `_pos`/`_check` + PosTree/shards/skeleton 胶合件。这是「证书工具
+> 在类型层、证明项只带判定结果」的正常形态，不是仪器漏计。
+
 ### 基线 AP：`nliCell3QZECFICwt0corner` 真证（SORRIED 53→52）@ `83144d4d`（2026-11-17）
 
 > 触发：`math5-w4` 件 1/5 交付——`NliBanks18.lean` 新文件 2,970 行（§8 mega-lemma
