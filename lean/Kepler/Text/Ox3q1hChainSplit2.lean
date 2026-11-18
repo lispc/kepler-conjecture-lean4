@@ -94,6 +94,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx71 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit71 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b13lo j) (b13hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit71 i k) (gsplit71 i (k + 1)))
         (fun t => f (Function.update y i t) - K71 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split71 j) → B71 ≤ f v)
@@ -119,23 +120,23 @@ theorem chain_split_idx71 (f : (Fin 6 → ℝ) → ℝ)
         f y + K71 i * wsplit71 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit71 ⟨0, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit71 ⟨0, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit71_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit71 ⟨1, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit71 ⟨1, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit71_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit71 ⟨2, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit71 ⟨2, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit71_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit71 ⟨3, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit71 ⟨3, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit71_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit71 ⟨4, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit71 ⟨4, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit71_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit71 ⟨5, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit71 ⟨5, by norm_num⟩) (by norm_num [msplit71]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit71_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b13lo j) (b13hi j)) →
       ∃ c ∈ cands_split71 i, f (Function.update y i c) ≤ f y + RS71 i := by
@@ -214,6 +215,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx76 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit76 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b14lo j) (b14hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit76 i k) (gsplit76 i (k + 1)))
         (fun t => f (Function.update y i t) - b3K76 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split76 j) → b3B76 ≤ f v)
@@ -239,23 +241,23 @@ theorem chain_split_idx76 (f : (Fin 6 → ℝ) → ℝ)
         f y + b3K76 i * wsplit76 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit76 ⟨0, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit76 ⟨0, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit76_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit76 ⟨1, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit76 ⟨1, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit76_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit76 ⟨2, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit76 ⟨2, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit76_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit76 ⟨3, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit76 ⟨3, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit76_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit76 ⟨4, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit76 ⟨4, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit76_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit76 ⟨5, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit76 ⟨5, by norm_num⟩) (by norm_num [msplit76]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit76_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b14lo j) (b14hi j)) →
       ∃ c ∈ cands_split76 i, f (Function.update y i c) ≤ f y + RS76 i := by
@@ -334,6 +336,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx96 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit96 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b20lo j) (b20hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit96 i k) (gsplit96 i (k + 1)))
         (fun t => f (Function.update y i t) - K96 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split96 j) → B96 ≤ f v)
@@ -359,23 +362,23 @@ theorem chain_split_idx96 (f : (Fin 6 → ℝ) → ℝ)
         f y + K96 i * wsplit96 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit96 ⟨0, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit96 ⟨0, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit96_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit96 ⟨1, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit96 ⟨1, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit96_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit96 ⟨2, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit96 ⟨2, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit96_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit96 ⟨3, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit96 ⟨3, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit96_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit96 ⟨4, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit96 ⟨4, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit96_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit96 ⟨5, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit96 ⟨5, by norm_num⟩) (by norm_num [msplit96]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit96_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b20lo j) (b20hi j)) →
       ∃ c ∈ cands_split96 i, f (Function.update y i c) ≤ f y + RS96 i := by
@@ -454,6 +457,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx111 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit111 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit111 i k) (gsplit111 i (k + 1)))
         (fun t => f (Function.update y i t) - K111 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split111 j) → B111 ≤ f v)
@@ -479,23 +483,23 @@ theorem chain_split_idx111 (f : (Fin 6 → ℝ) → ℝ)
         f y + K111 i * wsplit111 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit111 ⟨0, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit111 ⟨0, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit111_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit111 ⟨1, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit111 ⟨1, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit111_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit111 ⟨2, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit111 ⟨2, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit111_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit111 ⟨3, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit111 ⟨3, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit111_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit111 ⟨4, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit111 ⟨4, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit111_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit111 ⟨5, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit111 ⟨5, by norm_num⟩) (by norm_num [msplit111]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit111_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ∃ c ∈ cands_split111 i, f (Function.update y i c) ≤ f y + RS111 i := by
@@ -574,6 +578,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx116 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit116 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit116 i k) (gsplit116 i (k + 1)))
         (fun t => f (Function.update y i t) - K116 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split116 j) → B116 ≤ f v)
@@ -599,23 +604,23 @@ theorem chain_split_idx116 (f : (Fin 6 → ℝ) → ℝ)
         f y + K116 i * wsplit116 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit116 ⟨0, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit116 ⟨0, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit116_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit116 ⟨1, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit116 ⟨1, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit116_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit116 ⟨2, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit116 ⟨2, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit116_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit116 ⟨3, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit116 ⟨3, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit116_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit116 ⟨4, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit116 ⟨4, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit116_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit116 ⟨5, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit116 ⟨5, by norm_num⟩) (by norm_num [msplit116]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit116_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ∃ c ∈ cands_split116 i, f (Function.update y i c) ≤ f y + RS116 i := by
@@ -694,6 +699,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx121 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit121 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit121 i k) (gsplit121 i (k + 1)))
         (fun t => f (Function.update y i t) - K121 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split121 j) → B121 ≤ f v)
@@ -719,23 +725,23 @@ theorem chain_split_idx121 (f : (Fin 6 → ℝ) → ℝ)
         f y + K121 i * wsplit121 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit121 ⟨0, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit121 ⟨0, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit121_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit121 ⟨1, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit121 ⟨1, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit121_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit121 ⟨2, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit121 ⟨2, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit121_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit121 ⟨3, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit121 ⟨3, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit121_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit121 ⟨4, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit121 ⟨4, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit121_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit121 ⟨5, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit121 ⟨5, by norm_num⟩) (by norm_num [msplit121]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit121_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ∃ c ∈ cands_split121 i, f (Function.update y i c) ≤ f y + RS121 i := by
@@ -814,6 +820,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx126 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit126 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b29lo j) (b29hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit126 i k) (gsplit126 i (k + 1)))
         (fun t => f (Function.update y i t) - K126 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split126 j) → B126 ≤ f v)
@@ -839,23 +846,23 @@ theorem chain_split_idx126 (f : (Fin 6 → ℝ) → ℝ)
         f y + K126 i * wsplit126 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit126 ⟨0, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit126 ⟨0, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit126_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit126 ⟨1, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit126 ⟨1, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit126_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit126 ⟨2, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit126 ⟨2, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit126_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit126 ⟨3, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit126 ⟨3, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit126_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit126 ⟨4, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit126 ⟨4, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit126_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit126 ⟨5, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit126 ⟨5, by norm_num⟩) (by norm_num [msplit126]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit126_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b29lo j) (b29hi j)) →
       ∃ c ∈ cands_split126 i, f (Function.update y i c) ≤ f y + RS126 i := by
@@ -934,6 +941,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx161 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit161 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b40lo j) (b40hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit161 i k) (gsplit161 i (k + 1)))
         (fun t => f (Function.update y i t) - K161 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split161 j) → B161 ≤ f v)
@@ -959,23 +967,23 @@ theorem chain_split_idx161 (f : (Fin 6 → ℝ) → ℝ)
         f y + K161 i * wsplit161 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit161 ⟨0, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit161 ⟨0, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit161_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit161 ⟨1, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit161 ⟨1, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit161_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit161 ⟨2, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit161 ⟨2, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit161_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit161 ⟨3, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit161 ⟨3, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit161_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit161 ⟨4, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit161 ⟨4, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit161_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit161 ⟨5, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit161 ⟨5, by norm_num⟩) (by norm_num [msplit161]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit161_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b40lo j) (b40hi j)) →
       ∃ c ∈ cands_split161 i, f (Function.update y i c) ≤ f y + RS161 i := by
@@ -1054,6 +1062,7 @@ with the SPLIT rebates (rebate direction `B − ∑ RSN ≤ f x`). -/
 
 theorem chain_split_idx216 (f : (Fin 6 → ℝ) → ℝ)
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit216 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b45lo j) (b45hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit216 i k) (gsplit216 i (k + 1)))
         (fun t => f (Function.update y i t) - K216 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split216 j) → B216 ≤ f v)
@@ -1079,23 +1088,23 @@ theorem chain_split_idx216 (f : (Fin 6 → ℝ) → ℝ)
         f y + K216 i * wsplit216 i ^ 2 / 8 := by
     intro i y hybox
     fin_cases i
-    · refine hstep_split_m ⟨0, by norm_num⟩ (msplit216 ⟨0, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
-        (fun k hk y' => hslp ⟨0, by norm_num⟩ y' k hk) (hmem ⟨0, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨0, by norm_num⟩ (msplit216 ⟨0, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨0, by norm_num⟩) (hw ⟨0, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨0, by norm_num⟩ y' k hk hbox) (hmem ⟨0, by norm_num⟩) y hybox
         (by rw [← wsplit216_hhi ⟨0, by norm_num⟩]; exact hybox ⟨0, by norm_num⟩)
-    · refine hstep_split_m ⟨1, by norm_num⟩ (msplit216 ⟨1, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
-        (fun k hk y' => hslp ⟨1, by norm_num⟩ y' k hk) (hmem ⟨1, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨1, by norm_num⟩ (msplit216 ⟨1, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨1, by norm_num⟩) (hw ⟨1, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨1, by norm_num⟩ y' k hk hbox) (hmem ⟨1, by norm_num⟩) y hybox
         (by rw [← wsplit216_hhi ⟨1, by norm_num⟩]; exact hybox ⟨1, by norm_num⟩)
-    · refine hstep_split_m ⟨2, by norm_num⟩ (msplit216 ⟨2, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
-        (fun k hk y' => hslp ⟨2, by norm_num⟩ y' k hk) (hmem ⟨2, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨2, by norm_num⟩ (msplit216 ⟨2, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨2, by norm_num⟩) (hw ⟨2, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨2, by norm_num⟩ y' k hk hbox) (hmem ⟨2, by norm_num⟩) y hybox
         (by rw [← wsplit216_hhi ⟨2, by norm_num⟩]; exact hybox ⟨2, by norm_num⟩)
-    · refine hstep_split_m ⟨3, by norm_num⟩ (msplit216 ⟨3, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
-        (fun k hk y' => hslp ⟨3, by norm_num⟩ y' k hk) (hmem ⟨3, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨3, by norm_num⟩ (msplit216 ⟨3, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨3, by norm_num⟩) (hw ⟨3, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨3, by norm_num⟩ y' k hk hbox) (hmem ⟨3, by norm_num⟩) y hybox
         (by rw [← wsplit216_hhi ⟨3, by norm_num⟩]; exact hybox ⟨3, by norm_num⟩)
-    · refine hstep_split_m ⟨4, by norm_num⟩ (msplit216 ⟨4, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
-        (fun k hk y' => hslp ⟨4, by norm_num⟩ y' k hk) (hmem ⟨4, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨4, by norm_num⟩ (msplit216 ⟨4, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨4, by norm_num⟩) (hw ⟨4, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨4, by norm_num⟩ y' k hk hbox) (hmem ⟨4, by norm_num⟩) y hybox
         (by rw [← wsplit216_hhi ⟨4, by norm_num⟩]; exact hybox ⟨4, by norm_num⟩)
-    · refine hstep_split_m ⟨5, by norm_num⟩ (msplit216 ⟨5, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
-        (fun k hk y' => hslp ⟨5, by norm_num⟩ y' k hk) (hmem ⟨5, by norm_num⟩) y
+    · refine hstep_split_m_box ⟨5, by norm_num⟩ (msplit216 ⟨5, by norm_num⟩) (by norm_num [msplit216]) (hK0 ⟨5, by norm_num⟩) (hw ⟨5, by norm_num⟩)
+        (fun k hk y' hbox => hslp ⟨5, by norm_num⟩ y' k hk hbox) (hmem ⟨5, by norm_num⟩) y hybox
         (by rw [← wsplit216_hhi ⟨5, by norm_num⟩]; exact hybox ⟨5, by norm_num⟩)
   have hstep : ∀ (i : Fin 6) (y : Fin 6 → ℝ), (∀ j, y j ∈ Set.Icc (b45lo j) (b45hi j)) →
       ∃ c ∈ cands_split216 i, f (Function.update y i c) ≤ f y + RS216 i := by

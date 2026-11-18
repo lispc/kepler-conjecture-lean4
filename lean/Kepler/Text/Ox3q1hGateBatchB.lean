@@ -48,6 +48,7 @@ FALSE per KREBATE). -/
 
 theorem c61_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit61 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b9lo j) (b9hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit61 i k) (gsplit61 i (k + 1)))
         (fun t => c61_mfunb (Function.update y i t) - K61 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split61 j) → B61 ≤ c61_mfunb v) :
@@ -81,6 +82,7 @@ theorem c62_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c62_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b10lo j) (b10hi j)) →
       ConcaveOn ℝ (Set.Icc (b10lo i) (b10hi i))
         (fun t => c62_mfunb (Function.update y i t) - K62 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb10 j) → B62 ≤ c62_mfunb v)
@@ -143,6 +145,7 @@ theorem c63_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c63_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b11lo j) (b11hi j)) →
       ConcaveOn ℝ (Set.Icc (b11lo i) (b11hi i))
         (fun t => c63_mfunb (Function.update y i t) - K63 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb11 j) → B63 ≤ c63_mfunb v)
@@ -195,6 +198,7 @@ theorem c63_gate
 
 theorem c64_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c62_mfunb (Function.update y i t) - K64 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B64 ≤ c62_mfunb v)
@@ -265,6 +269,7 @@ FALSE per KREBATE). -/
 
 theorem c66_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit66 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b9lo j) (b9hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit66 i k) (gsplit66 i (k + 1)))
         (fun t => c66_mfunb (Function.update y i t) - K66 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split66 j) → B66 ≤ c66_mfunb v) :
@@ -298,6 +303,7 @@ theorem c67_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c67_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b11lo j) (b11hi j)) →
       ConcaveOn ℝ (Set.Icc (b11lo i) (b11hi i))
         (fun t => c67_mfunb (Function.update y i t) - K67 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb11 j) → B67 ≤ c67_mfunb v)
@@ -360,6 +366,7 @@ theorem c68_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c68_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c68_mfunb (Function.update y i t) - K68 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B68 ≤ c68_mfunb v)
@@ -412,6 +419,7 @@ theorem c68_gate
 
 theorem c69_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c62_mfunb (Function.update y i t) - K69 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B69 ≤ c62_mfunb v)
@@ -482,6 +490,7 @@ FALSE per KREBATE). -/
 
 theorem c71_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit71 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b13lo j) (b13hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit71 i k) (gsplit71 i (k + 1)))
         (fun t => c71_mfunb (Function.update y i t) - K71 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split71 j) → B71 ≤ c71_mfunb v) :
@@ -515,6 +524,7 @@ theorem c72_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c72_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c72_mfunb (Function.update y i t) - K72 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B72 ≤ c72_mfunb v)
@@ -577,6 +587,7 @@ theorem c73_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c73_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c73_mfunb (Function.update y i t) - K73 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B73 ≤ c73_mfunb v)
@@ -639,6 +650,7 @@ theorem c74_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c74_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c74_mfunb (Function.update y i t) - K74 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B74 ≤ c74_mfunb v)
@@ -709,6 +721,7 @@ FALSE per KREBATE). -/
 
 theorem c76_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit76 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b14lo j) (b14hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit76 i k) (gsplit76 i (k + 1)))
         (fun t => c76_mfunb (Function.update y i t) - b3K76 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split76 j) → b3B76 ≤ c76_mfunb v) :
@@ -742,6 +755,7 @@ theorem c77_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c77_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b15lo j) (b15hi j)) →
       ConcaveOn ℝ (Set.Icc (b15lo i) (b15hi i))
         (fun t => c77_mfunb (Function.update y i t) - K77 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb15 j) → B77 ≤ c77_mfunb v)
@@ -804,6 +818,7 @@ theorem c78_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c78_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b15lo j) (b15hi j)) →
       ConcaveOn ℝ (Set.Icc (b15lo i) (b15hi i))
         (fun t => c78_mfunb (Function.update y i t) - K78 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb15 j) → B78 ≤ c78_mfunb v)
@@ -866,6 +881,7 @@ theorem c79_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c79_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b15lo j) (b15hi j)) →
       ConcaveOn ℝ (Set.Icc (b15lo i) (b15hi i))
         (fun t => c79_mfunb (Function.update y i t) - K79 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb15 j) → B79 ≤ c79_mfunb v)
@@ -933,6 +949,7 @@ theorem c81_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c81_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b16lo j) (b16hi j)) →
       ConcaveOn ℝ (Set.Icc (b16lo i) (b16hi i))
         (fun t => c81_mfunb (Function.update y i t) - K81 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb16 j) → B81 ≤ c81_mfunb v)
@@ -981,6 +998,7 @@ theorem c82_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c82_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b17lo j) (b17hi j)) →
       ConcaveOn ℝ (Set.Icc (b17lo i) (b17hi i))
         (fun t => c82_mfunb (Function.update y i t) - K82 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb17 j) → B82 ≤ c82_mfunb v)
@@ -1043,6 +1061,7 @@ theorem c83_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c83_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b17lo j) (b17hi j)) →
       ConcaveOn ℝ (Set.Icc (b17lo i) (b17hi i))
         (fun t => c83_mfunb (Function.update y i t) - K83 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb17 j) → B83 ≤ c83_mfunb v)
@@ -1105,6 +1124,7 @@ theorem c84_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c84_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b18lo j) (b18hi j)) →
       ConcaveOn ℝ (Set.Icc (b18lo i) (b18hi i))
         (fun t => c84_mfunb (Function.update y i t) - K84 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb18 j) → B84 ≤ c84_mfunb v)
@@ -1172,6 +1192,7 @@ theorem c86_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c86_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b16lo j) (b16hi j)) →
       ConcaveOn ℝ (Set.Icc (b16lo i) (b16hi i))
         (fun t => c86_mfunb (Function.update y i t) - K86 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb16 j) → B86 ≤ c86_mfunb v)
@@ -1210,6 +1231,7 @@ theorem c86_gate
 
 theorem c87_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b17lo j) (b17hi j)) →
       ConcaveOn ℝ (Set.Icc (b17lo i) (b17hi i))
         (fun t => c82_mfunb (Function.update y i t) - K87 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb17 j) → B87 ≤ c82_mfunb v)
@@ -1272,6 +1294,7 @@ theorem c88_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c88_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b18lo j) (b18hi j)) →
       ConcaveOn ℝ (Set.Icc (b18lo i) (b18hi i))
         (fun t => c88_mfunb (Function.update y i t) - K88 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb18 j) → B88 ≤ c88_mfunb v)
@@ -1324,6 +1347,7 @@ theorem c88_gate
 
 theorem c89_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b19lo j) (b19hi j)) →
       ConcaveOn ℝ (Set.Icc (b19lo i) (b19hi i))
         (fun t => c82_mfunb (Function.update y i t) - K89 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb19 j) → B89 ≤ c82_mfunb v)
@@ -1381,6 +1405,7 @@ theorem c90_gate : ∀ y1 y12 y23 y34 y41 : ℝ, (h0 + hplus) ≤ y1 → y1 ≤ 
 
 theorem c91_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b16lo j) (b16hi j)) →
       ConcaveOn ℝ (Set.Icc (b16lo i) (b16hi i))
         (fun t => c81_mfunb (Function.update y i t) - K91 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb16 j) → B91 ≤ c81_mfunb v)
@@ -1419,6 +1444,7 @@ theorem c91_gate
 
 theorem c92_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b18lo j) (b18hi j)) →
       ConcaveOn ℝ (Set.Icc (b18lo i) (b18hi i))
         (fun t => c84_mfunb (Function.update y i t) - K92 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb18 j) → B92 ≤ c84_mfunb v)
@@ -1471,6 +1497,7 @@ theorem c92_gate
 
 theorem c93_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b19lo j) (b19hi j)) →
       ConcaveOn ℝ (Set.Icc (b19lo i) (b19hi i))
         (fun t => c83_mfunb (Function.update y i t) - K93 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb19 j) → B93 ≤ c83_mfunb v)
@@ -1523,6 +1550,7 @@ theorem c93_gate
 
 theorem c94_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b19lo j) (b19hi j)) →
       ConcaveOn ℝ (Set.Icc (b19lo i) (b19hi i))
         (fun t => c82_mfunb (Function.update y i t) - K94 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb19 j) → B94 ≤ c82_mfunb v)
@@ -1593,6 +1621,7 @@ FALSE per KREBATE). -/
 
 theorem c96_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit96 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b20lo j) (b20hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit96 i k) (gsplit96 i (k + 1)))
         (fun t => c96_mfunb (Function.update y i t) - K96 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split96 j) → B96 ≤ c96_mfunb v) :
@@ -1626,6 +1655,7 @@ theorem c97_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c97_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b21lo j) (b21hi j)) →
       ConcaveOn ℝ (Set.Icc (b21lo i) (b21hi i))
         (fun t => c97_mfunb (Function.update y i t) - K97 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb21 j) → B97 ≤ c97_mfunb v)
@@ -1688,6 +1718,7 @@ theorem c98_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c98_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b21lo j) (b21hi j)) →
       ConcaveOn ℝ (Set.Icc (b21lo i) (b21hi i))
         (fun t => c98_mfunb (Function.update y i t) - K98 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb21 j) → B98 ≤ c98_mfunb v)
@@ -1740,6 +1771,7 @@ theorem c98_gate
 
 theorem c99_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b21lo j) (b21hi j)) →
       ConcaveOn ℝ (Set.Icc (b21lo i) (b21hi i))
         (fun t => c98_mfunb (Function.update y i t) - K99 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb21 j) → B99 ≤ c98_mfunb v)
@@ -1807,6 +1839,7 @@ theorem c101_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c101_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b22lo j) (b22hi j)) →
       ConcaveOn ℝ (Set.Icc (b22lo i) (b22hi i))
         (fun t => c101_mfunb (Function.update y i t) - K101 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb22 j) → B101 ≤ c101_mfunb v)
@@ -1855,6 +1888,7 @@ theorem c102_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c102_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c102_mfunb (Function.update y i t) - K102 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B102 ≤ c102_mfunb v)
@@ -1917,6 +1951,7 @@ theorem c103_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c103_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c103_mfunb (Function.update y i t) - K103 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B103 ≤ c103_mfunb v)
@@ -1969,6 +2004,7 @@ theorem c103_gate
 
 theorem c104_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c102_mfunb (Function.update y i t) - K104 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B104 ≤ c102_mfunb v)
@@ -2036,6 +2072,7 @@ theorem c106_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c106_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b24lo j) (b24hi j)) →
       ConcaveOn ℝ (Set.Icc (b24lo i) (b24hi i))
         (fun t => c106_mfunb (Function.update y i t) - K106 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb24 j) → B106 ≤ c106_mfunb v)
@@ -2084,6 +2121,7 @@ theorem c107_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c107_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c107_mfunb (Function.update y i t) - K107 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B107 ≤ c107_mfunb v)
@@ -2146,6 +2184,7 @@ theorem c108_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c108_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c108_mfunb (Function.update y i t) - K108 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B108 ≤ c108_mfunb v)
@@ -2208,6 +2247,7 @@ theorem c109_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c109_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c109_mfunb (Function.update y i t) - K109 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B109 ≤ c109_mfunb v)
@@ -2278,6 +2318,7 @@ FALSE per KREBATE). -/
 
 theorem c111_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit111 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit111 i k) (gsplit111 i (k + 1)))
         (fun t => c111_mfunb (Function.update y i t) - K111 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split111 j) → B111 ≤ c111_mfunb v) :
@@ -2311,6 +2352,7 @@ theorem c112_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c112_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => c112_mfunb (Function.update y i t) - K112 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb26 j) → B112 ≤ c112_mfunb v)
@@ -2373,6 +2415,7 @@ theorem c113_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c113_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => c113_mfunb (Function.update y i t) - K113 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb26 j) → B113 ≤ c113_mfunb v)
@@ -2435,6 +2478,7 @@ theorem c114_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c114_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b27lo j) (b27hi j)) →
       ConcaveOn ℝ (Set.Icc (b27lo i) (b27hi i))
         (fun t => c114_mfunb (Function.update y i t) - K114 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb27 j) → B114 ≤ c114_mfunb v)
@@ -2505,6 +2549,7 @@ FALSE per KREBATE). -/
 
 theorem c116_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit116 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit116 i k) (gsplit116 i (k + 1)))
         (fun t => c116_mfunb (Function.update y i t) - K116 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split116 j) → B116 ≤ c116_mfunb v) :
@@ -2528,6 +2573,7 @@ theorem c116_gate
 
 theorem c117_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => c112_mfunb (Function.update y i t) - K117 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb26 j) → B117 ≤ c112_mfunb v)
@@ -2590,6 +2636,7 @@ theorem c118_mfunb_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c118_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b27lo j) (b27hi j)) →
       ConcaveOn ℝ (Set.Icc (b27lo i) (b27hi i))
         (fun t => c118_mfunb (Function.update y i t) - K118 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb27 j) → B118 ≤ c118_mfunb v)
@@ -2642,6 +2689,7 @@ theorem c118_gate
 
 theorem c119_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b28lo j) (b28hi j)) →
       ConcaveOn ℝ (Set.Icc (b28lo i) (b28hi i))
         (fun t => c112_mfunb (Function.update y i t) - K119 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb28 j) → B119 ≤ c112_mfunb v)

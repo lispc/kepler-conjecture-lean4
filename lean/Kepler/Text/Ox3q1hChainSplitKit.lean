@@ -112,9 +112,84 @@ theorem hstep_split_m {n : ℕ} {f : (Fin n → ℝ) → ℝ} (i : Fin n) {lo w 
       · exact ⟨lo + (m : ℝ) * w, hmem m (Nat.le_succ m), hc⟩
       · exact ⟨lo + ((m + 1 : ℕ) : ℝ) * w, hmem (m + 1) (le_refl _), hc⟩
 
+/-- Split-grid step from a BOXED piecewise shifted-concavity hypothesis
+(SF 111 supply-slot form): `hsl` is only demanded at points whose every
+coordinate lies in `[blo j, bhi j]`, and the induction only ever consumes it
+at its fixed point `y` (the same `y` at every recursion level). Same proof
+as `hstep_split_m` with `hybox` threaded to the single hsl applications. -/
+theorem hstep_split_m_box {n : ℕ} {f : (Fin n → ℝ) → ℝ} {blo bhi : Fin n → ℝ}
+    (i : Fin n) {lo w : ℝ} {K : ℝ} {S : Finset ℝ} (M : ℕ) (hM : 1 ≤ M)
+    (hK : 0 ≤ K) (hw : 0 ≤ w)
+    (hsl : ∀ (k : ℕ), k + 1 ≤ M → ∀ (y : Fin n → ℝ),
+      (∀ j, y j ∈ Set.Icc (blo j) (bhi j)) →
+      ConcaveOn ℝ (Set.Icc (lo + (k : ℝ) * w) (lo + ((k + 1 : ℕ) : ℝ) * w))
+        (fun t => f (Function.update y i t) - K / 2 * t * t))
+    (hmem : ∀ (k : ℕ), k ≤ M → (lo + (k : ℝ) * w) ∈ S)
+    (y : Fin n → ℝ) (hybox : ∀ j, y j ∈ Set.Icc (blo j) (bhi j))
+    (hy : y i ∈ Set.Icc lo (lo + (M : ℝ) * w)) :
+    ∃ c ∈ S, f (Function.update y i c) ≤ f y + K * w ^ 2 / 8 := by
+  induction M with
+  | zero => exact absurd hM (Nat.not_succ_le_zero 0)
+  | succ m ih =>
+    by_cases hlast : y i ≤ lo + (m : ℝ) * w
+    · rcases Nat.eq_zero_or_pos m with hm0 | hm0
+      · subst hm0
+        have hy0 : y i = lo := le_antisymm (by simpa using hlast) hy.1
+        have hc : (lo : ℝ) ∈ S := by simpa using hmem 0 (by omega)
+        refine ⟨lo, hc, ?_⟩
+        have hupf : Function.update y i lo = y := by
+          rw [← hy0]
+          funext a
+          by_cases ha : a = i
+          · subst ha
+            simp [Function.update_self]
+          · rw [Function.update_of_ne ha]
+        have hp : 0 ≤ K * w ^ 2 / 8 :=
+          div_nonneg (mul_nonneg hK (sq_nonneg w)) (by norm_num)
+        rw [hupf]
+        linarith [hp]
+      · have hmemm : ∀ (k : ℕ), k ≤ m → (lo + (k : ℝ) * w) ∈ S :=
+          fun k hk => hmem k (le_trans hk (Nat.le_succ m))
+        have hslm : ∀ (k : ℕ), k + 1 ≤ m → ∀ (z : Fin n → ℝ),
+            (∀ j, z j ∈ Set.Icc (blo j) (bhi j)) →
+            ConcaveOn ℝ (Set.Icc (lo + (k : ℝ) * w) (lo + ((k + 1 : ℕ) : ℝ) * w))
+              (fun t => f (Function.update z i t) - K / 2 * t * t) :=
+          fun k hk z hz => hsl k (le_trans hk (Nat.le_succ m)) z hz
+        exact ih (by omega) hslm hmemm ⟨hy.1, hlast⟩
+    · have hlt : lo + (m : ℝ) * w < y i := not_le.mp hlast
+      have hmem_y : y i ∈ Set.Icc (lo + (m : ℝ) * w) (lo + ((m + 1 : ℕ) : ℝ) * w) :=
+        ⟨le_of_lt hlt, hy.2⟩
+      have hkm : (m : ℝ) ≤ ((m + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.le_succ m
+      have hab : lo + (m : ℝ) * w ≤ lo + ((m + 1 : ℕ) : ℝ) * w := by
+        linarith [add_le_add_left (mul_le_mul_of_nonneg_right hkm hw) lo]
+      have hwid : (lo + ((m + 1 : ℕ) : ℝ) * w) - (lo + (m : ℝ) * w) = w := by
+        rw [Nat.cast_add_one]
+        ring
+      have hg : ConcaveOn ℝ (Set.Icc (lo + (m : ℝ) * w) (lo + ((m + 1 : ℕ) : ℝ) * w))
+          (fun t => f (Function.update y i t) - K / 2 * t * t) :=
+        hsl m (by omega) y hybox
+      have hp : 0 ≤ K * w ^ 2 / 8 :=
+        div_nonneg (mul_nonneg hK (sq_nonneg w)) (by norm_num)
+      have hupeq : Function.update y i (y i) = y := by
+        funext a
+        by_cases ha : a = i
+        · subst ha
+          simp [Function.update_self]
+        · rw [Function.update_of_ne ha]
+      have hpp := rebate_of_concave_shifted hab hK hg (t := y i) hmem_y
+      rw [hupeq] at hpp
+      rw [hwid] at hpp
+      have hmin : min (f (Function.update y i (lo + (m : ℝ) * w)))
+          (f (Function.update y i (lo + ((m + 1 : ℕ) : ℝ) * w))) ≤ f y + K * w ^ 2 / 8 := by
+        linarith [hpp, hp]
+      rcases min_le_iff.mp hmin with hc | hc
+      · exact ⟨lo + (m : ℝ) * w, hmem m (Nat.le_succ m), hc⟩
+      · exact ⟨lo + ((m + 1 : ℕ) : ℝ) * w, hmem (m + 1) (le_refl _), hc⟩
+
 /-! ### Axiom audit -/
 
 #print axioms cands_split_sub_aux
 #print axioms hstep_split_m
+#print axioms hstep_split_m_box
 
 end Kepler.Text

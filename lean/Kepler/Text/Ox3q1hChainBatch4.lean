@@ -693,6 +693,7 @@ theorem R101v_def (i : Fin 6) : R101 i = K101 i * (b22hi i - b22lo i) ^ 2 / 8 :=
 
 theorem chain_idx101 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b22lo j) (b22hi j)) →
       ConcaveOn ℝ (Set.Icc (b22lo i) (b22hi i))
         (fun t => f (Function.update y i t) - K101 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K101 i)
@@ -703,14 +704,15 @@ theorem chain_idx101 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb22 candsb22_ne hR0 candsb22_sub
     (fun i y hy => by
       rw [R101v_def i]
-      exact hstep_of_shifted_concave (b22lo_le_b22hi i) (hK0 i)
-        (hsl i) candsb22_eq y hy)
+      exact hstep_of_shifted_concave_box (b22lo_le_b22hi i) (hK0 i)
+        hsl candsb22_eq y hy)
     hcorner x hx
 
 /-- idx 102 chain: corner bound minus the grid rebate lower-bounds the margin (box 23; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx102 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => f (Function.update y i t) - K102 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K102 i)
@@ -719,14 +721,15 @@ theorem chain_idx102 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b23lo j) (b23hi j)) :
     B102 - ∑ j, R102 j ≤ f x :=
   final_bound candsb23 candsb23_ne hR0 candsb23_sub
-    (fun i y hy => hstep_of_shifted_concave (b23lo_le_b23hi i) (hK0 i)
-      (hsl i) candsb23_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b23lo_le_b23hi i) (hK0 i)
+      hsl candsb23_eq y hy)
     hcorner x hx
 
 /-- idx 103 chain: corner bound minus the grid rebate lower-bounds the margin (box 23; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx103 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => f (Function.update y i t) - K103 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K103 i)
@@ -735,14 +738,15 @@ theorem chain_idx103 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b23lo j) (b23hi j)) :
     B103 - ∑ j, R103 j ≤ f x :=
   final_bound candsb23 candsb23_ne hR0 candsb23_sub
-    (fun i y hy => hstep_of_shifted_concave (b23lo_le_b23hi i) (hK0 i)
-      (hsl i) candsb23_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b23lo_le_b23hi i) (hK0 i)
+      hsl candsb23_eq y hy)
     hcorner x hx
 
 /-- idx 104 chain: corner bound minus the grid rebate lower-bounds the margin (box 23; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx104 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => f (Function.update y i t) - K104 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K104 i)
@@ -751,8 +755,8 @@ theorem chain_idx104 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b23lo j) (b23hi j)) :
     B104 - ∑ j, R104 j ≤ f x :=
   final_bound candsb23 candsb23_ne hR0 candsb23_sub
-    (fun i y hy => hstep_of_shifted_concave (b23lo_le_b23hi i) (hK0 i)
-      (hsl i) candsb23_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b23lo_le_b23hi i) (hK0 i)
+      hsl candsb23_eq y hy)
     hcorner x hx
 
 /-- idx 106 rebate bridge: exact-fraction R equals the hstep value form
@@ -765,6 +769,7 @@ theorem R106v_def (i : Fin 6) : R106 i = K106 i * (b24hi i - b24lo i) ^ 2 / 8 :=
 
 theorem chain_idx106 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b24lo j) (b24hi j)) →
       ConcaveOn ℝ (Set.Icc (b24lo i) (b24hi i))
         (fun t => f (Function.update y i t) - K106 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K106 i)
@@ -775,14 +780,15 @@ theorem chain_idx106 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb24 candsb24_ne hR0 candsb24_sub
     (fun i y hy => by
       rw [R106v_def i]
-      exact hstep_of_shifted_concave (b24lo_le_b24hi i) (hK0 i)
-        (hsl i) candsb24_eq y hy)
+      exact hstep_of_shifted_concave_box (b24lo_le_b24hi i) (hK0 i)
+        hsl candsb24_eq y hy)
     hcorner x hx
 
 /-- idx 107 chain: corner bound minus the grid rebate lower-bounds the margin (box 23; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx107 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => f (Function.update y i t) - K107 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K107 i)
@@ -791,14 +797,15 @@ theorem chain_idx107 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b23lo j) (b23hi j)) :
     B107 - ∑ j, R107 j ≤ f x :=
   final_bound candsb23 candsb23_ne hR0 candsb23_sub
-    (fun i y hy => hstep_of_shifted_concave (b23lo_le_b23hi i) (hK0 i)
-      (hsl i) candsb23_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b23lo_le_b23hi i) (hK0 i)
+      hsl candsb23_eq y hy)
     hcorner x hx
 
 /-- idx 108 chain: corner bound minus the grid rebate lower-bounds the margin (box 23; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx108 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => f (Function.update y i t) - K108 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K108 i)
@@ -807,14 +814,15 @@ theorem chain_idx108 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b23lo j) (b23hi j)) :
     B108 - ∑ j, R108 j ≤ f x :=
   final_bound candsb23 candsb23_ne hR0 candsb23_sub
-    (fun i y hy => hstep_of_shifted_concave (b23lo_le_b23hi i) (hK0 i)
-      (hsl i) candsb23_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b23lo_le_b23hi i) (hK0 i)
+      hsl candsb23_eq y hy)
     hcorner x hx
 
 /-- idx 109 chain: corner bound minus the grid rebate lower-bounds the margin (box 23; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx109 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => f (Function.update y i t) - K109 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K109 i)
@@ -823,8 +831,8 @@ theorem chain_idx109 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b23lo j) (b23hi j)) :
     B109 - ∑ j, R109 j ≤ f x :=
   final_bound candsb23 candsb23_ne hR0 candsb23_sub
-    (fun i y hy => hstep_of_shifted_concave (b23lo_le_b23hi i) (hK0 i)
-      (hsl i) candsb23_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b23lo_le_b23hi i) (hK0 i)
+      hsl candsb23_eq y hy)
     hcorner x hx
 
 /-- idx 111 rebate bridge: exact-fraction R equals the hstep value form
@@ -837,6 +845,7 @@ theorem R111v_def (i : Fin 6) : R111 i = K111 i * (b25hi i - b25lo i) ^ 2 / 8 :=
 
 theorem chain_idx111 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (b25lo i) (b25hi i))
         (fun t => f (Function.update y i t) - K111 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K111 i)
@@ -847,14 +856,15 @@ theorem chain_idx111 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb25 candsb25_ne hR0 candsb25_sub
     (fun i y hy => by
       rw [R111v_def i]
-      exact hstep_of_shifted_concave (b25lo_le_b25hi i) (hK0 i)
-        (hsl i) candsb25_eq y hy)
+      exact hstep_of_shifted_concave_box (b25lo_le_b25hi i) (hK0 i)
+        hsl candsb25_eq y hy)
     hcorner x hx
 
 /-- idx 112 chain: corner bound minus the grid rebate lower-bounds the margin (box 26; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx112 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => f (Function.update y i t) - K112 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K112 i)
@@ -863,14 +873,15 @@ theorem chain_idx112 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b26lo j) (b26hi j)) :
     B112 - ∑ j, R112 j ≤ f x :=
   final_bound candsb26 candsb26_ne hR0 candsb26_sub
-    (fun i y hy => hstep_of_shifted_concave (b26lo_le_b26hi i) (hK0 i)
-      (hsl i) candsb26_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b26lo_le_b26hi i) (hK0 i)
+      hsl candsb26_eq y hy)
     hcorner x hx
 
 /-- idx 113 chain: corner bound minus the grid rebate lower-bounds the margin (box 26; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx113 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => f (Function.update y i t) - K113 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K113 i)
@@ -879,14 +890,15 @@ theorem chain_idx113 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b26lo j) (b26hi j)) :
     B113 - ∑ j, R113 j ≤ f x :=
   final_bound candsb26 candsb26_ne hR0 candsb26_sub
-    (fun i y hy => hstep_of_shifted_concave (b26lo_le_b26hi i) (hK0 i)
-      (hsl i) candsb26_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b26lo_le_b26hi i) (hK0 i)
+      hsl candsb26_eq y hy)
     hcorner x hx
 
 /-- idx 114 chain: corner bound minus the grid rebate lower-bounds the margin (box 27; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx114 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b27lo j) (b27hi j)) →
       ConcaveOn ℝ (Set.Icc (b27lo i) (b27hi i))
         (fun t => f (Function.update y i t) - K114 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K114 i)
@@ -895,8 +907,8 @@ theorem chain_idx114 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b27lo j) (b27hi j)) :
     B114 - ∑ j, R114 j ≤ f x :=
   final_bound candsb27 candsb27_ne hR0 candsb27_sub
-    (fun i y hy => hstep_of_shifted_concave (b27lo_le_b27hi i) (hK0 i)
-      (hsl i) candsb27_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b27lo_le_b27hi i) (hK0 i)
+      hsl candsb27_eq y hy)
     hcorner x hx
 
 /-- idx 116 rebate bridge: exact-fraction R equals the hstep value form
@@ -909,6 +921,7 @@ theorem R116v_def (i : Fin 6) : R116 i = K116 i * (b25hi i - b25lo i) ^ 2 / 8 :=
 
 theorem chain_idx116 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (b25lo i) (b25hi i))
         (fun t => f (Function.update y i t) - K116 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K116 i)
@@ -919,14 +932,15 @@ theorem chain_idx116 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb25 candsb25_ne hR0 candsb25_sub
     (fun i y hy => by
       rw [R116v_def i]
-      exact hstep_of_shifted_concave (b25lo_le_b25hi i) (hK0 i)
-        (hsl i) candsb25_eq y hy)
+      exact hstep_of_shifted_concave_box (b25lo_le_b25hi i) (hK0 i)
+        hsl candsb25_eq y hy)
     hcorner x hx
 
 /-- idx 117 chain: corner bound minus the grid rebate lower-bounds the margin (box 26; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx117 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => f (Function.update y i t) - K117 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K117 i)
@@ -935,14 +949,15 @@ theorem chain_idx117 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b26lo j) (b26hi j)) :
     B117 - ∑ j, R117 j ≤ f x :=
   final_bound candsb26 candsb26_ne hR0 candsb26_sub
-    (fun i y hy => hstep_of_shifted_concave (b26lo_le_b26hi i) (hK0 i)
-      (hsl i) candsb26_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b26lo_le_b26hi i) (hK0 i)
+      hsl candsb26_eq y hy)
     hcorner x hx
 
 /-- idx 118 chain: corner bound minus the grid rebate lower-bounds the margin (box 27; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx118 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b27lo j) (b27hi j)) →
       ConcaveOn ℝ (Set.Icc (b27lo i) (b27hi i))
         (fun t => f (Function.update y i t) - K118 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K118 i)
@@ -951,14 +966,15 @@ theorem chain_idx118 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b27lo j) (b27hi j)) :
     B118 - ∑ j, R118 j ≤ f x :=
   final_bound candsb27 candsb27_ne hR0 candsb27_sub
-    (fun i y hy => hstep_of_shifted_concave (b27lo_le_b27hi i) (hK0 i)
-      (hsl i) candsb27_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b27lo_le_b27hi i) (hK0 i)
+      hsl candsb27_eq y hy)
     hcorner x hx
 
 /-- idx 119 chain: corner bound minus the grid rebate lower-bounds the margin (box 28; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx119 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b28lo j) (b28hi j)) →
       ConcaveOn ℝ (Set.Icc (b28lo i) (b28hi i))
         (fun t => f (Function.update y i t) - K119 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K119 i)
@@ -967,8 +983,8 @@ theorem chain_idx119 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b28lo j) (b28hi j)) :
     B119 - ∑ j, R119 j ≤ f x :=
   final_bound candsb28 candsb28_ne hR0 candsb28_sub
-    (fun i y hy => hstep_of_shifted_concave (b28lo_le_b28hi i) (hK0 i)
-      (hsl i) candsb28_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b28lo_le_b28hi i) (hK0 i)
+      hsl candsb28_eq y hy)
     hcorner x hx
 
 /-- idx 121 rebate bridge: exact-fraction R equals the hstep value form
@@ -981,6 +997,7 @@ theorem R121v_def (i : Fin 6) : R121 i = K121 i * (b25hi i - b25lo i) ^ 2 / 8 :=
 
 theorem chain_idx121 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b25lo j) (b25hi j)) →
       ConcaveOn ℝ (Set.Icc (b25lo i) (b25hi i))
         (fun t => f (Function.update y i t) - K121 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K121 i)
@@ -991,14 +1008,15 @@ theorem chain_idx121 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb25 candsb25_ne hR0 candsb25_sub
     (fun i y hy => by
       rw [R121v_def i]
-      exact hstep_of_shifted_concave (b25lo_le_b25hi i) (hK0 i)
-        (hsl i) candsb25_eq y hy)
+      exact hstep_of_shifted_concave_box (b25lo_le_b25hi i) (hK0 i)
+        hsl candsb25_eq y hy)
     hcorner x hx
 
 /-- idx 122 chain: corner bound minus the grid rebate lower-bounds the margin (box 27; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx122 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b27lo j) (b27hi j)) →
       ConcaveOn ℝ (Set.Icc (b27lo i) (b27hi i))
         (fun t => f (Function.update y i t) - K122 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K122 i)
@@ -1007,14 +1025,15 @@ theorem chain_idx122 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b27lo j) (b27hi j)) :
     B122 - ∑ j, R122 j ≤ f x :=
   final_bound candsb27 candsb27_ne hR0 candsb27_sub
-    (fun i y hy => hstep_of_shifted_concave (b27lo_le_b27hi i) (hK0 i)
-      (hsl i) candsb27_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b27lo_le_b27hi i) (hK0 i)
+      hsl candsb27_eq y hy)
     hcorner x hx
 
 /-- idx 123 chain: corner bound minus the grid rebate lower-bounds the margin (box 28; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx123 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b28lo j) (b28hi j)) →
       ConcaveOn ℝ (Set.Icc (b28lo i) (b28hi i))
         (fun t => f (Function.update y i t) - K123 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K123 i)
@@ -1023,14 +1042,15 @@ theorem chain_idx123 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b28lo j) (b28hi j)) :
     B123 - ∑ j, R123 j ≤ f x :=
   final_bound candsb28 candsb28_ne hR0 candsb28_sub
-    (fun i y hy => hstep_of_shifted_concave (b28lo_le_b28hi i) (hK0 i)
-      (hsl i) candsb28_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b28lo_le_b28hi i) (hK0 i)
+      hsl candsb28_eq y hy)
     hcorner x hx
 
 /-- idx 124 chain: corner bound minus the grid rebate lower-bounds the margin (box 28; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx124 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b28lo j) (b28hi j)) →
       ConcaveOn ℝ (Set.Icc (b28lo i) (b28hi i))
         (fun t => f (Function.update y i t) - K124 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K124 i)
@@ -1039,8 +1059,8 @@ theorem chain_idx124 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b28lo j) (b28hi j)) :
     B124 - ∑ j, R124 j ≤ f x :=
   final_bound candsb28 candsb28_ne hR0 candsb28_sub
-    (fun i y hy => hstep_of_shifted_concave (b28lo_le_b28hi i) (hK0 i)
-      (hsl i) candsb28_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b28lo_le_b28hi i) (hK0 i)
+      hsl candsb28_eq y hy)
     hcorner x hx
 
 /-- idx 126 rebate bridge: exact-fraction R equals the hstep value form
@@ -1053,6 +1073,7 @@ theorem R126v_def (i : Fin 6) : R126 i = K126 i * (b29hi i - b29lo i) ^ 2 / 8 :=
 
 theorem chain_idx126 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b29lo j) (b29hi j)) →
       ConcaveOn ℝ (Set.Icc (b29lo i) (b29hi i))
         (fun t => f (Function.update y i t) - K126 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K126 i)
@@ -1063,14 +1084,15 @@ theorem chain_idx126 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb29 candsb29_ne hR0 candsb29_sub
     (fun i y hy => by
       rw [R126v_def i]
-      exact hstep_of_shifted_concave (b29lo_le_b29hi i) (hK0 i)
-        (hsl i) candsb29_eq y hy)
+      exact hstep_of_shifted_concave_box (b29lo_le_b29hi i) (hK0 i)
+        hsl candsb29_eq y hy)
     hcorner x hx
 
 /-- idx 127 chain: corner bound minus the grid rebate lower-bounds the margin (box 30; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx127 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b30lo j) (b30hi j)) →
       ConcaveOn ℝ (Set.Icc (b30lo i) (b30hi i))
         (fun t => f (Function.update y i t) - K127 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K127 i)
@@ -1079,14 +1101,15 @@ theorem chain_idx127 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b30lo j) (b30hi j)) :
     B127 - ∑ j, R127 j ≤ f x :=
   final_bound candsb30 candsb30_ne hR0 candsb30_sub
-    (fun i y hy => hstep_of_shifted_concave (b30lo_le_b30hi i) (hK0 i)
-      (hsl i) candsb30_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b30lo_le_b30hi i) (hK0 i)
+      hsl candsb30_eq y hy)
     hcorner x hx
 
 /-- idx 128 chain: corner bound minus the grid rebate lower-bounds the margin (box 30; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx128 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b30lo j) (b30hi j)) →
       ConcaveOn ℝ (Set.Icc (b30lo i) (b30hi i))
         (fun t => f (Function.update y i t) - K128 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K128 i)
@@ -1095,14 +1118,15 @@ theorem chain_idx128 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b30lo j) (b30hi j)) :
     B128 - ∑ j, R128 j ≤ f x :=
   final_bound candsb30 candsb30_ne hR0 candsb30_sub
-    (fun i y hy => hstep_of_shifted_concave (b30lo_le_b30hi i) (hK0 i)
-      (hsl i) candsb30_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b30lo_le_b30hi i) (hK0 i)
+      hsl candsb30_eq y hy)
     hcorner x hx
 
 /-- idx 129 chain: corner bound minus the grid rebate lower-bounds the margin (box 30; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx129 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b30lo j) (b30hi j)) →
       ConcaveOn ℝ (Set.Icc (b30lo i) (b30hi i))
         (fun t => f (Function.update y i t) - K129 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K129 i)
@@ -1111,8 +1135,8 @@ theorem chain_idx129 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b30lo j) (b30hi j)) :
     B129 - ∑ j, R129 j ≤ f x :=
   final_bound candsb30 candsb30_ne hR0 candsb30_sub
-    (fun i y hy => hstep_of_shifted_concave (b30lo_le_b30hi i) (hK0 i)
-      (hsl i) candsb30_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b30lo_le_b30hi i) (hK0 i)
+      hsl candsb30_eq y hy)
     hcorner x hx
 
 /-- idx 131 rebate bridge: exact-fraction R equals the hstep value form
@@ -1125,6 +1149,7 @@ theorem R131v_def (i : Fin 6) : R131 i = K131 i * (b31hi i - b31lo i) ^ 2 / 8 :=
 
 theorem chain_idx131 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b31lo j) (b31hi j)) →
       ConcaveOn ℝ (Set.Icc (b31lo i) (b31hi i))
         (fun t => f (Function.update y i t) - K131 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K131 i)
@@ -1135,14 +1160,15 @@ theorem chain_idx131 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb31 candsb31_ne hR0 candsb31_sub
     (fun i y hy => by
       rw [R131v_def i]
-      exact hstep_of_shifted_concave (b31lo_le_b31hi i) (hK0 i)
-        (hsl i) candsb31_eq y hy)
+      exact hstep_of_shifted_concave_box (b31lo_le_b31hi i) (hK0 i)
+        hsl candsb31_eq y hy)
     hcorner x hx
 
 /-- idx 132 chain: corner bound minus the grid rebate lower-bounds the margin (box 32; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx132 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b32lo j) (b32hi j)) →
       ConcaveOn ℝ (Set.Icc (b32lo i) (b32hi i))
         (fun t => f (Function.update y i t) - K132 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K132 i)
@@ -1151,14 +1177,15 @@ theorem chain_idx132 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b32lo j) (b32hi j)) :
     B132 - ∑ j, R132 j ≤ f x :=
   final_bound candsb32 candsb32_ne hR0 candsb32_sub
-    (fun i y hy => hstep_of_shifted_concave (b32lo_le_b32hi i) (hK0 i)
-      (hsl i) candsb32_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b32lo_le_b32hi i) (hK0 i)
+      hsl candsb32_eq y hy)
     hcorner x hx
 
 /-- idx 133 chain: corner bound minus the grid rebate lower-bounds the margin (box 32; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx133 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b32lo j) (b32hi j)) →
       ConcaveOn ℝ (Set.Icc (b32lo i) (b32hi i))
         (fun t => f (Function.update y i t) - K133 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K133 i)
@@ -1167,14 +1194,15 @@ theorem chain_idx133 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b32lo j) (b32hi j)) :
     B133 - ∑ j, R133 j ≤ f x :=
   final_bound candsb32 candsb32_ne hR0 candsb32_sub
-    (fun i y hy => hstep_of_shifted_concave (b32lo_le_b32hi i) (hK0 i)
-      (hsl i) candsb32_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b32lo_le_b32hi i) (hK0 i)
+      hsl candsb32_eq y hy)
     hcorner x hx
 
 /-- idx 134 chain: corner bound minus the grid rebate lower-bounds the margin (box 33; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx134 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b33lo j) (b33hi j)) →
       ConcaveOn ℝ (Set.Icc (b33lo i) (b33hi i))
         (fun t => f (Function.update y i t) - K134 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K134 i)
@@ -1183,8 +1211,8 @@ theorem chain_idx134 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b33lo j) (b33hi j)) :
     B134 - ∑ j, R134 j ≤ f x :=
   final_bound candsb33 candsb33_ne hR0 candsb33_sub
-    (fun i y hy => hstep_of_shifted_concave (b33lo_le_b33hi i) (hK0 i)
-      (hsl i) candsb33_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b33lo_le_b33hi i) (hK0 i)
+      hsl candsb33_eq y hy)
     hcorner x hx
 
 /-- idx 136 rebate bridge: exact-fraction R equals the hstep value form
@@ -1197,6 +1225,7 @@ theorem R136v_def (i : Fin 6) : R136 i = K136 i * (b31hi i - b31lo i) ^ 2 / 8 :=
 
 theorem chain_idx136 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b31lo j) (b31hi j)) →
       ConcaveOn ℝ (Set.Icc (b31lo i) (b31hi i))
         (fun t => f (Function.update y i t) - K136 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K136 i)
@@ -1207,14 +1236,15 @@ theorem chain_idx136 (f : (Fin 6 → ℝ) → ℝ)
   final_bound candsb31 candsb31_ne hR0 candsb31_sub
     (fun i y hy => by
       rw [R136v_def i]
-      exact hstep_of_shifted_concave (b31lo_le_b31hi i) (hK0 i)
-        (hsl i) candsb31_eq y hy)
+      exact hstep_of_shifted_concave_box (b31lo_le_b31hi i) (hK0 i)
+        hsl candsb31_eq y hy)
     hcorner x hx
 
 /-- idx 137 chain: corner bound minus the grid rebate lower-bounds the margin (box 32; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx137 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b32lo j) (b32hi j)) →
       ConcaveOn ℝ (Set.Icc (b32lo i) (b32hi i))
         (fun t => f (Function.update y i t) - K137 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K137 i)
@@ -1223,14 +1253,15 @@ theorem chain_idx137 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b32lo j) (b32hi j)) :
     B137 - ∑ j, R137 j ≤ f x :=
   final_bound candsb32 candsb32_ne hR0 candsb32_sub
-    (fun i y hy => hstep_of_shifted_concave (b32lo_le_b32hi i) (hK0 i)
-      (hsl i) candsb32_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b32lo_le_b32hi i) (hK0 i)
+      hsl candsb32_eq y hy)
     hcorner x hx
 
 /-- idx 138 chain: corner bound minus the grid rebate lower-bounds the margin (box 33; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx138 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b33lo j) (b33hi j)) →
       ConcaveOn ℝ (Set.Icc (b33lo i) (b33hi i))
         (fun t => f (Function.update y i t) - K138 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K138 i)
@@ -1239,14 +1270,15 @@ theorem chain_idx138 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b33lo j) (b33hi j)) :
     B138 - ∑ j, R138 j ≤ f x :=
   final_bound candsb33 candsb33_ne hR0 candsb33_sub
-    (fun i y hy => hstep_of_shifted_concave (b33lo_le_b33hi i) (hK0 i)
-      (hsl i) candsb33_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b33lo_le_b33hi i) (hK0 i)
+      hsl candsb33_eq y hy)
     hcorner x hx
 
 /-- idx 139 chain: corner bound minus the grid rebate lower-bounds the margin (box 34; ALL-CONCAVE, no rebate (K = 0)). -/
 
 theorem chain_idx139 (f : (Fin 6 → ℝ) → ℝ)
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b34lo j) (b34hi j)) →
       ConcaveOn ℝ (Set.Icc (b34lo i) (b34hi i))
         (fun t => f (Function.update y i t) - K139 i / 2 * t * t))
     (hK0 : ∀ i, 0 ≤ K139 i)
@@ -1255,8 +1287,8 @@ theorem chain_idx139 (f : (Fin 6 → ℝ) → ℝ)
     (x : Fin 6 → ℝ) (hx : ∀ j, x j ∈ Set.Icc (b34lo j) (b34hi j)) :
     B139 - ∑ j, R139 j ≤ f x :=
   final_bound candsb34 candsb34_ne hR0 candsb34_sub
-    (fun i y hy => hstep_of_shifted_concave (b34lo_le_b34hi i) (hK0 i)
-      (hsl i) candsb34_eq y hy)
+    (fun i y hy => hstep_of_shifted_concave_box (b34lo_le_b34hi i) (hK0 i)
+      hsl candsb34_eq y hy)
     hcorner x hx
 
 /-! ### Axiom audit -/

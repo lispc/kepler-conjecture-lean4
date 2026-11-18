@@ -106,6 +106,46 @@ theorem hstep_of_shifted_concave {n : ℕ} {f : (Fin n → ℝ) → ℝ}
   · rw [hcands i]
     exact ⟨hi i, Finset.mem_insert_of_mem (Finset.mem_singleton_self _), hhi⟩
 
+/-- One-step rebate supply from a BOXED shifted-concavity hypothesis
+(SF 111 supply-slot form): the certificate is only demanded at points whose
+every coordinate lies in the row box `[lo j, hi j]`; the step itself is
+applied at the boxed point `x`. Proof identical to
+`hstep_of_shifted_concave`, with `hsl` consumed at `x` via `hx`. -/
+theorem hstep_of_shifted_concave_box {n : ℕ} {f : (Fin n → ℝ) → ℝ}
+    {lo hi K : Fin n → ℝ} {i : Fin n} (hlohi : lo i ≤ hi i) (hK : 0 ≤ K i)
+    (hsl : ∀ (i' : Fin n) (y : Fin n → ℝ),
+      (∀ j, y j ∈ Set.Icc (lo j) (hi j)) →
+      ConcaveOn ℝ (Set.Icc (lo i') (hi i'))
+        (fun t => f (Function.update y i' t) - K i' / 2 * t * t))
+    {cands : Fin n → Finset ℝ}
+    (hcands : ∀ j, cands j = insert (lo j) {hi j})
+    (x : Fin n → ℝ) (hx : ∀ j, x j ∈ Set.Icc (lo j) (hi j)) :
+    ∃ c ∈ cands i,
+      f (Function.update x i c) ≤ f x + K i * (hi i - lo i) ^ 2 / 8 := by
+  have hper : ∀ t ∈ Set.Icc (lo i) (hi i),
+      f (Function.update x i t) ≥
+        min (f (Function.update x i (lo i)))
+          (f (Function.update x i (hi i))) - K i * (hi i - lo i) ^ 2 / 8 := by
+    intro t ht
+    exact rebate_of_concave_shifted hlohi hK (hsl i x hx) (ht := ht)
+  have hxmem : x i ∈ Set.Icc (lo i) (hi i) := hx i
+  have hmin : min (f (Function.update x i (lo i))) (f (Function.update x i (hi i)))
+      ≤ f x + K i * (hi i - lo i) ^ 2 / 8 := by
+    have h := hper (x i) hxmem
+    have hup : Function.update x i (x i) = x := by
+      funext a
+      by_cases h : a = i
+      · subst h
+        rw [Function.update_self]
+      · rw [Function.update_of_ne h]
+    rw [hup] at h
+    linarith
+  rcases min_le_iff.mp hmin with hlo | hhi
+  · rw [hcands i]
+    exact ⟨lo i, Finset.mem_insert_self _ _, hlo⟩
+  · rw [hcands i]
+    exact ⟨hi i, Finset.mem_insert_of_mem (Finset.mem_singleton_self _), hhi⟩
+
 /-- Final assembly: the corner-table lower bound minus the total
 grid rebate lower-bounds the margin at every box point. -/
 theorem final_bound {n : ℕ} {f : (Fin n → ℝ) → ℝ} {K : Fin n → ℝ}
@@ -265,6 +305,7 @@ theorem chain_idx76 (f : (Fin 6 → ℝ) → ℝ)
 
 #print axioms exists_vertex_grid
 #print axioms hstep_of_shifted_concave
+#print axioms hstep_of_shifted_concave_box
 #print axioms final_bound
 #print axioms chain_idx41
 #print axioms chain_idx46

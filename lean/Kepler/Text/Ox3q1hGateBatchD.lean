@@ -44,6 +44,7 @@ theorem c181_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c181_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b42lo j) (b42hi j)) →
       ConcaveOn ℝ (Set.Icc (b42lo i) (b42hi i))
         (fun t => c181_mfund (Function.update y i t) - K181 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb42 j) → B181 ≤ c181_mfund v)
@@ -92,6 +93,7 @@ theorem c182_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c182_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b10lo j) (b10hi j)) →
       ConcaveOn ℝ (Set.Icc (b10lo i) (b10hi i))
         (fun t => c182_mfund (Function.update y i t) - K182 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb10 j) → B182 ≤ c182_mfund v)
@@ -154,6 +156,7 @@ theorem c183_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c183_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b10lo j) (b10hi j)) →
       ConcaveOn ℝ (Set.Icc (b10lo i) (b10hi i))
         (fun t => c183_mfund (Function.update y i t) - K183 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb10 j) → B183 ≤ c183_mfund v)
@@ -216,6 +219,7 @@ theorem c184_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c184_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b11lo j) (b11hi j)) →
       ConcaveOn ℝ (Set.Icc (b11lo i) (b11hi i))
         (fun t => c184_mfund (Function.update y i t) - K184 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb11 j) → B184 ≤ c184_mfund v)
@@ -273,6 +277,7 @@ theorem c185_gate : ∀ y1 y12 y23 y34 y41 : ℝ, (h0 + hplus) ≤ y1 → y1 ≤
 
 theorem c186_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b42lo j) (b42hi j)) →
       ConcaveOn ℝ (Set.Icc (b42lo i) (b42hi i))
         (fun t => c181_mfund (Function.update y i t) - K186 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb42 j) → B186 ≤ c181_mfund v)
@@ -321,6 +326,7 @@ theorem c187_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c187_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b10lo j) (b10hi j)) →
       ConcaveOn ℝ (Set.Icc (b10lo i) (b10hi i))
         (fun t => c187_mfund (Function.update y i t) - K187 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb10 j) → B187 ≤ c187_mfund v)
@@ -383,6 +389,7 @@ theorem c188_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c188_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b11lo j) (b11hi j)) →
       ConcaveOn ℝ (Set.Icc (b11lo i) (b11hi i))
         (fun t => c188_mfund (Function.update y i t) - K188 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb11 j) → B188 ≤ c188_mfund v)
@@ -435,6 +442,7 @@ theorem c188_gate
 
 theorem c189_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c182_mfund (Function.update y i t) - K189 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B189 ≤ c182_mfund v)
@@ -492,6 +500,7 @@ theorem c190_gate : ∀ y1 y12 y23 y34 y41 : ℝ, (h0 + hplus) ≤ y1 → y1 ≤
 
 theorem c191_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b42lo j) (b42hi j)) →
       ConcaveOn ℝ (Set.Icc (b42lo i) (b42hi i))
         (fun t => c181_mfund (Function.update y i t) - K191 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb42 j) → B191 ≤ c181_mfund v)
@@ -530,6 +539,7 @@ theorem c191_gate
 
 theorem c192_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b11lo j) (b11hi j)) →
       ConcaveOn ℝ (Set.Icc (b11lo i) (b11hi i))
         (fun t => c184_mfund (Function.update y i t) - K192 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb11 j) → B192 ≤ c184_mfund v)
@@ -582,6 +592,7 @@ theorem c192_gate
 
 theorem c193_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c183_mfund (Function.update y i t) - K193 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B193 ≤ c183_mfund v)
@@ -634,6 +645,7 @@ theorem c193_gate
 
 theorem c194_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b12lo j) (b12hi j)) →
       ConcaveOn ℝ (Set.Icc (b12lo i) (b12hi i))
         (fun t => c182_mfund (Function.update y i t) - K194 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb12 j) → B194 ≤ c182_mfund v)
@@ -701,6 +713,7 @@ theorem c196_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c196_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b43lo j) (b43hi j)) →
       ConcaveOn ℝ (Set.Icc (b43lo i) (b43hi i))
         (fun t => c196_mfund (Function.update y i t) - K196 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb43 j) → B196 ≤ c196_mfund v)
@@ -749,6 +762,7 @@ theorem c197_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c197_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b15lo j) (b15hi j)) →
       ConcaveOn ℝ (Set.Icc (b15lo i) (b15hi i))
         (fun t => c197_mfund (Function.update y i t) - K197 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb15 j) → B197 ≤ c197_mfund v)
@@ -811,6 +825,7 @@ theorem c198_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c198_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b15lo j) (b15hi j)) →
       ConcaveOn ℝ (Set.Icc (b15lo i) (b15hi i))
         (fun t => c198_mfund (Function.update y i t) - K198 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb15 j) → B198 ≤ c198_mfund v)
@@ -863,6 +878,7 @@ theorem c198_gate
 
 theorem c199_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b15lo j) (b15hi j)) →
       ConcaveOn ℝ (Set.Icc (b15lo i) (b15hi i))
         (fun t => c198_mfund (Function.update y i t) - K199 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb15 j) → B199 ≤ c198_mfund v)
@@ -930,6 +946,7 @@ theorem c201_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c201_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b44lo j) (b44hi j)) →
       ConcaveOn ℝ (Set.Icc (b44lo i) (b44hi i))
         (fun t => c201_mfund (Function.update y i t) - K201 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb44 j) → B201 ≤ c201_mfund v)
@@ -978,6 +995,7 @@ theorem c202_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c202_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b17lo j) (b17hi j)) →
       ConcaveOn ℝ (Set.Icc (b17lo i) (b17hi i))
         (fun t => c202_mfund (Function.update y i t) - K202 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb17 j) → B202 ≤ c202_mfund v)
@@ -1040,6 +1058,7 @@ theorem c203_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c203_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b17lo j) (b17hi j)) →
       ConcaveOn ℝ (Set.Icc (b17lo i) (b17hi i))
         (fun t => c203_mfund (Function.update y i t) - K203 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb17 j) → B203 ≤ c203_mfund v)
@@ -1102,6 +1121,7 @@ theorem c204_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c204_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b18lo j) (b18hi j)) →
       ConcaveOn ℝ (Set.Icc (b18lo i) (b18hi i))
         (fun t => c204_mfund (Function.update y i t) - K204 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb18 j) → B204 ≤ c204_mfund v)
@@ -1169,6 +1189,7 @@ theorem c206_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c206_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b44lo j) (b44hi j)) →
       ConcaveOn ℝ (Set.Icc (b44lo i) (b44hi i))
         (fun t => c206_mfund (Function.update y i t) - K206 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb44 j) → B206 ≤ c206_mfund v)
@@ -1217,6 +1238,7 @@ theorem c207_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c207_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b17lo j) (b17hi j)) →
       ConcaveOn ℝ (Set.Icc (b17lo i) (b17hi i))
         (fun t => c207_mfund (Function.update y i t) - K207 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb17 j) → B207 ≤ c207_mfund v)
@@ -1279,6 +1301,7 @@ theorem c208_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c208_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b18lo j) (b18hi j)) →
       ConcaveOn ℝ (Set.Icc (b18lo i) (b18hi i))
         (fun t => c208_mfund (Function.update y i t) - K208 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb18 j) → B208 ≤ c208_mfund v)
@@ -1331,6 +1354,7 @@ theorem c208_gate
 
 theorem c209_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b19lo j) (b19hi j)) →
       ConcaveOn ℝ (Set.Icc (b19lo i) (b19hi i))
         (fun t => c207_mfund (Function.update y i t) - K209 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb19 j) → B209 ≤ c207_mfund v)
@@ -1398,6 +1422,7 @@ theorem c211_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c211_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b44lo j) (b44hi j)) →
       ConcaveOn ℝ (Set.Icc (b44lo i) (b44hi i))
         (fun t => c211_mfund (Function.update y i t) - K211 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb44 j) → B211 ≤ c211_mfund v)
@@ -1446,6 +1471,7 @@ theorem c212_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c212_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b18lo j) (b18hi j)) →
       ConcaveOn ℝ (Set.Icc (b18lo i) (b18hi i))
         (fun t => c212_mfund (Function.update y i t) - K212 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb18 j) → B212 ≤ c212_mfund v)
@@ -1498,6 +1524,7 @@ theorem c212_gate
 
 theorem c213_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b19lo j) (b19hi j)) →
       ConcaveOn ℝ (Set.Icc (b19lo i) (b19hi i))
         (fun t => c202_mfund (Function.update y i t) - K213 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb19 j) → B213 ≤ c202_mfund v)
@@ -1550,6 +1577,7 @@ theorem c213_gate
 
 theorem c214_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b19lo j) (b19hi j)) →
       ConcaveOn ℝ (Set.Icc (b19lo i) (b19hi i))
         (fun t => c203_mfund (Function.update y i t) - K214 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb19 j) → B214 ≤ c203_mfund v)
@@ -1620,6 +1648,7 @@ FALSE per KREBATE). -/
 
 theorem c216_gate
     (hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplit216 i →
+      (∀ j : Fin 6, y j ∈ Set.Icc (b45lo j) (b45hi j)) →
       ConcaveOn ℝ (Set.Icc (gsplit216 i k) (gsplit216 i (k + 1)))
         (fun t => c216_mfund (Function.update y i t) - K216 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ cands_split216 j) → B216 ≤ c216_mfund v) :
@@ -1653,6 +1682,7 @@ theorem c217_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c217_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b21lo j) (b21hi j)) →
       ConcaveOn ℝ (Set.Icc (b21lo i) (b21hi i))
         (fun t => c217_mfund (Function.update y i t) - K217 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb21 j) → B217 ≤ c217_mfund v)
@@ -1715,6 +1745,7 @@ theorem c218_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c218_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b21lo j) (b21hi j)) →
       ConcaveOn ℝ (Set.Icc (b21lo i) (b21hi i))
         (fun t => c218_mfund (Function.update y i t) - K218 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb21 j) → B218 ≤ c218_mfund v)
@@ -1767,6 +1798,7 @@ theorem c218_gate
 
 theorem c219_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b21lo j) (b21hi j)) →
       ConcaveOn ℝ (Set.Icc (b21lo i) (b21hi i))
         (fun t => c217_mfund (Function.update y i t) - K219 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb21 j) → B219 ≤ c217_mfund v)
@@ -1834,6 +1866,7 @@ theorem c221_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c221_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b46lo j) (b46hi j)) →
       ConcaveOn ℝ (Set.Icc (b46lo i) (b46hi i))
         (fun t => c221_mfund (Function.update y i t) - K221 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb46 j) → B221 ≤ c221_mfund v)
@@ -1882,6 +1915,7 @@ theorem c222_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c222_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c222_mfund (Function.update y i t) - K222 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B222 ≤ c222_mfund v)
@@ -1944,6 +1978,7 @@ theorem c223_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c223_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c223_mfund (Function.update y i t) - K223 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B223 ≤ c223_mfund v)
@@ -1996,6 +2031,7 @@ theorem c223_gate
 
 theorem c224_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b23lo j) (b23hi j)) →
       ConcaveOn ℝ (Set.Icc (b23lo i) (b23hi i))
         (fun t => c222_mfund (Function.update y i t) - K224 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb23 j) → B224 ≤ c222_mfund v)
@@ -2063,6 +2099,7 @@ theorem c226_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c226_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b47lo j) (b47hi j)) →
       ConcaveOn ℝ (Set.Icc (b47lo i) (b47hi i))
         (fun t => c226_mfund (Function.update y i t) - K226 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb47 j) → B226 ≤ c226_mfund v)
@@ -2111,6 +2148,7 @@ theorem c227_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c227_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => c227_mfund (Function.update y i t) - K227 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb26 j) → B227 ≤ c227_mfund v)
@@ -2173,6 +2211,7 @@ theorem c228_mfund_at (y1 y2 y3 y4 y5 y6 : ℝ) :
 
 theorem c228_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => c228_mfund (Function.update y i t) - K228 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb26 j) → B228 ≤ c228_mfund v)
@@ -2225,6 +2264,7 @@ theorem c228_gate
 
 theorem c229_gate
     (hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+      (∀ j : Fin 6, y j ∈ Set.Icc (b26lo j) (b26hi j)) →
       ConcaveOn ℝ (Set.Icc (b26lo i) (b26hi i))
         (fun t => c227_mfund (Function.update y i t) - K229 i / 2 * t * t))
     (hcorner : ∀ v : Fin 6 → ℝ, (∀ j, v j ∈ candsb26 j) → B229 ≤ c227_mfund v)
