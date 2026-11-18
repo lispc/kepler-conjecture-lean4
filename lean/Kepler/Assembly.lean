@@ -60,6 +60,9 @@ import Kepler.Text.Reduction5J5JcajyduFinal
 import Kepler.Text.LocalConcl
 import Kepler.Text.PackingConcl
 import Kepler.Text.PackIneqBiefjhuClose
+-- TSKAJXY-XLLIPLS 全盒装配落地（tskasm-land-w1，2026-11-18）：`packIneqTskXLLIPLS`
+--（6,612 叶证书树 + PosTree 覆盖树，全标准三）闭合下方 `nliTskXLLIPLS`。
+import Kepler.Text.PackIneqTskXLLIPLSClose
 import Kepler.Text.TameLp
 import Kepler.Text.TameLpPerimeter
 import Kepler.Assembly.GoodListDefs
@@ -979,9 +982,9 @@ theorem nliTskWKGUESBsym : bank_TSKAJXYWKGUESBsym := sorry
 
 /-- 1b 8/10：HOL ineq entry `TSKAJXY-XLLIPLS`（ineq.hl:304；PA21
 `bank_TSKAJXYXLLIPLS`，盒 [2hplus,√8]×[2,2.01]²×[2hplus,2.8]×[2,2.01]²）。
-资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliTskXLLIPLS : bank_TSKAJXYXLLIPLS := sorry
+资产状态：closed——6,612 叶证书树 + PosTree 覆盖树全标准三
+（tskasm-land-w1，2026-11-18；`Kepler.Text.packIneqTskXLLIPLS`）。 -/
+theorem nliTskXLLIPLS : bank_TSKAJXYXLLIPLS := Kepler.Text.packIneqTskXLLIPLS
 
 /-- 1b 9/10：HOL ineq entry `TSKAJXY-delta_x4`（ineq.hl:341；PA21
 `bank_TSKAJXYdx4`，x-空间盒 [4,2.01²]²×[2.8²,8]×[4,2.01²]²×[2.8²,8]）。
