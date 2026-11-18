@@ -1326,6 +1326,9 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（09:35，续1242）**：**`handoff-2026-11-18.md` 新建（用户「换一个 agent」指令）——整体状态 dump 入档**。
+① 内容：基线 AQ 一屏 / 本日六笔落库 / **4 项待裁决**（S2a 车道、S2b batch2、push 67 commit、农场解冻 5 项）/ ox3q1h 剩余路径与全部件表 / farm-ops 摘要 / **复现命令与易失池风险**（leaf olean 只在 /tmp，重编 42.6 h）/ 护栏与新增经验 / 快照索引 / 接手第一小时建议。
+② 入口层联动：`docs/README.md` 交接列表置顶。下一条：续1243。
 - **2026-11-18（09:20，续1241）**：**`sf-hslp-box-w1` 收线落库 `b11c1627`——SF 111 全量落地：hsl/hslp 387 处盒前提 + 2 个 `_box` 步骤引理（14 文件，+1,101/−596），S2a margin″ 装配解锁**。
 ① **范围**：gate 184 槽（A 40 hsl + 8 hslp / B 41+7 / C 45+3 / D 39+1）+ `chain_idxN` 184 hsl + `chain_split_idxN` 19 hslp = **387**；每处仅插入 `(∀ j : Fin 6, y j ∈ Set.Icc (bNlo j) (bNhi j)) →`，结论/槽序/量化形状逐字未动。
 ② **方法**：生成器基线复现 10/12 逐字节一致（GateBatchA–D / ChainBatch3–6 / ChainSplit1–2）；ChainBatch1/2 不可复现（旧发射器）⇒ 统一 in-place 变换（`apply_sf111.py`），并对 10 个可复现文件用修订生成器二次验证与变换输出逐字节同。
