@@ -98,7 +98,7 @@
 ---
 
 
-## 1. 在飞（2026-11-18 早：**`sf-hslp-box-w1`（SF 111 实施）与 `farm-ops-w1`（排产规划）在飞**；**TSKAJXY 装配已落地 `58ade83a`+`c940aae7`+`e4c384e6`，基线 AQ 定档 = SORRIED 51（50 `nli*` + 1 hLP）/ K_REACH 2,108,657 / AXIOM 585，续1239**；kernel 波收线 5,212/5,212（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`，S2a margin″ 装配在 SF 111 实施后解锁；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
+## 1. 在飞（2026-11-18 早：**`sf-hslp-box-w1`（SF 111 实施）在飞**；**`farm-ops-w1` 已收线**（FARM_PLAN/DEBTS，续1240，解冻请求呈裁决）；**TSKAJXY 装配已落地 `58ade83a`+`c940aae7`+`e4c384e6`，基线 AQ 定档 = SORRIED 51（50 `nli*` + 1 hLP）/ K_REACH 2,108,657 / AXIOM 585，续1239**；kernel 波收线 5,212/5,212（续1235）；`ox3q1h` S2b Batch1 已落 `8326ca5e`，S2a margin″ 装配在 SF 111 实施后解锁；gate0-measure 已收线 = **Gate-0 NO-GO 实测确认**（`12c81dee`）；math5-w4 件2 挂起等统一排产（续1221）；ztgmain/jet3-g0/asm-precheck/census/map52/ixpotpa/g4corner-scout 均已收线）
 
 > **2026-11-17 06:49 双车道发车（用户批「都发」，Gate-0 挂分支后重排）**：
 > ① `ox3q1h-nogate-w1`——**ox3q1h 双前线（本债主路线，全无 gate）**：前线 1 = 46 条
@@ -1326,6 +1326,13 @@ dihY 半边已全部落库，γ4 半边补齐即接线四条 `ztg_of_global_boun
 ① **`Ox3q1hSliceRebate.lean`**（138 行/3 定理，namespace Kepler.Text ✓，import Ox3q1hRebate）：`rebate_of_concave_shifted`（chord-rebate 核心引理：ConcaveOn(f−K/2·t²) ⟹ min−K(b−a)²/8 ≤ f t）+ `slice_hper`（hper 前提提升，R i = K i·W i²/8）+ `exists_vertex_rebate_of_shifted_concave`（S2→S4 组合接口）。**编排者闸**：patch 双侧 a/lean CHECK PASS、直编 RC=0/0 err、**3/3 axioms 亲验标准三**。
 ② **`Ox3q1hCornerPilot.lean`**（1,787 行，S3 量产模板，编排者代抄生成 patch 落快照）：P0938/P0768/P0884_g4_bounds + `cvp_conj147_at_P0938` 四顶层全链。**B3 尾部全清（超预期）**——真根因 = pilot_emit.py **三个发射级路由 bug**（负级数实参直送 cvp_atan_of / B3-native 缺 shift 分支致证书数值必假 / y-括号 eps 与 sl.eps 同值致 2.5e-21 余量被 2^-60 取整击穿），v37→v41 四轮全绿；**此发现保全了 S3 量产不被"编译通过但证书为假"污染**（对 ztg γ4 复用同套路亦为预警）。编排者闸：直编 RC=0/0 err、**4/4 axioms 亲验标准三**。
 ③ 剩余义务交接明确：48 盒×6 槽 |f''|≤K dyadic 数值包络（供 SliceRebate 的 hsl；float 普查仅 sizing）→ S3 角点值 bank 量产（30–60 lean-h，分批停轮）→ S4 装配 → S5 接线。车道已 resume K 包络。下一条：续1225。
+- **2026-11-18（09:05，续1240）**：**`farm-ops-w1` 收线（零 lean）——农场/LP 统一排产表交付，43 冻结债 0 已消 / 42 待办 + 3 BLOCKED；非农场可闭 8 条、农场 ~27,000 CPU·h 请求呈裁决**。
+① 交付：`FARM_PLAN.md`（381 行）+ `DEBTS.tsv`（52 行 × 21 列，脚本生成）+ `DELIVERY.md`；主仓零改动。
+② **对账（编排者复核）**：SORRIED 51 名单与 DEBTS 集合逐名对齐（51 + 1 已闭 `nliCell3QZECFICwt0corner` 参考行；comm 双向 0 缺漏）；Assembly.lean `:= sorry` 行 57 = **55 声明（50 `nli*` + 5 锥外 `*Ids`）+ 2 注释块命中**；hLP `lpArchiveCertificatesDebt` 另计（匿名 sorry 体，不在 `:= sorry` 面）。
+③ **43 条 Gate-0 冻结债**：0 已消 / 43 待办（FARM-BB 27 / 解析 6 / 解析待证 6 / LP 2 / BLOCKED 2：`wt0` 规则缺失、`WKGUESBsym` 发射 TIMEOUT）；Gate-0 后已消 2 条（`wt0corner` `83144d4d`、`nliTskXLLIPLS` 三笔）**属"无 gate 9 条"，不在 43**；math5 四债 = 0 消 / 3 解析可行（wt2A/wt1/iyou）/ 1 BLOCKED（sqrt8）。
+④ **排产**：6 批 + 1 条件批（ZTG joint 6 侦察失败则农场）；总核时 **≈27,000 CPU·h**（区间 13,500–54,000）；墙钟 18 天 @64 并发 / 9 天 @128；12 GB/lean；scratch 1.7 TB 中心 / 3 TB 上限。F1 便宜档 pilot 是唯一校准点，不批则全部保持 EST。
+⑤ **非农场捷径 8 条（0 解冻，3–5 周本地）**：ZTG γ4 解耦 4（−4）、`iyou-sharpv2`（−1）、`cell3-wt1`+`wt2A`（−2）、`ox3q1h`（−1，依赖在飞 SF 111）。
+⑥ **解冻请求 5 项（仅请求，呈用户批）**：nli 农场证书批（30 条 FARM-BB 叶级）/ Rule P 规模化（不批则 Rule C 12× 核时）/ certtm 特性开发（sqrt8、wt0 log、IXPOTPA mixed-tm；TM3/Mono\*/D 仍 hold）/ LP 证书层（42,889 叶）/ 磁盘算力（LP ≥1.2 TB、nli scratch ≥3 TB、64–128 并发）+ AGENTS §1「不做证书农场」口径限定裁定。下一条：续1241。
 - **2026-11-18（08:55，续1239）**：**🎯 TSKAJXY 全盒装配落地 + 基线 AQ 定档——SORRIED 52→51（50 `nli*` + 1 hLP），根面 589 逐条集合同基线**。
 ① **三笔 commit**：`58ade83a`（6,612 leaf 源：5,012 old + 200 famA + 1,400 famB，与 kernel 波已编源逐字节同）+ `c940aae7`（装配层 202 模块/23,832 行：`PosTree` + 199 shard + 骨架 + Close）+ `e4c384e6`（`Assembly.nliTskXLLIPLS` sorry→`Kepler.Text.packIneqTskXLLIPLS`，Assembly sorry 58→57）。两处人拍板位点 `tsk_atan1_eval`/`tsk_box_eq` 均 `rfl` 一次通过。
 ② **编排者亲验**：6,815 文件 MANIFEST `shasum -c` 全 OK；从仓库落地源重编装配全链 RC=0/0 err（PosTree 3.4 s / 5 shard 抽样 3.7 s 个 / 骨架 6 s / Close 4.3 s / Assembly 43 s / Final 6.9 s）；`#print axioms` `TskXLLIPLS_pos`/`packIneqTskXLLIPLS`/`Assembly.nliTskXLLIPLS` 全标准三；根面 `the_kepler_conjecture_e2e` = **589 = 585 native + 标准三 + `sorryAx`**，与基线 AP 逐条集合相同（new∖base=∅、base∖new=∅）。
