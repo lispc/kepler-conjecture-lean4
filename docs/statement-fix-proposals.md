@@ -7015,3 +7015,76 @@ m 槽 = 1 的实例全 16 中恰一个：`(0,1,0,0)`（唯一满足 `w = 2 ∧ i
 **立案待审**（housekeeping-w1 记档 2026-11-17；发现源 =
 `nli-triage-w1` `AUDIT.md` A-4 + `DELIVERY.md` #4、pq 续1152 ④
 SUSPECT-2；`docs/nli-campaign.md` §1.1 同口径）。
+
+## 111. ox3q1h G4 供给槽 `hsl`/`hslp` 的 `y` 无界量化与真实消费域不符（盒外反例使槽不可满足；S2 供给被 BLOCKED）— 分级 **A**（陈述修正 · 用户 2026-11-18 批「1 推进」· 补丁面 = 184 gate 槽 + 203 链签名，共 387 处前提）
+
+### (a) 现状陈述
+
+G4 组件 gate（`lean/Kepler/Text/Ox3q1hGateBatchA–D.lean`）与链
+（`Ox3q1hChainBatch1–6.lean`、`Ox3q1hChainSplit1/2.lean`）的供给槽：
+
+```lean
+-- 非劈分（165 gate + 184 chain_idxN）
+(hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+  ConcaveOn ℝ (Set.Icc (boxNlo i) (boxNhi i))
+    (fun t => cN_mfuna (Function.update y i t) - KN i / 2 * t * t))
+-- 劈分（19 gate + 19 chain_split_idxN）
+(hslp : ∀ (i : Fin 6) (y : Fin 6 → ℝ) (k : ℕ), k + 1 ≤ msplitN i →
+  ConcaveOn ℝ (Set.Icc (gsplitN i k) (gsplitN i (k + 1)))
+    (fun t => cN_mfuna (Function.update y i t) - b2KN i / 2 * t * t))
+```
+
+`y : Fin 6 → ℝ` **无界量化**；而全部消费点（gate 的 `![y1…y6]` 与链的下降点）
+都落在本行盒 `bNlo/bNhi`（`S4_MAP.tsv` 的 `box_id` 列；如 idx41 → b5）内。
+
+### (b) 问题（机器证据）
+
+盒外反例（`ox3q1h-s2a-interactive-w1` study，mpmath 30 dps，可复现）：
+`y = (3, 2, 2, 2.53, 2, 2)`（y1 = 3 ∉ box5），i = y4 时切片二阶导在
+t = 2.53 处 = **1.386 > b2K41 3 ≈ 0.8639** ⇒ 平移后切片非凹，
+`ConcaveOn` 假。故该槽作为证明义务**不可满足**，S2 供给车道无法发射任何
+证书（续1233 BLOCKED 定性）。不是转录问题：HOL 原件同一函数在盒外亦不凹，
+槽的无界量化是 Lean 侧槽形设计缺陷（消费域本为盒内）。
+
+### (c) 修法草案
+
+给槽加**本行盒前提**（`N` = 该 gate/chain 在 `S4_MAP.tsv` 的 `box_id`；
+链的盒即其 `hx` 已在用的 `bNlo/bNhi`）：
+
+```lean
+(hsl : ∀ (i : Fin 6) (y : Fin 6 → ℝ),
+  (∀ j : Fin 6, y j ∈ Set.Icc (bNlo j) (bNhi j)) →
+  ConcaveOn ℝ (Set.Icc (boxNlo i) (boxNhi i))
+    (fun t => cN_mfuna (Function.update y i t) - KN i / 2 * t * t))
+-- hslp 同位置、同前提
+```
+
+同时：
+- gate 体调用 `chain_idxN … hsl …` / `chain_split_idxN … hslp …` 时前提逐位对齐；
+- 链体内 hsl 应用点的盒前提由 `hx` + `t ∈ Icc (boxNlo i) (boxNhi i)` 局部证
+  （`Function.update` 逐坐标 `fin_cases` + `simp`，单链一处 helper）；
+- 结论、槽名/顺序、下游 S5 对位形状**零改动**；
+- `Ox3q1hChainSplitKit.hstep_split_m` 的 `hsl` 是抽象 `S` 上的泛型假设
+  （无盒知识）；若链体实际消费它，则同批加盒参数，否则不动。
+
+### (d) 保真影响
+
+- 只收紧**假设的量词域**（盒外点本来就不被任何消费点使用）；所有 gate/
+  chain 的结论与证明逻辑不变，S5 最终形状不变。
+- 供给解锁：S2a margin″ 装配（原子包络 + 带符号求和 ≤ K，slack ≈ +0.31）
+  可对盒内 y 发射；19 劈分行先解锁，其余 165 行同管线批量化。
+- 不引入新信任假设；不改任何已证命题真值；零 axiom/sorry 影响。
+
+### (e) patch 草案要点
+
+12 文件、387 处前提（数字已逐文件核）：GateBatchA（hsl 40 + hslp 8）、
+B（41 + 7）、C（45 + 3）、D（39 + 1）；ChainBatch1–6（hsl 184）；
+ChainSplit1/2（hslp 19）。优先走**生成器模板改 + 整文件重生成**
+（`emit_gate.py` / `emit_chain.py` / `emit_split.py`，§7.1-32），
+重生成前先验生成器对当前文件逐字节复现；不可复现则退回统一 in-place 变换。
+闸：12 文件全编 RC=0/0 err + 每文件尾部/探针 `#print axioms` 恰标准三。
+
+### (f) 状态
+
+**已批，实施中**（用户 2026-11-18「1 推进」；草案源 =
+`ox3q1h-s2a-interactive-w1/SF_DRAFT.md`；实施车道 `sf-hslp-box-w1`）。
