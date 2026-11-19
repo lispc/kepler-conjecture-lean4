@@ -256,6 +256,11 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-19（16:38 实测，续1291）**：**IXPOTPA 考古+分解侦察发车（用户批「发侦查车道考古吧」）+ ztg 第三 bug 判明与假绿陷阱入册（PR-48）。**
+  ① `ixpotpa-arch-w1` 发车（零 Lean / 零占槽 / 有界半天）：双轨 = 考古优先（AGENTS §8：HOL `ineq.hl:1265` 原版怎么证的最宽盒、辅助引理/废弃注记/Isabelle 侧）+ 定量复核（PR-47 精神：「自相似不可分解」当被检断言，真盒 cases_narrow 口径，候选给实测数字）。判词三选一：GO 给工单级规格 / NO-GO 则选项(c) 判死、③裁决简化为 (a) vs (b) / UNRESOLVED 列缺口。这是 IXPOTPA 卡上写死的「任一选项启动前置」。
+  ② ztg-bernstein-pilot 第三轮：括号假设**证实**（诊断性干跑 480+600 处包裹后「Function expected」×101 全灭，2,428+3,034 声明证明体全过内核）但暴露**第三 bug**：两文件顶层 theorem binder 写成 `(x1 : ℝ, x2 : ℝ, …)` 逗号形（探针实证 Lean 4 不收）；perl 改空格形后重编中（orch4_*.log）。**PR-48 入册**：语法错误后 parse recovery 照样建声明、文件尾 `#print axioms` 打「does not depend on any axioms」假绿——error≠0 时自审计行全部作废；AGENTS #9 双检的最硬实证。车道已接三 bug 全套修法（顶层模板空格形 + emit_nnl 括号包裹 + PR-32 整文件重生成），落库以车道重生成为准。
+  ③ 在飞 6 条（iyou / wt1 / ztg / ixpotpa-arch / wt0 手工 / LP 终局链）。SORRIED 51 / AXIOM 585 不变。下一条：续1292。
+
 - **2026-11-19（16:29 实测，续1290）**：**sqrt8 重估侦察收线（第二件正面）——双侦察独立同源翻案收敛；sqrt8 正式移出③包。**
   ① `cell3-sqrt8-reeval-w1` 判词 **GO**：旧「125–512 cell 不可写」双因翻案——定量核心 0.0293=8× 是 a-公式 **term4 转录错**（第六槽抄成字面量 2；正确 term4 = √x3·x1/2；角点 y5=y6=2 两形式同值故自检漏检），诚实全盒超额 **0.00586 ≈ 1.57×**（与 S·a 侦察 0.00552≈1.5× 独立同源复算，量级一致）；生成器范式区间 B&B 实测 **38 自适应叶 / 67 wt2A 同款矩形设计** @τ=2e-4 即收线。**已认证硬事实**：D={δT≥0} 全域 `0<c3Main` 6,311 叶零未决 22 s（真极小=角点 +3.7446884e-3，与已证 `nb11_c3_corner_pos` 8 位对齐）；route-A 三坐标偏导全盒为正（旧负点在盒外 y5≈2.6）但 ~370 导数 cell 贵于值 cell ⇒ 降为回退。
   ② **双侦察并单**：首选 S·a 10-cell antitone（~1–1.5 车道日）+ 备胎 S0-67（~1.5–3 车道日，`w2a_cell` 严格子集）；§9.3 卡已合入双侦察全部数字（ERRATA 精确根因 / 硬事实 / 施工资格表 / 回退链）；**③包收缩为 wt0 log 规则 + IXPOTPA mixed-tm 两债**（wt0 手工侦察在飞，其收线定③最终去留）。快照 `~/c17_backup/lane_snapshots/cell3-sqrt8-reeval-w1/`（SCOUT.md + sqrt8_card.md + work/ 11 件）。

@@ -35,7 +35,7 @@
 | 19 | 池纪律：复制式 island、禁 ln -s、.lake 只读、LEAN_PATH 独占解析 | PR-36, PR-9 |
 | 20 | 锁纪律：禁 exec 起 lean（丢 trap）；无主锁取证后清 | PR-37 |
 
-未入 AGENTS 的册内条目：PR-17（已 ERRATA）、PR-38–47（handoff 五条 + 2026-11-19 新增五条：linarith 原子化 / 短命脚本重写 / 时间戳实测 / guard-槽序 / 判死公式核对）。
+未入 AGENTS 的册内条目：PR-17（已 ERRATA）、PR-38–48（handoff 五条 + 2026-11-19 新增六条：linarith 原子化 / 短命脚本重写 / 时间戳实测 / guard-槽序 / 判死公式核对 / 语法恢复假绿）。
 外部散件索引见 §F。
 
 ---
@@ -108,6 +108,18 @@ by funext t; unfold D; ring`，然后 `rw [hfun]`。
 
 **PR-35 tactic 块行首 `-` 是 case bullet**（2026-11-18 S2a）：多行项续行以 `-`
 开头被解析为 bullet → 后续全乱。续行 `-` 挪到上一行行尾（`… -\n    (…)`）。
+
+**PR-48 语法错误后的 parse recovery 照样建声明，`#print axioms` 会假绿**
+（2026-11-19 ztg-bernstein-pilot 编排者探针实证）：定理签名写成
+`(x1 : ℝ, x2 : ℝ, …)` 逗号 binder（Lean 4 定理签名不收）⇒ 单点语法错误、
+RC=1、不写 olean；但 Lean 的错误恢复**仍把该名声明进环境**，文件尾
+`#print axioms <该名>` 照样打出「does not depend on any axioms」——
+自审计行在**签名已损坏**的前提下假绿。探针三行复现：
+`theorem t (x : Nat, y : Nat) : Nat := x + y` + `#print axioms t`
+→ 一条 error + 一条假绿。这是 AGENTS #9「error 计数 0 与 axioms 双检
+缺一不可」的最硬实证：**只看 axioms 行会收下一个陈述已损坏的定理**。
+推论：任何文件的文件尾自审计在 error≠0 时全部作废；发射器顶层模板与
+量产模板必须同构（本例量产 2,427 条全空格形 ✓、顶层 1 条逗号形 ✗）。
 
 ## B. 陈述与审计纪律
 
