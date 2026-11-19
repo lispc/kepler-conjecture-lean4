@@ -1365,10 +1365,18 @@
   s8_cell ~500 行机器层、~10–14k 生成 + ~900 机器层、编译 11–34 min 串行、
   **~1.5–3 车道日**；sqrt8 核是 `w2a_cell` 严格子集：无 /2、无 d4/DU/
   m4/m5/h0cut）。**无需**：certtm、③解冻、125–512 cell。
-- **回退链（双侦察并单后）**：matanJoint-10（+4.8e-4，主案）→
-  perSlot-24（+3.04e-4，零新引理）→ sumAnti-12（+5.9e-4，需 sum-antitone
-  难件）→ **S0-67（重估侦察已给全套 [interval] 叶表）** → route-A
-  ~370 导数符号 cell（偏导全盒已认证为正）。
+- **回退链（双侦察并单后；2026-11-19 施工实测改选）**：~~matanJoint-10
+  （+4.8e-4，主案）~~ **施工证伪（cell3-sqrt8-build-w1 构造期抓到）**：
+  matan 全域**递减**（matan(0)=1 > matan(1)=π/4）⇒ 左支 v₅ 反单调时
+  matan 因子**递增**、L5「三反单调之积」**不 per-factor 成立**（数值真性
+  依赖 S/D 跨侧抵消，Lean 不可机械）；perSlot-24 的 antiHi D-界同依赖 L5
+  ⇒ **实际采用链条末端 S0（perSlot+prodMin）= `w2a_cell` 严格孪生**，每因子
+  方向独立成立、零新数学、零陈述改动 → sumAnti-12（需 sum-antitone
+  难件）→ route-A ~370 导数符号 cell。**施工实测（停泊态，等池恢复收尾）**：
+  30 叶覆盖全盒（0 缺口）、对称后 26 实例**全编译 PASS**、精确有理 margin
+  最小 **+2.6398e-4**（Fraction 逐 cell）、逐 cell 22³ soundness 0 违反、
+  静态扫描全清；NliSqrt8.lean 4,058 行就绪，欠 round-8 复跑（池事故停泊）
+  + 闸（预期：s8_bank 恰标准三、根面仍 589 逐条同集、K_SORRIED 51→50）。
 - **③包处置**：sqrt8 **移出③解冻包**（双侦察一致：其解冻唯一动机
   「不可写」已灭；即便解冻，certtm 的工程+信任面成本也高于 10-cell 纯
   Lean 电池）。③包剩余内容 = wt0 log 规则 + IXPOTPA mixed-tm 两债。
