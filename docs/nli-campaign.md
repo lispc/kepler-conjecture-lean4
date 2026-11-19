@@ -1059,7 +1059,7 @@
 - **止损**：余量 1.104e-3 若被区间舍入吃掉 ⇒ 先重测再续，不硬凑。
 - **判词指针**：§1.6 / §1.11 / DEBTS 行 42。
 
-**`nliCell3QZECFICwt1` —— cell3 二号（状态：BLOCKED-on-cost——施工车道收线 2026-11-19，数学真、Lean 化超预算两数量级；归约接口已落库 `NliBanks21`，三选项等裁决）**
+**`nliCell3QZECFICwt1` —— cell3 二号（状态：可启动——二阶塔路线 A′ 侦察 GO；BLOCKED-on-cost 史见下，选项 (b) 已实测成立，待用户批产）**
 
 - **这是什么**：`Assembly.lean:425`；HOL `ineq.hl:1425`「QZECFIC wt1」。
   盒 `[√2,√2]³ × [2hminus,2hplus] × [2,2hminus]²`，`h0cut y4` 单折点参数化；
@@ -1149,6 +1149,28 @@
     先修二阶因式化原子表（1–2 车道日）有望把叶数压到 **10¹–10²**；
     (c) 挂起等更优证书。快照 `cell3-wt1-build-w1/`（DELIVERY/Evidence +
     work/ 17 脚本 + 6 份 B&B 日志）。
+  - **选项 (b) 裁决（2026-11-19 `cell3-wt1-tower-scout-w1` 收线 GO，用户批
+    「Wt1 b 侦察启动」）——二阶塔路线 A′ 成立，工单级规格在 SCOUT.md**：
+    ① **原子表（成败关键）过线**：干净 level-2 形（无 1/Δ 奇异、无
+    matan‴）18 原子，FD 交叉验证 ≤1.5e-5；6 个 `_A` 原子全是**平方**
+    （符号由形式定）；6 槽符号确定全盒 corner-mono，D4 权重消费已落库
+    `nb20_k2_upper`（≤ −0.00097 < 0）；P1 收口 `∂²F/∂y5² ≤ −0.0071 < 0`
+    （4× 余量）；8-角 ℚ(√2) 顶点证书演示 [exact] 全 PASS。
+    ② **塔定案（A′）**：全盒凹性 ×2 + 对称引理 ⇒ `F ≥ min{E00,E01,
+    E10,E11}` 4 棱——无 Δ=0 曲面件、无 KEY LEMMA A 依赖、全矩形域；
+    全局最小 = 折点值 `F(2.52,2,2) = 4.5143e-5`（④ 字面量 kink_
+    lean_pieces.txt **直接复用**）。**证书总数 ≈ 50–60 件（10¹–10² 达标，
+    对比路线 A 的 2,902 叶）**；上车道「导数角 +3.0462e-3 与 ④ 混称」
+    勘误（A′ 不需要导数角证书）。
+    ③ **Lean 件预算**：直接消费 of_core / concaveOn 桥 / nb20 K1/K2 /
+    g4s_quad_deriv / ④ 字面量；新件 = 对称引理 ~150–220 行 +
+    matan 三阶括号 kit ~540–1,050（最重，log 支 HasDerivAt）+
+    y5-切片导数链 ~500–850 + P1 证书层（生成器 ≈13–19k 行 / 手写
+    ≈5.5–7k）+ 棱/点证书 ~1.4–2.7k + 接线 ~200–400 ⇒ **手写合计
+    ≈4–5.5k 行 + P1 生成块**。风险主项：mono 义务目前 [sampled]，
+    level-3 符号证明是最大未量化劳动（退路 = 子盒顶点证书，预算 ×2–3
+    仍达标）。快照 `~/c17_backup/lane_snapshots/cell3-wt1-tower-scout-w1/`
+    （SCOUT.md + work/ 16 脚本 + atoms2.pkl）。
 - **判词指针**：快照 `cell3-wt1-scout-w1/`（SCOUT.md 全量数字+方法标注 /
   work/ 可复现脚本 11 件）/ 施工快照 `cell3-wt1-build-w1/` / 旧口径 §1.9
   （含 ERRATA）/ §1.15（wt2A 对照）/ DEBTS 行 3 / FARM_PLAN §4 N2。
@@ -1643,7 +1665,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | 可启动（双侦察收敛 GO：10-cell antitone 首选 / 67-cell 备胎；已移出③包，待批产） | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | 在飞施工（路线 A，目标 −1） | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | 在飞（目标 −1） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①② | 9.4 | §1.3 |
