@@ -883,91 +883,585 @@
 
 ## 9. 逐债执行计划登记（2026-11-19 新设：启动即照做）
 
-> **规则（2026-11-19 用户裁定）**：每债一卡，记「当前最优路线 + 依赖资产 + 启动即
-> 执行的工单模板 + 预算/止损」。真启动时照卡派单，不再重侦察。状态枚举：
+> **规则（2026-11-19 用户裁定）**：每债一卡，记「当前最优路线 + 依赖资产 +
+> 启动即执行的工单模板 + 预算/止损」。真启动时照卡派单，不再重侦察。状态枚举：
 > `可启动`（依赖齐备等点头）/ `有界试点建议`（先试再量产）/ `待侦察` / `等解冻` /
-> `UNRESOLVED`。数字以本文件 §1.x 判词 + `DEBTS.tsv` 为唯一出处，本节只做执行索引。
+> `UNRESOLVED`；另两个派生态：`等批`（依赖已齐、用户明示暂不启动）、`在飞`
+> （工单已发车，回执见 `priority-queue.md` §1）。数字以本文件 §1.x 判词 +
+> `~/c17_backup/lane_snapshots/farm-ops-w1/DEBTS.tsv` 为唯一出处，本节只做执行
+> 索引、不另抄数字。本节引用的编号一律是指针：`FARM_PLAN.md` §4 的本地工单
+> N1–N5、§5 的农场批 F1–F5、§6 的解冻项 ①–⑤，含义见该文件；`PR-43` 指
+> `docs/pitfall-register.md` 的生成代码书写规范条目。**覆盖对账表在 §9.5**
+> （51 = 50 `nli*` + hLP 逐名）。
+
+### 9.0 名词速查（第一次读卡先看这一段）
+
+每条 `nli*` 债长得都差不多：**六个实变量 `y1..y6` 在一个「6 维盒」
+（每维给定上下界）里变化，要证某个不等式在整个盒上成立**。六个变量描述的是
+局部构形（与一个单形/胞腔相关的一组边长参数），盒就是这些参数的允许范围。
+其余术语一句话版：
+
+- **γ4（`gamma4fgcy`）**：HOL 传下来的非线性「打分」函数，大多数 rest 债的
+  主角；由体积项、二面角项与一个可变乘子组合而成，不等式通常要求它在盒上
+  为正或有下界。
+- **dihY**：二面角函数；在 ZTG / ox3q1h 一族里与 γ4 联合出现，两者不能各自
+  单独取下界（ox3q1h 已有反例，见 §1.4）。
+- **lmfun**：γ4 内部的分段乘子（与 Marchal 四次式挂钩，在 `hminus` 处取 0）；
+  它的「折面」会让最小值出现在拼接点而非普通角点。
+- **2hminus / 2hplus**：两个有理常数 ≈ 2.4635 / 2.6508（`hminus`≈1.23175、
+  `hplus`=1.3254）；绝大多数盒的端点就是它们（或 √2、√8、2.001 这类钉死值）。
+- **析取支 / 合取债**：陈述形如「A ∨ B」时证一支即可；形如「A ∧ B ∧ …」时
+  每个分量都要证，**缺一支不减债**（SORRIED 不动）。
+- **角点表**：先用单调性/凹性证明「函数在盒上的最小值只能落在有限个角点
+  （或折点）上」，再逐点精确求值——把连续问题压成有限次有理数检查。
+- **Bernstein 叶 / peel 表示**：把盒上的多项式改写成 Bernstein 基；若全部
+  系数同号，多项式全盒同号。一张「叶」= 一个子盒上的这样一次检查；
+  「peel 表示」是本仓 2026-11-19 落库的手写剥皮写法（`9a4a9dc6`），绕开了
+  MvPolynomial/Finsupp/decide 的内核归约死路。
+- **叶 / 覆盖树 / 装配 / 胶水**：大盒切成子盒逐叶发证书，再用一棵覆盖树把
+  所有叶拼回整盒；「装配」是最后接回 Assembly 债行的接线；「胶水」是把
+  证书定理（往往对某个等价表达式证）与 bank 原陈述接起来的恒等式引理。
+- **bb_arb 发射器**：现行分支定界证书生成器（Python `pipeline/`），把盒二分
+  到每叶通过区间/TM 检查为止。
+- **Rule P**：库内点锚定 TM-hull 叶检查规则（`058b2c12` + 优化 `229f731f`，
+  有界 opt-in），单叶 27–31 s；TSKAJXY 6,612 叶全量走的就是它。
+- **certtm / TM（Taylor 模型）**：处理 √/atan 等超越函数的区间估计封装；
+  「certtm 特性开发」指为它补规则（log、负底、mixed-tm 析取），**不是**量产
+  解冻。
+- **农场**：一次性的大批量「发射 + 内核逐叶重放 + 装配」算力窗口，
+  **用户保留项**；本节所有农场核时/磁盘都是 EST（recost TRUNC 下界外推），
+  未批不动；解冻项清单 = FARM_PLAN §6 的 ①–⑤。
+- **SORRIED −N**：锥内 sorry 债减少 N 条；唯一验收 = 编排者亲跑
+  `#print axioms`。
 
 ### 9.1 有完整执行包（启动即可做）
 
 **`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：等批；用户 2026-11-19 明示先不启动）**
-- 依赖（已全部落库）：`NliBanks19`（`431fb92a`，`bank_QZECFICwt2A_of_core` 归约）；
-  `NliBanks20`（机器层 + 通用 `w2a_cell` + 代表 cell00 范式 `cell00_core`/
-  `bank_wt2A_of_cell00`，1,576 行，探针 10/10 标准三）。
-- 启动做法：① 生成器 ~300 行 python（模板 = cell00 的 214 行/cell 结构，
-  数据 = 快照 `cells_raw.json` 53 实 cell；书写规范遵守 PR-43 linarith 原子化）；
-  ② 按 y6 层拆 6 文件量产 52 cell；③ Assembly 接线：逐 cell 按
+
+- **这是什么**：`Assembly.lean:431`；HOL `ineq.hl:1443`（「QZECFIC wt2 A」）。
+  6 维盒 `[√2,√2]³ × [2hminus,√8]² × [2,2hminus]`（前三维钉死在 √2），
+  结论带 `h0cut y4/y5` 双支参数化；要证的是 bank 陈述 `bank_QZECFICwt2A`
+  （`PackingAuto21`）。同族兄弟 `wt0corner` 已闭（`83144d4d`，`NliBanks18`）。
+- **依赖（已全部落库）**：`NliBanks19`（`431fb92a`，288 行，把 bank 归约到
+  显式三维核「`deltaX ≥ 0 ⇒ 0 < w2aF`」）；`NliBanks20`（`ebd11b13`，1,576 行，
+  机器层 + 通用 `w2a_cell` + 代表 cell00 范式 `cell00_core`/
+  `bank_wt2A_of_cell00`，探针 10/10 标准三）。
+- **还缺**：52 个剩余实 cell 的量产 + Assembly 接线（纯机械生成）。
+- **启动做法**：① 生成器 ~300 行 python（模板 = cell00 的 214 行/cell 结构，
+  数据 = 快照 `cells_raw.json` 53 实 cell；书写规范遵守 PR-43 的 linarith
+  原子化）；② 按 y6 层拆 6 文件量产 52 cell；③ Assembly 接线：逐 cell 按
   `bank_wt2A_of_cell00` 范式组装 → 消费 `bank_QZECFICwt2A_of_core`；
   ④ 验收 = 亲跑 `#print axioms nliCell3QZECFICwt2A` 恰标准三。
-- 预算：生成 1–2 车道日 + 编译 9–26 min（并发 ≤3 放宽后 ~5–10 min）+ 装配半天。
-- 止损：单 cell 编译 >60 s 或 cell margin <1e-4 时复查 cells_raw.json。
+- **预算**：生成 1–2 车道日 + 编译 9–26 min（编译并发 ≤3 放宽后 ~5–10 min）+
+  装配半天；生成码 ~11,130 行（cell3-wt2a-core-w2 成本外推，pq §1）。
+- **止损**：单 cell 编译 >60 s 或 cell margin <1e-4 时复查 `cells_raw.json`。
+- **判词指针**：§1.15 / §1.19 / DEBTS 行 4 / FARM_PLAN §4 N2。
 
-**ZTG 解耦 4（`1_1_0_0`/`0_1_1_0`/`0_1_0_1`/`0_0_1_1`）—— Bernstein 路线（状态：有界试点建议）**
-- 依赖（已落库）：dihY 半边 `decbc61c` + Kit A `f47d472f`；`ztg_of_main`/
-  `_rad2_refuted`/`_main_forced`（`1b401275`）；peel 表示范式 `BernsteinLeaf0011`
-  （`9a4a9dc6`，81 系数叶 14.9 s 标准三）；witness 数据（快照
-  bernstein-representative-w1：q=64/25 三债各 1,215 系数 / q=36/25 一债 81）。
-- 启动做法（三步，①②为有界试点 ~1 车道日）：① **剪枝胶水两条**——x1 方向
-  729 个一阶差分常数 + x4 方向 162 个（引擎侧同号证据 972+162），Lean 化 =
-  Gamma4Deriv 一阶闭式 + deriv⇒monotone 模板 ⇒ 剪枝面形假设
-  （`hx1 : x1 = 3793/625`、`hx4 : x4 = 4`）；② q=64/25 三债 1,215 系数根叶 peel
-  定标——**先 1 叶**测 wall/RSS/olen（预算 ≤5 min/≤10 GB；不过线则转研究扩展
-  剪枝降系数）；③ bank 接线消费 `ztg_of_main`。⇒ **SORRIED −4**。
-- 备选路线（②定标不过时）：角点表 `G4CORNER_PLAN.md`（1.2–2.4 万行/4–7 车道日）。
-- 量产（③及三债全叶）等用户批；①② 建议先行。
+**ZTG 解耦 4（`nliRestZTGIJCF4_1_1_0_0` / `_0_1_1_0` / `_0_1_0_1` / `_0_0_1_1`）—— Bernstein 路线（状态：有界试点在飞，量产等批）**
 
-**`nliTskIYOUOBFsharpv2` —— hybrid 纯 MATH（状态：可启动；最便宜独立 −1）**
-- 依赖：余量已测（hmono 四轴 min ∂ +0.13110；h2d 三件套 edge 线性下桥
-  1.358e-5 / strip ∂y4 ≥ +0.15 / 上方 2D 小证书 1.76e-3）；模板 `Gamma4Feed`/
-  `Gamma4VolY` 在库；2D 小证书走 Rule P（bounded opt-in 已生效）。
-- 启动做法：NliBanks 同型新文件 1–1.5k 行 + Assembly 1 import + 1 body。
-- 预算：3–5 车道日；止损：2 轮结构卡死交班。
+- **这是什么**：`Assembly.lean:1738/1777/1783/1795`；HOL `ineq.hl:486-499`
+  `make_F4` 循环的四个实例（模板 `bank_ZTGIJCF4tmpl`，id 1821661595），
+  盒宽 0.46–0.52。陈述 = 「γ4 主支为正 ∨ rad2 > 2」；rad2 支已逐条证假
+  （`1b401275` 的 `_rad2_refuted`），唯一活路是 γ4 主支。
+- **依赖（已落库）**：dihY 半边 `decbc61c`（四箱 `ztg_dihY_* : 1.008/0.875 ≤
+  dihY`，6,191 行 143 声明全标准三）+ Kit A `f47d472f`；`ztg_of_main` /
+  `_rad2_refuted` / `_main_forced` 归约（`1b401275`）；peel 表示范式
+  `BernsteinLeaf0011`（`9a4a9dc6`，q=36/25 的 81 系数叶 14.9 s 标准三）；
+  witness 数据（快照 bernstein-representative-w1：q=64/25 三债各 1,215
+  系数 / q=36/25 一债剪枝后 81 系数）。q 是 Bernstein 基的阶参数。
+- **在飞**：`ztg-bernstein-pilot-w1`（2026-11-19 用户批「可以启动」，pq §1）
+  ——① 剪枝胶水两条 Lean 化（x1 方向 729 + x4 方向 162 个一阶差分常数，
+  deriv⇒monotone 模板，消费 `Gamma4Deriv` 一阶闭式）；② q=64/25 三债首张
+  1,215 系数根叶定标（预算 ≤5 min / ≤10 GB）。
+- **还缺**：试点①②；之后三债根叶 + `ztg_of_main` 接线（量产主体）。
+- **启动做法（试点成功后）**：③ 其余根叶按 `BernsteinLeaf0011` 范式量产 →
+  每债消费 `ztg_of_main` ⇒ **SORRIED −4**。
+- **预算**：试点 ~1 车道日；量产（③）另报批。
+- **止损 / 翻车点**：根叶定标不过线（>5 min / >10 GB）→ 转 9.4 备选角点表
+  路线（`G4CORNER_PLAN.md`，1.2–2.4 万行 / 4–7 车道日）；**剪枝面形假设
+  （x1/x4 钉在单调剪枝端点）本身未形式化**——胶水两条必须真证单调性，不能
+  按数值同号糊过（bernstein-kernel-representation-w1 DELIVERY §4 诚实边界）；
+  胶水 2 轮结构卡死交班。
+- **判词指针**：§1.10 / §5（含 ERRATA）/ DEBTS 行 5–8 / FARM_PLAN §4 N3。
+
+**`nliTskIYOUOBFsharpv2` —— 四轴单调 + 2 维三块（状态：在飞；`iyou-sharpv2-slots-w1` 2026-11-19 发车，目标 SORRIED −1）**
+
+- **这是什么**：`Assembly.lean:946`；HOL `ineq.hl:242`「TSKAJXY-IYOUOBF
+  sharp v2」。盒 `[2hplus,√8] × [2,2.001]² × [2,2hminus] × [2,2.001]²`；
+  结论 `0 < gamma4fgcy y lmfun` 型（bank `TSKAJXYIYOUOBFsharpv2`）。
+- **路线（审计已测余量）**：**四轴单调降维**（四个坐标方向偏导下界
+  +0.13110，把 6 维压到 2 维）+ **2 维三块**——边缘一条线性下桥（余量
+  1.358e-5，全债最紧点）、带状区 `∂/∂y4 ≥ +0.15`（y4∈[2,2.05]）、上方区域
+  30–80 张 2 维小证书（余量 1.76e-3）。sharp corner + 2 维非单调，单点规则
+  不够，必须混合（§1.2）。
+- **依赖**：余量已测（§1.6）；模板 `Gamma4Feed`/`Gamma4VolY` 在库；一阶偏导
+  闭式 `Gamma4Deriv1-8`（`c05928f5c`）；2 维小证书走 Rule P（有界 opt-in
+  已生效，无需新解冻）。
+- **还缺**：新 NliBanks 同型文件 + Assembly 1 import + 1 body（施工中）。
+- **预算**：3–5 车道日；产出 ~2.5–4.7k 行（pq §1 在飞表口径）。
+- **止损**：2 轮结构卡死交班；edge 线性桥余量太紧时先复查区间算术舍入方向，
+  不硬凑。
+- **判词指针**：§1.2 / §1.6 / DEBTS 行 2 / FARM_PLAN §4 N1。
 
 ### 9.2 可启动但依赖未齐 / 等前置
 
-**FHBa（`nliRestFHBVYXZa`）—— 地板凹性 + g3pos 内部（状态：可启动，两车道）**
-- 依赖已落库：`FhbEtaCurve`（`8848b526`）/ `FhbFloorMono`（`032857d0` 归约）/
-  `Gamma4DerivSecond`+`Gamma4ConcaveBridge`（`b9134d34`）/ `FhbG3posCurve`+
-  `FhbG3posEndpoint`（`20ee1cd5` 端点真证）。
-- 剩余：m3/m4/m5 的 H1 纤维凹性证书（一阶单调已数值证伪，唯一活路 = 对角二阶
-  atan-free 闭式 + `concaveOn_of_hasDerivAt2_nonpos`）+ H2 端点比较 + g3pos 内部
-  （N3D、7 边界片、1-D 尾部单调，Phase 2 估 800–1500 行）。
-- 预算：H1 车道 2–4 天；g3pos 3–5 天；**两处都成才 −1**。
+**FHBa（`nliRestFHBVYXZa`）—— η 曲线 + 地板凹性 + g3pos（状态：可启动，两车道；两处都成才 −1）**
 
-**FHBv2a** —— FHBa 真闭合后再启（minimax +2.124e-3，余量更紧）。
+- **这是什么**：`Assembly.lean:1569`；HOL `ineq.hl:914`（「FHBVYXZ a」），
+  盒宽 0.46–0.83。陈述 = 「γ4 主支为正 ∨ η 守卫」，η 守卫是 `eta_y` 平方
+  的下界支。主支在盒内为负（角点 dip −5.5589e-3，VERIFIED-iv），所以必须
+  走「守卫支 + 主支」的联合结构；η 守卫集在 d 空间不可分、`max(g,c−η²)`
+  非凹 ⇒ **不能套 96 角点表**（§1.11）。
+- **路线三段**：① η 边界曲线（二次曲线 + 显式根式，代数核心已证）；
+  ② 地板比较 m3/m4/m5——三条「槽纤维凹且地板值 ≤ 顶端值 ⇒ 原不等式」的
+  比较引理（审计代号 m3/m4/m5，FhbEtaCurve 的 `fhb_hba_of_floor3` 消费它们）；
+  ③ g3pos 内部——γ4 沿一条一维缝合曲线 ≥ 7e-3（内部区域、7 个边界片、
+  尾部单调；右端点已真证）。
+- **依赖已落库**：`FhbEtaCurve`（`8848b526`，405 行，η 二次边界曲线 + 三个
+  归约接口）；`FhbFloorMono`（`032857d0`，166 行，凹性+端点 ⇒ m3/m4/m5 的
+  归约三件套）；`Gamma4DerivSecond` + `Gamma4ConcaveBridge`（`b9134d34`，
+  atan-free 二阶偏导闭式 + 「二阶导非正 ⇒ 凹」桥）；`FhbG3posCurve` +
+  `FhbG3posEndpoint`（`20ee1cd5`，缝合曲线 + 右端点真证
+  `7e-3 ≤ gamma4fgcy (2*hplus) (fhbY2Star (2*hplus)) 2 2 2 2 lmfun`）。
+- **还缺**：m3/m4/m5 的 H1 纤维凹性证书（三轴一阶单调已有高精度数值反例，
+  §1.14——唯一活路 = 对角二阶 atan-free 闭式 + 凹桥）+ H2 五维端点比较 +
+  g3pos 内部（N3D、7 边界片、1 维尾部单调；尾部只有数值 GO：F′ 估计
+  ≤ −0.2488）。
+- **预算**：H1 车道 2–4 天；g3pos 3–5 天。
+- **止损**：任一槽纤维凹性被精确反例打破 ⇒ 该纤维转分段凹（不许改陈述）；
+  g3pos 内部 3 轮结构卡死交班。
+- **判词指针**：§1.6 / §1.11 / §1.13 / §1.14 / §1.20 / DEBTS 行 41
+  （注：DEBTS 该行的「农场口径、无解析路线」已被 §1.11 之后的路线取代，
+  见 9.4 的 audit 卡口径注）。
 
-**`nliCell3QZECFICwt1` —— 待侦察**：先显式化 wt1 核（同 NliBanks19 范式）再
-y4 一维证书；注意 y5 单调旧测量已证伪，符号断言一律区间/精确证书。
+**FHBv2a（`nliRestFHBVYXZv2a`）—— FHBa 的孪生债（状态：等前置；FHBa 真闭合后再启）**
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：S2a/S2b 分别等批）**
-- 依赖已落库：S1 Lin46 / S2 kit / S3 链 184 / S4 gates 230 / S4.5 splits /
-  S2b Batch1 / SF 111（`b11c1627`）。
-- 启动做法照 handoff §3.2：S2a margin″ 装配（20–80 lean-h）→ S2b 其余批
-  （48 盒剩余角点 ~67 万行生成，或届时重估 Bernstein 化）→ S5 接线 230 分量 +
-  Assembly 替换 → −1。
+- **这是什么**：`Assembly.lean:1575`；HOL `ineq.hl:888`。与 FHBa 同骨架
+  （同一 γ4 + η 守卫结构），但接缝更紧：sharp 余量 **+1.104e-3**（§1.11
+  勘误；audit 旧记 +2.124e-3 是非最优驻点，勿再引用）。
+- **路线**：FHBa 的曲线/凹性证书直接复用（η 曲线 + 地板归约同模板，只换
+  常数）；农场兜底 = 两支改写 + bb_arb（见 9.4 audit 卡）。
+- **还缺**：FHBa 真闭合；v2a 自己的端点/接缝重算。
+- **预算**：FHBa 收线后 2–3 天。
+- **止损**：余量 1.104e-3 若被区间舍入吃掉 ⇒ 先重测再续，不硬凑。
+- **判词指针**：§1.6 / §1.11 / DEBTS 行 42。
 
-**TerminalV11 3 MATH（num1 ×2 + 645 slab）—— 可启动但不减 SORRIED（合取债）**
-- multiaffine + 单变量凹 ⇒ 64 顶点枚举即完整证明；余量精确有理
-  （+52.512319 / +11.734635 / −0.46104538）；1 天级；价值 = 合取去 3 支。
+**`nliCell3QZECFICwt1` —— cell3 二号（状态：待侦察）**
+
+- **这是什么**：`Assembly.lean:425`；HOL `ineq.hl:1425`「QZECFIC wt1」。
+  盒 `[√2,√2]³ × [2hminus,2hplus] × [2,2hminus]²`，`h0cut y4` 双支参数化；
+  要证 `bank_QZECFICwt1`。数值极小 **+4.514e-5**（iv 包围，DEBTS 行 3）。
+- **路线（未验证）**：同 wt2A 的「显式化核 + 分层 cell」范式——先把 wt1 的核
+  像 `NliBanks19`（`431fb92a`）那样显式化，再定 cell 方案。**注意**：旧
+  「y5/y6 全盒单调增」结论未经证明（§1.9 ERRATA：wt2A 的 y5 单调已有高精度
+  反例，wt1 的单调结论也不得直接当已验资产）；符号断言一律用区间/精确证书
+  重测后再立件。
+- **还缺**：wt1 核显式化（未动笔）+ 单调性重测 + cell 方案定型。
+- **预算**：侦察 0.5–1 天 + 施工 5–8 车道日（FARM_PLAN §4 N2 口径）。
+- **止损**：+4.514e-5 的余量 3 轮内收不进区间算术 ⇒ 转农场兜底并记档
+  （FARM_PLAN §4 N2 同款止损）。
+- **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
+
+**`nliOx3q1h` —— S2a→S2b→S5（状态：S2a / S2b 分别等批）**
+
+- **这是什么**：`Assembly.lean:1904`；陈述本体 `ox3q1hP25`
+  （`PackingAuto25.lean:94`，2026-11-06 DEF-FIX 显式化为 **230 条非线性不等式
+  合取** = `ineqdata3q1h.hl` 46 record × 5 支）。这是 quarter case 的证书
+  不等式库；**纯证书债**（无语句级缺口）。
+- **结构**：230 = 46 条线性合取（全部可 `linarith`，最小余量 1.416e-7）+
+  184 条 γ4 合取（最小余量 3.0205e-4）；按 **48 个 y-盒**联合处理——
+  **不能**拆成独立的 `γ4≥G` 与 `dihY≥D`（γ4 在 18/48 盒为负、dihY 在 25/48
+  盒为假，§1.4）。
+- **依赖已落库**：S1 `Ox3q1hLin46`（`930d0dd1`）；S2 骨架 `6fc8db4b` /
+  `bc6265b4` / `ce9174b4`；S3 链 184（`062c1799`/`df42274f`/`e18cd427`/
+  `6730ea89`）；S4 gates 230（`2779a9da`，10,627 行）；S4.5 splits
+  （`8d6b04a8`）；S2a 试点（`cec2264f` / `b3df5dc8`）；S2b Batch1（`8326ca5e`，
+  42,882 行/1,672 定理）；SF 111 盒前提（`b11c1627`，14 文件 +1,101/−596，
+  387 处）。清单见 `handoff-2026-11-18.md` §3.1。
+- **还缺**：① S2a margin″ 装配（48 盒 × 6 槽 ≈ 288 槽的 `|f″| ≤ K` 双侧
+  包络，试点已完 1 盒 y4）；② S2b 其余批（48 盒剩余角点 bank：~976 去重点
+  ≈ 61 个 16-角点文件 ≈ 67 万行生成，或届时重估 Bernstein 化）；③ S5 接线
+  （230 分量 `⟨…⟩` 逐位 + Assembly 替换）。
+- **预算**：S2a 剩余 20–80 lean-h（EST）；S2b 生成零 lean、编译 ~2–3 h；
+  S5 接线 ~240 行；合计 1–2 周墙钟；**0 农场**。
+- **止损**：单轮 >15 min 编译失败触发「sorry 探针策略」（先出类型全绿版
+  再分批装回）；两条 3 轮卡死即按 §7 交班。
+- **判词指针**：§1.4 / handoff-2026-11-18 §3.2 / DEBTS 行 15 /
+  FARM_PLAN §4 N4。
+
+**TerminalV11 的 3 条纯数学支 —— 可启动但不减 SORRIED（合取债的一部分）**
+
+- **这是什么**：`nliMainNonlinearTerminalV11`（全债卡见 9.4）109 支合取中
+  的三条 MATH 支（§1.9 census 路由 3 条）：两条 num1 顶点极小
+  （**+52.512319 / +11.734635**）+ 一条 645 slab deltaY（**−0.46104538**），
+  全部精确有理。
+- **路线**：「multiaffine + 单变量凹 ⇒ 64 顶点枚举」即完整证明；1 天级。
+- **价值**：合取债去 3 支（**不单独减 SORRIED**）；完整闭合仍需 85 农场支 +
+  补粘 + 21 支进锥。
+- **判词指针**：§1.9 / DEBTS 行 45 / FARM_PLAN §2.2。
 
 ### 9.3 等解冻 / 等裁决
 
-**hLP + `nliLpIneqs` + `nliKcblrqcIneqDef`**：bound 叶 42,889 条；**packed b2
-格式已验证**（单叶 olean 395,784 B ≈ 49×、wall 1.06×、六输出逐字节一致）⇒ 全量
-磁盘 0.83 TB → **~17 GB**、内核时约降 50×；量产 = 农场窗口或本地长跑，等 ④/⑤
-裁决；`Kcblrqc` #2 无 LP 依赖可先单独收。
-**sqrt8**：certtm 区间细分（等 ③ 解冻）或 S·a 联合乘积新数学（零 Lean 侦察
-1 车道日可先做）。
-**IXPOTPA**：三选项等裁决（周级战役+并行豁免 / certtm mixed-tm / HOL 数学分解移植）。
-**WKGUESBsym**：分段侦察（零 Lean 1 车道日）→ 归 F2b 或解析路线。
-**ZTG joint 6**：N5 侦察先行（零 Lean）→ joint 联合曲线 or F5 条件批。
+**LP 三债共享一张叶表（状态：等解冻 ④ LP 证书层 + ⑤ 磁盘/算力）**
 
-### 9.4 农场类（等 ①② 解冻；数据预算以 `FARM_PLAN.md`/`DEBTS.tsv` 为准）
+- **共享背景**：LP（线性规划）证书层背后是 **43,078 条终端记录**
+  （root 19,237 + easy 4,403 + hard 19,438），其中 **189 条 infeasible 已闭**
+  （`LPLeafInfeas00` 零 sorry + 189 个 Farkas 模块），实际待证 =
+  **42,889 条 bound 叶**。每叶 = 一张 LP 对偶证书（对偶向量 + 弱对偶检查 +
+  `by decide`），机制已在用，不要重新发明 checker（pq §0.1）。单叶定标：
+  生成 + 编译/内核 794.8 CPU·h/120 叶（lp-pilot-w1）；批量 20 叶安全上限
+  19.3 GB；**磁盘是硬墙**：olean 0.70–0.95 TB（中心 0.83）。**packed b2
+  格式已验证**（§6.3）：单叶 olean 395,784 B（≈49×）、wall 1.06×、六输出
+  逐字节一致 ⇒ 若车队化，全量磁盘有望从 0.83 TB 降到 ~17 GB 量级
+  （**外推 EST**；pq §1 明言不按单叶倍数外推、不车队化）。
+- **`nliLpIneqs`**（`Assembly.lean:1944`）：`LpIneqs = AllCertified
+  idsLpIneqs`，127 条 LP 域不等式（HOL `the_main_statement.hl:29-45` 清单）。
+  域覆盖已真证（`lpIneqs_domain_covered`：`False` 回落不可达，无 else-True
+  退化）。闭合 = 42,889 bound 叶表 + 总装配。锥外孪生 `nliLpIneqsIds`
+  （127/127）是**真债**（§1.1），别当 VACUOUS 除名。判词：§6 / §6.3 /
+  DEBTS 行 48。
+- **hLP `lpArchiveCertificatesDebt`**（`Assembly.lean:7114`）：陈述 = 「给定
+  `LpIneqs` 与 `lp_main_estimate` 两个前提，对每张 archive 图证反例不存在
+  （`¬Contravening V`）」。逻辑桥已就位（前提消费形），**不产生额外农场
+  成本**——它消费的就是上面同一张 42,889 叶表 + `lp_main_estimate`（后者是
+  TerminalV11 消费链的出口，`LocalAuto16.lean:505`）。所以 hLP 是 LP 链最后
+  一环：`nliLpIneqs` 闭 + main estimate 在位后只剩逐叶装配。判词：§6 /
+  DEBTS 行 46 / FARM_PLAN F4。
+- **`nliKcblrqcIneqDef`**（`Assembly.lean:2003`）：`KcblrqcIneqDef`
+  （HOL `tame_lemmas-compiled.hl:34-46`，28 条折算）的**四条合取**：
+  ① `azimDart` 上下界（按面基数分档：三边面 0.852 < azim < 1.893、多边面
+  azim > 1.15）——按 Lean 陈述（`TameLp.lean:516`）这是**唯一不带
+  `lp_main_estimate` 前提的合取项**，可走纯数值矛盾先单独收；②③④ 都带
+  `lp_main_estimate` 前提 ⇒ 等 LP 表。**口径注**：DEBTS 行 47 把无 LP 件记作
+  「#2」，与 Lean 合取序不一致（待核），但「有一件无 LP 依赖、可先收」两边
+  一致。注意：只收 ① **不减 SORRIED**（合取债），价值是去风险。锥外
+  `nliKcblrqcIneqDefIds`（28/28）同样是真债（§1.1）。判词：§1.1 / §1.7
+  （LP-GATED 2）/ DEBTS 行 47。
+- **预算（三债同批 = FARM_PLAN F4）**：42,889 叶，中心 **845 CPU·h**
+  （区间 795–900，lp-pilot 定标）；磁盘 0.83–0.95 TB 硬墙（或 packed 后
+  ~17 GB 量级，EST）；2 lean × 10 叶批 ≈ 7.8 天本地长跑或农场窗口。
+  **止损**：磁盘无第二卷且已用 >0.95 TB ⇒ 停；单批 >20 叶（19.3 GB）⇒ 强制
+  拆批；`LPLeaf` olean 单叶 >25 MB ⇒ 停。
 
-QITNPEA 家族 10 + `BIXPCGW9455898160`；GLFVCVK4 5 + `FHBVYXZb` + `iyousym` +
-`ribcyxusym`；audit 4（两支改写 + 引擎叶）；TerminalV11 85 支。
-**重估注（2026-11-19）**：peel 表示 GO 后，「多项式可代数化」子集的叶成本按新
-范式重估（多项式义务优先试 Bernstein 叶，再回 bb_arb）；heavy-√/atan 债
-（BIX 类 c_sqrt=3112）维持农场口径。
+**`nliCell3QZECFICwt0` —— 发射器缺规则（状态：等解冻 ③ certtm 特性）**
+
+- **这是什么**：`Assembly.lean:406`；HOL `ineq.hl:1372`。盒
+  `[1,1]³ × [2.01,2hminus] × [2,2hminus]²`（前三维钉死），结论
+  `bank_QZECFICwt0`。
+- **数值不堵，规则堵**：farm 盒全局最小 **+1.783e-4**（iv，角点 (2.01,2,2)），
+  无反例；但三轴导数变号 ⇒ 角点单调模板不能照搬。真正阻塞在**规则层**：
+  陈述含 `log`（matan 负分支）与 `sqrt/log` 负底，`tmexact.transOn` 无此
+  kind，bb_arb 实测 50% 尝试「sqrt/log 底非正」直接失败（§1.3）。
+- **路线**：给发射器/certtm 补 `log`（matan 负支）与负底规则（EMIT-EXT，
+  FARM_PLAN §6-③——**特性开发，非量产解冻**），打通后按农场口径走。
+- **预算**：规则开发量未知（等③）；发射打通后农场档。
+- **止损**：规则补完后若单债叶树 ≥10⁵ 且 poly 档不适用 ⇒ 按 F2 口径重估。
+- **判词指针**：§1.3 / §1.9 / DEBTS 行 49 / FARM_PLAN §2.1 BLK。
+
+**`nliCell3QZECFICwt0sqrt8`（sqrt8）—— 逐项矩形链已定量判死（状态：等解冻 ③；新数学侦察可先做）**
+
+- **这是什么**：`Assembly.lean:419`；HOL `ineq.hl:1406`。盒
+  `[1,1]³ × [2hplus,√8] × [2,2hminus]²`；第二析取支
+  `eta_y y4 y5 y6 ^ 2 > 2`。角点余量 **+3.745e-3**。
+- **已判死的具体路线（不要重试）**：逐项矩形区间链——仅 a-矩形一项损失
+  0.0293 = 角点余量的 **8 倍**；要压回余量内需每坐标切 5–8 段 ⇒
+  125–512 cell，Lean 逐 cell 不可写。这是**数学结构结论**，不是预算不足
+  （math5-w4 route_map §9）。
+- **剩余两条活路**：① certtm 区间细分（原版 Clusterlp 路线，FARM_PLAN
+  §6-③）；② S·a 联合乘积新数学——**零 Lean 侦察 1 车道日可先做**（不需
+  任何解冻）。
+- **预算**：① 等特性开发；② 侦察 1 天，GO 后估 400–800 行级。
+- **判词指针**：§1.2 / §1.9 / DEBTS 行 50 / FARM_PLAN §2.2。
+
+**`nliRestIXPOTPA` —— 自相似阶梯（状态：BLOCKED，三选项等裁决）**
+
+- **这是什么**：`Assembly.lean:1408`；HOL `ineq.hl:1265`。**全债最宽盒**
+  （DEBTS 实测 w=2.372）：`[2hminus,2hplus] × [2,2hminus]² × [√8,4hminus] ×
+  [2,2hminus]²`。poly 析取支网格最小 −519.9，真最小 +0.05–0.17（在另一支）。
+- **为什么 BLOCKED**：区间证书不终止——10 配置 × 65k–30M 节点全 TRUNC，
+  自相似无限阶梯化；poly 档实测 1.2+ s/叶，recost 旧判 0.59 CPU·h 被实测
+  推翻 60–240×（§8 禁重复项；ixpotpa-poly-w1 续1210）。3M+ 叶 ≈ 500 h
+  墙钟起。
+- **三个等裁决选项**（FARM_PLAN §2.2）：(a) 周级战役 + 并行豁免；
+  (b) certtm 解冻 + mixed-tm 析取特性开发；(c) 数学分解（HOL 侧思路移植，
+  需立项）。
+- **止损**：任一选项启动前先做 1 天零 Lean 分解侦察，不再裸跑发射器。
+- **判词指针**：§1.3 / §8 / DEBTS 行 51 / FARM_PLAN §2.2。
+
+**`nliTskWKGUESBsym` —— 发射 TIMEOUT（状态：待侦察；分段侦察先行）**
+
+- **这是什么**：`Assembly.lean:981`；HOL `ineq.hl:281`「TSKAJXY-WKGUESB
+  sym」。盒 `[2hplus,√8] × [2.01,2hminus] × [2,2hminus] × [2hplus,√8] ×
+  [2,2hminus]²`，析取四排序支；网格主支最小 **+8.534e-3**（正，不紧）。
+- **为什么卡**：发射器 1200 s TIMEOUT 无叶产出（recost 唯一超时债）；同族
+  另两条（IYOUOBFsym/RIBCYXUsym）1,033/1,116 CPU·h 正常出叶 ⇒ 大概率是
+  case 未分段。
+- **路线**：先做零 Lean 分段侦察（1 车道日，把 4 排序支逐支切开测）→
+  分段后归 F2b 农场口径（未验证）或解析路线。
+- **预算**：侦察 1 天；之后按 F2b 档（~1,000 CPU·h 量级，EST）。
+- **判词指针**：§1.3 / DEBTS 行 52 / FARM_PLAN §2.1 BLK。
+
+**ZTG joint 6（`nliRestZTGIJCF4_0_0_0_0` / `_0_0_0_1` / `_0_0_1_0` / `_0_1_0_0` / `_1_0_0_0` / `_1_0_0_1`）—— 解耦已死，先侦察（状态：待侦察，FARM_PLAN §4 N5）**
+
+- **这是什么**：`Assembly.lean:1813/1807/1801/1789/1764/1758`；同
+  `make_F4` 循环（ineq.hl:486-499，id 1821661595）的六个 joint 实例。
+  与 9.1 解耦 4 的区别：这六个的 γ4 主支**单独**取下界不够——
+  `1_0_0_1` min γ4 0.0655 < 需 0.0877；`1_0_0_0`/`0_0_1_0`/`0_0_0_1`
+  0.01397 < 0.0358；`0_1_0_0` 0.00686 < 0.0124；`0_0_0_0` γ4 箱内为负
+  （−0.0055589）。
+- **路线**：`main = γ4/w + mβ − a5 − b5·dihY` 的**联合 trade-off**
+  （γ4 与 dihY 在同一点取值后的组合下界）；main 凹性余量仅 0.0146 且
+  `0_1_0_0` 破 ⇒ 比解耦难一档，需先侦察（N5，零 Lean 1 车道日，
+  `G4CORNER_PLAN.md` §6）：逐债 joint 候选塌缩表 + main 逐片凹性普查 +
+  GO/NO-GO 判定行。
+- **判据**：≥6/6 债正联合余量且逐片凹性 ≥90% cells ⇒ GO（并入 9.1 的
+  R/C 双车道续打，+2–4 车道日/债）；否则 6 条进 F5 农场条件批
+  （3,000 CPU·h 中心，区间 600–6,000）。
+- **止损**：侦察零风险；施工阶段同 9.1 止损。
+- **判词指针**：§5（含 ERRATA）/ DEBTS 行 9–14 / FARM_PLAN §4 N5。
+
+### 9.4 农场类（等 ① 农场批 + ② Rule P 规模化解冻；数据预算以 `FARM_PLAN.md` §5 / `DEBTS.tsv` 为准）
+
+> **总口径**：本组全部走「bb_arb 发射 → 内核逐叶重放 → 装配」的农场管线，
+> 需要用户解冻 ①（nli 农场证书批）+ ②（Rule P 规模化；不批 = 旧 Rule C
+> 核时 ×12）。核时全部是 **recost TRUNC 下界外推（EST）**；**F1 是唯一实测
+> 校准点**，F1 不批则以下数字全部保持 EST。
+>
+> **重估注（2026-11-19）**：peel 表示 GO（`9a4a9dc6`）后，「多项式可代数化」
+> 子集的叶成本按新范式重估——多项式义务优先试 Bernstein 叶（零
+> MvPolynomial/decide 路线），再回 bb_arb；heavy-√/atan 债（BIX 类
+> c_sqrt=3112）维持农场口径（√ 整盒仿射误差为 slack 的 2,662 倍，§1.10
+> NO-GO）。
+
+**F1 便宜档 6 债（状态：等解冻 ①②；其中三条是已实测的「无 gate」便宜档）**
+
+- **逐名**（陈述锚 + 网格主支最小 + recost 实测核时；DEBTS 行 16–21）：
+  - `nliRestPEMKWU`（`Assembly.lean:1439`，ineq.hl:1169，盒 `[2hminus,2hplus]×
+    [2,√8]×[2,2hminus]×[2,√8]×[2,2hminus]×[2,√8]`，5 析取支，网格主支
+    −5.939e-3 由支承接）：**27.77 CPU·h**。小注：HOL 侧 id `PEMKWKU` 比
+    Lean 名 `PEMKWU` 多一个 K（§1.7 考古勘误），跨 HOL 检索时两拼法都查。
+  - `nliRestTEWNSCJ`（`:1446`，ineq.hl:1146，盒 `[2hminus,2hplus]×
+    [2,2hminus]³×[2,√8]×[2,2hminus]²`，网格 +2.234e-2，实测最便宜农场
+    case）：**27.77**。
+  - `nliRestQITNPEAv24003532128`（`:1433`，ineq.hl:1193，盒同 TEWNSCJ，
+    3 支 + 3 var_lt，网格 −0.1845 由支承接）：**33.82**。
+  - `nliRestTXQTPVC`（`:1415`，ineq.hl:1241，盒 `[2hminus,2hplus]×
+    [2,2hminus]²×[2,√8]×[2,2hminus]²`，六支析取，网格 −1.842e-3）：
+    **79.93**。注：**「常数非负权重消析取」已被三点 Farkas 证人精确排除**
+    （§1.21：`E_μ[f]` 最小分量 +0.001271705>0，任意常数 `aᵢ≥0` 有证人点使
+    组合为正）——这条的捷径已死，农场口径维持；析取命题为真仍是 EST。
+  - `nliRestQITNPEA5400790175b`（`:1453`，ineq.hl:1121，盒 `[2hminus,2hplus]×
+    [2,2hminus]³×[2hminus,√8]×[2,2hminus]²`，heavy-sqrt c_sqrt=3112，
+    网格 +8.971e-3）：**99.77**。
+  - `nliRestBIXPCGW7274157868a`（`:1633`，ineq.hl:776，盒 `[2hminus,2hplus]×
+    [2,2hminus]³×[2hplus,√8]×[2,2hminus]²`，网格 +1.563e-2）：**149**。
+- **批预算**：6 债一次窗口，中心 **418 CPU·h**（区间 209–836；叶数各 ~10⁵
+  TRUNC 下界；磁盘 ~120 GB；12 GB/lean 进程）。
+- **启动做法**：FARM_PLAN §5.3 六步模板（emit → 叶分类 → 叶源 → 内核重放
+  → 装配 → 验收四件套：编排者亲跑 axioms + error/`rg sorry` 双检 + SORRIED
+  对账 + 根面不动）。
+- **硬止损**：实测 s/叶 >60 s 或 olean >2 MB/叶 ⇒ **停批重估**（F1 是全计划
+  校准点，此处失真则 F2 全部作废）；单债 >300 CPU·h 未闭 ⇒ 退回 BLOCKED。
+- **判词指针**：§1.3 / §1.21 / FARM_PLAN §5.1 F1 行。
+
+**QITNPEA 家族 10 + `nliRestBIXPCGW9455898160`（状态：等解冻 ①②，F2a 批）**
+
+- **这是什么**：同一条 HOL idv 循环（`ineq.hl:845-862` 等）量产出的 11 张
+  同模板债（`Assembly.lean:1602–1633` 区段），盒宽 0.464（宽盒 ⇒ 叶树 ~10⁵
+  起）。共享同一 case JSON 生成器（recost 已量产 24 个 case，FARM_PLAN
+  §3.1）。
+- **逐名**（网格主支最小 + 核时；DEBTS 行 22–32）：
+  `nliRestQITNPEA1_1_0`（`:1620`）+4.192e-3 / 1,122 CPU·h；
+  `nliRestQITNPEA1_1_1`（`:1614`）+1.739e-2 / 1,122——**分母勘误**：其主支
+  分母 = `1+bankGenMid 1+bankGenMid 2 = 3`（§1.23），「并盒 γ4≥23/2000」
+  共享下界服务不了它（精确余量 −0.0056）；
+  `nliRestQITNPEA1_1_2`（`:1608`）+3.585e-2（旧网格值；重算 m≈0.03497，
+  §1.18）/ 1,128——**fat1，见下**；
+  `nliRestQITNPEA1_2_0`（`:1602`）+1.906e-2 / 1,128；
+  `nliRestQITNPEA2134082733`（`:1582`，盒 `[2hminus,2hplus]×[2,2hminus]³×
+  [2hminus,√8]×[2,2hminus]²`）+4.898e-3 / 1,169；
+  `nliRestQITNPEA3848804089`（`:1465`，盒 `[2hminus,2hplus]×[2,2hminus]⁵`）
+  +2.881e-3 / 1,164；
+  `nliRestQITNPEA5653753305`（`:1483`，盒同上）+2.981e-3 / 1,161——B0 联合
+  包络的「Q565」（§1.11 纯有理支配覆盖）；
+  `nliRestQITNPEA5814748276`（`:1471`，盒同上）+2.669e-3 / 1,165——B0 的
+  「Q581」（同上）；
+  `nliRestQITNPEA6206775865`（`:1477`，盒同上）+2.200e-3 / 1,169；
+  `nliRestQITNPEA9939613598`（`:1627`，盒 `[2hminus,2hplus]×[2,2hminus]³×
+  [2hplus,√8]×[2,2hminus]²`）+3.804e-3 / 1,169；
+  `nliRestBIXPCGW9455898160`（`:1490`，盒 `[2hminus,2hplus]×[2,2hminus]⁵`，
+  HOL 字面 `-- #0.00569` 双重负号笔误已由陈述核对钉死，Assembly rest 19/62
+  注）+2.233e-3 / 1,122。
+- **fat1 = `nliRestQITNPEA1_1_2` 的解析替代路线（暂缓中，资产已落库一半）**：
+  主支 = **`γ4/2 > 0.0057`**（分母勘误后，§1.16/§1.18）。路线 = 局部代数化：
+  6 个 slab + 2 个超越区，atan 用上界——已落库：交错 Taylor arctan 上界
+  `NliQitnpea12ArctanSeries`（`248fde92`，G3 的 Hermite 锚已撤销，任意阶
+  精确）+ √ 分段界 + G 正性。**当前状态：G 正性车道 2 h 超时暂缓**（§1.26，
+  2,975 行 WIP 原样 RC=1/82 err，WIP 已抢救，不自动 resume；朴素 enclosure
+  6001 叶后两半仍负，该具体路线不可行，§1.22）。若用户另批：从快照 fresh、
+  先修发射器逐段验证，不重生成 ~3,000 行整件。另有**共享下界替代**：并盒
+  `γ4 ≥ 23/2000` 若真证可服务 `1_0`/`1_2(fat1)`/`2_0` 三条（不覆盖 `1_1`；
+  `2_1`/`2_2` 已证）——`qitnpea1-shared-floor-w1` 等用户裁决（§1.23）；
+  两条路线不得重复建设相同胶水。
+- **批预算**：11 债合计中心 **12,619 CPU·h**（区间 6.3k–25.2k；磁盘
+  ~220 GB）。
+- **止损**：单债 >2× 上界（2,200 CPU·h）未闭 ⇒ 停债留 WIP；家族 >30% 叶需
+  Rule P 且单叶 >35 s ⇒ 停批改档（FARM_PLAN §5.4）。
+- **判词指针**：§1.3 / §1.16 / §1.18 / §1.22 / §1.23 / §1.25 / §1.26 /
+  FARM_PLAN §5.1 F2a 行。
+
+**GLFVCVK4 家族 5（状态：等解冻 ①②，F2b 批）**
+
+- **这是什么**：同一张 GLFVCVK4 bank 的 y4 三分裂 + 主 bank
+  （`Assembly.lean:1669–1696` 区段）：
+  主债 `nliRestGLFVCVK4`（`:1696`，ineq.hl:559，盒 `[2hminus,2hplus]×
+  [2,√8]⁵`，**全债第二宽盒** w=0.828；网格主支 −3.457e-3 由析取支承接）
+  1,128 CPU·h；
+  `nliRestGLFVCVK4a8328676778`（`:1690`，ineq.hl:586，盒 `[2hminus,2hplus]×
+  [2,2hminus]²×[2hminus,2hplus]×[2,2hminus]²`，w=0.464，+6.068e-3）
+  1,130；
+  y4 分裂三子 `nliRestGLFVCVK4y4crit`（`:1683`，ineq.hl:623，盒
+  `[2hminus,2hplus]×[2hminus,2hplus]×[2,2hminus]×[2hminus,2hplus]×
+  [2,2hminus]²`，+1.739e-2）1,128；
+  `nliRestGLFVCVK4y4subcrit`（`:1669`，ineq.hl:675，盒 `[2hminus,2hplus]×
+  [2hminus,√8]×[2,2hminus]⁴`，+4.213e-3）1,123；
+  `nliRestGLFVCVK4y4supercrit`（`:1676`，ineq.hl:649，盒 `[2hminus,2hplus]×
+  [2,2h0]×[2,2hminus]×[2hplus,√8]×[2,2hminus]²`，+4.965e-3）1,128。
+- **共享**：同一 bank 的分裂产物 ⇒ case JSON 骨架同源；HOL 侧参考成本
+  127.9 CPU·h/846 叶（§1.5）——说明引擎杠杆存在，但 Gate-0 已实测 NO-GO
+  （`12c81dee`）⇒ 当前按 bb_arb 农场口径排。
+- **批预算**：F2b 批 = 本家族 5 + `FHBVYXZb` + sym×2（下两卡）合计中心
+  **8,118 CPU·h**（区间 4.1k–16.2k；磁盘 ~160 GB）。止损同 F2a。
+- **判词指针**：§1.3 / §1.5 / DEBTS 行 34–38 / FARM_PLAN §5.1 F2b 行。
+
+**`nliRestFHBVYXZb` —— heavy-sqrt（状态：等解冻 ①②，F2b 批）**
+
+- **这是什么**：`Assembly.lean:1564`；HOL `ineq.hl:942`。heavy-sqrt 表达式
+  （c_sqrt=3112，约 36k 运算），2 析取支；网格主支 +7.844e-3；
+  **332 CPU·h**。
+- **解析替代（数值 GO、非形式）**：B0 联合包络给出 FHBb 主支全盒估计最小
+  +3.804e-3、析取冗余（§1.11）；但整盒凹性归约已被证伪（§1.12），母定理
+  `b0-master-lean-w1` 搁置 ⇒ **当前按农场口径排**，包络证书将来真证才切换。
+- **判词指针**：§1.3 / §1.11 / §1.12 / DEBTS 行 33。
+
+**TSKAJXY sym 2 债（状态：等解冻 ①②，F2b 批）**
+
+- `nliTskIYOUOBFsym`（`Assembly.lean:952`，ineq.hl:223）：盒
+  `[2hplus,√8] × [2.001,2hminus] × [2,2hminus]⁴`，析取三排序支
+  （`y2 < y3/y5/y6`）；宽盒 r≈0.46、无解析路线（DEBTS 行 39）；网格主支
+  +1.313e-4；1,116 CPU·h。
+- `nliTskRIBCYXUsym`（`:969`，ineq.hl:183）：盒 `[2.001,2hminus] ×
+  [2,2hminus]⁵`，析取排序支（**口径差**：Assembly 注释记八支、DEBTS 行 40
+  记 7 支——发射时以 Lean 陈述为准）；网格主支 +8.234e-5；1,033 CPU·h。
+- **共享**：19,614 运算的同模板 sym 发射器；**XLLIPLS 的 Rule P + 装配管线
+  直接复用**（6,612 叶全量先例，`58ade83a`/`c940aae7`/`e4c384e6`）。
+- **判词指针**：§1.3 / §4（装配先例）/ DEBTS 行 39–40 / FARM_PLAN §3.1
+  TSKAJXY sym 组。
+
+**audit 引擎 4 债（状态：等解冻 ①②，F2c 批；FHBa/v2a 的解析路线另见 9.2）**
+
+- **这是什么**：`rest-math-audit` 判定的四条「主支在盒内为负、必须先改写
+  两支再引擎出叶」的债（§1.6）：
+  - `nliRestQITNPEA5400790175a`（`Assembly.lean:1459`，ineq.hl:1103，盒同
+    `5400790175b`）：主支 min **−7.2693e-3** 在双折点角；minimax 改写后
+    +4.121e-3。
+  - `nliRestRQWUDDU`（`:1839`，ineq.hl:1332）：主支 min **−0.1536**；
+    minimax 改写后 **+2.155e-3**（**ERRATA**：triage 旧记 0.00474，2.2× 紧，
+    §1.6）。dih/η 双支同时贴边（§1.2）；MATH 备选高风险。
+  - `nliRestFHBVYXZa` / `nliRestFHBVYXZv2a`：解析路线已推进大半（9.2 两卡），
+    本卡仅记其**农场兜底**口径。
+- **路线**：每债先写 60–100 行「主支 ∨ `eta126² < 1.34²` 两支改写」引理，
+  再引擎出叶。**注意**：audit 估的 80–800 叶是 CertTM2 投影，CertTM2 已随
+  Gate-0 NO-GO（`12c81dee`）出局 ⇒ 现行 bb_arb 下回到 ~10⁵ 叶 ≈
+  **1,100 CPU·h/债**（EST）。FHBa/v2a 的 η 接缝有内点极小、`max(g,c−η²)`
+  非凹，**不能套 96 角点表**（§1.11 ERRATA——audit 旧 minimax 值也是非
+  最优驻点，已勘误为 +4.813e−3/+1.104e−3）。
+- **批预算**：4 债合计中心 **4,400 CPU·h**（区间 1.6k–8.8k；磁盘 ~80 GB）。
+- **止损**：两支改写件 >300 行 ⇒ 停（audit 估 60–100）；bb_arb 叶数
+  >5×10⁵ ⇒ 停（说明改写没起作用，FARM_PLAN §5.4）。
+- **DEBTS 口径注**：DEBTS 行 41/42 对 FHBa/v2a 记「FARM-BB、no MATH/corner
+  route、FROZEN」，这是 §1.6 audit 时点的口径；§1.11–§1.14（更晚）已给出
+  η 曲线 + 地板凹性路线且相关资产全部落库（9.2 两卡按新口径）。两债以
+  9.2 为准，本卡仅作农场兜底——**DEBTS 该两行待 farm-ops 复核时刷新**。
+- **判词指针**：§1.2 / §1.6 / §1.11 / DEBTS 行 41–44 / FARM_PLAN §5.1
+  F2c 行。
+
+**`nliMainNonlinearTerminalV11` —— 109 支合取（状态：3 MATH + 补粘可启动；85 农场支等解冻 ①②）**
+
+- **这是什么**：`Assembly.lean:1926`；陈述 `main_nonlinear_terminal_v11`
+  （HOL `terminal.hl:24-44`），109 条 Main_estimate 支的**合取**。语句级
+  展开已落库（LA1:1900–2158，T0）——剩的是证明与接线，不是语句缺口。
+  锥外孪生 `nliMainNonlinearTerminalV11Ids` 是 **VACUOUS**（§1.1，
+  100/109 查表命中 `True` 回落），已从接线主波剔除，**不是真债**。
+- **闭合算术**（§1.9 census，109 支全判零 UNRESOLVED）：21 支在库（20 支
+  T11Glue 已粘 + `8405387449` 在库 40,785 叶/498 分片**未粘**，只差接线）+
+  **3 支纯数学**（9.2 卡：64 顶点枚举即完整证明，1 天级）+ **85 支农场**
+  （5 case JSON 在库 + 35 hex 模板 + 40 直发 atan + 2 高维 prep + 3 多项式
+  分割）。**合取债：缺一支不减 SORRIED。**
+- **正确顺序**（FARM_PLAN §7-4）：3 MATH → 补粘 → 21 支进锥 → 85 支农场
+  （F3 批，中心 **600 CPU·h**，区间 500–700；磁盘 50–150 GB）。不要先烧
+  农场——预算烧完仍 0 收益。
+- **家族压缩资产**（§1.24）：五个参数化模板覆盖 80 支、另 5 支须独立处理；
+  置换等价只对 74 条显式 def 验证过、35 条 hex 未测；发射侧 70%/150–250
+  machine-h 是**不预支的估计**——发射前先过代表样本定标。
+- **硬止损**：5 个子族任一**发射不出** ⇒ 停（合取债缺一支 = 0 收益，不许把
+  84/85 记成进展）；单支 >10 machine-h ⇒ 停。
+- **判词指针**：§1.9 / §1.24 / DEBTS 行 45 / FARM_PLAN §5.1 F3 行。
+
+### 9.5 覆盖对账表（50 `nli*` + hLP 逐名；与 DEBTS.tsv / 地图 SORRIED 段对齐）
+
+| 债名 | 状态 | 卡位 | 判词主出处 |
+|---|---|---|---|
+| `nliCell3QZECFICwt0` | 等解冻③ | 9.3 | §1.3 / §1.9 |
+| `nliCell3QZECFICwt0sqrt8` | 等解冻③（新数学侦察可先做） | 9.3 | §1.2 / §1.9 |
+| `nliCell3QZECFICwt1` | 待侦察 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
+| `nliTskIYOUOBFsharpv2` | 在飞（目标 −1） | 9.1 | §1.2 / §1.6 |
+| `nliTskIYOUOBFsym` | 等解冻①② | 9.4 | §1.3 |
+| `nliTskRIBCYXUsym` | 等解冻①② | 9.4 | §1.3 |
+| `nliTskWKGUESBsym` | 待侦察 | 9.3 | §1.3 |
+| `nliRestBIXPCGW7274157868a` | 等解冻①②（F1） | 9.4 | §1.3 |
+| `nliRestBIXPCGW9455898160` | 等解冻①②（F2a） | 9.4 | §1.3 |
+| `nliRestFHBVYXZa` | 可启动（两车道） | 9.2 | §1.11–§1.14 |
+| `nliRestFHBVYXZb` | 等解冻①②（F2b） | 9.4 | §1.3 / §1.11 |
+| `nliRestFHBVYXZv2a` | 等前置（FHBa） | 9.2 | §1.6 / §1.11 |
+| `nliRestGLFVCVK4` | 等解冻①②（F2b） | 9.4 | §1.3 / §1.5 |
+| `nliRestGLFVCVK4a8328676778` | 等解冻①②（F2b） | 9.4 | §1.3 |
+| `nliRestGLFVCVK4y4crit` | 等解冻①②（F2b） | 9.4 | §1.3 |
+| `nliRestGLFVCVK4y4subcrit` | 等解冻①②（F2b） | 9.4 | §1.3 |
+| `nliRestGLFVCVK4y4supercrit` | 等解冻①②（F2b） | 9.4 | §1.3 |
+| `nliRestIXPOTPA` | BLOCKED，三选项等裁决 | 9.3 | §1.3 / §8 |
+| `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
+| `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
+| `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
+| `nliRestQITNPEA1_1_2` | 等解冻①②（F2a）；解析替代暂缓中 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 |
+| `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
+| `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
+| `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
+| `nliRestQITNPEA5400790175a` | 等解冻①②（F2c） | 9.4 | §1.6 |
+| `nliRestQITNPEA5400790175b` | 等解冻①②（F1） | 9.4 | §1.3 |
+| `nliRestQITNPEA5653753305` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.11 |
+| `nliRestQITNPEA5814748276` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.11 |
+| `nliRestQITNPEA6206775865` | 等解冻①②（F2a） | 9.4 | §1.3 |
+| `nliRestQITNPEA9939613598` | 等解冻①②（F2a） | 9.4 | §1.3 |
+| `nliRestQITNPEAv24003532128` | 等解冻①②（F1） | 9.4 | §1.3 |
+| `nliRestRQWUDDU` | 等解冻①②（F2c） | 9.4 | §1.2 / §1.6 |
+| `nliRestTEWNSCJ` | 等解冻①②（F1） | 9.4 | §1.3 |
+| `nliRestTXQTPVC` | 等解冻①②（F1） | 9.4 | §1.3 / §1.21 |
+| `nliRestZTGIJCF4_0_0_0_0` | 待侦察（N5） | 9.3 | §5 / DEBTS 行 9 |
+| `nliRestZTGIJCF4_0_0_0_1` | 待侦察（N5） | 9.3 | §5 / DEBTS 行 10 |
+| `nliRestZTGIJCF4_0_0_1_0` | 待侦察（N5） | 9.3 | §5 / DEBTS 行 11 |
+| `nliRestZTGIJCF4_0_0_1_1` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_0_1_0_0` | 待侦察（N5） | 9.3 | §5 / DEBTS 行 12 |
+| `nliRestZTGIJCF4_0_1_0_1` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_0_1_1_0` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_1_0_0_0` | 待侦察（N5） | 9.3 | §5 / DEBTS 行 13 |
+| `nliRestZTGIJCF4_1_0_0_1` | 待侦察（N5） | 9.3 | §5 / DEBTS 行 14 |
+| `nliRestZTGIJCF4_1_1_0_0` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliKcblrqcIneqDef` | 等解冻④（无 LP 合取项可先收） | 9.3 | §1.1 / §1.7 |
+| `nliLpIneqs` | 等解冻④⑤ | 9.3 | §6 |
+| `nliMainNonlinearTerminalV11` | 3 MATH + 补粘可启动；85 支等解冻①② | 9.2 / 9.4 | §1.9 / §1.24 |
+| `nliOx3q1h` | S2a / S2b 等批 | 9.2 | §1.4 |
+| hLP `lpArchiveCertificatesDebt` | 等解冻④⑤ | 9.3 | §6 |
 
 > 维护：相关车道收线/落库后更新对应卡；新判词以 §1.x 为准，本节只同步状态行。

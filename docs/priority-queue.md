@@ -63,14 +63,16 @@
 
 ## 1. 在飞
 
-**当前授权在飞 3 条（用户 2026-11-19 连批：`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1` / `nli-plan-cards-w1`）。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复双链并行中**（编排者后台计算，非车道）——ETA ~17:30–18:30，链尾自动接 e2e 树可视化重建；进度 `progress.txt` / `progress_b.txt`。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 2 条（`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1`）；`nli-plan-cards-w1` 已收线入档。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复双链并行中**（编排者后台计算，非车道）——ETA ~17:30–18:30，链尾自动接 e2e 树可视化重建；进度 `progress.txt` / `progress_b.txt`。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；所有 Lean 编译统一经 `/tmp/lean_global_lock.d` 原子锁串行，锁内执行压力/RSS 护栏。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `ztg-bernstein-pilot-w1` | 编排者会话后台 agent，running（用户批「可以启动」） | ①剪枝胶水两条 Lean 化（x1 方向 729 / x4 方向 162 差分常数，deriv⇒monotone，消费 Gamma4Deriv 闭式）——接通 BernsteinLeaf0011 剪枝面叶到**原始盒**义务；② q=64/25 三债 1,215 系数**首张根叶定标**（预算 ≤5 min / ≤10 GB）；只做一张不量产；~1 天止损，量产等批 |
 | `iyou-sharpv2-slots-w1` | 编排者会话后台 agent，running（用户批「启动」） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:946）目标 **SORRIED −1**：四轴单调降维（min ∂ +0.13110）+ 2 维三块（edge 线性桥 +1.358e-5 最紧主风险 / strip ∂y4 ≥ +0.15 / 上方 30–80 叶小证书走已生效 Rule P）；产出 Text 新文件 ~2.5–4.7k 行 + Assembly 1 import 1 body；3–5 天，结构点 2 轮卡死即交班 |
-| `nli-plan-cards-w1` | 编排者会话后台 agent，running（用户批「启动」） | 零 Lean 纯文档：nli-campaign §9 补全至 **50 nli + hLP 全部逐债执行卡**（五要素 + 普通话行文）；产出 docs patch 由编排者应用；~1 天止损，判词缺失的债如实标 UNRESOLVED 不编造 |
+| `nli-plan-cards-w1` | **已收线（见下）** | — |
+
+**nli-plan-cards-w1 已收线（2026-11-19）：nli-campaign §9 逐债执行卡补全至 51 债全覆盖（50 nli + hLP），patch 已应用入档。** §9 由 ~90 行扩到 585 行：9.0 名词速查（普通话术语表）+ 9.1–9.4 全部执行卡 + 9.5 覆盖对账表（51 行逐名，与 DEBTS.tsv / 地图 SORRIED 段双向差集为空、25 个 commit 锚核实存在）。机器自检零缺失；**5 处数据源矛盾如实标注未擅裁**（FHBa/v2a 的 DEBTS 农场口径已被 η 曲线+凹性路线取代、RIBCYXU 析取支数 8 vs 7 以 Lean 陈述为准、Kcblrqc 无 LP 合取项编号、ZTG/fat1 余量两源并存）；「待侦察」卡 3 组（ZTG joint 6 / cell3 wt1 / WKGUESBsym）。交付与审计在 `~/c17_backup/lane_snapshots/nli-plan-cards-w1/`。
 
 **cell3-wt2a-core-w2 已收线（2026-11-19）：GO——机器层修通 + 代表 cell00 端到端 + 52 cell 成本外推，落库 `ebd11b13`。** `NliBanks20.lean` 1,576 行：WIP 19 处错全消（含 `dlt_anti_b/c` 恒等式按真族重写、`lfun` 无 ite 勘正）；通用 `w2a_cell` + `cell00_core`（margin +1.2e-3）+ `bank_wt2A_of_cell00` 真实消费 `NliBanks19.bank_QZECFICwt2A_of_core`；探针 10/10 恰标准三。52 剩余实 cell ≈ 11,130 行 / 编译 9–26 min（结构同构，生成器 ~300 行 python）——**量产与 Assembly 接线等用户批**，执行卡入 `nli-campaign.md` §9.1；新雷 PR-43（linarith 语法原子化）入册。交付在 `~/c17_backup/lane_snapshots/cell3-wt2a-core-w2/`。
 
@@ -246,6 +248,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-19（14:05，续1282）**：**`nli-plan-cards-w1` 收线入档——nli-campaign §9 逐债执行卡 51 债全覆盖，patch 应用落库。**
+  ① 覆盖 = 50 `nli*` + 1 hLP 零缺失（9.5 对账表 51 行逐名，与 DEBTS.tsv / 地图 SORRIED 双向差集空；族分解复算吻合；25 commit 锚核实存在；`Assembly.lean` 行号与 DEBTS 逐行一致）。
+  ② §9 由 ~90 行扩到 585 行：9.0 普通话名词速查 + 9.1–9.4 全部执行卡 + 9.5 对账表；单 hunk 只动 §9（§1–8 逐字节不动）；今日变化同步（wt2A 补 `ebd11b13` 锚、ZTG 试点在飞、iyou 在飞）。
+  ③ **5 处数据源矛盾如实标注未擅裁**（FHBa/v2a DEBTS 农场口径已过时 / RIBCYXU 支数 8 vs 7 以 Lean 为准 / Kcblrqc 无 LP 项编号 / ZTG·fat1 余量两源并存）；「待侦察」卡 3 组（ZTG joint 6 / cell3 wt1 / WKGUESBsym）；DEBTS.tsv 待按新口径刷新（另批）。
+  ④ 编排者验收：apply-check PASS、单 hunk 范围核查、9.0/9.5 抽查通过；零 Lean；SORRIED 51 / AXIOM 585 不变。在飞剩 2 条（ztg 试点 / iyou）。下一条：续1283。
 
 - **2026-11-19（13:20，续1281）**：**用户连批三单，三条异步发车并登记 running 回执，当前授权在飞 3 条。**
   ① `ztg-bernstein-pilot-w1`（用户批「可以启动」）：剪枝胶水两条 + q=64/25 首张 1,215 系数根叶定标，~1 天有界试点；成功 ⇒ ZTG 解耦 4 债的量产包就绪（其余三叶 + `ztg_of_main` 接线 ⇒ −4），量产另行报批。
