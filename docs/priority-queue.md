@@ -63,11 +63,14 @@
 
 ## 1. 在飞
 
-**当前授权在飞 0 条（cell3 与 Bernstein 双双收线 GO 并落库：`ebd11b13` / `9a4a9dc6`）。** A 已超时记暂缓、可重启，不自动 resume；D 已收线。另：**LP 池恢复双链并行中**（编排者后台计算，非车道；2026-11-19 编译并发放宽至 ≤3 后 A/B 双链各 ~3 分钟/件）——ETA ~17:30–18:30，链尾自动接 e2e 树可视化重建；进度 `progress.txt` / `progress_b.txt`。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 3 条（用户 2026-11-19 连批：`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1` / `nli-plan-cards-w1`）。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复双链并行中**（编排者后台计算，非车道）——ETA ~17:30–18:30，链尾自动接 e2e 树可视化重建；进度 `progress.txt` / `progress_b.txt`。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；所有 Lean 编译统一经 `/tmp/lean_global_lock.d` 原子锁串行，锁内执行压力/RSS 护栏。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `ztg-bernstein-pilot-w1` | 编排者会话后台 agent，running（用户批「可以启动」） | ①剪枝胶水两条 Lean 化（x1 方向 729 / x4 方向 162 差分常数，deriv⇒monotone，消费 Gamma4Deriv 闭式）——接通 BernsteinLeaf0011 剪枝面叶到**原始盒**义务；② q=64/25 三债 1,215 系数**首张根叶定标**（预算 ≤5 min / ≤10 GB）；只做一张不量产；~1 天止损，量产等批 |
+| `iyou-sharpv2-slots-w1` | 编排者会话后台 agent，running（用户批「启动」） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:946）目标 **SORRIED −1**：四轴单调降维（min ∂ +0.13110）+ 2 维三块（edge 线性桥 +1.358e-5 最紧主风险 / strip ∂y4 ≥ +0.15 / 上方 30–80 叶小证书走已生效 Rule P）；产出 Text 新文件 ~2.5–4.7k 行 + Assembly 1 import 1 body；3–5 天，结构点 2 轮卡死即交班 |
+| `nli-plan-cards-w1` | 编排者会话后台 agent，running（用户批「启动」） | 零 Lean 纯文档：nli-campaign §9 补全至 **50 nli + hLP 全部逐债执行卡**（五要素 + 普通话行文）；产出 docs patch 由编排者应用；~1 天止损，判词缺失的债如实标 UNRESOLVED 不编造 |
 
 **cell3-wt2a-core-w2 已收线（2026-11-19）：GO——机器层修通 + 代表 cell00 端到端 + 52 cell 成本外推，落库 `ebd11b13`。** `NliBanks20.lean` 1,576 行：WIP 19 处错全消（含 `dlt_anti_b/c` 恒等式按真族重写、`lfun` 无 ite 勘正）；通用 `w2a_cell` + `cell00_core`（margin +1.2e-3）+ `bank_wt2A_of_cell00` 真实消费 `NliBanks19.bank_QZECFICwt2A_of_core`；探针 10/10 恰标准三。52 剩余实 cell ≈ 11,130 行 / 编译 9–26 min（结构同构，生成器 ~300 行 python）——**量产与 Assembly 接线等用户批**，执行卡入 `nli-campaign.md` §9.1；新雷 PR-43（linarith 语法原子化）入册。交付在 `~/c17_backup/lane_snapshots/cell3-wt2a-core-w2/`。
 
@@ -243,6 +246,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-19（13:20，续1281）**：**用户连批三单，三条异步发车并登记 running 回执，当前授权在飞 3 条。**
+  ① `ztg-bernstein-pilot-w1`（用户批「可以启动」）：剪枝胶水两条 + q=64/25 首张 1,215 系数根叶定标，~1 天有界试点；成功 ⇒ ZTG 解耦 4 债的量产包就绪（其余三叶 + `ztg_of_main` 接线 ⇒ −4），量产另行报批。
+  ② `iyou-sharpv2-slots-w1`（用户批「启动」）：真证 `nliTskIYOUOBFsharpv2` 目标 **−1**——四轴单调降维 + 2 维三块（edge 线性桥 / strip / 上方 30–80 叶小证书），产出 Text 新文件 ~2.5–4.7k 行 + Assembly 接线；3–5 车道日。
+  ③ `nli-plan-cards-w1`（用户批「启动」）：零 Lean 纯文档，nli-campaign §9 逐债执行卡补全至 50 nli + hLP 全覆盖（普通话行文，五要素），产出 docs patch 由编排者应用。
+  三条均主仓 tracked 零改动、3 槽信号量护栏内（LP 双链恢复同刻并行，共享 ≤3 并发）；派发时无卡死。SORRIED 51 / AXIOM 585 不变。下一条：续1282。
 
 - **2026-11-19（12:45，续1280）**：**双 GO 日收官：Bernstein 表示试点与 cell3 wt2A 核双双收线 GO 并落库；编译并发放宽（≤3）；LP 双链恢复中；AGENTS 雷区重组。**
   ① `bernstein-kernel-representation-w1` **GO**：81 系数叶以 peel 表示（IneqAgent 式 `node+positivity+ring` 变体，零 MvPolynomial/Finsupp/decide）过内核——`ztgG_leaf_0_0_1_1` 直编 RC=0/14.9 s，4 公理面亲验恰标准三；落库 `9a4a9dc6`。诚实边界 = 剪枝面形（两次单调剪枝未形式化）；**ZTG 解耦 4 的 Bernstein 路线解锁，执行卡入 nli-campaign §9.1（①胶水②根叶定标为有界试点，量产等批）**。
