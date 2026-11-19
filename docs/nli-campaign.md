@@ -1210,20 +1210,48 @@
 - **止损**：规则补完后若单债叶树 ≥10⁵ 且 poly 档不适用 ⇒ 按 F2 口径重估。
 - **判词指针**：§1.3 / §1.9 / DEBTS 行 49 / FARM_PLAN §2.1 BLK。
 
-**`nliCell3QZECFICwt0sqrt8`（sqrt8）—— 逐项矩形链已定量判死（状态：等解冻 ③；新数学侦察可先做）**
+**`nliCell3QZECFICwt0sqrt8`（sqrt8）—— antitone-角点 10-cell 电池路线成立（状态：可启动，待用户批产；2026-11-19 S·a 侦察收线）**
 
 - **这是什么**：`Assembly.lean:419`；HOL `ineq.hl:1406`。盒
   `[1,1]³ × [2hplus,√8] × [2,2hminus]²`；第二析取支
   `eta_y y4 y5 y6 ^ 2 > 2`。角点余量 **+3.745e-3**。
-- **已判死的具体路线（不要重试）**：逐项矩形区间链——仅 a-矩形一项损失
-  0.0293 = 角点余量的 **8 倍**；要压回余量内需每坐标切 5–8 段 ⇒
-  125–512 cell，Lean 逐 cell 不可写。这是**数学结构结论**，不是预算不足
-  （math5-w4 route_map §9）。
-- **剩余两条活路**：① certtm 区间细分（原版 Clusterlp 路线，FARM_PLAN
-  §6-③）；② S·a 联合乘积新数学——**零 Lean 侦察 1 车道日可先做**（不需
-  任何解冻）。
-- **预算**：① 等特性开发；② 侦察 1 天，GO 后估 400–800 行级。
-- **判词指针**：§1.2 / §1.9 / DEBTS 行 50 / FARM_PLAN §2.2。
+- **ERRATA（2026-11-19 `cell3-sqrt8-sa-math-w1`）**：本卡原「判死」依据
+  （a-矩形损失 0.0293 = 8×余量 ⇒ 需 125–512 cell，math5-w4 route_map §9）
+  **公式失准**——其「纠错后 a-公式」与已落库已证的 `NliBanks20` 规范形
+  （`ea4X/ea5X/ea6X` + `sol_euler4/5/6_eq`）**一般点不一致**（仅对称点
+  巧合相符，角点自检不能区分）。真实数字：a-矩形超额仅
+  **0.00552 = 1.5×余量**；朴素均匀链 −0.0182 的主要损失在 dih/lfun 侧
+  （lfun 系数三重损失 ≈0.016），不在 a-侧。「必须 125–512 cell」
+  「matan 括弧全不可达」两条均不成立。注意：朴素**逐项矩形链本身仍判死**
+  （同格 (3,10,10) 下 product-of-mins −0.000739 ✗），死因改写为「不共享
+  折点、不按单调组合」。
+- **最优解（可启动）**：**antitone-角点组合 + 10-cell 共享 y4 电池**
+  （`w2a_cell` 孪生范式）：三条 box 级反单调引理（δ 三向 / lfun·D5·D6 /
+  Σ1/a）按**角点组合**保留相关性——同格从 −0.000739 转 **+0.000940**；
+  10 cell 全部 **y4 零分割**（折点仅 y5/y6 的 6 层二进有理分割），
+  y5↔y6 对称后 **8 cell**；60 dps 证书最小余量 **+4.7758e-4**、
+  有理化后 **+4.7757e-4**（有理化总代价 1e-8）；逐 cell 28³ 精扫
+  soundness 0 违反。关键代数巧合：y4h=√8 时 δ(hi) = −2(8−B−C)² ≤ 0
+  恒成立 ⇒ dih 括弧只需 `matan ≥ 1`（负支），完全不需要 1−t/3 形。
+- **引理清单（SCOUT §4，全部装配件已落库或属已验证范式）**：
+  L1 δ 反单调 ×3（仿 `dlt_anti_a` NliBanks20:509 因式分解）；L2 a_i
+  逐坐标单调 ×12（机械）；L3 t5 反单调（L1+分母单调）；L4 matan 库
+  （`≤1` 已落库 `nb20_matan_le_one`；`≥1` 负支 ~15 行；单调已落库
+  NliBanks13 `matanDeriv`；**新增** 2-项 Taylor 上括弧 ~40 行——最紧
+  cell T ≤ 0.0166，括弧只吃 6e-9）；L5 `lfun·D5` 反单调 ~30 行；
+  L6 cell 主引理（`w2a_cell` 孪生，margin norm_num）；L7 `cell_vacuous`
+  范式直接复用（NliBanks20:1294）；L8 y5↔y6 对称 ~20 行（cell 10→8）。
+  装配：`nb11_c3_unfold`（已落库）+ `nb18_s8_eta_dlt_neg`（已落库、
+  private 转 public 或复证 ~30 行——**已知小缺口**）+ by_cases 分派；
+  接线 `Assembly:419`。
+- **预算**：~700–1000 行；10 cell 可手写可生成器量产（ChainBatch1 范式）。
+  **无需**：certtm、③解冻、125–512 cell。
+- **回退链**：matanJoint-10（+4.8e-4，主案）→ sumAnti-12（+5.9e-4，
+  需 sum-antitone 难件）→ perSlot-24（+3.0e-5，零新引理）→
+  均匀 (4,12,12) 359 cell（+5.5e-4）。
+- **判词指针**：§1.2 / §1.9 / DEBTS 行 50 / FARM_PLAN §2.2 /
+  `~/c17_backup/lane_snapshots/cell3-sqrt8-sa-math-w1/SCOUT.md`
+  （ERRATA 全文 + 10-cell 表 + `work/` 四脚本可复现）。
 
 **`nliRestIXPOTPA` —— 自相似阶梯（状态：BLOCKED，三选项等裁决）**
 
@@ -1465,8 +1493,8 @@
 | 债名 | 状态 | 卡位 | 判词主出处 |
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 等解冻③ | 9.3 | §1.3 / §1.9 |
-| `nliCell3QZECFICwt0sqrt8` | 等解冻③（新数学侦察可先做） | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | 待侦察 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt0sqrt8` | 可启动（antitone 8-cell 电池，待批产；11-19 侦察收线） | 9.3 | §1.2 / §1.9 |
+| `nliCell3QZECFICwt1` | 在飞施工（路线 A，目标 −1） | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | 在飞（目标 −1） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①② | 9.4 | §1.3 |
