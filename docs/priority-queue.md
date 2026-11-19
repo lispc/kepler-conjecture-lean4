@@ -256,6 +256,11 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-19（16:49 实测，续1292）**：**wt0 手工侦察收线（三侦察批全部正面，③紧迫性全面降档）+ ztg 两件全绿、glue 五错判明。**
+  ① `cell3-wt0-scout-w1` 判词 **GO（置信高）**：wt0 银行义务已由区间 B&B 直接机器认证（θ=0，**38,011 proven / 0 pending / 306 s**，全盒 `0 < pc3`）；11-17「三轴变号 + log ⇒ 等解冻③」精确翻案——变号全结构化在远端三面墙（墙 min = 极小 15.4 倍，`nb18_cycle` 免费转移），全局极小**恰在有理角点 (2.01,2,2) = +1.7827835e-4**（census 双复现）；log 支仅 0.02% 体积远角帽（92 倍余量），负底从不出现，手工 log kit ~100–200 行。**推荐路线 R 五件套**（R1 单调核 / R2 有理角点证书 / R3 单墙盒 / R4 log kit / R5 装配）：~2,000–21,000 行、单车道 1–3 周、施工序 R4→R2→R1→R3→R5；纯三轴直搬定量判死（反例点在案）。§9.3 wt0 卡升级可启动。**三侦察批（wt0/sqrt8×2）全部正面 ⇒ ③只剩 IXPOTPA 一债的实际依赖**（ixpotpa-arch-w1 在飞定夺选项 c）。
+  ② ztg-bernstein-pilot 第三轮编译：**ZTGDgrad0011 与 BernsteinRoot1100 双双全绿**（RC=0 / error 0 / 自审计恰标准三；wall 2m29s / 5m36s，olean 76 MB / 215 MB）——两发射器修法实证正确，车道第三轮重生成为落库源。**glue（315 行手写）五错判明**（63–72 HOF 函数字面量加法 vs 单 lambda 形态 = PR-28 同病；70 const_mul 乘法结合律形状；233 `nonneg_of_pos_mul` 未带命名空间；286 monotoneOn 引理 f' 隐参不合成——PR-29 先 #check 实参序）⇒ hasDerivAt_quad 根错致 4 件 sorryAx 污染（PR-14 链）。修法已发车道；修完 glue 我跑终局闸（车道重生成三件 + 亲跑探针）再落库。
+  ③ 在飞 6 条。SORRIED 51 / AXIOM 585 不变。下一条：续1293。
+
 - **2026-11-19（16:38 实测，续1291）**：**IXPOTPA 考古+分解侦察发车（用户批「发侦查车道考古吧」）+ ztg 第三 bug 判明与假绿陷阱入册（PR-48）。**
   ① `ixpotpa-arch-w1` 发车（零 Lean / 零占槽 / 有界半天）：双轨 = 考古优先（AGENTS §8：HOL `ineq.hl:1265` 原版怎么证的最宽盒、辅助引理/废弃注记/Isabelle 侧）+ 定量复核（PR-47 精神：「自相似不可分解」当被检断言，真盒 cases_narrow 口径，候选给实测数字）。判词三选一：GO 给工单级规格 / NO-GO 则选项(c) 判死、③裁决简化为 (a) vs (b) / UNRESOLVED 列缺口。这是 IXPOTPA 卡上写死的「任一选项启动前置」。
   ② ztg-bernstein-pilot 第三轮：括号假设**证实**（诊断性干跑 480+600 处包裹后「Function expected」×101 全灭，2,428+3,034 声明证明体全过内核）但暴露**第三 bug**：两文件顶层 theorem binder 写成 `(x1 : ℝ, x2 : ℝ, …)` 逗号形（探针实证 Lean 4 不收）；perl 改空格形后重编中（orch4_*.log）。**PR-48 入册**：语法错误后 parse recovery 照样建声明、文件尾 `#print axioms` 打「does not depend on any axioms」假绿——error≠0 时自审计行全部作废；AGENTS #9 双检的最硬实证。车道已接三 bug 全套修法（顶层模板空格形 + emit_nnl 括号包裹 + PR-32 整文件重生成），落库以车道重生成为准。
