@@ -1454,18 +1454,41 @@
   `~/c17_backup/lane_snapshots/ixpotpa-arch-w1/`（SCOUT.md + work/ 17 件，
   含 HOL 61 片耗时表、80 dps 最差角脚本、HOL 骨架复放器）。
 
-**`nliTskWKGUESBsym` —— 发射 TIMEOUT（状态：待侦察；分段侦察先行）**
+**`nliTskWKGUESBsym` —— 侦察收线 GO（状态：F2b 直入 ~1,045 CPU·h，var_lt 重发为前置；旁路 Face 证书半程实测；2026-11-19/20 `wkguesbsym-seg-scout-w1`）**
 
 - **这是什么**：`Assembly.lean:981`；HOL `ineq.hl:281`「TSKAJXY-WKGUESB
   sym」。盒 `[2hplus,√8] × [2.01,2hminus] × [2,2hminus] × [2hplus,√8] ×
-  [2,2hminus]²`，析取四排序支；网格主支最小 **+8.534e-3**（正，不紧）。
-- **为什么卡**：发射器 1200 s TIMEOUT 无叶产出（recost 唯一超时债）；同族
-  另两条（IYOUOBFsym/RIBCYXUsym）1,033/1,116 CPU·h 正常出叶 ⇒ 大概率是
-  case 未分段。
-- **路线**：先做零 Lean 分段侦察（1 车道日，把 4 排序支逐支切开测）→
-  分段后归 F2b 农场口径（未验证）或解析路线。
-- **预算**：侦察 1 天；之后按 F2b 档（~1,000 CPU·h 量级，EST）。
-- **判词指针**：§1.3 / DEBTS 行 52 / FARM_PLAN §2.1 BLK。
+  [2,2hminus]²`，析取四排序支；网格主支最小 **+8.534e-3**（正，不紧；
+  侦察定位 = 64 角点网格 min @ (√8, 2.01, 2, √8, 2, 2)）。
+- **超时根因（[interval] 实测，卡上「未分段」假设证伪）**：**6.6% 墙钟
+  near-miss**——正定向 case 跑满 200k 节点需 **1,279 s**，被 recost 的
+  1,200 s 上限击杀（空日志 = SIGKILL 丢缓冲）；逐节点 165/s（同族
+  210/196），慢因 = **ite guard straddle 率 94–99%**（y1,y4 长维把
+  gamma4fgcy 的 60 条 ite 分支面推入跨 0 态；RIBCYXU 仅 30%）。HOL 原版
+  自己也是 prep 预切 234 片消 hull 成本（239,884 cells/299–374 s），但
+  bb_arb 隐式二分对分支面的发现成本与 HOL 同阶——**预切不会降低节点
+  预算**，无需分段。
+- **必须先修的数据债（发射前置，全批 4 case 同病）**：case json 的
+  var_lt 是 **2026-10-26 `392517111` 修复前的反定向**，与 bank 陈述
+  （`PackingAuto21.lean:321-322`/ineq.hl:286-287）**不同向**——发射出的
+  证明粘不上 bank；**recost 30 case 里全部 4 个 var_lt case 同病**
+  （WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128），发射前一律用现行
+  emit_rpn 重发 + 重窄化。幸运无 CEX 风险：主支全盒为正（HOL 无析取版
+  同盒 QED 13,337 s 外部锚；flip-hard 区采样 min +5.09e-2）。
+- **主路（立即可排，等农场/长跑裁决）**：重发正定向 case → bb_arb
+  200k、**超时 ≥1,500 s** → 92,952 TM 叶 + ~7,039 裸区间叶 + 9 未闭叶
+  （贴对角带，同族 13 叶同型）→ **≈1,045 CPU·h**（prescan 344 + kernel
+  697 + plain 2）+ 磁盘 ~20–40 GB；验收照 FARM_PLAN §5.3。
+- **旁路（半程实测，math 车道可选）**：四短维 ∂γ4/∂y_k ≥ +0.128
+  [sampled]、短对二阶超模全正、prog 零引用 hminus ⇒ 全盒 min 收拢 2-D
+  face；**Face 证书实测 bb_arb 2 s CLOSED、210 叶 ≈ 2.4 CPU·h**——但
+  单独不闭合 bank（缺 Cert A 四条单调归约）；AD 直证试点 NO-GO（31 min
+  无 CLOSE 已止损），二阶符号归约为 math 车道级工作（ZTG-joint6 kit
+  形状，3 条边缘对 −0.013/−0.006/−0.0008 先符号核实）。若落地总
+  ~15–25 CPU·h（**比主路便宜 ~50–70×**）；不落地主路独走无损失。
+- **判词指针**：§1.3 / DEBTS 行 52 / FARM_PLAN §2.1 BLK / 快照
+  `~/c17_backup/lane_snapshots/wkguesbsym-seg-scout-w1/`（SCOUT.md 15.2KB
+  + work/ 29 项探针脚本/face 证书/cases_narrow；探针合计 ~70 min CPU）。
 
 **ZTG joint 6（`nliRestZTGIJCF4_0_0_0_0` / `_0_0_0_1` / `_0_0_1_0` / `_0_1_0_0` / `_1_0_0_0` / `_1_0_0_1`）—— 路线 B 角点表全家族成立（状态：可启动，W0–W4 战役包待批产；2026-11-19 `ztg-joint6-scout-w1` 收线 GO）**
 
@@ -1709,9 +1732,9 @@
 | `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | 在飞（目标 −1） | 9.1 | §1.2 / §1.6 |
-| `nliTskIYOUOBFsym` | 等解冻①② | 9.4 | §1.3 |
-| `nliTskRIBCYXUsym` | 等解冻①② | 9.4 | §1.3 |
-| `nliTskWKGUESBsym` | 待侦察 | 9.3 | §1.3 |
+| `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债：发射前须重发重窄化**（wkguesbsym 侦察） | 9.4 | §1.3 |
+| `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债：发射前须重发重窄化**（wkguesbsym 侦察） | 9.4 | §1.3 |
+| `nliTskWKGUESBsym` | 侦察收线 GO：F2b 直入 ~1,045 CPU·h（var_lt 重发前置）+ Face 旁路半程 | 9.3 | §1.3 |
 | `nliRestBIXPCGW7274157868a` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestBIXPCGW9455898160` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestFHBVYXZa` | 可启动（两车道） | 9.2 | §1.11–§1.14 |

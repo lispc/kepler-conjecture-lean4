@@ -258,6 +258,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-20（00:02 实测，续1308）**：**WKGUESBsym 分段侦察收线 GO——超时根因 = 6.6% 墙钟 near-miss（非未分段）；var_lt 反定向数据债（4 case 同病）发射前必修。**
+  ① `wkguesbsym-seg-scout-w1`（快照 SCOUT.md + work/ 29 项；探针 ~70 min CPU 有界）：**超时根因 [interval] 实测**——正定向 case 跑满 200k 节点需 **1,279 s**、被 recost 1,200 s 上限击杀（空日志 = SIGKILL 丢缓冲）；慢因 = ite guard straddle 率 **94–99%**（y1,y4 长维把 60 条分支面推跨 0；同族仅 30%）；卡上「大概率未分段」**证伪**——bb_arb 隐式二分与 HOL prep 预切同阶，预切不降节点预算。
+  ② **数据债（发射前置，全批同病）**：case json 的 var_lt 是 2026-10-26 修复前**反定向**、与 bank 陈述不同向（发射出的证明粘不上 bank）；**recost 30 里全部 4 个 var_lt case 同病**（WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128）——发射前一律重发重窄化；无 CEX 风险（主支全盒正，HOL 无析取版 QED 13,337 s 外部锚）。
+  ③ **主路（F2b 直入，等裁决）**：重发 + 超时 ≥1,500 s → 92,952 TM 叶 + ~7,039 裸叶 + 9 贴对角未闭叶 → **≈1,045 CPU·h** + 20–40 GB；**旁路（math 可选，半程实测）**：全盒 min 收拢 2-D face（四短维 ∂ ≥ +0.128、二阶超模全正）、**Face 证书 bb_arb 2 s CLOSED ≈ 2.4 CPU·h**——缺 Cert A 四条单调归约（AD 直证 NO-GO 止损；二阶符号归约 = math 车道级，ZTG-joint6 kit 形状）；若落地 ~15–25 CPU·h（**便宜 50–70×**）。§9.3 卡重写 + census 三行注记。
+  ④ 三零-Lean 侦查批全部收线（Ox3q1h 条件 GO / WKGUESBsym GO / cases-prep 就绪）。池恢复链 00:02 ok=145/fail=1（Graphs 慢尾段校准中，晨报给实测 ETA）。在飞：恢复链独跑。SORRIED 51 / AXIOM 585 不变。下一条：续1309。
+
 - **2026-11-19（23:25 实测，续1307）**：**cases-swap-prep 收线——P1/P2 复刻完成（工单级就绪），P3 五族 GO 两族诚实 NO-GO；恢复链照跑。**
   ① P1 = CFWGKMBZ：整 case ≡ `deltaX > 0` 多项式化；729 系数全正，EXACT min ≈ **+54.7107285542**（argmin 恰为最坏角、与 64 角精确枚举逐 Fraction 相等 = 全盒真 min；四口径交叉验证含 y-空间 15,625 精确张量）；**422,988/607 → 16,348/3（−96.13%）**，编译预算 ~90 s/11.2 GB；消费者全集 = 仅 Assembly（:79/:1499 槽 + PA21:610 def），Tree/605 shard 零外部消费。
   ② P2 = C4717061266：729 全正，EXACT min = **128 整**（全 lo 角闭式）；**122,448/555 → 16,350/3（−86.64%）**；P1+P2 合计 −94.0%、串行 ≈180 s。
