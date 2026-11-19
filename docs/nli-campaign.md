@@ -958,7 +958,7 @@
 - **止损**：单 cell 编译 >60 s 或 cell margin <1e-4 时复查 `cells_raw.json`。
 - **判词指针**：§1.15 / §1.19 / DEBTS 行 4 / FARM_PLAN §4 N2。
 
-**ZTG 解耦 4（`nliRestZTGIJCF4_1_1_0_0` / `_0_1_1_0` / `_0_1_0_1` / `_0_0_1_1`）—— Bernstein 路线（状态：有界试点在飞，量产等批）**
+**ZTG 解耦 4（`nliRestZTGIJCF4_1_1_0_0` / `_0_1_1_0` / `_0_1_0_1` / `_0_0_1_1`）—— 真缺件 = γ4 半边角点表（状态：hD 双证已闭、hG 待产；2026-11-19 18:41 接线车道实测钉死）**
 
 - **这是什么**：`Assembly.lean:1738/1777/1783/1795`；HOL `ineq.hl:486-499`
   `make_F4` 循环的四个实例（模板 `bank_ZTGIJCF4tmpl`，id 1821661595），
@@ -970,19 +970,31 @@
   `BernsteinLeaf0011`（`9a4a9dc6`，q=36/25 的 81 系数叶 14.9 s 标准三）；
   witness 数据（快照 bernstein-representative-w1：q=64/25 三债各 1,215
   系数 / q=36/25 一债剪枝后 81 系数）。q 是 Bernstein 基的阶参数。
-- **在飞**：`ztg-bernstein-pilot-w1`（2026-11-19 用户批「可以启动」，pq §1）
-  ——① 剪枝胶水两条 Lean 化（x1 方向 729 + x4 方向 162 个一阶差分常数，
-  deriv⇒monotone 模板，消费 `Gamma4Deriv` 一阶闭式）；② q=64/25 三债首张
-  1,215 系数根叶定标（预算 ≤5 min / ≤10 GB）。
-- **还缺**：试点①②；之后三债根叶 + `ztg_of_main` 接线（量产主体）。
-- **启动做法（试点成功后）**：③ 其余根叶按 `BernsteinLeaf0011` 范式量产 →
-  每债消费 `ztg_of_main` ⇒ **SORRIED −4**。
-- **预算**：试点 ~1 车道日；量产（③）另报批。
-- **止损 / 翻车点**：根叶定标不过线（>5 min / >10 GB）→ 转 9.4 备选角点表
-  路线（`G4CORNER_PLAN.md`，1.2–2.4 万行 / 4–7 车道日）；**剪枝面形假设
-  （x1/x4 钉在单调剪枝端点）本身未形式化**——胶水两条必须真证单调性，不能
-  按数值同号糊过（bernstein-kernel-representation-w1 DELIVERY §4 诚实边界）；
-  胶水 2 轮结构卡死交班。
+- **试点（已完成，2026-11-19）**：`ztg-bernstein-pilot-w1` 三件全绿落库
+  `57eded64`（972 系数 Dgrad + 1,215 系数根叶 + 剪枝胶水，12 探针标准三，
+  千系数件 = 分钟级定标）。**角色勘误（18:41 接线车道实测钉死）**：ztgG
+  盒义务只证 **dihY 半边**，该半边树内**早已闭合**（`decbc61c`
+  `ztg_dihY_1_1_0_0 : 1.008 ≤ dihY` / `ztg_dihY_0_0_1_1 : 0.875 ≤ dihY`，
+  32 角点证书路线）——**`57eded64` 是同一盒事实的第二条独立内核证明，
+  对债面零增量**（试点价值 = 表示定标 + 剪枝必走债的唯一胶水模板）。
+- **还缺（真正缺件 = γ4 半边）**：bank ⟸ `ztgMain > 0` = `γ4/3 > a5 +
+  b5·dihY`（各债 w=3、m=0，探针亲证）——**hD 已闭**（decbc61c certified
+  1.008/0.875；勘误：Bounds 的探索常数 D=1.1/0.88 在 certified dihY 下
+  不可消费，residual 定理即 certified-D 刷新版消费接口）；**hG 缺**：
+  `γ4 ≥ 0.05`（1_1_0_0 盒）/ `γ4 ≥ 0.065`（0_0_1_1 盒），全树无任何 ZTG
+  盒 γ4 下界。接线车道已内核钉死**唯一剩余缺件**：两条 residual 定理
+  `bank ⟸ hD(在树) + hG(缺)`（探针 RC=0、margin 双 PASS：a5+b5·1.008 =
+  0.011093 < 0.05/3、a5+b5·0.875 = 0.017022 < 0.065/3；快照
+  `ztg-decouple4-wiring-w1/probe_blocker.lean`）。
+- **启动做法（修正后）**：**γ4 半边角点表**（`G4CORNER_PLAN.md` 已 GO
+  路线，与 joint-6 W 包共享 L0/L1/L2 模板）四债 γ4 下界量产 → 每债 hG
+  实参 + hD 取 `ztg_dihY_*` + `ztg_of_main` 消费 + Assembly 一行 ⇒
+  **SORRIED −4**。residual 定理可选先落库作未来 γ4 车道的验收面（等批）。
+- **预算**：γ4 角点表 1.2–2.4 万行 / 4–7 车道日（与 joint-6 并跑摊销 kit）；
+  接线本体秒级。
+- **止损 / 翻车点**：γ4 角点表片证书包络精度（同 joint-6 R1 三级 fallback）；
+  **「根叶 = 每债主交付」已证伪——任何 Bernstein 侧后续量产先对照本卡
+  角色勘误**；胶水机制仅对根张量含负系数的债保留为剪枝必走模板。
 - **判词指针**：§1.10 / §5（含 ERRATA）/ DEBTS 行 5–8 / FARM_PLAN §4 N3。
 
 **`nliTskIYOUOBFsharpv2` —— 四轴单调 + 2 维三块（状态：在飞；`iyou-sharpv2-slots-w1` 2026-11-19 发车，目标 SORRIED −1）**
@@ -1668,13 +1680,13 @@
 | `nliRestZTGIJCF4_0_0_0_0` | 可启动（W3 精度档，−5；11-19 joint-6 侦察 GO） | 9.3 | §5 / DEBTS 行 9 |
 | `nliRestZTGIJCF4_0_0_0_1` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 10 |
 | `nliRestZTGIJCF4_0_0_1_0` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 11 |
-| `nliRestZTGIJCF4_0_0_1_1` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_0_0_1_1` | hD 双证已闭；缺 hG=γ4≥0.065（角点表待批） | 9.1 | §1.10 / §5 |
 | `nliRestZTGIJCF4_0_1_0_0` | 可启动（W4，2.2 一刀全 mono-up，−6） | 9.3 | §5 / DEBTS 行 12 |
-| `nliRestZTGIJCF4_0_1_0_1` | 有界试点在飞 | 9.1 | §1.10 / §5 |
-| `nliRestZTGIJCF4_0_1_1_0` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_0_1_0_1` | 同族缺件（γ4 半边角点表，随 G4CORNER 摊销） | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_0_1_1_0` | 同族缺件（γ4 半边角点表，随 G4CORNER 摊销） | 9.1 | §1.10 / §5 |
 | `nliRestZTGIJCF4_1_0_0_0` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 13 |
 | `nliRestZTGIJCF4_1_0_0_1` | 可启动（W2，−4） | 9.3 | §5 / DEBTS 行 14 |
-| `nliRestZTGIJCF4_1_1_0_0` | 有界试点在飞 | 9.1 | §1.10 / §5 |
+| `nliRestZTGIJCF4_1_1_0_0` | hD 双证已闭；缺 hG=γ4≥0.05（角点表待批） | 9.1 | §1.10 / §5 |
 | `nliKcblrqcIneqDef` | 等解冻④（无 LP 合取项可先收） | 9.3 | §1.1 / §1.7 |
 | `nliLpIneqs` | 等解冻④⑤ | 9.3 | §6 |
 | `nliMainNonlinearTerminalV11` | 3 MATH + 补粘可启动；85 支等解冻①② | 9.2 / 9.4 | §1.9 / §1.24 |
