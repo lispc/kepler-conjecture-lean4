@@ -63,13 +63,15 @@
 
 ## 1. 在飞
 
-**当前授权在飞 2 条（另一编排会话的 cell3/Bernstein）。** A 已超时记暂缓、可重启，不自动 resume；D 已收线。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 0 条（cell3 与 Bernstein 双双收线 GO 并落库：`ebd11b13` / `9a4a9dc6`）。** A 已超时记暂缓、可重启，不自动 resume；D 已收线。另：**LP 池恢复双链并行中**（编排者后台计算，非车道；2026-11-19 编译并发放宽至 ≤3 后 A/B 双链各 ~3 分钟/件）——ETA ~17:30–18:30，链尾自动接 e2e 树可视化重建；进度 `progress.txt` / `progress_b.txt`。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；所有 Lean 编译统一经 `/tmp/lean_global_lock.d` 原子锁串行，锁内执行压力/RSS 护栏。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `cell3-wt2a-core-w2` | 编排者会话后台 agent，running（2026-11-19 用户批「启动 sub agent」） | 从 WIP 重启：先修 NliBanks20 机器层 RC=0，再一个代表 cell 端到端真证 + 消费 NliBanks19 归约，最后诚实成本外推；**y5 单调已证伪，符号断言须区间/精确证书**；53 cell 量产不做；机器层 3 轮卡死即止损交班 |
-| `bernstein-kernel-representation-w1` | 编排者会话后台 agent，running（2026-11-19 用户批「启动 sub agent」） | 81 系数 ZTG q=36/25 叶的**新表示**试点（显式指数向量 / IneqAgent 式 `positivity + ring` 证明项）；禁 MvPolynomial/Finsupp/Quot 路径；**2 h 墙钟无合格叶即暂缓**，不写永久放弃；不做 1,215 系数或量产 |
+
+**cell3-wt2a-core-w2 已收线（2026-11-19）：GO——机器层修通 + 代表 cell00 端到端 + 52 cell 成本外推，落库 `ebd11b13`。** `NliBanks20.lean` 1,576 行：WIP 19 处错全消（含 `dlt_anti_b/c` 恒等式按真族重写、`lfun` 无 ite 勘正）；通用 `w2a_cell` + `cell00_core`（margin +1.2e-3）+ `bank_wt2A_of_cell00` 真实消费 `NliBanks19.bank_QZECFICwt2A_of_core`；探针 10/10 恰标准三。52 剩余实 cell ≈ 11,130 行 / 编译 9–26 min（结构同构，生成器 ~300 行 python）——**量产与 Assembly 接线等用户批**，执行卡入 `nli-campaign.md` §9.1；新雷 PR-43（linarith 语法原子化）入册。交付在 `~/c17_backup/lane_snapshots/cell3-wt2a-core-w2/`。
+
+**Bernstein 表示试点已收线（2026-11-19）：GO——81 系数叶以 peel 表示过内核，落库 `9a4a9dc6`。** `ztgG_leaf_0_0_1_1`（ZTG q=36/25 根盒多项式正性义务剪枝面形）直编 RC=0/14.9 s，4 公理面亲验恰标准三；peel 表示 = 手写 `peel2` 二次剥皮 ×4 层 + 40 小 ring 恒等式 + 81 闭式 norm_num 折叠，零 MvPolynomial/Finsupp/Quot/decide。**诚实边界**：剪枝面形（x1/x4 钉两次单调剪枝端点，剪枝本身未形式化，胶水两条在快照 DELIVERY §4）；**1,215 系数根叶定标与 ZTG 量产未批不做**。交付与审计在 `~/c17_backup/lane_snapshots/bernstein-kernel-representation-w1/`。
 
 **A fat1 G 正性已超时暂缓（2026-11-19，`fat1-g-positivity-w1`）：WIP 已抢救，不判死、不自动 resume。** 最新 2,975 行源与 patch 的 2,955 行旧版不同；原样独立编译 RC=1（unterminated comment），隔离闭合 14 处章节注释后仍有 82 个 `error:`，没有可接受证明或公理面。Δ 中心展开、小区与逐组 Taylor/checkPos 设计保留为数学资产；约 3,000 行生成整件及旧 patch 不接收入库。fresh 重启须用户另批，先小组件与简洁化。详见 `nli-campaign.md` §1.26 与快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
 
@@ -241,6 +243,15 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-19（12:45，续1280）**：**双 GO 日收官：Bernstein 表示试点与 cell3 wt2A 核双双收线 GO 并落库；编译并发放宽（≤3）；LP 双链恢复中；AGENTS 雷区重组。**
+  ① `bernstein-kernel-representation-w1` **GO**：81 系数叶以 peel 表示（IneqAgent 式 `node+positivity+ring` 变体，零 MvPolynomial/Finsupp/decide）过内核——`ztgG_leaf_0_0_1_1` 直编 RC=0/14.9 s，4 公理面亲验恰标准三；落库 `9a4a9dc6`。诚实边界 = 剪枝面形（两次单调剪枝未形式化）；**ZTG 解耦 4 的 Bernstein 路线解锁，执行卡入 nli-campaign §9.1（①胶水②根叶定标为有界试点，量产等批）**。
+  ② `cell3-wt2a-core-w2` **GO**：`NliBanks20` 机器层修通 + `cell00_core` 代表 cell 端到端 + `bank_wt2A_of_cell00` 真实消费 NliBanks19 归约；探针 10/10 标准三；落库 `ebd11b13`。**52-cell 量产（≈11,130 行 + Assembly 接线）用户明示先不启动**，执行卡入 nli-campaign §9.1；新雷 PR-43 入册。
+  ③ **编译并发放宽（用户裁定）**：AGENTS §4 由「同时只许 1 个 lean」改为 **≤3 并发 ∧ 总 RSS ≤24 GB ∧ pressure <2**（3 槽信号量 `/tmp/lean_slot{1..3}.d`；每车道仍 ≤1；禁裸多目标 lake build 不变）；LP 恢复随之改双链并行（A 正序/B 倒序，SKIP 去重），ETA 从 ~27.5 h 收窄至 **~17:30–18:30**；链尾自动 e2e 可视化重建。
+  ④ Kimi 编排会话收尾入档 `363a2841`（续1279）。
+  ⑤ **AGENTS 雷区重组（用户裁定 ≤20 条）**：§7.1 精简为现行 20 条（候选 37 exec-trap 直接入表为第 20 条，此后走登记册晋升规则不需逐条批）；全文/历史/散件入新档 `docs/pitfall-register.md`（PR-1..37 + handoff §6 五条升格 PR-38..42 + cell3 新雷 PR-43 + 编排者 mid-flight 脚本重写事故 PR-44 + playbook/车道散件索引）；`§7.1-N` 外部引用编号不变。
+  ⑥ **nli-campaign 新设 §9 逐债执行计划登记**（用户裁定「启动即照做」）：cell3 wt2A 量产卡、ZTG Bernstein 三步卡、iyou/FHBa/ox3q1h/TerminalV11 3 MATH/LP 类等待批卡；hf-proof-map 状态更新五十一入档。
+  ⑦ SORRIED 51 / AXIOM 585 不变；push 已获用户批（本批后执行）。下一条：续1281。
 
 - **2026-11-19（10:42，续1279）**：**A fat1 G 正性超时暂缓，最新 WIP 已抢救并独立确认未通过；不自动 resume**。
   ① timed_out 后 wire 终止于 cancelled、无对应编译进程；DELIVERY/Evidence 均为草案。最新 2,975 行源已保存到快照 `ORCHESTRATOR_CHECK/`，patch 的 2,955 行版本不是最新。

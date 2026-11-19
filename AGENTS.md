@@ -61,14 +61,16 @@
   ① 模块级 `lake build <单模块>` PASS；② 岛协议 `lean -o /tmp/...` RC=0；
   ③ 编排者**亲跑** `#print axioms`（不许转述车道输出）。纯新增 diff（无既有模块改动）时，
   “全树不破”由 ①②③ 替代；闸的 roots 步失败**不作为拒绝理由**，只在日志里记一笔。
-- **重编译串行**：起前查 `vm_stat` free ≥ 200,000 pages（≈3 GB）作为**软性提醒**；
-  硬闸是上一条（同一时刻 1 个 lean）。不满足就等，不许“先跑起来再说”。
-- **内存的真正约束是「同时只许 1 个 Lean 编译」，不是 free pages。** 2026-11-09 实测
-  （`/usr/bin/time -l`，`Base.lean` 12 KB 源）：**单次编译峰值 RSS = 5.66 GB**、耗时 27.8 s；
-  5 条车道并发编译 ⇒ 28 GB 需求（2026-11-12 用户更正：本机 **36G 物理**，
-  并发 3–4 编译 ≈ 17–23 GB 尚有余量；pressure 纪律与 wait_low 不变）。
-  普通进程不是问题：同一测量里 3 GB 分配 **0 pageouts、压力不变（1）**。
-  ⇒ 车道起编译前必须确认“此刻没有别的 lean 在跑”；编排者侧只放行一个。
+- **重编译并发护栏**：起前查 `vm_stat` free ≥ 200,000 pages（≈3 GB）作为**软性提醒**；
+  硬闸是上一条（同一时刻 ≤3 个 lean ∧ 总 RSS ≤24 GB ∧ pressure <2）。不满足就等，
+  不许“先跑起来再说”。
+- **内存的真正约束是「同时最多 3 个 Lean 编译」（2026-11-19 用户裁定放宽，替代
+  2026-11-09「同时只许 1 个」），不是 free pages。** 实测依据（`/usr/bin/time -l`）：
+  单次编译峰值 RSS 5.66 GB（`Base.lean`）/ 6–10 GB（Rule P、LP `T*`）；本机 **36 GB
+  物理**下 3 并发 ≈ 18–30 GB 尚有余量；普通进程不是问题（3 GB 分配 0 pageouts、
+  压力不变）。**12 路扇出仍不可行**（见下条 lake 禁令）。
+  ⇒ 护栏口径：**lean 进程数 ≤3 ∧ lean 总 RSS ≤24 GB ∧ pressure <2**；每车道仍
+  ≤1 lean；编排者脚本内置 3 槽信号量 `/tmp/lean_slot{1,2,3}.d`（取槽编译、退出释放）。
 - **swap 会动态伸缩**，不是只增不减：2026-11-09 实测从 **84.8 GB 回落到 25.5 GB**
   （无需重启），单次编译又会长回去 **+3.2 GB**。所以 **`swapused` 本身不是告警指标**；
   判据 = `kern.memorystatus_vm_pressure_level`（1 正常 / 2 警告 / 4 危急）+
@@ -78,10 +80,11 @@
   12 个 lean 并发；Graphs/Interval 的 native_decide **分片实测单进程峰值 12.6 GB**
   （`/usr/bin/time -l`，TopReplayHexShardS000）⇒ 12 路扇出 = 150 GB 需求 ≫ 36 GB 物理
   ⇒ swap 爆炸 ⇒ 驱动连环崩 ⇒ kernel panic（panic 表象 bcmwlan，实为内存枯竭）。
-  ② **编排者编译批 = 1（2026-11-13 用户裁定：保持 1 个 lean 进程，慢就慢点，
-  单进程也就几个 GB）；车道并行每车道 ≤1 lean**；批/次间过**编排者护栏**：
-  `lean 进程数 ≤2` ∧ `lean 总 RSS ≤20 GB` ∧ `pressure <2`
-  （护栏脚本 `~/c17_backup/orch_guard.sh`，编译前 source 之）；
+  ② **编译并发 = 3（2026-11-19 用户裁定放宽，替代 2026-11-13 的批=1；车道并行
+  每车道仍 ≤1 lean）**；编译前过**编排者护栏**：
+  `lean 进程数 ≤3` ∧ `lean 总 RSS ≤24 GB` ∧ `pressure <2`
+  （护栏脚本 `~/c17_backup/orch_guard.sh`，编译前 source 之；3 槽信号量取槽、
+  孤儿 PPID=1 自杀检查不变）；
   ②b **shard 类（Graphs/Interval native_decide）禁用 `lake build`**——单目标也会
   12 路扇出（2026-11-13 实测 pressure 4）；必须直编
   `lake env lean -o .lake/build/lib/lean/<Mod>.olean <Src>.lean`（严格 1 进程，
@@ -151,203 +154,73 @@
   并把勘误写进交付。
 - 不确定就标 UNRESOLVED。编造比空手更糟。
 
-### 7.1 高频机械雷区（2026-11-09 汇编，每条都实际烧过轮次）
+### 7.1 高频机械雷区（现行 20 条；全文、历史与降级条目见 `docs/pitfall-register.md`）
 
-1. **注释正文里禁出现字面「减斜杠」`-/`**（哪怕在引号内）——lexer 照样提前闭合注释，
-   后续 `import` 全变垃圾。同车道 6 次、跨车道多次。注释框统一用 `└──…` 收尾。
-2. **`def` 展开导致 `rfl`/`show` 失败时，先 `#check` 该 def 的自动生成方程引理**
-   （`foo.eq_1/eq_2/eq_3`）——RHS 常是 Prop-ite 而非 `bif/cond`，按 `cond` 写必错。
-3. `Nat.iterate` **右嵌套**、`List.append` **左结合（`infixl`）**：pow/拼接目标的构造树必须按此摆。
-4. `List.append_eq_nil` 不存在；`List.getElem_append_right` 的 `h₂` 须具名传参。
-   **`List.Disjoint`（Batteries `Data/List/Basic.lean:544`，随 Kepler 模块 transitively import）
-   的真实形状是 `∀ ⦃a⦄, a ∈ l₁ → a ∈ l₂ → False`**（元素隐式、单成员、结论 `False`），
-   收口用 `(hdisp hx1 hx2).elim`——**不是** `∀ a∈l₁, ∀ b∈l₂, a≠b`（旧措辞错）；
-   而 `List.nodup_append` 的第三分量才是裸两变量 `∀ a, a∈l₁ → ∀ b, b∈l₂ → a≠b`。
-   两者逻辑等价但形状不同，互转各需一个 lambda。
-   **`#check foo` 报 unknown identifier 时先怀疑 import 面（探针有没有 import 到定义它的模块），
-   再怀疑存在性**——2026-11-10 有车道因 bare-prelude 探针误判"`List.Disjoint` 不存在"。
-5. 批量替换注释前先跑 **comment-depth 核查**（`/-` 与 `-/` 计数），否则层次归零。
-6. **`rw` 只重写首个匹配，`simp only [if_pos/if_neg h]` 重写全部匹配 if**——
-   LHS/RHS 各带同条件 `if` 时，`rw [if_pos]` 只改一边，会伪造"类型不匹配"假象
-   （j3def 连续 8 轮踩坑，一替换即全绿）。另：`exact f a _ (by tactic)` 里
-   元变量与 tactic 实参求值次序有坑，显式给实参。
-7. **grep 命中 ≠ 声明**：树里同名符号可能只出现在注释/排期注记里
-   （2026-11-09 实测：`indexf_rotn_alt`/`indexl_map_uniq`/`ifbetwn_indexf`/
-   `flatten_indexf`/`indexf_map_uniq`/`transform_assumption_v2` 全树仅注释命中）。
-   判"已落"必须 `#check` 或 `grep -E '^(theorem|lemma|def|noncomputable def) <name>'`。
-8. **本树无 Mathlib tactic**：`tauto` 不可用（unknown tactic）⇒ 命题收口用 core 的
-   `grind`（j3def T9 五处一次通过，产物仍标准三）。`simp only [...]` 的 unusedSimpArgs
-   linter 警告不影响 RC，但替换表里不要写已被 simp 消掉的项。
-9. **`LEAN_PATH` 解析 = 首个含 `Kepler/` 顶层目录的 entry 独占**（Lean 4.32 实测）：
-   引用 `/tmp` 侧 olean 时，该 entry 必须自身含完整 `Kepler/` 树（symlink farm 镜像
-   主仓 `.lake/build/lib/lean/Kepler` + 本车道新 olean），否则解析停在该 entry 报
-   “object file … does not exist”。探针最简法：把 olean 装进 `.lake` 再跑（见 §4 岛协议）。
-10. **`rw [← h]` 在 `getElem` 上 motive 不 type correct**（依赖索引）：改私有
-   `getElem_eq_of_eq`（证明无关，`rfl` 级）+ `rw` 该等式，不要硬 `rw` 原式。
-11. **`Perm` 的 `~` 是 scoped notation**：裸文件里写 `~p` 报 unexpected token，
-   一律写 `List.Perm xs xs'`；`List.getD_eq_getElem` 的界证明参数名是 **`hn`**（非 `h`）。
-   `Perm` 归纳的 cons 真支两侧退化为 `news ++ tail` 时 IH 不适用，用 `p.mem_iff`。
-12. **`(ite c a b).2` 不 defeq `ite c a.2 b.2`**（`c : Bool` 变量表达式时 Decidable
-   不归约）⇒ 别用 `change` 把 `.2/.2.1` 推进 ite 分支；先 `rw [show β = ite形 from rfl]`
-   展开本体，再 `by_cases` + `if_pos/if_neg`。
-13. **`open Foo (fList eList …)` 里写错一个名字会让整条 open 失效**，且只报该名字一处，
-   随后满屏 unknown identifier（`Dart`/`parts`/`core`）⇒ 先核 `#check` 该名字的真实命名空间
-   （`fList`/`eList` 在 `Kepler.Assembly`，不在 `Kepler.Text.Reduction5`）。另：
-   `getLast!` 按前缀构造子递归（`(l++[a]).getLast! = a` 走 `getLastD_concat`；
-   `l.reverse.getLast! = l.head!` 需对 `l.reverse` 用再 `reverse_reverse`）。
-14. **有未解目标的声明仍会以 `sorryAx` 进入环境**（不只在 `error` 时）：文件里一处
-   `error` 可能让另一处未收口的声明静默带债 ⇒ 验收必须 **"`error` 计数 0" 与 axioms 双检**，
-   只跑 `#print axioms` 或只看 RC 都会漏。**新变体（2026-11-10，wsewpch wave1 实测）**：
-   private helper 里的 `error`（如 `Finset.sum_nbij` 方向写反）会让 Lean 为失败声明**合成
-   sorry 占位**并污染下游定理的 axioms 面 —— 见到"意外 `sorryAx`"先查**同文件 `error`**，
-   再怀疑证明本身。
-15. **`Set.ncard_eq_toFinset_card` 的 autoParam 会静默插 `sorryAx`**（Finiteness 解不出时）：
-   必须显式给证人（`Fintype`/`Finite` 项），否则审计线被污染而编译仍 RC=0。
-17. ~~**`TameSpine.markedListMarked` 带 `sorryAx`**（根 = `TameList16.lean:1109` 的显式
-   `sorry`，经 `markedListIsNodeNondegenerate`；连带 `hqymrtx1List` 也脏）。~~
-   **ERRATA（2026-11-10 编排者实测，作废本条）**：`TameList16:1109` 已于 `967ebbb5` 真证；
-   现 `#print axioms Kepler.Text.TameSpine.markedListMarked` 与 `markedListIsNodeNondegenerate`
-   均 = **`[propext, Classical.choice, Quot.sound]`**（零 `sorryAx`）。⇒ **`IsMarked` 路线已可安全消费**，
-   此前按本条绕行的件（`Split1G:17-19` 旧注、`ChainMarkedQ` 部分条件槽、AQ8 W1a 等）可择机简化。
-   历史事实保留：该债未清前，走它的件会把在案债注进自己 axioms（aqfin r4 实测 0 error 但探针出 sorryAx）。
-16. **陈述里写 `let (a,b,c) = f x` 模式绑定，会在最终 defeq 检验时打爆 heartbeats**
-   （实测 8M 仍爆，单件编译从分钟级失控）⇒ 改「显式 `a b c` 参数 + 假设
-   `h : f x = (a,b,c)`」，前提/结论一字未改（下游传 `rfl` 实例化），编译降到 2 分钟级
-   （j3-t9c2 T9D 实测：`splitFace` 三元 let，115 s）。**注意**：这是陈述写法变更，
-   虽 defeq 等价也必须在该批 DIFFERS 里记档。
-18. **负探针报 unknown 有两个成因，别只查名字**：(i) 名字面改名（HOL 名 → Lean 公开名，
-   如 `aq1`/`aq10_*`/`findListSpineMemN`）；(ii) **导入闭包过窄**——探针没 import 到
-   定义/已落库的叶文件，件明明在树仍报 Unknown（2026-11-10 AQ12 W1b 实测：
-   `ProbeAQ12_neg.lean` 未 import `JcajyduAqLeaf8W0`，`memPartsImp`/`sndMemRtran1` 假阴性）。
-   ⇒ 负探针必须按**最新叶文件全集**建 import 闭包，再逐名做语义 grep/`#check` 复核。
-19. **`Coplanar` 有两个读法，不许混用**（2026-11-11 stepB W3b 实测）：
-   Mathlib `Coplanar ℝ`（秩 ≤ 2，点集张成空间维数）与 `Kepler.Geom.Coplanar`
-   （HOL 存在形，显式 `∃ a b c, … ∧ u = a•v + b•w + c•x`）**不是同一个谓词**，
-   互转需桥接件。`aff_ge_3_1_rep_cross_dot_p9`（LA9:2773 桩）用 Mathlib 读法，
-   而其消费者 `aff_gt_3_1_rep_cross_dot` 与 `properties_fully_surrounded` 用 Geom 读法。
-   ⇒ 写/消费仿射几何件时先 `#check` 目标谓词的读法，**同文件内统一一种**；
-   跨读法时显式加桥，不许把两者当同义。
-20. **e 步跨面陷阱：对 `r`/`N` 的全称「单面/同面」断言先做反例探针**（2026-11-10 AQ8
-   实测，**四个已证假**：`ChunkFace`、全 `r` 的 `hR`、`harcF`、`hsface`）。根因：
-   `NormalListSpine` 的 `loopListSpine` 只保证每步 `nextEl r x = fList L x ∨ nextEl r x =
-   fList L (eList x)`（TameList5:116），**e 步可跨到相邻面**；`fLastSpine` 只钉闭合步。
-   配 `nextRNotEqF`（Split1C:50）在 `y = lYSpine` 处必走 e 步 ⇒ `r` 同时含两个面的 dart。
-   ⇒ ① 面成员性只从 **f-弧**（`betwn (findFaceDarts L x) …`）或显式假设取（`betwnMem` +
-   `aq10_memFindFaceImpFacesEq`），不从 `normal_list` 反推；② 任何「`parts L r` 上单射 /
-   同 node ⇒ 同 part / 全 r 在面 x」类断言，先写 10 行反例探针再立件（AQ8 W3d/W3f/W3h/W3i
-   四个判定件因此省下数百行死路）；③ 已落条件形若前提被证假，**保留件不动**、另立收窄件
-   （`aq8w3i_fstHdInjPartsFaceArc` 是范例）。
-21. **shell 文本搜索一律 rg，严禁裸 `grep -rn` 扫仓**（2026-11-13 用户裁定，实测裸 grep
-   扫全仓 444 s——`.lake` 的 olean/二进制 + `reference/` 巨文件 + `_distfiles/` 全被逐字节啃）。
-   本机 rg 在 `~/.kimi-code/bin/rg`（v15），**默认遵守 .gitignore**（本仓 `.lake/`、
-   `*.olean` 已覆盖 ⇒ 自动跳过构建池）；确需兼容 grep 时必须 `-I`（跳二进制）+
-   `--exclude-dir={.lake,.git,reference,_distfiles}`。车道的 Grep/Read 工具不受影响，
-   但任何 shell 兜底检索都按本条执行；工单模板已同步改写。
-   **变体（2026-11-13 xrr1553-w1 实烧两次）**：`rg -rn "x"` 的 `-r` 是 **replace** 旗标
-   （会把命中文本全替换成 `n`，输出 mangled 且仍 RC=0）——`-n` 必须独立写
-   `rg -n "x"`，想叠加 replace 时想清楚 `-r<val>` 的 val 是什么。
-22. **subagent 中断潮三形态 + 僵尸锁正解（2026-11-13 当日 17 例实战定性，零成果丢失）**：
-   三形态——(a) turn 无终讯截断（wire 停在 `step.begin`、全程零 error 记录）；
-   (b) **假失败**：通知 failed/completed 但 agent **还活着继续干活**（tmxllipls-w1 实证：
-   「failed」后 14:06→14:40 连续产出含工具调用，继任车道 ps 侦察发现、核实其成果正确后主动退役）；
-   (c) resume 撞 "already running" —— 两因：实例真的还在跑（假失败型），或实例已死但注册表
-   未回收（截断型，ps 无进程仍撞锁）。
-   **根因（2026-11-13 实证修正）**：当日下午中断潮 = **账户 5 小时滚动配额（429）逼近/触顶
-   的症状**——续跑撞出硬错误 "You've reached your 5-hour usage limit"（官方 error-reference
-   原文）；配额见底前请求被静默丢流，表现为形态 (a)/(b)。非引擎过载、非机器问题。
-   办法（全链路已验证 18 例零成果丢失）：① fresh 接管**前必做 ps 预检**（`ps aux | grep <车道名>` + 工作区
-   文件 mtime 双查）——前辈活着就让它干完（留 `ORCHESTRATOR_NOTE.md` 进其快照目录通信，
-   不派继任）；② 工单硬纪律第一条 = **开场先把起点文件落盘 b/ 再干活**；③ 接管从快照
-   WIP 续，绝不从 HEAD 重来；④ 里程碑落盘制（每轮编译/每段收口覆盖写快照）是生死线；
-   ⑤ resume 撞锁等 90s 重试 ≤2 次即转 fresh，不三试。每次中断记 pq §8，
-   假失败变体曾修正既有彻查结论（续1037 → 续1038 ERRATA 式更新）。
-   **假失败处置协议（续1055 增补，案例：tmxllipls-w1 / penthex-w1/w2 均「failed」
-   后无头跑完全程交付）**：收到 failed/截断通知后——① ps 预检进程；② **查快照目录
-   有无 DELIVERY.md/patch（有 = 交付已发生，直接进闸流程落库，绝不派接管）**；
-   ③ 进程活着且快照无交付 → 不派接管，留 ORCHESTRATOR_NOTE 收束任务面，登记
-   「无头在飞」清单，下次 orchestrator 回合必复查其快照；④ 进程死且无交付才 fresh
-   接管。根因是 harness 通知通道丢包（agent 循环未死），本地只能以快照为准管理。
-   **巡检机制（续1064 增补，用户立；仅 Kimi Code harness 生效，勿套用到其他 agent 体系）**：
-   每 10 min 定时扫「无头在飞」清单的快照目录（DELIVERY/patch 新出现 = 已结束 → 闸+落库）+
-   ps 双检；真死无交付只报告不擅自接管。丢包规律：通知丢失高发于车道**发出编译的当口**
-   （n3cross-w1 四案均截断在「开始直编」句）。
+> 2026-11-19 用户裁定：本表最多维护 20 条。编号沿用历史号（外部大量引用
+> `§7.1-N`，不改号；各条括注吸收的 PR 号，映射表在登记册 §0）。新雷区先入
+> 登记册（全文+出处），两周内 ≥2 车道踩中或属禁造/锁/池级事故再晋升本表；
+> 本表满 20 条时最低频者降级回登记册。
 
-23. **交付泄漏（2026-11-13 pick 审计，用户令；jlxfdmj-w1 / vasw0-w1 / k4cprep-w3 三例）**：
-   ① 车道**晚交付**——jlxfdmj-w1 被通知 failed/零工件、编排者已发 fresh w2，1.5h 后它又产出
-   50KB patch + 完整 DELIVERY（假失败变体的延长版）；② **patch 未落快照**——vasw0-w1 的
-   `make_patches.sh` 从未执行，DELIVERY 里列的 patch 文件在快照里不存在，只有 `/tmp` 工作区还有；
-   ③ **交付≠picked**——k4cprep-w3 11:02 已交付 LA18 +135/−31（3 sorry），但编排者一直按
-   「K4c 挂起、WIP 在 rescue」记，直到全面审计才发现。⇒ 硬纪律：**工单必须要求 patch 文件
-   写进快照**；编排者每次接管/收工前按 mtime 扫最近目录，凡「有 DELIVERY/Evidence、无 LANDED
-   commit、无 pq 落库记录」立即 pick 或显式退役；被 fresh 取代的前代目录不删，回扫到其最后
-   mtime。审计方法：`git log --grep=<lane>` + `git apply --check` + pq 关键词三查。
-24. **harness 通知双向误报（假 completed / 假 failed）+ 判死唯一准则 = wire.jsonl 活性
-   （2026-11-13 夜 agent-52/agent-51 两例实证，仅 Kimi Code 生效）**：background agent 的
-   completed / failed 通知**都可能是假的**——agent-52（t4crux-w1）收 completed + TaskList 除名
-   + 102 B 截断式输出，实际仍存活（wire.jsonl 持续增长、`/tmp` 连续出新文件）；agent-51
-   （n2def-w1）收 failed「turn ended without a final message」，同刻 step 仍推进。**判死/判活
-   唯一准则 = 该车 agent wire.jsonl mtime 是否 1 分钟内仍在增长**（路径
-   `~/.kimi-code/sessions/wd_<repo>_<hash>/session_<id>/agents/<agentId>/wire.jsonl`，agentId
-   形如 agent-5x）；ps 只作辅证（agent 处于 Python/读稿/思考相位时常零匹配进程，假阴性高发）。
-   收线流程：任何通知（**含 completed**）→ 先 wire.jsonl 活性检查 → 活 = 登记「无头在飞」等下轮；
-   死 = 再跑 §7.1-22 四步。**绝不因 completed 通知就归档遗产/撤单/派接管**。与 §7.1-22 合并记：
-   通知通道双向不可靠，事实源只有 wire.jsonl + 快照目录。
-25. **「私有 def 实参序勘正」先过双重对表再动手**（2026-11-13 n2def-w1 闸面修正实证）：
-   车道把 `planar2F_p21`（私有 def）的 mkPlanar2 两个位置实参从 `(f1, v0)` 改成 `(v0, f1)`，
-   引 HOL CUXVZOZ.hl:1038「锚点在前」为据——但 :1038 是**第一版** deform_planar 的 f
-   （Lean 对应 `planarF_p21`，本来就对），被改的 def 属于**第二版**（HOL :1421/:1790 锚序
-   恰是 `(f1, v0)`，原序逐字忠实），唯一消费者是仍 sorry 的 `deform_planar_second_version_p21`
-   ⇒ 改动对工单零贡献、却会漂移该定理**陈述语义**（文本一字未变，§2 隐形改动），被编排者
-   剥除后落库（`3b863763`，判词见 lane 快照 ORCHESTRATOR_NOTE.md）。
-   ⇒ 对任何「def 写反了/实参序看反了」的勘正冲动：① 先查该 def 的直接消费者是谁
-   （目标件可能用的是孪生 def）；② HOL 同文件有多个版本定理时，锚序必须对上**对应的那个
-   版本**；③ 改动私 def = 改动所有消费者定理的语义，视同陈述改动，走 SF/DEF-FIX 级审慎。
-26. **`git apply` 前必查 patch 头（diff --git 的 a/b 双侧路径）**（2026-11-14 hexsym-w1
-   闸面事故实证）：车道若在 `/tmp` 工作区内 `git diff <repo文件> /tmp/<lane>/成品` 生成
-   patch，b 侧路径会是 `/tmp/...`——`git apply` 把它判为 **rename**（**apply --check 照样
-   PASS**），应用后 repo 目标文件被删、成品落到 `tmp/` 下。⇒ 硬纪律：apply 前 `head -5
-   patch.diff` 看 `diff --git` 行双侧都必须是 `a/lean/... b/lean/...`；b 侧异常时用
-   `sed 's| b/tmp/...| b/lean/...|'` 修正后再 apply；apply 后 `git status` 必查（出现
-   ` D <目标文件>` + 未跟踪 `tmp/` = 本事故签名），修复 = 还原目标文件 + 删 stray tmp/ +
-   修正 patch 重应用 + `cmp` 工作文件与车道成品逐字节比对。
-27. **长上下文 sub agent 退化 → 果断换 fresh session**（2026-11-17/18 ox3q1h 战役
-   用户指令 + 双向实证）：sub agent 多轮 resume 后会 micro-turn 化（每轮工具数骤降、
-   重报告轻推进、重试同一失败路线）——编排者接管也同退化。⇒ 处置 = 交接包
-   （WIP + 诊断 + 修法）落快照后**立即 spawn 新鲜 session**（编排者代管期间也适用）。
-   实证：远程八轮 BLOCKED → 交互式新鲜 7 轮全收口（ox3q1h S2a）。
-28. **`HasDerivAt` 链嵌套 add 的 HOF 贪心值拆分**（2026-11-18 ox3q1h S2a 试点实测，
-   接管 7 轮定性）：`refine HasDerivAt.add p₁ p₂` 的 unifier 把目标值贪心拆分
-   （如 `2*x1 + 2*x3 - 2*x5` 拆成 `2*x1 + (2*x3 - …)`）——与 piece 树分组不一致时
-   逐层 mismatch，嵌套修补打地鼠。⇒ 对策 = **hfun 分组括号重写**：
-   `have hfun : (fun t => poly) = fun t => (组₁) + (组₂) := by funext t; unfold D; ring`
-   然后 `rw [hfun]`——目标函数树即与 piece 树逐节点语法一致，piece 直接 exact。
-   `HasDerivAt.add` 的值拆分随函数树走，不再贪心。
-29. **Mathlib 实参序高频双坑（`#check` 先行铁律）**（2026-11-18 同文件连环实证）：
-   `HasDerivAt.const_mul (c) (hc)`——(c) 在前 (hc) 在后（`hu'.const_mul (4*x1)` 点记法
-   不踩坑，全限定名必踩）；`hasDerivAt_const (x) (c)`——(x) 在前 (c) 在后。
-   ⇒ 新引理首次使用时 `#check @Lemma.name` 打印签名后再写实参。
-30. **`Real.sq_sqrt` 是错引**：证 `(√a)² = a` 用 `pow_two` + `Real.mul_self_sqrt hx`；
-   `Real.sq_sqrt` 证的是 `√(a²) = a`（前提 a ≥ 0，方向不同）。同文件连环踩两次。
-31. **整值最外层必须括号**：`Term / (DEN) x1` 中 `(DEN) x1` 被吃成函数应用——
-   分母非原子时整值最外层必须括号（`… / (DEN x1)`）。
-32. **生成器整文件重生成 > 增量正则补丁**（2026-11-18 ChainBatch1 实测）：
-   量产文件批量修时，kn-wrap 正则截断供给行前缀 12 处（v50 的 22 错根因）——
-   生成器重生成一次清零（v3）。⇒ 量产文件出批量错时不做增量补丁，改参数重跑生成器。
-33. **编排者接管也退化 → 早停交回车道**（2026-11-18 编排者接管 S2a 收口 7 轮实证）：
-   编排者自己的字符串外科手术同样陷入打地鼠循环——接管 ≠ 万能，接管 3 轮未收
-   应立即停手，完整诊断落快照移交回车道（车道 fresh context 迭代更快）。
-34. **车道交付物落快照由车道自查入轮末例行**（2026-11-18 ox3q1h 连续 5 次
-   车道快照缺 lean/ 镜像）：sync_lean.sh 固化到轮末例行后连续全绿；编排者代抄
-   5 次后正式移交给车道自管。
-35. **tactic 块行首 `-` 会被解析为 case bullet**（2026-11-18 S2a 实测）：
-   多行项内的续行以 `-` 开头时（如 `- (4 * x1 * …)`），Lean 将其解析为
-   case-bullet → 后续全乱。⇒ 多行项续行的 `-` 挪到上一行行尾（`… -\n    (…)`）。
-36. **symlink farm 先建真实目录骨架，再逐级填链接**（2026-11-19 `lp-packed-single-leaf-w2`
-   实事故：父目录穿透后批量 `ln -sfn`，主仓大量 LP 构建产物被替换为自指链接）。
-   任何 `ln -sfn` 前必须对**目标父路径每一级**确认 `test -d && ! -L` 并用 `readlink -f`
-   核到预期 farm 根；`Kepler` 根仍是 symlink 时严禁写其子层，先干跑打印。发现误写
-   立即停手、清点、保全快照并报告；构建池恢复另批，不擅自全量重建。精确事故范围
-   只以 `docs/priority-queue.md` 文件头为准。
+1. **注释 lexer**：正文禁字面「减斜杠」`-/`（引号内也算）——lexer 提前闭合注释，
+   后续 import 全变垃圾；批量改注释前先跑 comment-depth（`/-` 与 `-/` 计数）核查。（PR-1/5）
+2. **库形状**：`Nat.iterate` 右嵌套、`List.append` 左结合；`List.Disjoint` 真实形状
+   `∀ ⦃a⦄, a ∈ l₁ → a ∈ l₂ → False`（收口 `(hdisp hx1 hx2).elim`），与
+   `nodup_append` 裸双变量第三分量互转各需一个 lambda；`Perm` 裸文件写全名
+   `List.Perm`；`List.append_eq_nil` 不存在；`getElem_append_right` 的 `h₂` 具名
+   传参；`getLast!` 按前缀构造子递归。（PR-3/4/11/13 尾）
+3. **改写次序**：`rw` 只重写首个匹配、`simp only [if_pos/if_neg h]` 重写全部——
+   LHS/RHS 同条件 if 只改一边会伪造类型不匹配假象；`(ite c a b).2` 不 defeq——先
+   `rw [show β = ite形 from rfl]` 再 `by_cases`；`rw [← h]` 在 `getElem` 上
+   motive 不 type correct——改私有 `getElem_eq_of_eq`。（PR-6/12/10）
+4. **签名/展开先查再写**：def 展开先 `#check foo.eq_N`（RHS 常是 Prop-ite）；
+   新引理首次用前 `#check @Lemma.name`（`HasDerivAt.const_mul` c 在前、
+   `hasDerivAt_const` x 在前）；`Real.sq_sqrt` 证 `√(a²)=a`、`(√a)²=a` 用
+   `Real.mul_self_sqrt`；分母非原子时整值最外层必须括号；`HasDerivAt.add` 贪心
+   拆分与分组不符时先 `have hfun : (fun t => poly) = fun t => (组₁)+(组₂)` 再
+   `rw [hfun]`。（PR-2/29/30/31/28）
+5. **本树无 Mathlib tactic**：`tauto` 不可用 ⇒ 命题收口用 core `grind`；
+   unusedSimpArgs 警告不影响 RC。（PR-8）
+6. **`#check` 报 unknown 先怀疑 import 面**：负探针必须按最新叶文件全集建
+   import 闭包再逐名复核（unknown 两成因：改名 vs 闭包过窄）。（PR-4 尾/18）
+7. **grep 命中 ≠ 声明**：判「已落」必须 `rg -E '^(theorem|lemma|def|noncomputable def) <name>'` 或 `#check`。（PR-7）
+8. **`open Foo (…)` 写错一个名字整条失效**且只报该名一处：先 `#check` 真实命名空间。（PR-13）
+9. **验收双检**：`error` 计数 0 与 `#print axioms` 缺一不可——未解目标静默带
+   `sorryAx`、helper 的 error 污染下游；`Set.ncard_eq_toFinset_card` 的 autoParam
+   静默插 `sorryAx`，必须显式给证人。（PR-14/15）
+10. **陈述禁 `let (a,b,c) = f x` 模式绑定**（defeq 检验打爆 heartbeats）：改显式参数
+    + `h : f x = (a,b,c)`；任何陈述写法变更（含 defeq 等价）记 DIFFERS。（PR-16）
+11. **数学断言先写反例探针**：全称「单面/同面」类（e 步可跨面——`loopListSpine`
+    的 e 步会跨到相邻面，此类断言四个已证假）；`Coplanar` 两读法（Mathlib 秩 ≤2
+    vs Geom 存在形）不许混用，跨读法显式加桥。（PR-20/19）
+12. **shell 检索一律 `~/.kimi-code/bin/rg`，禁裸 grep 扫仓**（实测 444 s）；裸 grep
+    必须 `-I` + `--exclude-dir={.lake,.git,reference,_distfiles}`；`rg -r` 是
+    replace 旗标，`-n` 独立写。（PR-21）
+13. **状态以事实源为准**：通知（completed/failed 双向）都可能是假的——判活唯一
+    准则 = agent wire.jsonl mtime 1 分钟内增长（仅 Kimi harness），通用三查 =
+    进程 + 快照 mtime + 交付目录；「有 DELIVERY 无 LANDED commit」按 mtime 收账；
+    车道交付物落快照入轮末例行（sync_lean.sh）。（PR-22/24/23/34）
+14. **私有 def 实参序/形态「勘正」先双重对表**（直接消费者 + 对应 HOL 版本锚序）；
+    改 def = 改所有消费者语义，视同陈述改动走 SF/DEF-FIX。（PR-25）
+15. **patch 头双侧必须 `a/lean/... b/lean/...`**：b 侧 `/tmp/...` 会被判 rename
+    （apply --check 照样 PASS）；apply 后 `git status` 必查（`D 目标` + 未跟踪
+    `tmp/` = 事故签名）。（PR-26）
+16. **长上下文退化 → 交接包落快照换 fresh session**（车道多轮 resume 与编排者
+    接管同罪）；接管 3 轮未收即停手交回。（PR-27/33）
+17. **量产文件批量错 → 改参数重跑生成器整文件重生成**，不做增量正则补丁
+    （正则会截断供给行前缀）。（PR-32）
+18. **tactic 块行首 `-` 是 case bullet**：多行项续行以 `-` 开头全乱——挪上一行行尾。（PR-35）
+19. **池纪律**：建 island 池一律**复制式**（cp/rsync），禁 `ln -sfn`（2026-11-19
+    实事故：farm 穿透把主仓 LP 池 193 个 olean 换成自指死链）；主仓 `.lake` 对
+    车道只读；写前 `test -L`、开池后 `find <池> -type l | wc -l` 须为 0；
+    LEAN_PATH 首个含 `Kepler/` 顶层目录的 entry 独占解析——引用 /tmp olean 时
+    该 entry 须含完整 Kepler/ 树（最简法：新 olean 装进 `.lake`）。（PR-36/9）
+20. **锁纪律**：编译脚本**禁 `exec` 起 lean**（exec 替换进程镜像、EXIT trap 不存活
+    ⇒ 全局锁泄漏楔死全场，2026-11-19 实事故）；发现无主锁先取证（pgrep lean
+    为空 + 无日志增长 + 无存活持锁脚本）再 rmdir，有效 PID 持锁绝不动。（PR-37）
+
+> 已降级/历史条目全文见登记册：PR-17（TameSpine，已 ERRATA 作废）、PR-38–42
+> （handoff-2026-11-18 §6 五条）+ 车道级雷区散件索引（hex51-w2 §5 六则、
+> pent4-w1 §4 八则、la3/PA22g handoff、W5 mono 侦察）。
 
 ## 8. 遇难数学，先看原版（2026-11-09 用户裁定）
 

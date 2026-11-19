@@ -878,3 +878,96 @@
 8. **不再重复**：rad2 望远镜、CertTM2/Gate-0、IXPOTPA 旧 0.59 CPU·h、
    超越函数“整盒有理界 + 单分数组合”、FHBa/v2a 的 96 角点表、FHB floor 三轴一阶单调、
    cell3 wt2A 的 y5 全盒单调。
+
+---
+
+## 9. 逐债执行计划登记（2026-11-19 新设：启动即照做）
+
+> **规则（2026-11-19 用户裁定）**：每债一卡，记「当前最优路线 + 依赖资产 + 启动即
+> 执行的工单模板 + 预算/止损」。真启动时照卡派单，不再重侦察。状态枚举：
+> `可启动`（依赖齐备等点头）/ `有界试点建议`（先试再量产）/ `待侦察` / `等解冻` /
+> `UNRESOLVED`。数字以本文件 §1.x 判词 + `DEBTS.tsv` 为唯一出处，本节只做执行索引。
+
+### 9.1 有完整执行包（启动即可做）
+
+**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：等批；用户 2026-11-19 明示先不启动）**
+- 依赖（已全部落库）：`NliBanks19`（`431fb92a`，`bank_QZECFICwt2A_of_core` 归约）；
+  `NliBanks20`（机器层 + 通用 `w2a_cell` + 代表 cell00 范式 `cell00_core`/
+  `bank_wt2A_of_cell00`，1,576 行，探针 10/10 标准三）。
+- 启动做法：① 生成器 ~300 行 python（模板 = cell00 的 214 行/cell 结构，
+  数据 = 快照 `cells_raw.json` 53 实 cell；书写规范遵守 PR-43 linarith 原子化）；
+  ② 按 y6 层拆 6 文件量产 52 cell；③ Assembly 接线：逐 cell 按
+  `bank_wt2A_of_cell00` 范式组装 → 消费 `bank_QZECFICwt2A_of_core`；
+  ④ 验收 = 亲跑 `#print axioms nliCell3QZECFICwt2A` 恰标准三。
+- 预算：生成 1–2 车道日 + 编译 9–26 min（并发 ≤3 放宽后 ~5–10 min）+ 装配半天。
+- 止损：单 cell 编译 >60 s 或 cell margin <1e-4 时复查 cells_raw.json。
+
+**ZTG 解耦 4（`1_1_0_0`/`0_1_1_0`/`0_1_0_1`/`0_0_1_1`）—— Bernstein 路线（状态：有界试点建议）**
+- 依赖（已落库）：dihY 半边 `decbc61c` + Kit A `f47d472f`；`ztg_of_main`/
+  `_rad2_refuted`/`_main_forced`（`1b401275`）；peel 表示范式 `BernsteinLeaf0011`
+  （`9a4a9dc6`，81 系数叶 14.9 s 标准三）；witness 数据（快照
+  bernstein-representative-w1：q=64/25 三债各 1,215 系数 / q=36/25 一债 81）。
+- 启动做法（三步，①②为有界试点 ~1 车道日）：① **剪枝胶水两条**——x1 方向
+  729 个一阶差分常数 + x4 方向 162 个（引擎侧同号证据 972+162），Lean 化 =
+  Gamma4Deriv 一阶闭式 + deriv⇒monotone 模板 ⇒ 剪枝面形假设
+  （`hx1 : x1 = 3793/625`、`hx4 : x4 = 4`）；② q=64/25 三债 1,215 系数根叶 peel
+  定标——**先 1 叶**测 wall/RSS/olen（预算 ≤5 min/≤10 GB；不过线则转研究扩展
+  剪枝降系数）；③ bank 接线消费 `ztg_of_main`。⇒ **SORRIED −4**。
+- 备选路线（②定标不过时）：角点表 `G4CORNER_PLAN.md`（1.2–2.4 万行/4–7 车道日）。
+- 量产（③及三债全叶）等用户批；①② 建议先行。
+
+**`nliTskIYOUOBFsharpv2` —— hybrid 纯 MATH（状态：可启动；最便宜独立 −1）**
+- 依赖：余量已测（hmono 四轴 min ∂ +0.13110；h2d 三件套 edge 线性下桥
+  1.358e-5 / strip ∂y4 ≥ +0.15 / 上方 2D 小证书 1.76e-3）；模板 `Gamma4Feed`/
+  `Gamma4VolY` 在库；2D 小证书走 Rule P（bounded opt-in 已生效）。
+- 启动做法：NliBanks 同型新文件 1–1.5k 行 + Assembly 1 import + 1 body。
+- 预算：3–5 车道日；止损：2 轮结构卡死交班。
+
+### 9.2 可启动但依赖未齐 / 等前置
+
+**FHBa（`nliRestFHBVYXZa`）—— 地板凹性 + g3pos 内部（状态：可启动，两车道）**
+- 依赖已落库：`FhbEtaCurve`（`8848b526`）/ `FhbFloorMono`（`032857d0` 归约）/
+  `Gamma4DerivSecond`+`Gamma4ConcaveBridge`（`b9134d34`）/ `FhbG3posCurve`+
+  `FhbG3posEndpoint`（`20ee1cd5` 端点真证）。
+- 剩余：m3/m4/m5 的 H1 纤维凹性证书（一阶单调已数值证伪，唯一活路 = 对角二阶
+  atan-free 闭式 + `concaveOn_of_hasDerivAt2_nonpos`）+ H2 端点比较 + g3pos 内部
+  （N3D、7 边界片、1-D 尾部单调，Phase 2 估 800–1500 行）。
+- 预算：H1 车道 2–4 天；g3pos 3–5 天；**两处都成才 −1**。
+
+**FHBv2a** —— FHBa 真闭合后再启（minimax +2.124e-3，余量更紧）。
+
+**`nliCell3QZECFICwt1` —— 待侦察**：先显式化 wt1 核（同 NliBanks19 范式）再
+y4 一维证书；注意 y5 单调旧测量已证伪，符号断言一律区间/精确证书。
+
+**`nliOx3q1h` —— S2a→S2b→S5（状态：S2a/S2b 分别等批）**
+- 依赖已落库：S1 Lin46 / S2 kit / S3 链 184 / S4 gates 230 / S4.5 splits /
+  S2b Batch1 / SF 111（`b11c1627`）。
+- 启动做法照 handoff §3.2：S2a margin″ 装配（20–80 lean-h）→ S2b 其余批
+  （48 盒剩余角点 ~67 万行生成，或届时重估 Bernstein 化）→ S5 接线 230 分量 +
+  Assembly 替换 → −1。
+
+**TerminalV11 3 MATH（num1 ×2 + 645 slab）—— 可启动但不减 SORRIED（合取债）**
+- multiaffine + 单变量凹 ⇒ 64 顶点枚举即完整证明；余量精确有理
+  （+52.512319 / +11.734635 / −0.46104538）；1 天级；价值 = 合取去 3 支。
+
+### 9.3 等解冻 / 等裁决
+
+**hLP + `nliLpIneqs` + `nliKcblrqcIneqDef`**：bound 叶 42,889 条；**packed b2
+格式已验证**（单叶 olean 395,784 B ≈ 49×、wall 1.06×、六输出逐字节一致）⇒ 全量
+磁盘 0.83 TB → **~17 GB**、内核时约降 50×；量产 = 农场窗口或本地长跑，等 ④/⑤
+裁决；`Kcblrqc` #2 无 LP 依赖可先单独收。
+**sqrt8**：certtm 区间细分（等 ③ 解冻）或 S·a 联合乘积新数学（零 Lean 侦察
+1 车道日可先做）。
+**IXPOTPA**：三选项等裁决（周级战役+并行豁免 / certtm mixed-tm / HOL 数学分解移植）。
+**WKGUESBsym**：分段侦察（零 Lean 1 车道日）→ 归 F2b 或解析路线。
+**ZTG joint 6**：N5 侦察先行（零 Lean）→ joint 联合曲线 or F5 条件批。
+
+### 9.4 农场类（等 ①② 解冻；数据预算以 `FARM_PLAN.md`/`DEBTS.tsv` 为准）
+
+QITNPEA 家族 10 + `BIXPCGW9455898160`；GLFVCVK4 5 + `FHBVYXZb` + `iyousym` +
+`ribcyxusym`；audit 4（两支改写 + 引擎叶）；TerminalV11 85 支。
+**重估注（2026-11-19）**：peel 表示 GO 后，「多项式可代数化」子集的叶成本按新
+范式重估（多项式义务优先试 Bernstein 叶，再回 bb_arb）；heavy-√/atan 债
+（BIX 类 c_sqrt=3112）维持农场口径。
+
+> 维护：相关车道收线/落库后更新对应卡；新判词以 §1.x 为准，本节只同步状态行。
