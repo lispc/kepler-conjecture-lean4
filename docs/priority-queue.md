@@ -63,7 +63,7 @@
 
 ## 1. 在飞
 
-**当前授权在飞 3 条（`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1` / `cell3-wt1-build-w1`）；`nli-plan-cards-w1` 与 `cell3-wt1-scout-w1` 均已收线入档。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复三链并行中**（编排者后台计算，非车道：A/B 主力死链 + C 补漏被删件；真受损面修正 = 193 死链 + 9 被删文件，~930 个 Pilot/RandShard 碎片源经核实从未入池、排除）；链尾自动接 e2e 树可视化重建。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 6 条（`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1`(内核波已恢复) / `cell3-wt1-build-w1` + 三条零 Lean 侦察 `cell3-wt0-scout-w1` / `cell3-sqrt8-reeval-w1` / `cell3-sqrt8-sa-math-w1`）；`nli-plan-cards-w1` 与 `cell3-wt1-scout-w1` 均已收线入档。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复三链并行中**（编排者后台计算，非车道：A/B 主力死链 + C 补漏被删件；真受损面修正 = 193 死链 + 9 被删文件，~930 个 Pilot/RandShard 碎片源经核实从未入池、排除）；链尾自动接 e2e 树可视化重建。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；所有 Lean 编译统一经 `/tmp/lean_global_lock.d` 原子锁串行，锁内执行压力/RSS 护栏。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
@@ -71,6 +71,9 @@
 | `ztg-bernstein-pilot-w1` | 编排者会话后台 agent，running（用户批「可以启动」） | ①剪枝胶水两条 Lean 化（x1 方向 729 / x4 方向 162 差分常数，deriv⇒monotone，消费 Gamma4Deriv 闭式）——接通 BernsteinLeaf0011 剪枝面叶到**原始盒**义务；② q=64/25 三债 1,215 系数**首张根叶定标**（预算 ≤5 min / ≤10 GB）；只做一张不量产；~1 天止损，量产等批 |
 | `iyou-sharpv2-slots-w1` | 编排者会话后台 agent，running（用户批「启动」） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:946）目标 **SORRIED −1**：四轴单调降维（min ∂ +0.13110）+ 2 维三块（edge 线性桥 +1.358e-5 最紧主风险 / strip ∂y4 ≥ +0.15 / 上方 30–80 叶小证书走已生效 Rule P）；产出 Text 新文件 ~2.5–4.7k 行 + Assembly 1 import 1 body；3–5 天，结构点 2 轮卡死即交班 |
 | `cell3-wt1-build-w1` | 编排者会话后台 agent，running（用户批「Wt1 启动吧」） | 照 §9.2 执行卡 v2 施工路线 A「折点+单调面」：NliBanks21 显式核+归约 → 两导数引理（精确/区间收口，[sampled] 证据不许直接当证书）→ 底面 1D 两段 → 折点单点有理证书（余量 1.4e-6）→ K2 上界小件 → Assembly 接线；目标 **SORRIED −1**；3–5 天；导数引理 3 轮卡死转路线 B 无导数 cell |
+| `cell3-wt0-scout-w1` | 编排者会话后台 agent，running（用户批「三个侦查都做」） | **零 Lean**：wt0 手工视角重审（11-17 判词早于手工机器落库）——核显式化 + 三轴变号结构精确重测 + log/matan 手工界余量判定 + wt1/wt2A 范式适配判定；产出 §9.3 卡升级（可启动/维持 BLOCKED 附定量）；结果直接供③解冻立项论证 |
+| `cell3-sqrt8-reeval-w1` | 编排者会话后台 agent，running（用户批「三个侦查都做」） | **零 Lean**：「125–512 cell 不可写」判词的生成器范式重估——区间 B&B 实测真实叶数（不照抄旧估）+ wt2A 范式 footprint 账（N×214 行/编译时）+ 与③/S·a 两替代路对比；GO/仍不 competitive 带数字 |
+| `cell3-sqrt8-sa-math-w1` | 编排者会话后台 agent，running（用户批「三个侦查都做」） | **零 Lean**：S·a 联合乘积纯数学探索（不再分别粗界 S 与 a，对乘积整体找结构化界）——≥3 类候选 × 60 dps 全盒实测剩余损失 vs 余量 0.003745；存活者给 Lean 引理形状草案，全灭给定量清单 |
 | `cell3-wt1-scout-w1` | **已收线（见下）** | — |
 | `nli-plan-cards-w1` | **已收线（见下）** | — |
 
@@ -252,6 +255,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-19（15:01 实测，续1287）**：**三零-Lean 侦察齐发（用户批「三个侦查都做」）——wt0/sqrt8 两债的③解冻前置弹药收集。**
+  ① `cell3-wt0-scout-w1`：wt0 手工视角重审（11-17 BLOCKED 判词早于 `NliBanks20` 手工机器落库两天，未见过新武器）；GO 则 wt0 脱离③，NO-GO 则给出③立项的定量论据。
+  ② `cell3-sqrt8-reeval-w1`：「125–512 cell 不可写」是手写时代判词——wt2A 生成器范式（214 行/cell 机器生成）下重算真实叶数（区间 B&B 实测，不照抄旧估）与 footprint。
+  ③ `cell3-sqrt8-sa-math-w1`：S·a 联合乘积纯数学探索（粗界丢相关性 = 0.0293 损失根源；对乘积整体找界）。
+  **决策树入档**：三侦察全负 ⇒ ③解冻（wt0 log 规则 + sqrt8 区间细分 + IXPOTPA mixed-tm 三债打包）成为唯一活路、届时呈裁决；任一正面 ⇒ ③紧迫性降档。三侦察全部零编译不占槽；在飞现 6 条（3 施工/侦察重活 + 3 零 Lean）。SORRIED 51 / AXIOM 585 不变。下一条：续1288。
 
 - **2026-11-19（14:53 实测，续1286）**：**iyou 车道首程收线（结构性交付、未达 −1）+ 全场槽位饿死事故与处置。**
   ① `iyou-sharpv2-slots-w1` 首程：**全案源树完成**（60 文件/35,150 行，复刻层全验证：落库 XLLIPLS 叶 lb 20 位逐位一致、43/43 sqrt 证书 bit-exact、990 检查零失败）但**编译 0 分钟**——未获槽位，按 §7 纪律不作完成声明。**两条工单路线实测证伪**（烧内核前抓住）：hmono 全盒解析粗界合计 −0.27<0（真值 +0.131 只对真值成立）、底边线性下桥余量 1.8e-11；**替代路线已建好**：六导数 TM-hull 证书（atan-free）+ 角区塌缩到已证 `gamma4_at_sqrt8` + 复用 `TskXLLIPLSAtan1Expr`；合计 536 叶/内核估 3.5–4.5 h（XLLIPLS 先例的 8%）。§9.1 iyou 卡的路线数字待内核波收线后一并勘误。
