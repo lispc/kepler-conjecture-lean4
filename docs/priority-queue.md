@@ -63,13 +63,14 @@
 
 ## 1. 在飞
 
-**当前授权在飞 2 条（`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1`）；`nli-plan-cards-w1` 与 `cell3-wt1-scout-w1` 均已收线入档。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复三链并行中**（编排者后台计算，非车道：A/B 主力死链 + C 补漏被删件；真受损面修正 = 193 死链 + 9 被删文件，~930 个 Pilot/RandShard 碎片源经核实从未入池、排除）；链尾自动接 e2e 树可视化重建。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 3 条（`ztg-bernstein-pilot-w1` / `iyou-sharpv2-slots-w1` / `cell3-wt1-build-w1`）；`nli-plan-cards-w1` 与 `cell3-wt1-scout-w1` 均已收线入档。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复三链并行中**（编排者后台计算，非车道：A/B 主力死链 + C 补漏被删件；真受损面修正 = 193 死链 + 9 被删文件，~930 个 Pilot/RandShard 碎片源经核实从未入池、排除）；链尾自动接 e2e 树可视化重建。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；所有 Lean 编译统一经 `/tmp/lean_global_lock.d` 原子锁串行，锁内执行压力/RSS 护栏。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `ztg-bernstein-pilot-w1` | 编排者会话后台 agent，running（用户批「可以启动」） | ①剪枝胶水两条 Lean 化（x1 方向 729 / x4 方向 162 差分常数，deriv⇒monotone，消费 Gamma4Deriv 闭式）——接通 BernsteinLeaf0011 剪枝面叶到**原始盒**义务；② q=64/25 三债 1,215 系数**首张根叶定标**（预算 ≤5 min / ≤10 GB）；只做一张不量产；~1 天止损，量产等批 |
 | `iyou-sharpv2-slots-w1` | 编排者会话后台 agent，running（用户批「启动」） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:946）目标 **SORRIED −1**：四轴单调降维（min ∂ +0.13110）+ 2 维三块（edge 线性桥 +1.358e-5 最紧主风险 / strip ∂y4 ≥ +0.15 / 上方 30–80 叶小证书走已生效 Rule P）；产出 Text 新文件 ~2.5–4.7k 行 + Assembly 1 import 1 body；3–5 天，结构点 2 轮卡死即交班 |
+| `cell3-wt1-build-w1` | 编排者会话后台 agent，running（用户批「Wt1 启动吧」） | 照 §9.2 执行卡 v2 施工路线 A「折点+单调面」：NliBanks21 显式核+归约 → 两导数引理（精确/区间收口，[sampled] 证据不许直接当证书）→ 底面 1D 两段 → 折点单点有理证书（余量 1.4e-6）→ K2 上界小件 → Assembly 接线；目标 **SORRIED −1**；3–5 天；导数引理 3 轮卡死转路线 B 无导数 cell |
 | `cell3-wt1-scout-w1` | **已收线（见下）** | — |
 | `nli-plan-cards-w1` | **已收线（见下）** | — |
 
@@ -251,6 +252,10 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-19（14:50 实测，续1285）**：**`cell3-wt1-build-w1` 发车（用户批「Wt1 启动吧」）：照执行卡 v2 施工，目标 SORRIED −1。**
+  ① 路线 A「折点+单调面」~800–1500 行/3–5 车道日：NliBanks21 显式核+`bank_QZECFICwt1_of_core` 归约 → `∂w1aF/∂y5、∂y6 ≥ 0` 两引理（**侦察证据 [sampled]，施工必须精确/区间收口**）→ 底面 1D 两段 → 折点单点有理证书（4.50e-5 目标、余量 1.4e-6）→ K2 上界小件（nb20 勘误方向）→ Assembly 1 import 1 body。
+  ② ②引理 3 轮卡死转路线 B 无导数 cell（SE 槽必须 `nb20_matan_ge_taylor` 下界）。在飞现 3 条（ztg 试点 / iyou / wt1 施工）；**两条 −1 车道同时在飞（iyou + wt1），双双落地即 51→49**。SORRIED 51 / AXIOM 585 不变。下一条：续1286。
 
 - **2026-11-19（14:28 实测，续1284）**：**`cell3-wt1-scout-w1` 收线（~1 h，远低于 1 天预算）：wt1 路线成立（区间级），§9.2 执行卡升级为「可启动」。**
   ① 关键数字：全域 D 正性 iv B&B 全证（零未决叶、不依赖采样）；y5/y6 单调 min ∂ **+0.0030472209238**（60 dps 多档一致；求值器以 12 位复现 wt2A 反例作标定）；极小 **+4.5143350968e-5** @ h0cut 折点 (2.52,2,2)（census 数值对、位置错）；折点单点全有理（δ=8184078/390625，证书余量 1.4e-6）。
