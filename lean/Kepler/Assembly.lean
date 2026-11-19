@@ -34,6 +34,7 @@ import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto22PackIneqA  -- nliPackIneqDefA 接线（packIneqAWAZLDCD）
+import Kepler.Text.NliSqrt8  -- nliCell3QZECFICwt0sqrt8 真证（cell3-sqrt8-build-w1）
 import Kepler.Text.NliQitnpea  -- nliRestQITNPEA4003532128a 纯代数真证（qitnpea-w1）
 import Kepler.Text.PackingAuto25
 import Kepler.NliBanks
@@ -414,9 +415,12 @@ theorem nliCell3QZECFICwt0corner : bank_QZECFICwt0corner :=
 
 /-- 1a 3/7：HOL ineq entry `QZECFIC wt0 sqrt8`（ineq.hl:1406；PA21
 `bank_QZECFICwt0sqrt8`，盒 [1,1]³×[2hplus,√8]×[2,2hmin]²，析取第二支
-`eta_y y4 y5 y6 ^ 2 > 2`）。资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliCell3QZECFICwt0sqrt8 : bank_QZECFICwt0sqrt8 := sorry
+`eta_y y4 y5 y6 ^ 2 > 2`）。资产状态：真证（cell3-sqrt8-build-w1，2026-11-19）：
+右支 = δ<0 ⇒ eta²>2（NliBanks18 §12 复证）；左支 = `NliSqrt8.s8_bank` 的
+26-cell antitone-角点证书电池（perSlot+prodMin，`w2a_cell` 孪生；全盒精确
+有理 margin 最小 +2.6398e-4）。 -/
+theorem nliCell3QZECFICwt0sqrt8 : bank_QZECFICwt0sqrt8 :=
+  Kepler.Text.NliSqrt8.s8_bank
 
 /-- 1a 4/7：HOL ineq entry `QZECFIC wt1`（ineq.hl:1425；PA21
 `bank_QZECFICwt1`，盒 [√2,√2]³×[2hmin,2hplus]×[2,2hmin]²，`h0cut y4`
