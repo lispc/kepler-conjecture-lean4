@@ -16,21 +16,24 @@
 > 全文日志已移至 [`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)。
 > 本文件只保留当前基线、真实在飞、可执行队列、待裁决和最近日志。
 
-**当前实测 = 基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证）**：
+**当前实测 = 基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证）；sqrt8 闭后仓面 SORRIED 50（`8c7dfc34`，2026-11-20）**：
 
-- cone `K_REACH 2,108,657` / **SORRIED 51** / **`K_AXIOM 585`**；
+- cone `K_REACH 2,108,657`（基线实测；P0/P1/P2 置换的锥缩记账随池复跑仪器，见 §8 续1310/1312）/ **SORRIED 50** / **`K_AXIOM 585`**；
   MODULES 12,140 / UNIVERSE 2,140,793 / COVERAGE 98.4989%；
-  口径 II 39,125 / 51 / 585 / 49,868。
-- **SORRIED 51 = Assembly 51（50 `nli*` + 1 hLP）+ Text 0**。
-  50 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + 4 `nliCell3*` + 4 直挂
+  口径 II 39,125 / 51 / 585 / 49,868（仪器口径池后复跑）。
+- **SORRIED 50（sqrt8 真证落库 `8c7dfc34`，2026-11-20 实测仓面计数；仪器复跑池后）
+  = Assembly 50（49 `nli*` + 1 hLP）+ Text 0**。
+  49 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + **3 `nliCell3*`**（sqrt8 `nliCell3QZECFICwt0sqrt8` 已闭）+ 4 直挂
   （`nliKcblrqcIneqDef` / `nliLpIneqs` / `nliMainNonlinearTerminalV11` / `nliOx3q1h`）。
 - 根面 **589 = 585 native + 标准三 + `sorryAx`**；基座 585 未动。
 - **运行态事故（2026-11-19，`lp-packed-single-leaf-w2`）**：主仓
   `lean/.lake/build/lib/lean/Kepler/LP/` 有 **969 个自指符号链接**（193 `.olean`、194 `.ilean`、
   194 `.trace`、388 `.hash`），由 farm 父目录穿透后 `ln -sfn` 误替换；`W6Align/` 幸存。
-  **1,150 个 tracked LP 源文件无损、主仓 tracked 无改动**；但根面/Assembly/Final 验收在
-  LP 池恢复前不可复跑。上述基线仍是最后实测，不表示当前构建池可用。修复须另批，
-  禁止擅自 `lake build` 全量重建。事故报告在车道快照 `INCIDENT.md`。
+  **1,150 个 tracked LP 源文件无损、主仓 tracked 无改动**；上述基线仍是最后实测。
+  **二次事故（2026-11-19 晚，PR-49）：rsync 从链接式旧池回灌把 36,198 个真 olean 变自指死链**，
+  死链已全清、**v4 重编链在跑**（PID 31920，3,331 件断点续跑、3 槽并行，ETA 今晚；§8 续1308–1312）；
+  根面/Assembly/Final 验收在池恢复前不可复跑（P0/P1/P2/sqrt8 根面 589 同集探针排池完成第一位）。
+  修复链由编排者跑；禁止擅自 `lake build` 全量重建。事故报告在车道快照 `INCIDENT.md` 与登记册 PR-49。
 - 仪器原样：[`e2e-reachability-map.tsv`](e2e-reachability-map.tsv)（12,795 行）；
   历史基线叙事：[`e2e-reachability-map.md`](e2e-reachability-map.md)。
 
@@ -44,11 +47,11 @@
 
 | 里程碑 | 当前状态 | 下一步 |
 |---|---|---|
-| M0 / 根面与可达图 | **基线 AQ**：SORRIED 51 / AXIOM 585 | 所有落库后重跑仪器；数字只在本文件头和地图维护 |
+| M0 / 根面与可达图 | **sqrt8 后仓面 SORRIED 50 / AXIOM 585**（`8c7dfc34`，2026-11-20；仪器复跑池后） | 所有落库后重跑仪器；数字只在本文件头和地图维护 |
 | M1a / Text 清债 | **完成：Text 0** | 不重开旧 Text 战役；历史矩阵见 §2.1d |
-| M1b / 接口 | hTC 0；**hNL 50 + hLP 1** | 主攻 nli 数学压缩；LP 独立处理 |
+| M1b / 接口 | hTC 0；**hNL 49 + hLP 1** | 主攻 nli 数学压缩；LP 独立处理 |
 | M2 / 信任基座 | 585 定格；manifest 数据源/生成器钉定已完成 | 抽样 replay、Docker 一键复现与最终公理断言，重算窗口另批 |
-| M3 / 北极限 | **51 = 50 `nli*` + 1 hLP** | 先数学归约与复用，再证剩余计算核心；不以生成行数作为进展 |
+| M3 / 北极限 | **50 = 49 `nli*` + 1 hLP**（sqrt8 已闭） | 先数学归约与复用，再证剩余计算核心；不以生成行数作为进展 |
 
 ### 0.1 剩余债务边界
 
@@ -63,13 +66,14 @@
 
 ## 1. 在飞
 
-**当前授权在飞 2 条（`iyou-sharpv2-slots-w1` 内核波 + `cell3-wt1-tower-scout-w1` 零-Lean 二阶塔侦察）；`ztg-bernstein-pilot-w1` / `cell3-wt1-build-w1` / 三零-Lean 侦察 / `ztg-joint6-scout-w1` / `ixpotpa-arch-w1` 全部收线入档（§8 续1288–1296）。** cell3 与 Bernstein 试点已双双收线 GO 并落库（`ebd11b13` / `9a4a9dc6` / `57eded64` / `e8d58205`）；A 已超时记暂缓、不自动 resume；D 已收线。另：**LP 池恢复——链 A/B 已暂停（债道让槽）、链 C 完成、终局链在飞**（编排者后台计算，非车道：夜间重编 CertPilot 大件 → 全量 olean 核对 → e2e 树可视化重建；链 A/B 债道编译波排干后重启，其列表自带 SKIP 逻辑零浪费）。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 1 条车道 + 池恢复链（编排者后台）。** `iyou-build-w1`（双活裁决后净接管，§8 续1312：前任 11h 卡死无自检被 TaskStop、卡死发射器 76231 已杀；wave_a 在跑）。**池恢复链 v4**（PID 31920，3,331 件、3 槽并行、断点续跑；sqrt8 闸序列让位 SIGSTOP 后已 SIGCONT 复跑，ETA 今晚）。**今晨三笔连落：P1 `36fa6434` + P2 `7f4bfb59`（cases-swap-p12-w1 批产，−94.0% 合计）+ sqrt8 债闭合 `8c7dfc34`（SORRIED 51→50）**，编排者亲编亲测全绿（§8 续1312）。`ztg-bernstein-pilot-w1`（`57eded64`）/ `cell3-wt1`（`e8d58205`）/ 三零-Lean 侦查批（Ox3q1h / WKGUESBsym / cases-prep）/ `ztg-joint6-scout-w1` / `ixpotpa-arch-w1` 全部收线入档（§8 续1288–1311）；A fat1 暂缓不自动 resume。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；编译走 3 槽信号量 + guard 护栏（≤3 lean ∧ ≤24 GB ∧ pressure<2）。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `iyou-sharpv2-slots-w1` | 编排者会话后台 agent，running（用户批「启动」；首程饿死后 resume） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:946）目标 **SORRIED −1**：替代路线 536 叶内核波在跑（两工单路线实测证伪后重建）；产出 Text 新文件 ~2.5–4.7k 行 + Assembly 1 import 1 body；目标今晚；结构点 2 轮卡死即交班 |
-| `cell3-wt1-tower-scout-w1` | 编排者会话后台 agent，running（用户批「Wt1 b 侦察启动」，17:52 发） | **零 Lean**：wt1 选项 b「二阶塔」——二阶因式化原子表（成败关键，先小规模试原子）+ 塔结构逐层叶预算（目标 10¹–10²、总行数 ~2k–8k）+ Lean 件清单与复用图（concaveOn 桥 / NliBanks21 / 折点字面量）；原子同覆辙如实 NO-GO 回落挂起 |
+| `iyou-build-w1` | 编排者会话后台 agent，running（双活裁决后净接管，§8 续1312） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:950）目标 **SORRIED −1**：对账 67 源/18 olean 完成；wave_a 在跑（2 根 + 6 D 树 + L1 系 + Gamma4Env 四件补池 + IyouSharpV2 首编）；L23 34 叶等 36051 发射器（09:15 硬顶，块缓冲判据已批）；接线走 patch 等闸 |
+| `cell3-wt1-tower-scout-w1` | **已收线 GO（nli-campaign §9.2 卡已改写）** | 二阶塔 A′ GO：原子表 + 塔结构 10¹–10² 叶（~50–60 证书）；A′ 施工等用户批 |
+| `cell3-sqrt8-build-w1` | **已闭合落库 `8c7dfc34`（§8 续1312）** | sqrt8 债闭合：NliSqrt8 26-cell antitone 电池 + Assembly 1a-3/7 接线；11 定理标准三编排者亲测；K_SORRIED −1 |
 | `ztg-bernstein-pilot-w1` | **已收线 GO（§8 续1293–1294）** | 三件全绿落库 `57eded64`（12 探针标准三）；千系数件=分钟级定标；量产等批 |
 | `cell3-wt1-build-w1` | **已收线 BLOCKED-on-cost（§8 续1295）** | 数学真但 ~10⁵ 行超预算；`NliBanks21` 接口落库 `e8d58205`；三选项呈裁、(b) 侦察在飞 |
 | `ztg-joint6-scout-w1` | **已收线 GO（§8 续1296）** | 六债联合证书路线 B 角点表全胜；W0–W4 战役包呈批（与解耦 4 并跑 −10） |
@@ -257,6 +261,14 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（08:02 实测，续1312）**：**三笔连落：P1（`36fa6434`，−96.13%）+ P2（`7f4bfb59`，−86.64%）+ sqrt8 债闭合（`8c7dfc34`，K_SORRIED 51→50）——编排者亲编亲测全绿；池链让位-复位实录；iyou 双活裁决（含编排者自勘误）。**
+  ① **P1+P2（cases-swap-p12-w1，用户裁 A 批产）**：CFWGKMBZ 605 shard/422,331 行（205,418 叶）→ CertD 16,104 + 桥 225；C4717061266 553 shard/121,843 行（55,668 叶）→ CertD 16,103 + 桥 228；合计 545,436→32,698（**−94.0%**），K_REACH 锥内 Cases 节点 −1,158。编排者闸：两笔分开 apply（605D+1M+1A / 553D+1M+1A 与 DELIVERY §4 预期逐项一致），亲编 6 件 RC=0/error 0（Base 5-7 s、CertD 92/78 s、峰值 5.8 GB，全部单槽），亲跑探针：`CFWGKMBZ_pos` / `C4717061266_pos` / CertD 六名 / 两消费者形状探针（Assembly:1550-1559、T11Glue:762-790 逐字复刻）**全恰标准三**；桥私有二名（`evalReal_eq_yOfX`/`evalReal_eq_deltaY` + `dyadic_toReal_pos`×2）外部 `#print` 不可直达（`_private.lean…` 前缀），经编排者编译输出的文件尾自审计捕获复核 = 标准三。`nliRestFWGKMBZ` / `glue_C4717061266` 槽链复核随池完成机械补验（同 P0 裁 A 口径）；两案 6 olean 直编入主池（回灌兼闸证）。
+  ② **sqrt8 债闭合（cell3-sqrt8-build-w1 runbook 终态）**：`NliSqrt8` 26-cell antitone 电池 4,058 行（S0 = `w2a_cell` 严格孪生，精确有理 margin 最小 +2.6398e-4，y5↔y6 对称）+ Assembly `1a-3/7` 槽接线（`:= NliSqrt8.s8_bank` + 注释刷新）。编排者亲编 RC=0/error 0（主池暖闭包 2.24 GB，比车道岛编 322 s/7.11 GB 显著轻）+ 亲跑 11 定理 `#print axioms` 全恰标准三 + `#check s8_bank : bank_QZECFICwt0sqrt8` + Assembly sorry 槽 57→56 恰 −1。**K_SORRIED 51→50（49 nli + 1 hLP）；根面仍 589 逐条同集不变**（池后机械补验）。诚实账 2 条：车道声称 NliSqrt8.olean 已入池实未入（磁盘查无，编排者重编补上）；车道仓内 Assembly 接线与 patch 逐字节一致（编排者 diff 复核，本轮按仓内状态直接闸）。
+  ③ **池操作实录**：P0 5 个 olean 自 p0 车道 stage 回灌主池（PR-49 源零 symlink 核验过，队列 A2QITNPEAGlue/Assembly 落位前依赖补齐）；闸序列期间 SIGSTOP 恢复链调度器让位（三个 Pent K005–K007 稀疏巨件健康长尾：100% CPU/1.7 GB/36+ min 超 27 件采样 max），**有意杀 K007（11 min 龄最年轻、牺牲最小）解锁闸序列；链 CONT 后经重试队列自愈**（K004 误杀先例已证机制，本轮为有意处置非误读，PPID 链照 PR-50 核过）；sqrt8 闸毕 SIGCONT 复跑正常。
+  ④ **iyou 双活裁决（编排者自勘误入册）**：我 07:15 判前任死亡——**判定过早 2 分钟**（前任 07:14 复活并重发 7 树，我的 mtime 检查恰好先于其重写）；iyou-build-w1 对账抓出实况：前任昨夜被卡死发射器 76231 楔死（孤儿 PPID=1、11h15m、99.9% CPU、3.5 GB、零日志零产出）整晚无自检——PR-27 长上下文劣化实证。裁决 = TaskStop 前任（agent_dd8f7225）+ 亲杀 76231 + iyou-build-w1 净接管；前任今晨修复产物（emit_family.py 修版 + 7 树重发 + wave5.sh 工具链）磁盘收编；**36051 发射器监控判据修正已批**（编排者原判据错在块缓冲：stdout 重定向 0 字节日志 ≠ 死；真判据 RSS 轨迹 + 09:15 硬顶）；Gamma4EnvAtoms/Env/EnvNum/Mono0 四件直编补池（排位 2334–2990 数小时轮不到）报备成立。
+  ⑤ 在飞：iyou-build-w1 wave_a（L1 叶系编译中）+ 池恢复链 v4 复跑；仓面 SORRIED 50 / AXIOM 585。下一条：续1313。
+
 
 - **2026-11-20（07:05 实测，续1311）**：**锥外库存清理落库（`47f67379`，−7,920,519 行 / 11,916 文件）——用户批「把握大的话删了吧」，逐树取证后删、保留两件。**
   ① **把握评估（代码级取证先行）**：三棵纯多项式巨树 C3253650737/C8425800388/C6078657299（7,659,413 行）——**0 个代码级 import 消费者**（LP 层 `lpIneqStatement_104` 等陈述独立携带，IdLists 仅字符串表；HOL 原版确认已线性化多项式条目），把握**很高** ⇒ 删；C549 实验族（286,132 行）——消费者仅 `pipeline/interval/out/p549fold2|hull` 再生物料（历史实验产物，非 e2e 链），把握**高** ⇒ 删。**保留两件**：C8405387449（`T11Proofs.lean:21` 活 import，待结构化换装后再删——压缩侦察原建议）、C5550839403delta（P3 判「现状即优」的小件 3,951 行）。

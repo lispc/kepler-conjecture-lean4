@@ -1030,7 +1030,7 @@
   角色勘误**；胶水机制仅对根张量含负系数的债保留为剪枝必走模板。
 - **判词指针**：§1.10 / §5（含 ERRATA）/ DEBTS 行 5–8 / FARM_PLAN §4 N3。
 
-**`nliTskIYOUOBFsharpv2` —— 四轴单调 + 2 维三块（状态：在飞；`iyou-sharpv2-slots-w1` 2026-11-19 发车，目标 SORRIED −1）**
+**`nliTskIYOUOBFsharpv2` —— 四轴单调 + 2 维三块（状态：在飞；`iyou-build-w1` 2026-11-20 双活裁决后净接管——前任 11h 被卡死发射器楔死无自检已 TaskStop（PR-27 实证）、76231 已杀；67 源/18 olean 对账完成，wave_a 在跑，L23 34 叶等 36051 发射器（09:15 硬顶）；目标 SORRIED −1）**
 
 - **这是什么**：`Assembly.lean:946`；HOL `ineq.hl:242`「TSKAJXY-IYOUOBF
   sharp v2」。盒 `[2hplus,√8] × [2,2.001]² × [2,2hminus] × [2,2.001]²`；
@@ -1343,7 +1343,7 @@
   （SCOUT.md 全数字 + wt0_card.md + work/ 14 件可复现脚本，60 dps
   求值器 19 项标定阀门全 PASS）。
 
-**`nliCell3QZECFICwt0sqrt8`（sqrt8）—— antitone-角点 10-cell 电池路线成立（状态：可启动，待用户批产；2026-11-19 S·a 侦察收线）**
+**`nliCell3QZECFICwt0sqrt8`（sqrt8）—— 已闭合落库 `8c7dfc34`（2026-11-20；10-cell 首选路线施工演进为 26-cell perSlot+prodMin 终态 = `w2a_cell` 严格孪生（S0 回退链末端），精确有理 margin 最小 +2.6398e-4；编排者亲编 RC=0/error 0 + 11 定理 `#print axioms` 全恰标准三 + `#check s8_bank : bank_QZECFICwt0sqrt8`；Assembly `1a-3/7` 槽接线；K_SORRIED 51→50，根面 589 不变池后补验）**
 
 - **这是什么**：`Assembly.lean:419`；HOL `ineq.hl:1406`。盒
   `[1,1]³ × [2hplus,√8] × [2,2hminus]²`；第二析取支
@@ -1728,10 +1728,10 @@
 | 债名 | 状态 | 卡位 | 判词主出处 |
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
-| `nliCell3QZECFICwt0sqrt8` | 可启动（双侦察收敛 GO：10-cell antitone 首选 / 67-cell 备胎；已移出③包，待批产） | 9.3 | §1.2 / §1.9 |
+| `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
 | `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
-| `nliTskIYOUOBFsharpv2` | 在飞（目标 −1） | 9.1 | §1.2 / §1.6 |
+| `nliTskIYOUOBFsharpv2` | 在飞（`iyou-build-w1` 净接管，目标 −1；双活裁决见 pq §8 续1312） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债：发射前须重发重窄化**（wkguesbsym 侦察） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债：发射前须重发重窄化**（wkguesbsym 侦察） | 9.4 | §1.3 |
 | `nliTskWKGUESBsym` | 侦察收线 GO：F2b 直入 ~1,045 CPU·h（var_lt 重发前置）+ Face 旁路半程 | 9.3 | §1.3 |
