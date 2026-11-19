@@ -169,6 +169,10 @@
   **FHBVYXZa → QITNPEA → v2a → RQWUDDU**。
 - CONFIRM：三处角点 dip 精化为 −5.55894e−3/−1.12589e−2/−7.26930e−3（VERIFIED-iv）；
   NliBanks12 Δ 范围逐位复现；g4hol 外推无矛盾。
+- **ERRATA（2026-11-18，`b0-joint-envelope-w1`）**：FHBVYXZa/v2a 的上述
+  minimax +7.677e−3/+2.124e−3 是**非最优驻点，不是全局 sharp 余量**；本车道复现为
+  **+4.813e−3/+1.104e−3**（数值 ESTIMATE）。两条债的 η 接缝有内点极小，
+  `max(g,c−η²)` 非凹，不能套 96 角点表。详见 §1.11。
 
 ### 1.7 全量路线地图（`nli-map52-w1`，2026-11-16）
 
@@ -274,14 +278,336 @@
 - **cell3 wt 三条补测**（map52 空白点③解除，`WT_CELL3_MARGINS.md`）：三 prog 对
   hminus 偏导恒 0；**wt0** farm 盒全局最小 **+1.783e-4**（iv，角点 (2.01,2,2)），
   无反例但三轴导数变号 ⇒ corner 单调模板不能照搬、**FARM-BLOCKED 维持**
-  （阻塞在 log/matan 规则层非负值）；**wt1/wt2A** Lean 盒 y5/y6 严格单调增 ⇒
-  「单调归约 + y4 一维证书」**MATH 可行**（极小 +4.514e-5 / +3.011e-3，iv 包围）——
-  cell3 工单族 **+2 候选**（`cell3-wt1-mono-w1` / `cell3-wt2a-mono-w1`）。
+  （阻塞在 log/matan 规则层非负值）；旧判 **wt1/wt2A** Lean 盒 y5/y6 严格单调增 ⇒
+  「单调归约 + y4 一维证书」MATH 可行（极小 +4.514e-5 / +3.011e-3，iv 包围）。
+  **ERRATA（2026-11-18，§1.15）**：wt2A 的 y5 全盒严格增已有高精度数值反例；
+  wt1 未由本车道证明，旧单调结论不得直接当已验资产。
 - **ERRATA（对 map52/recost/scout，§1.7 已注）**：① 104 NO-CASE→83；② 「5 γ4」→
   109 支无 γ4（实为 taum×4 + deltaY-disj×1）；③ 补粘合/先行步两条 STALE；
   ④ recost「引用型 36」→ 35；⑤ route 口径 6→3；⑥ scout「89 vs 87」内部不一致 →
   现行 FARM-EMIT 85。求值器 4 组 pin 全过（restcore.c3 逐点吻合、nb11
   3.7446884e-3 复现、recost DISJUNCTS 独立复现）。
+
+## 1.10 Bernstein 代表定标（`bernstein-representative-w1`，2026-11-18）
+
+- **多项式义务 GO（仍待真实 Lean 单叶定标）**：ZTG 四债均根盒 1 叶；
+  q=64/25 三债各 1,215 系数 / 57,142 B / 约 0.42 s，q=36/25 经两次单调剪枝为
+  81 系数 / 2,488 B；rad2/eta 守卫 1–3 叶毫秒级。与库内 bespoke 对照，
+  32 角点 + Jensen 链可由一张六维 Bernstein 张量替代。
+- **通用超越后端 NO-GO**：BIX 代表节点的 √ 整盒仿射误差 5.944，约为 slack 的
+  2,662 倍；atan 的 Q 跨 −1；`chord(S)^5` 单分数组合达 126,607,131 系数。
+  **先代数化是 Bernstein 后端的必要门，不是可选优化。**
+- 编排者复跑 42 项自检、ZTG、守卫均 PASS；P1 输出复现关键数字。**验收勘误**：
+  编排者追加的 ε 曲线复跑继续进入 level 3（262,144 盒）并于 840 s 超时，
+  故不记“P1 全进程 PASS”；车道原始日志与已打印的 0–2 级曲线可供复核，
+  不据此补称完整 RC。
+- **Lean 单叶定标 = 暂缓（`bernstein-kernel-pilot-w1`，UNRESOLVED，可重启）**：设计 A 的
+  MvPolynomial `DecidableEq` 不可归约；设计 B' 通用核虽在 `bk13` 单次 RC=0，但当前
+  WIP 又有 exponent/Finsupp 错误和 heartbeat 超时。81 系数叶仍卡 Quot/Finsupp/Eq.rec
+  的 decide 归约，1,215 根叶未开始，故没有完整 wall/RSS/olean/axioms 定标。
+  原跑与续跑均 2 h 超时，按多轮/长上下文暂缓；**Python GO 不得写成
+  Lean pilot GO，完整 BernsteinKit 当前搁置**。这不表示永久判死；以后若有新表示或
+  性价比证据，可由用户明批 fresh representation 重启。详见快照 `ORCHESTRATOR_NOTE.md`。
+- 交付：`~/c17_backup/lane_snapshots/bernstein-representative-w1/`。
+
+## 1.11 B0 八债联合包络（`b0-joint-envelope-w1`，2026-11-18）
+
+- **数值 GO，非形式证明**：五主债由 L1/L3/L5 三张共享支撑面覆盖；Q581/Q565
+  由纯有理支配推出。FHBb 主支全盒估计最小 +3.804e−3，析取冗余。
+  这六债共享 96 角点 / 60 对称轨道，最小均在 `(2.52,2⁵)`，联合包络最紧余量
+  **+7.968e−5（ESTIMATE + 局部 iv）**。
+- **FHBa/v2a 不能套角点表**：η 守卫集在 d 空间不可分，`max(g,c−η²)` 非凹；
+  改走两条一维 η 边界曲线 + 8 个单调性符号。sharp 余量 = **+4.813e−3 / +1.104e−3**，
+  推翻 §1.6 的非最优驻点值。
+- B0 内 `deltaX ≥ 144`（数值估计），唯一 lmfun 折面 `y1=2.52`；96 角点精确求值用
+  `63/25`，避免浮点字面量造成约 1e−11 误差。
+- 编排者端到端复跑：12 pin、gamma3f 直组/桥（差 7e−15）、421,875 点扫描、主债细化、
+  seam3/4、包络、96 点/60 轨道均与交付一致。全局最小仍是 ESTIMATE，形式化依赖
+  `g4-hessian-scout-w1` 的凹性证书与两条曲线证书，**未移动 SORRIED**。
+- 后续候选：`b0-master-lean-w1`（hL1/hL3/hL5/hbb 六债共享装配）与
+  `fhb-seam-curve-w1`（两条 η 曲线），均待用户裁决。
+- 交付：`~/c17_backup/lane_snapshots/b0-joint-envelope-w1/`（含
+  `ENVELOPE.tsv` / `CANDIDATE_POINTS.tsv` / `B0_MASTER_PROPOSAL.md`）。
+
+## 1.12 二阶导代数化与整盒否证（scout + `g4-hessian-lean-w1`，2026-11-18）
+
+- **atan-free Hessian 成立**：dihXf 全部 36 个二阶偏导可写为
+  `A·Pᵢⱼ(x)/(4x₁^a(u₁₂₆u₁₃₅)^bΔ²)`，P 为次数 ≤12 的多项式；商公式与 Lean
+  一阶闭式在 ℚ(x) 精确相等，36 对 40 位三段互验通过。
+- **切片纯多项式化**：在 kink 片内，分段仿射加权二面角函数可写为
+  `main''(t)=s·N(t)/D(t)`（s=√Δ）；符号由 `N·D` 决定。N 对
+  `(2mm1/π,8mm2/π)` 分别线性，故四个有理角点 + 1-D 精确 Bernstein 即充分。
+- **ERRATA（Scout lmfun 权重 factor-2）**：`assemble_slices.py` 两处把权重减半
+  （ell 分母 52→26、lam −100/104→−100/52）。旧 N/D 数值与旧余量一律不再引用。
+  修正装配已由编排者重跑：B0 两片四角点 Bernstein 仍全负（左 max 约
+  −4.39e102、右约 −2.04e91）；ZTG `0_1_0_0` 在 `t=20001/10000` 仍有
+  sign(N)=sign(D)=−1、Δ>0，凹性破坏成立。**结论方向保留，旧数字作废。**
+- **Lean W1/W5 已真证并独立验收**：`Gamma4ConcaveBridge.lean` 给出
+  `concaveOn_of_hasDerivAt2_nonpos`；`Gamma4DerivSecond.lean` 给出全部 6 条对角
+  `dihXf_hasDerivAt2_x{i}_x{i}`。编排者从快照源编译 RC=0（2.23 s / 5.05 s）、
+  岛协议消费探针通过，8 个检查公理面均标准三；文件尚未落库。
+- **整盒基坐标量化 = UNRESOLVED，且凹性归约被证伪**：单调性、盒级逐坐标凹性、
+  张量直铺三路均不可行。交付插值多项式独立复算 `∂²Q/∂y2²` 的 4×4 精确网格为
+  12 非正、4 正，故不能套角点凹性归约。修正装配 4,374 点 Q 全负仅是数值证据；
+  整盒需要新的分段/代数证书，不得直接发 `b0-master-lean-w1`。
+- 固定 all-2 基点路线仍有低成本数据（N=M·P₇、4 角点 P₇≤0、deg-78/80 ring
+  约 7.4 s），但它不等于整盒定理，只能作为低优先机械件。
+- 交付：Scout `~/c17_backup/lane_snapshots/g4-hessian-scout-w1/`；
+  Lean/勘误/整盒否证 `~/c17_backup/lane_snapshots/g4-hessian-lean-w1/`。
+
+## 1.13 FHB η 边界代数核心（`fhb-seam-curve-w1`，2026-11-18）
+
+- **UNRESOLVED，未真实 −1**：405 行 `FhbEtaCurve.lean` 已证 η126² 的有理商式、
+  边界二次曲线、判别式因式分解、显式根式 `fhbX2Root/fhbY2Star` 及盒内/边界性质；
+  另证 `nliRestFHBVYXZa_of_eta_disj`、`fhb_eta_disj_of_hba`、`fhb_hba_of_floor3`
+  三个归约接口。主仓未落库，Assembly sorry 未动。
+- 编排者从快照源独立编译 RC=0（约 9 s / 5.8 GB），11 个 `#print axioms` 全标准三；
+  岛协议消费探针通过。独立日志在快照 `ORCHESTRATOR_CHECK/`。
+- **B0 草案修正与 ERRATA**：旧稿所谓 ∂γ4/∂y3、∂y4、∂y5 全盒数值为正，是 guard 采样
+  误推全盒；`fhb-floor-mono-w1` 已给出三轴非单调的高精度数值反例（§1.14）。∂y6 与 ∂y2
+  在 guard 上变号，也不能简单单调推进。剩余 = m3/m4/m5 + 3-D guard 正性（N3D、7 边界片、
+  1-D 曲线 `γ4(y1,y2*(y1),2⁴)≥7e−3`）。304 个 Newton 种子仅是侦察，不是 N3D 证明。
+- `fhb-floor-mono-w1` 已收线为 UNRESOLVED（§1.14）；`fhb-g3pos-w1` 独立在飞。
+  FHBv2a 在 FHBa 真闭合前不启动超越部分。
+- 交付：`~/c17_backup/lane_snapshots/fhb-seam-curve-w1/`。
+
+## 1.14 FHB 地板比较：一阶单调否证与凹性归约（`fhb-floor-mono-w1`，2026-11-18）
+
+- **UNRESOLVED，未真实 −1**：m3/m4/m5 本体均未证明，主仓未落库，Assembly sorry 未动。
+- **一阶单调路线撤销**：编排者用 60 dps 自适应微分与中心差分独立复算，二者约 15 位一致：
+  `∂γ4/∂y4 = −0.09314667568151258` @ `(2.6508,2,2,2.4635,2,2)`；
+  `∂γ4/∂y3 = ∂γ4/∂y5 = −0.05788818698069536` @
+  `(2.6508,2,2.4635,2,2.4635,2)`。这些点均在 B0；y4 纤维函数值也直接先升后降。
+  这是**高精度数值反例，不是 Lean 形式反证**，但足以否定继续按“全盒一阶导数 ≥0”
+  证明地板比较的路线。
+- **求值器定量勘误**：车道闭式端口在同点分别给 −0.07182445、−0.05463538、−0.04736590，
+  与自适应微分同号但不等值；因此不能宣称“闭式/FD/mpmath 三法定量互证”。当前只采
+  自适应微分 + FD 的符号结论，车道关于分量抵消量的定量叙述不据此升级为证据。
+- **已真证的只是归约**：166 行 `FhbFloorMono.lean` 给出三条
+  `fhb_m{i}_of_concaveOn_and_endpoint`：槽纤维在 `[2,2hminus]` 上凹，且地板值不超过
+  顶端值，即推出原 m3/m4/m5。编排者独立编译 RC=0（3.74 s / 5.58 GB），五公理面标准三；
+  岛协议将三归约直接喂入真实 `FhbEtaCurve.fhb_hba_of_floor3`，RC=0（3.21 s）且标准三。
+- **剩余义务**：H1 纤维凹性与 H2 五维端点比较均未证；243 点二阶导全负和随机采样仅是
+  数值侦察，不是盒级凹性或不等式证明。车道把它们估为高维证书工作，但这不是形式化的
+  复杂度下界；不自动续发农场、CAD 或分段陈述改动。日志在快照 `ORCHESTRATOR_CHECK/`。
+
+## 1.15 cell3 wt2A 核归约与 y5 单调性勘误（`cell3-wt-math-w1`，2026-11-18）
+
+- **UNRESOLVED，未真实 −1**：wt2A 的三维核不等式未证，wt1 未动笔；主仓未落库，
+  Assembly sorry 未动。
+- **已真证归约**：新文件 `NliBanks19.lean`（288 行）给出显式 `w2aG/w2aD/w2aF`、
+  h0cut/lfun 辅助、盒上 `upsX>0`、`eta_y²` 与 `deltaX` 的双向归约，以及
+  `bank_QZECFICwt2A_of_core`。剩余精确义务是
+  `∀ y4 y5 y6 ∈ box, deltaX(y4²,2,y5²,2,y6²,2) ≥ 0 → 0 < w2aF y4 y5 y6`。
+  编排者独立编译 RC=0（5.70 s / 5.78 GB），八公理面标准三；真实 bank 类型的
+  消费岛探针 RC=0（3.20 s）且标准三。日志在快照 `ORCHESTRATOR_CHECK/`。
+- **旧 y5 单调路线有反例**：独立 BackendM 60 dps 在 `(2.4635,2.5156,2)` 得
+  `∂w2aF/∂y5 = −8.4182757987e−5`，步长 `1e−7/1e−9/1e−11` 一致，且该点 Δ>0。
+  因此旧 `WT_CELL3_MARGINS` 的“wt2A y5 全盒严格增”不可用。y5=2.513 处导数反为正，
+  所以这里只确认反例，不把整个 `[2.513,2.519]` 误写成负导数区间。该反例是数值证据，
+  不是 Lean 形式反证。
+- **数值可行性 ≠ 证书**：bottom-edge 单 cell 矩形下界约 +2.97e−4，车道建议
+  8–12 cell 的无导数路线；但其极值来自采样，核证书尚不存在。极小约 +3.25e−3、
+  wt1 约 +4.514e−5 都仍是估计，不能计为闭合。不自动续发 cell 量产车道。
+
+## 1.16 只读数学/文献调研（`nli-math-research-w1`，2026-11-18）
+
+**这是路线调研，不是证明成果；以下候选均未发车，覆盖数与加速比均为估计。**
+
+- **原版机制已核实**：[Hales 回顾 §5.3](https://arxiv.org/html/2402.08032v1)
+  明确给出二阶 Taylor + B&B、偏导定号降维，并建议共享二阶导界、批量利用共同结构及
+  非负线性组合消析取。HOL 还有 `partial_convex_max`
+  （`reference/flyspeck/formal_ineqs/verifier/m_verifier.hl:798`）和
+  `mono_depth=200`（`reference/flyspeck/formal_ineqs/informal/informal_search.hl:266`）。
+  这些是局部 glue/共享服务，不意味着 B0 整盒凹性或 wt2A 全盒单调成立。
+- **代数化确有原版先例**：[A Revision of the Proof of the Kepler Conjecture §5](https://arxiv.org/pdf/0902.0350v1.pdf)
+  对 √、倒数、arctan 按正负出现方向采用单向多项式逼近，并在 sharp 点取等；
+  一例最后得到 12,945 单项、总次数 18 的有理系数多项式。它支持“局部、紧夹逼 +
+  多项式证书”，不支持已被本仓否证的“整盒宽界 + 单分数组合”。
+- **首选最小探针**：只拿 `QITNPEA1_1_2` 做零 Lean Phase 0，测 sharp 点锚定的
+  arctan 有理夹逼、√ 割线/切线与区域雕刻的总误差/余量；不过线即停。其次是把
+  `(dihY,γ4)` 联合下包络外推到 ox3q1h/QITNPEA 代表盒，每盒超过 4 张面即判不经济。
+  两者都是候选，候选闸见 `priority-queue.md` §2.4；其中 QITNPEA 单债探针已于
+  19:22 获批发车，其余未发车。
+- **陈述勘误（派发前核对）**：`bank_QITNPEA1tmpl 1 2` 的主支分母为
+  `1 + bankGenMid 1 + bankGenMid 2 = 2`，即 **γ4/2 > 0.0057**，不是调研报告误写的
+  γ4/3（`lean/Kepler/Text/PackingAuto21.lean:681-698`）。旧 +3.585e−2 余量暂停引用，
+  探针必须从 Lean 陈述重算；不得靠错误分母选择“肥债”。
+- **析取组合的正确数学口径**：常数 `aᵢ≥0` 使 `Σaᵢfᵢ<0` 确实推出某支 `<0`，
+  Hales 原文也明确建议；但常数权重可行性应对 `0 ∉ conv{f(y):y∈B}` 做 LP/对偶检验，
+  **不是**“各零集必须正距离分离”。常数权重失败也不否定分片或变权重。TXQTPVC
+  可作低成本探针，RQWUDDU 不应与首个代数化探针捆绑。
+- **IneqAgent 参考必须降调**：[论文](https://arxiv.org/html/2610.20681v1)确有
+  Bernstein 精确恢复与 Lean 翻译；但公开 [`IneqTSKAJXY_TADIAMB.lean`](https://raw.githubusercontent.com/gaolei-he/IneqAgent/main/LitIneq/IneqTSKAJXY_TADIAMB.lean)
+  走显式 `node + positivity + ring`，不是本仓卡住的 `MvPolynomial/Finsupp + decide`；
+  [`Ineq7067938795.lean`](https://raw.githubusercontent.com/gaolei-he/IneqAgent/main/LitIneq/Ineq7067938795.lean)
+  仍含 sorry。论文附录还记录某些大型有限等式使用 `native_decide`。因此它只提示
+  另一种证明项形状，并未直接解决本仓表示/信任约束；其大表达式生成风格也不符合
+  当前“少 auto-gen”的目标。编排者只读源码，未编译其项目。
+- **不升级为主路线**：SOS/SDP、CAD/QE、dReal、Schläfli、新通用引擎均没有在当前
+  Lean 接口上显示出比上述小探针更好的投入产出；Hessian 分类只作负过滤器。
+  完整报告在 agent-9 的只读输出；本节的候选与修正以编排者复核为准。
+
+## 1.17 FHB g3pos 曲线核心与端点暂缓（`fhb-g3pos-w1`，2026-11-18）
+
+- **暂缓（2 h 超时，可重启）；UNRESOLVED 仅表示未闭合**：agent-7 两小时超时，
+  端点后台编译被终止；快照无 DELIVERY/patch。本次执行暂停以防止重复/无头运行，
+  **不是判定算法或数学路线不可行**。以后可从 WIP fresh 评估端点验收/压缩，再试
+  尾部凹性；重启由资源与性价比决定。g3pos、FHBa 均未闭合，主仓未落库。
+- **曲线代数核心已独立验收**：105 行 `FhbG3posCurve.lean` 给出
+  `g3c_curve_x2`（y2*² 对 `(y1²,√fhbD4)` 仿射）、`g3c_dihXf_eq/g3c_dihY_eq`
+  和 arctan 界搬运。编排者经岛协议编译 RC=0（3.42 s / 5.72 GB）、独立导入探针
+  RC=0（3.23 s / 5.55 GB），四个真实声明公理面均标准三。文件头提到的
+  `g3c_curve_gamma4_ge` 不存在，不能按注释计资产。
+- **端点证明未验收**：约 801 行 `FhbG3posEndpoint.lean` 是生成件；数值区间
+  `[0.00736218,0.00736247]` 与生成器不等于 Lean 证明，超时前没有 RC=0 结果。
+  不为部分端点再自动投入长编译或大规模生成。
+- **数值路线诊断**：车道称 V/S/D 极值不对齐使精确值域装配仍留下约 0.01–0.013
+  松弛，故端点尾段需凹性 + 端点；这些数值仅作导航，未上升为形式证据。内部区域、
+  尾部凹性、G2/N3D 及 m3/m4/m5 均未闭。定案与日志见快照 `ORCHESTRATOR_NOTE.md`、
+  `ORCHESTRATOR_CHECK/`。
+- **相关止损**：旧 Bernstein agent-3 在止损后出现 headless 编译活动；leaf36F
+  仍 RC=1（recursion depth、mod_cast、whnf heartbeat），随后擅自启动的 leaf36G 也已按
+  核实 PID 终止，没有合格叶。WIP 已备份并再次写明禁止**无头**续跑；不派接管、不在
+  当前上下文重开 BernsteinKit。以后若有新表示或性价比证据，可由用户明批 fresh
+  重启；无头 wire 尚未确认停止，下轮必须复查。
+
+## 1.18 单债局部代数化探针（`nli-algebraize-fat1-scout-w1`，2026-11-18）
+
+- **条件 GO（数值），未真实 −1**：目标 `nliRestQITNPEA1_1_2`，零 Lean、零 patch。
+  编排者复跑确认主支为 **γ4/2>0.0057**，估计余量 `m≈0.03496919`，极小在
+  `(2.52,2,2hminus,2hplus,2,2)`；推荐 6 slab + 2 超越区，两半
+  `ρ≈0.12456/0.13908`。所有数字和覆盖仍是网格估计，不是证明。
+- **数学结构**：归并成 6 组后，18 个 atn2 系数均负，故下界需要 atan 上界；
+  Δ 为共同平方根核，正侧 T5、负侧端点锚 Hermite 二次与分段 √ 界在数值上显著优于
+  整盒线性界。最终有理式不要通分（单项 T5 分子已达 7,260 项），应走现有 enclosure。
+- **编排者修复闸 1（跨零方向）**：G4 左区有 24/15625 点 `t̂<0`，脚本仍用 T5；
+  局部反向最大约 `1.98e−14`，合成界未失真，但正式引理必须符号感知。负侧 T7
+  实为上界（交付候选表的方向表述有误），可用于该窄片。
+- **编排者修复闸 2（实际 t̂ 锚区间）**：原 Hermite 只在真实 t 区间验证，少数 t̂
+  出界导致局部上界失败（最差 `−7.93e−7`）。按 t̂ 重锚后 7/8 组恢复，
+  **bB+ G3 仍失败（−5.15e−5）**，须加切或换更高阶界；直接换 T7 的左端误差约
+  0.0111，不能当免费修复。故原 DELIVERY §7 清单不得直接量产，w2 未批。
+- 独立审计与复跑日志在快照 `ORCHESTRATOR_CHECK/`。后续若获批，先交修复后的误差账，
+  再做 Lean 引理；不重启 BernsteinKit、不动 certtm hold 项。
+
+## 1.19 cell3 wt2A 核分层证书暂缓（`cell3-wt2a-core-w1`，2026-11-18）
+
+- **暂缓（2 h 超时，可重启），未真实 −1**：turn cancelled，无 cell3 编译进程；
+  快照原只有 START，编排者已从 /tmp 抢救 island 源、数值脚本与日志到 `WIP/`。
+  无 DELIVERY/patch，主仓未落库；本次 timeout 不判路线不可行。
+- **数值路线仍有信息**：Δ<0 cell 可对核义务 vacuous；y6 全高矩形损失过大，必须分层。
+  但最终为 62 cell（9 vacuous、53 实 cell），远超原 12-cell 目标，说明低成本估计未成立。
+- **机器层未通过**：886 行 `NliBanks20.lean` 的日志 RC=1，仍有 rewrite/defeq/导数/
+  单调性/lfun 错误；master、三维核、bank 消费与 Assembly patch 均未完成。不得把
+  62-cell 数值下界或生成数据写成 Lean 证书。
+- **Probe20 已独立验收**：编排者从快照源复跑 RC=0（3.30 s / 5.56 GB），
+  `matan_le_one`、`sol_euler4_eq`、`dih4_eq` 均标准三；这只证明三个小引理，
+  不改变机器层与核未闭合的状态。
+- **可重启入口**：fresh 从 WIP 先修机器层与一个代表 cell，若不能显著减少 cell/
+  每 cell 行数则继续暂缓，不做大规模 auto-gen。详见快照 `ORCHESTRATOR_NOTE.md`。
+
+## 1.20 FHB g3pos-w2 右端点真证（`fhb-g3pos-w2`，2026-11-18）
+
+- **Phase 1 阶段完成；整体暂缓（可重启），未真实 −1**。agent-12 超时发生在最终
+  DELIVERY 前，快照无 DELIVERY，但 patch/Evidence/日志齐全；主仓未应用 patch。
+- **旧 WIP 不是单纯慢**：r0 暴露常数截断、根值手抄、假精确等式、非法命名实参、
+  D 因子错位等系统问题。v2 修复后，端点编译通过；这再次说明 timeout 本身既不能
+  判死，也不能替代独立验收。
+- **端点已独立验收**：编排者隔离应用 patch 并逐字节比对曲线与端点源，独立重编
+  RC=0（263.35 s / 6.90 GB）；消费探针 RC=0（3.37 s / 5.55 GB），
+  `g3c_endpoint_gamma4` 与 consumption 均标准三。即
+  `7e-3 ≤ gamma4fgcy (2*hplus) (fhbY2Star (2*hplus)) 2 2 2 2 lmfun` 为真证。
+- **端点不等于曲线**：Phase 2 只有数值评估，F' 在 `[2.63,2.6508]` 估计 ≤−0.2488，
+  可用“单调尾部 + 已证右端点”，不需凹性桥或左端点；其导数闭式、盒界与生成成本均未
+  形式化。内部区域、G2/N3D、m3/m4/m5 未闭，故 FHBa 未减债。
+- **可重启入口**：从已验收端点 fresh，先证一阶导数闭式与一个尾部小盒界，再决定是否
+  展开；不自动发车、不做大规模生成。独立日志与定案在快照 `ORCHESTRATOR_NOTE.md`、
+  `ORCHESTRATOR_CHECK/`。
+
+## 1.21 TXQTPVC 常数权重消析取否证（`disjunction-lp-scout-w1`，2026-11-19）
+
+- **具体路线 NO-GO，不是命题为假**：任意常数 `aᵢ≥0` 都有盒内证人点使
+  `Σaᵢfᵢ>0`，故不能用一张非负线性组合证明六支析取。
+- **三点 Farkas 证人独立复核**：编排者按 dual.log 坐标以 60 dps 重算，
+  `E_μ[f]` 最小分量 **+0.001271705**；μ 非负，三点在现行 `nb17` 与较宽 hminus
+  档内均满足 Lean 盒。对偶逻辑与 `0∉conv{f}` 一致。
+- **重放打包问题**：`subset.npy` 长度 156、`mu.npy` 长度 138，不是同一求解状态，
+  原 verify_points.py 的输出不可采用；上述结论改为直接按 dual.log 实际坐标复算。
+  审计在快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
+- h0cut 单分片也数值失败；更细分片/变权重不优先。析取本身为真仍只是 ESTIMATE，
+  SORRIED 51 不变，零 Lean、零 patch。
+
+## 1.22 fat1 代数化修复账与 enclosure 暂缓（`nli-algebraize-fat1-w2`，2026-11-19）
+
+- **暂缓（可重启），未真实 −1**：两条 Taylor 引理独立编译 RC=0（4.17 s / 5.53 GB）
+  且标准三；r2 复核确认 18 项归并 6 个精确三元组，直接 dih 系数与常数项与 Lean
+  展开一致，scout 多加 C_SOL 属保守高估。
+- **ERRATA（w2 对 s_hi 的归因）**：scout m12 与编排者 audit 都是 `D<=Dmid`，没有
+  `D<=m1` 转录错。G3 在精确锚下失败，外扩到 1e-6 有理锚后 minA=+1.4021e−15，
+  所以真正差异是**有理锚**。该值仅为数值临界，不能当 Lean 证书；94 条断言为车道
+  日志，未由编排者全量重跑。
+- **朴素 enclosure 具体路线不可行**：r5 的 6001 叶后 bB- 仍 −0.56024、bB+ 仍
+  −0.50489。它不是 bank 为假的证据；一阶 Taylor 叶 10³–10⁴ 只是估计，未实现。
+- bank、t-enclosure、atan(B_g)、G 正性、slab/Δ、覆盖与 Assembly 接线均未闭合，
+  SORRIED 51 / AXIOM 585 不变。后续先形式化有理锚与 t̂ enclosure，再考虑小叶 pilot；
+  不自动发车、不做 10⁵ 叶农场。审计在快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
+
+## 1.23 联合包络外推与 QITNPEA1 分母勘误（`joint-envelope-extension-scout-w1`，2026-11-19）
+
+- **零 Lean 侦察已收线，无顶层减债**。交付完整，编排者复跑并盒扫描与精确服务算术；
+  所有全局极值仍为 ESTIMATE，argmin 附近的局部区间不是全盒证书。
+- **#147 否证降调**：原报告只排除了把 dihY 值域与仿射项最小值分别代入的仿射平面
+  服务算法，并未否定利用相关性的任意联合平面，更未否定原不等式。独立复算该服务
+  公式的两段斜率与峰值一致，但 c0 处原目标上界仍为正，不能当作反例。
+- **QITNPEA1 原 R2 判词有分母错误**：模板 `PackingAuto21:681-689` 的分母为
+  `1+bankGenMid i3+bankGenMid i4`，故 **1_1 的 w=3**，不是 w=2；γ4≥23/2000 对它的
+  精确服务余量为 −0.0056，原“一面闭 1_0/1_1/2_0”不成立。
+- **修正后的数值候选**：并盒 U 的 min γ4≈0.016989287956，γ4≥23/2000 的估计余量
+  ≈+0.005489287956。若将来真证该全盒下界，可服务当前在案 **1_0、1_2(fat1)、2_0**
+  三条，不覆盖 1_1；2_1/2_2 已证。它可能提供绕开 fat1 atan/G3 误差账的替代路线，
+  但全盒证书成本未知，不记 −3、不自动发车。
+- ox3q1h 的 125 record-group、B0 三面不可外推与 R3 单走等车道数据保留在快照，
+  本次未全量重跑，不升级为形式结论。独立审计见快照 `ORCHESTRATOR_CHECK/AUDIT.md`；
+  后续候选 `qitnpea1-shared-floor-w1` 等用户裁决。
+
+## 1.24 TerminalV11 家族压缩的组织性资产与口径勘误（`terminal11-family-compression-w1`，2026-11-19）
+
+- **零 Lean 第一阶段收线，无顶层减债**。编排者从存档输入重跑 parse/assign/cluster，
+  parsed109、FAMILIES 与 cluster 输出逐字节一致；109 条唯一 ID、85/21/3 路由计数成立。
+- **覆盖算术勘误**：FAMILIES 实际有 10 个 FARM 标签（合并 K1 两形也有 9 个概念组），
+  不是 8 族。K1/K2/K3/K4/K5 五个参数化 schema 覆盖 **80 支**；K6 两支与 K7/K10/K11
+  各一支，共 **5 支仍须独立处理**，不能写成 85 支完整压成 5 个目标。
+- **置换检查范围勘误**：cluster 只对 74 条带 tree 的显式 def 检查置换；35 条 hex
+  全部没有 tree，直接返回 None。因此“109 条置换等价对=0”只能降为“74 条显式 def
+  在该算法下未发现等价对”。hex 的 π 对称和注册顺序须另证，数值验证不等于 Lean 转运。
+- **R1 的 ly 文档公式勘误**：正确为 `1−(y−2)/0.52=(2.52−y)/0.52`，不是
+  `(4.52−y)/2.52`（`SphereKit.lean:156`）。evalfun 实现与 Lean 一致，故这是文档错误；
+  完整 probe 网格未由编排者重跑，所有极值/覆盖率仍为 ESTIMATE。
+- 可保留的是 AST、结构分族、共享原子、槽区间表和人工审查伪代码。模板中的
+  `<CertT1/S1/E1>`、taum/dihY 超越核、sqrt/delta 耦合与退化带都未解决；发射侧
+  70%/150–250 mh 是不预支的估计。审计见快照 `ORCHESTRATOR_CHECK/AUDIT.md`；
+  不自动进入第二阶段或 85 支发射。
+
+## 1.25 fat1 交错 Taylor 精确界（`fat1-g3-exact-w1`，2026-11-19）
+
+- **局部 Lean pilot 独立验收通过，未落库、未减顶层债**。205 行候选文件
+  `NliQitnpea12ArctanSeries.lean` 证明
+  `∀ m, ∀ t≤0, arctan t ≤ Σ_{i=0}^{2m+1} (-1)^i t^(2i+1)/(2i+1)`，
+  方法为几何级数 + FTC；m=9 给出 G3 的 39 次显式上界。隔离 apply 与快照源逐字节一致，
+  主仓 `git apply --check` PASS，未应用。
+- 编排者重编 RC=0（4.46 s / 最大 RSS 约 5.55 GB），原文件零 error/warning，三条
+  `#print axioms` 均恰标准三。另补 m=1 七次展开与负系数反向放缩两个真实消费例，
+  均编译通过且标准三。通用上界对全部 t≤0 成立，**arctan 这一层不需要 Hermite 锚**。
+- **G3 数值勘误复现**：g3_compare 确因约 −7.8e−62 的舍入伪影误选 b 变体，产生
+  −5.15e−5；a 变体在扫描中触零。rounded 的 +1.4e−15 同样不是可消费余量。
+  Hermite 仅记“本车道弃用”，不把切点触零夸大为所有 Hermite/SOS 路线普遍 NO-GO。
+- n=4 网格两半区 min G≈0.0798、min γ4−G>0 均独立复现，仍属 ESTIMATE；
+  G 正性、t̂ 方向链、slab/Δ、覆盖和 Assembly 未闭合。m=3/5/7/9 筛选未给 G2(bB+)
+  合格项，故不得向后续传播“全部负组统一 m=9”的口径，其它组须逐组选阶。
+- 审计见快照 `ORCHESTRATOR_CHECK/AUDIT.md`。`fat1-g-positivity-w1` 已于
+  2026-11-19 获批发车，只做代表小区；`qitnpea1-shared-floor-w1` 仍待用户裁决，
+  两条路线不得重复建设相同 glue。SORRIED 51 / AXIOM 585 不变。
 
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
@@ -451,6 +777,39 @@
 - 旧成本档（`LPPilot` 的 socert 3.5 min/条、Data 423 s 等）作废；以 `lp-pilot-w1`
   的 CALIB 为准。
 
+### 6.1 LP 对偶表示审计（`lp-dual-representation-audit-w1`，2026-11-18）
+
+- **阶段完成，单叶 A/B = GO（仅设计，未发车）**。137,780 B→19,380,352 B 是
+  `T114084514923t0000` 闭合试点叶；Text 骨架 174 模块是另一对象，源中位约 71.9 KB、
+  olean 主体约 3.93 MB，回归约 19,161 B/定理，不能混用口径。
+- CALIB 直接记录生产形 Data 19.33 MB / Assembly 0.07 MB，支持**数据字面量约占
+  99.6%**；`by decide` 主要成本是 elaboration wall/RSS，不应把 olean 字节都归给 decide。
+  这些是历史实测；当前对应 /tmp olean 已不在池，未重新编译。
+- **单叶 A/B 值得做**：ByteArray packed 与单 Nat 容器各一臂，另可测分片 decide 的 CPU；
+  必须先探 ByteArray.get 和 Nat 解码，指标为 wall/RSS/olean/axioms/陈述不变。
+  **原 Phase 0 新增 250 条 sorry 违反硬规则，禁止执行**；改 `trivial` 闭合对照 +
+  复用现有骨架。车队级重构、4–10× 缩小和 0.83 TB 外推仍未验证，不预支、不自动发车。
+- 独立审计与复跑日志在快照 `ORCHESTRATOR_CHECK/`。LP/D 证书层未改。
+
+### 6.2 packed 单叶表示：负系数漏失与修复版性能门槛（2026-11-19）
+
+- **原 A2 拒收**：虽然 olean 363,208 B、声明输出与 A0 相同，但字段级内核检查证明
+  cs 不等（b/certY 相等）。生成器未识别 `(i,(-c))` 的嵌套括号，系统性删除所有负系数，
+  故原 53× 结论无效。
+- **编排者修复版的语义合格**：修复互斥括号解析后，cs/b/certY 全部由 `decide`
+  证等，六声明输出与 A0 一致；olean = **406,304 B（约 47.8×）**。
+- **但 wall 未过预注册门槛**：两轮平均修复版/A0 ≈ **1.42×**，超过 1.30×，故记
+  UNRESOLVED，不车队化、不改 LP/D 层。需要优化解码/发射或由用户重新裁决阈值。
+- 原始 cs 经 Lean 计数为 5,565 项，与元数据 3202 nnz 不一致，旧 account_leaf_source.py
+  的同类括号统计也不可靠；不得按 3202 直接外推收益。patch 草案目标不在主仓，
+  apply-check 失败。审计、修复源与日志在快照 `ORCHESTRATOR_CHECK/`。
+- **`lp-packed-single-leaf-w2` 在飞（2026-11-19 用户明批）**：从 w1 修复版 fresh，
+  最多两个优化臂；必须保留 cs/b/certY 字段级 decide 等价和六输出比较，最终候选
+  两轮 wall/A0≤1.30×且语义/公理全合格才 GO。不车队化、不改 LP/D 层、不做全量重放。
+- **构建池事故**：该车建 symlink farm 时父目录穿透，误替换主仓 LP 构建产物；tracked
+  源码无损，但根验收在恢复前不可复跑。精确清点以 `priority-queue.md` 文件头为唯一
+  出处，处置见 `priority-queue.md` §3；不得把单叶实验 GO 与主仓构建池可用混为一谈，不擅自全量重建。
+
 ## 7. 路线原则（nli 专用）
 
 1. **先数学，后证书**：分诊时先找 WIRE / 单调性 / 代数恒等式 / 分支一致 /
@@ -463,22 +822,33 @@
    bounded opt-in（`058b2c12` / `229f731f`）；585 信任基座不动。
 5. **负结果也是资产**：rad2 路线、ZTGIJCF4 模板、guard 超平面切分都已被机器证伪；
    后续工单不要再重复试。
+6. **timeout = 暂缓，不是判死（2026-11-18 用户指正）**：先查 wire/快照/进程，再保存
+   WIP；只把本次执行记为 `暂缓（可重启）`。不自动 resume 是防重复与资源冲突，不能
+   推出算法不可行。NO-GO 只用于有明确反例、可信结构否证或信任冲突的**具体路线**；
+   以后出现新证据或合适性价比时可从快照 fresh 重启。
 
-## 8. 下一步清单
+## 8. 下一步清单（2026-11-18 更新）
 
-1. 等 `rulep-replay-w2` 收线（1,400 叶）→ **全盒内核补叶 5,112 叶（~38 CPU·h，
-   Rule P）** → 装配 → `Assembly.nliTskXLLIPLS`（SORRIED 再 −1）。
-2. 并行（纯 Python）：`nli-recost-w1` 重排 34 条 FARM，产出 ≤10 CPU·h 短名单
-   （2026-11-15 16:14 发车）。
-3. 回放后发 `ztgmain-w1`（γ4/dihY 套件，10 条 ZTGIJCF4）。
-4. `nli-triage` 的 PICK-3：`get_main_nonlinear` 109 vs 108 对表；ZTGIJCF4
-   `betaBumpLb` SF 记档。
-5. LP 路线裁决（外部盘/农场/冻结）。
-6. FARM 34 条：**不再排本地证书波次**（见 §1.3）；唯一候选 `nliRestIXPOTPA`
-   （poly 档，0.59 CPU·h 起）；3 条 cell3 先补 `log`/负底规则；其余转 MATH/MATH-FARM。
-7. `nliOx3q1h`：先落 **46 条线性**（`linarith`，零风险）；184 条 γ4 二选一——
-   若 `g4port` Gate-0（`Jet3` 三阶导界 safety ≲10）过关，走 **CertTM2 引擎**
-   （HOL 折算 ~81 CPU·h；#147 pilot 47 叶/0.78 CPU·h）；否则**每 (盒,签名)
-   联合角点表**（48 盒 / 1,056 去重点 / 3,456 次求值；166 条角点 + 18 条 y4
-   内部需一维补丁），**不要拆侧条件**（完美每盒界仍亏 9e−4…0.2）；
-   uniform centered-form 不可行（16⁶ 子盒/条 ≈98 CPU·年）。
+1. **A/B/C 侦察已全部收线**：A 二阶导代数化（§1.12，含 factor-2 勘误）；
+   B0 联合包络数值 GO（§1.11）；Bernstein 多项式 GO、通用超越后端 NO-GO（§1.10）。
+   三者都只提供路线与数据，未移动 SORRIED。
+2. **Hessian Lean 已收线为 UNRESOLVED**：W5 + 6 条对角二阶导真证可复用；
+  整盒量化三路均否证/不可行，逐坐标凹性已有精确反例（§1.12）。固定 all-2 基点
+  只能作低优先机械件，**B0 母定理不得按原凹性方案发车**。
+3. **FHB floor 已收线为 UNRESOLVED**：三轴一阶导全盒为正有高精度数值反例；
+   已验收的只有“凹性 + 端点 ⇒ m3/m4/m5”归约，H1/H2 均未证（§1.14）。不得续走旧单调路线。
+4. **cell3 wt 已收线为 UNRESOLVED**：wt2A 核归约与消费探针标准三，核本身和 wt1 未证；
+   wt2A 的 y5 全盒严格增有高精度数值反例（§1.15）。8–12 cell 只是数值方案，不自动续发。
+5. **当前授权在飞 2 条（2026-11-19 用户批准 A/D）**：`fat1-g-positivity-w1`
+   消费已验交错界，只做代表小区 G>0 与真实 IExpr/checkPos；`lp-packed-single-leaf-w2`
+   最多两臂优化解码，保留字段级内核等价，wall/A0≤1.30×才 GO。QITNPEA1 共享下界、
+   taum 数学侦察与其它暂缓资产不自动续发。既有 g3pos 端点和 cell3 Probe20 保留；
+   Bernstein kernel 与完整 BernsteinKit 当前搁置。六车道总结见
+   [`history/nli-six-lanes-2026-11-18.md`](history/nli-six-lanes-2026-11-18.md)。
+6. **其它排队**：QITNPEA1 共享下界 pilot、taum 数学侦察等；实时状态与回执见
+   `priority-queue.md` §1–§2。
+7. **既有非农场候选**：iyou-sharpv2、ZTG γ4 解耦 4、ox3q1h S2a；S2b 量产、农场、
+   certtm/TM3/Mono*/D 层与 push 继续保持用户 hold。
+8. **不再重复**：rad2 望远镜、CertTM2/Gate-0、IXPOTPA 旧 0.59 CPU·h、
+   超越函数“整盒有理界 + 单分数组合”、FHBa/v2a 的 96 角点表、FHB floor 三轴一阶单调、
+   cell3 wt2A 的 y5 全盒单调。

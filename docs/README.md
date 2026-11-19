@@ -10,9 +10,11 @@
 
 - **[`priority-queue.md`](priority-queue.md)** — 唯一 operational 账本：
   里程碑对表（§0）、在飞车道（§1）、排队与工单（§2–§6）、最近日志（§8）。
-  §8 只保留最近窗口（续990 起）；续306–续989 在
-  [`history/changelog-archive-2.md`](history/changelog-archive-2.md)，续1–续344 在
-  [`history/changelog-archive.md`](history/changelog-archive.md)。旧队列/战术/J 战役表在
+  2026-11-18 重组前全文（含 J/Text 旧排产与续990–1242）在
+  [`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)；
+  续306–续989 在 [`history/changelog-archive-2.md`](history/changelog-archive-2.md)，
+  续1–续344 在 [`history/changelog-archive.md`](history/changelog-archive.md)。
+  更早队列/战术/J 战役表在
   [`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
 - [`handoff-2026-11-18.md`](handoff-2026-11-18.md) — **2026-11-18 交接（换 agent 用）**
@@ -28,6 +30,8 @@
   [`handoff-2026-11-14.md`](handoff-2026-11-14.md)（OCBICBY 移交）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
+- [`history/nli-six-lanes-2026-11-18.md`](history/nli-six-lanes-2026-11-18.md) —
+  **2026-11-18 六车道总结**：实测加速、失败边界、Lean 资产与下一步（历史总结）。
 - [`DECISIONS.md`](../DECISIONS.md) — 用户裁决与长期政策（根级唯一 current 文档）。
 - [`PLAN.md`](../PLAN.md) — 项目目标、锁定决策、阶段定义（**2026-10-10 计划快照，
   不是当前状态**）。
@@ -90,7 +94,7 @@
 ## 维护规则（三条）
 
 1. **一笔落库 = 一条日志**：只在 `priority-queue.md` §8 追加（新→旧）；§8 超过窗口
-   （当前约 20 条）时移入 `history/changelog-archive-2.md`（按续号升序），原文不改；
+   （当前约 20 条）时机械迁入 `history/` 或带日期的 `archive/` 快照，原文不改；
    续1–续344 的旧档在 `history/changelog-archive.md`。
 2. **数字只引用不抄**：同一指标不允许多个文档各写一份；引用时带
    `（实测 <commit>，<日期>）` 或标 `stale`。
