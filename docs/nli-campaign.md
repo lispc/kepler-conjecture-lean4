@@ -609,6 +609,22 @@
   2026-11-19 获批发车，只做代表小区；`qitnpea1-shared-floor-w1` 仍待用户裁决，
   两条路线不得重复建设相同 glue。SORRIED 51 / AXIOM 585 不变。
 
+## 1.26 fat1 G 正性小区 WIP 暂缓（`fat1-g-positivity-w1`，2026-11-19）
+
+- **2 h 超时，暂缓（可重启），不是判死；不自动 resume**。DELIVERY/Evidence 均为
+  “编译结果后补”的草案，没有可接受的 fat1_main、公理面或 patch。
+- 最新 farm 源 **2,975 行**，已抢救到快照 `ORCHESTRATOR_CHECK/`；快照 patch 为
+  **2,955 行**旧版。原样独立编译 RC=1（18.55 s / 约 8.14 GB），末尾
+  `unterminated comment`。隔离闭合 14 处章节注释后仍 RC=1，日志含 82 个 `error:`，
+  涉及解析、sqrt 改写、盒成员与代数归约；故不是“只差注释”，按止损停止接管。
+- **可复用的是数学设计而非生成整件**：临界角附近 bB− 小区、Δ 中心展开以降低
+  IExpr 依赖、18→6 分组、逐组 S7/S11/T5 与 kernel checkPos。Fraction 包络与网格
+  min 值仍只是车道导航，不是全盒 Lean 证书。205 行通用交错 Taylor 引理已另件落库
+  `248fde92`，不与本 WIP 的失败混合。
+- 后续若获用户另批，fresh 从快照 WIP，先修发射器并逐段验证，再把主证明压成可人工
+  审查的小文件；不直接重生成约 3,000 行整件，也不把旧 patch_with_series（含已落库
+  依赖）应用主仓。审计见快照 `ORCHESTRATOR_CHECK/AUDIT.md`；SORRIED 51 / AXIOM 585 不变。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒
@@ -803,12 +819,22 @@
 - 原始 cs 经 Lean 计数为 5,565 项，与元数据 3202 nnz 不一致，旧 account_leaf_source.py
   的同类括号统计也不可靠；不得按 3202 直接外推收益。patch 草案目标不在主仓，
   apply-check 失败。审计、修复源与日志在快照 `ORCHESTRATOR_CHECK/`。
-- **`lp-packed-single-leaf-w2` 在飞（2026-11-19 用户明批）**：从 w1 修复版 fresh，
-  最多两个优化臂；必须保留 cs/b/certY 字段级 decide 等价和六输出比较，最终候选
-  两轮 wall/A0≤1.30×且语义/公理全合格才 GO。不车队化、不改 LP/D 层、不做全量重放。
-- **构建池事故**：该车建 symlink farm 时父目录穿透，误替换主仓 LP 构建产物；tracked
-  源码无损，但根验收在恢复前不可复跑。精确清点以 `priority-queue.md` 文件头为唯一
-  出处，处置见 `priority-queue.md` §3；不得把单叶实验 GO 与主仓构建池可用混为一谈，不擅自全量重建。
+### 6.3 packed-w2 双流单叶 GO 与构建池事故（2026-11-19）
+
+- **b2 单叶 bounded GO，编排者独立两轮验收通过**。从 A0 重生成 Data 与交付源逐字节
+  一致，Assembly 与 A0 一致；cs/b/certY 字段级 `decide` 等价均无公理，Count=
+  5,565/5,565，六声明输出逐字节相同，`bound/bound_lt` 标准三。
+- 独立 wall/A0：r1=1.062659、r2=1.048097；均值 A0=51.42 s、b2=54.27 s，
+  合并比 **1.055329**，通过预注册 ≤1.30×。A0 olean=19,404,032 B，b2=
+  **395,784 B**（约49.0×）；最大 RSS=8.254 GB，全部日志零 error/warning。
+- 设计 = 双流 base-2^64 条目打包 + hex 发射 + 单趟解码；车道分解探针提示主要成本在
+  giant-Nat 字面量 elaboration，而非解码循环。目标源不在主仓 tracked 集，**没有可落
+  patch，不车队化、不改 LP/D 层、不按单叶倍数外推总体磁盘**。
+- **独立运行态事故**：该车建 symlink farm 时父目录穿透，误替换主仓 LP 构建产物；
+  tracked 源码无损，但根验收在恢复前不可复跑。精确清点以 `priority-queue.md` 文件头
+  为唯一出处；193 个受损 olean 全部有 tracked 源，恢复不等于重放 42,889 条 bound 债。
+  处置见 `priority-queue.md` §3，未获用户批准前不重建。审计在快照
+  `ORCHESTRATOR_CHECK/{AUDIT,INCIDENT_AUDIT}.md`。
 
 ## 7. 路线原则（nli 专用）
 
@@ -839,11 +865,11 @@
    已验收的只有“凹性 + 端点 ⇒ m3/m4/m5”归约，H1/H2 均未证（§1.14）。不得续走旧单调路线。
 4. **cell3 wt 已收线为 UNRESOLVED**：wt2A 核归约与消费探针标准三，核本身和 wt1 未证；
    wt2A 的 y5 全盒严格增有高精度数值反例（§1.15）。8–12 cell 只是数值方案，不自动续发。
-5. **当前授权在飞 2 条（2026-11-19 用户批准 A/D）**：`fat1-g-positivity-w1`
-   消费已验交错界，只做代表小区 G>0 与真实 IExpr/checkPos；`lp-packed-single-leaf-w2`
-   最多两臂优化解码，保留字段级内核等价，wall/A0≤1.30×才 GO。QITNPEA1 共享下界、
-   taum 数学侦察与其它暂缓资产不自动续发。既有 g3pos 端点和 cell3 Probe20 保留；
-   Bernstein kernel 与完整 BernsteinKit 当前搁置。六车道总结见
+5. **当前授权在飞 2 条（另一编排会话的 cell3/Bernstein）**。
+   `fat1-g-positivity-w1` 已超时记暂缓、可重启，WIP 与失败证据见 §1.26，不自动 resume；
+   `lp-packed-single-leaf-w2` 的 b2 经独立两轮验收为单叶 bounded GO（§6.3），不车队化。
+   QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发；实时回执以
+   `priority-queue.md` §1 为准。六车道总结见
    [`history/nli-six-lanes-2026-11-18.md`](history/nli-six-lanes-2026-11-18.md)。
 6. **其它排队**：QITNPEA1 共享下界 pilot、taum 数学侦察等；实时状态与回执见
    `priority-queue.md` §1–§2。

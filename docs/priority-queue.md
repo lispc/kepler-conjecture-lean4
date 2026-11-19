@@ -63,14 +63,15 @@
 
 ## 1. 在飞
 
-**当前授权在飞 3 条（A + 另一编排会话的 cell3/Bernstein）；D 已收线。** QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 2 条（另一编排会话的 cell3/Bernstein）。** A 已超时记暂缓、可重启，不自动 resume；D 已收线。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；所有 Lean 编译统一经 `/tmp/lean_global_lock.d` 原子锁串行，锁内执行压力/RSS 护栏。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `fat1-g-positivity-w1` | agent-20 / agent-9torpddk，running | 消费已验交错 Taylor 界，只做一个代表小区的 G>0 与 IExpr/checkPos 真实接口；逐组选阶，不默认展开39次，不重开 Hermite/上千叶/bank |
 | `cell3-wt2a-core-w2` | 编排者会话后台 agent，running（2026-11-19 用户批「启动 sub agent」） | 从 WIP 重启：先修 NliBanks20 机器层 RC=0，再一个代表 cell 端到端真证 + 消费 NliBanks19 归约，最后诚实成本外推；**y5 单调已证伪，符号断言须区间/精确证书**；53 cell 量产不做；机器层 3 轮卡死即止损交班 |
 | `bernstein-kernel-representation-w1` | 编排者会话后台 agent，running（2026-11-19 用户批「启动 sub agent」） | 81 系数 ZTG q=36/25 叶的**新表示**试点（显式指数向量 / IneqAgent 式 `positivity + ring` 证明项）；禁 MvPolynomial/Finsupp/Quot 路径；**2 h 墙钟无合格叶即暂缓**，不写永久放弃；不做 1,215 系数或量产 |
+
+**A fat1 G 正性已超时暂缓（2026-11-19，`fat1-g-positivity-w1`）：WIP 已抢救，不判死、不自动 resume。** 最新 2,975 行源与 patch 的 2,955 行旧版不同；原样独立编译 RC=1（unterminated comment），隔离闭合 14 处章节注释后仍有 82 个 `error:`，没有可接受证明或公理面。Δ 中心展开、小区与逐组 Taylor/checkPos 设计保留为数学资产；约 3,000 行生成整件及旧 patch 不接收入库。fresh 重启须用户另批，先小组件与简洁化。详见 `nli-campaign.md` §1.26 与快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
 
 **D packed-w2 已收线（2026-11-19）：b2 单叶 bounded GO，独立两轮验收通过。** 从 A0 重生成候选并逐字节比对；cs/b/certY 字段等价均无公理、六输出逐字节相同、Count=5,565/5,565。独立 wall/A0=1.062659/1.048097，合并均值比 1.055329；olean=395,784 B（约49.0×），最大 RSS=8.254 GB。目标源不在主仓，无可落 patch，不车队化、不改 D 层。LP 构建池事故另见文件头与 §3，恢复未批、未执行；详见快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
 
@@ -168,7 +169,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 候选 | 数学内容与最小闸 | 当前边界 |
 |---|---|---|
 | `nli-algebraize-fat1-scout-w1` | **已收线，条件 GO（数值）**；`QITNPEA1_1_2` 两半 ρ≈0.125/0.139，8 区域 | 后续 `fat1-g3-exact-w1` 已收线：通用交错 Taylor 引理与 G3 S39 独立验收标准三，patch 未落库；bank/G 正性仍未闭合，详见 `nli-campaign.md` §1.25 |
-| `fat1-g-positivity-w1` | **在飞，回执见 §1**：消费已证交错 Taylor 界，只做一个代表小区的 G 正性与真实 IExpr/checkPos 接口 pilot | 不重开 Hermite、不扩 Taylor 农场；逐组选阶，G2(bB+) 不套用 m=9；不承包 bank/Assembly |
+| `fat1-g-positivity-w1` | **超时暂缓（可重启），WIP 已抢救**；最新 2,975 行原样 RC=1，注释修复探针仍有 82 个 error，无公理面 | 不自动 resume、不接旧 patch；用户另批后 fresh 从快照，先修发射器、逐段验证并简洁化，不直接重生成整件 |
 | `joint-envelope-extension-scout-w1` | **已收线，两处勘误**；#147 仅否定独立值域服务算法；QITNPEA1 并盒候选经复跑，但 1_1 分母纠错后不覆盖 | 修正后仅数值覆盖在案 1_0/1_2/2_0，零 Lean、零减债；详见 `nli-campaign.md` §1.23 |
 | `qitnpea1-shared-floor-w1` | **等用户裁决**：研究并盒 γ4≥23/2000 的短证书，及分离 1_1 后的二盒/分段常数面 | 先数学归约与代表小片，不承包全家族、不直接生成农场；可能绕开 fat1 atan/G3，但实际形式化成本未知 |
 | `disjunction-lp-scout-w1` | **已收线，常数权重 NO-GO**；三点 Farkas 证人独立复核最小分量 +0.001271705 | 不否定析取命题；h0cut 单分片亦失败，更细分片/变权重不优先 |
@@ -240,6 +241,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-19（10:42，续1279）**：**A fat1 G 正性超时暂缓，最新 WIP 已抢救并独立确认未通过；不自动 resume**。
+  ① timed_out 后 wire 终止于 cancelled、无对应编译进程；DELIVERY/Evidence 均为草案。最新 2,975 行源已保存到快照 `ORCHESTRATOR_CHECK/`，patch 的 2,955 行版本不是最新。
+  ② 原样独立编译 RC=1（18.55 s / 约 8.14 GB），末尾 unterminated comment；隔离闭合 14 处章节注释后仍 RC=1，含 82 个 `error:`，涉及解析、sqrt、盒成员和代数归约。没有 fat1_main 或 `#print axioms` 证据，旧 patch 不接收入库，接管按止损停止。
+  ③ 保留 Δ 中心展开、bB− 小区、18→6 分组与逐组 Taylor/checkPos 设计为数学资产；数值包络不升级为证书。205 行通用交错 Taylor 引理已另件落库 `248fde92`，与本 WIP 分开。
+  ④ 后续须用户另批 fresh 从快照，先小组件、发射器与简洁化，不直接重生成整件。当前授权在飞为另一会话 cell3/Bernstein；SORRIED 51 / AXIOM 585 不变，LP 池恢复仍独立待批。下一条：续1280。
 
 - **2026-11-19（11:20，续1278）**：**封账批次收线：六件已验收 Lean 资产全部落库（6 commit），SORRIED 51 / AXIOM 585 不变。**
   ① 落库清单（每件流程：快照逐字节对表 → 岛协议直编 RC=0/0 err → 编排者亲跑 `#print axioms` 恰 `[propext, Classical.choice, Quot.sound]` → 一件一 commit）：
