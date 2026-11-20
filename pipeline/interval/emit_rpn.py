@@ -629,6 +629,13 @@ class RPNEmitter(object):
             lo = Fraction(-10) ** 6
         if hi is None:
             hi = Fraction(10) ** 6
+        if name == "hminus":
+            # 2026-11-20 root fix: `nb17_two_hminus_bounds` proves
+            # 2.4635 <= 2*hminus <= 2.46352.  The raw choice box is
+            # [6/5, 13/10]; without this clamp `2*hminus` endpoints
+            # regress to 2.4 and re-open the false-domain slice.
+            lo = max(lo, Fraction(123175, 100000))
+            hi = min(hi, Fraction(123176, 100000))
         note = ("choice const %s: 特征方程丢弃, 按外扩盒 [%s, %s] 处理%s"
                 % (name, lo, hi,
                    "（原为" + "/".join(strict) + "开）" if strict else ""))
