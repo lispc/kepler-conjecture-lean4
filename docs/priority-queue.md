@@ -16,16 +16,16 @@
 > 全文日志已移至 [`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)。
 > 本文件只保留当前基线、真实在飞、可执行队列、待裁决和最近日志。
 
-**当前实测 = 基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证）；sqrt8 闭后仓面 SORRIED 50（`8c7dfc34`，2026-11-20）**：
+**当前实测 = 基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证）；wt2A 小模块验收后仓面 SORRIED 49（`1ec06b28`，2026-11-20；根面复跑池后）**：
 
-- cone `K_REACH 2,108,657`（基线实测；P0/P1/P2 置换的锥缩记账随池复跑仪器，见 §8 续1310/1312）/ **SORRIED 50** / **`K_AXIOM 585`**；
+- cone `K_REACH 2,108,657`（基线实测；P0/P1/P2 置换的锥缩记账随池复跑仪器，见 §8 续1310/1312）/ **SORRIED 49** / **`K_AXIOM 585`**；
   MODULES 12,140 / UNIVERSE 2,140,793 / COVERAGE 98.4989%；
   口径 II 39,125 / 51 / 585 / 49,868（仪器口径池后复跑）。
-- **SORRIED 50（sqrt8 真证落库 `8c7dfc34`，2026-11-20 实测仓面计数；仪器复跑池后）
-  = Assembly 50（49 `nli*` + 1 hLP）+ Text 0**。
-  49 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + **3 `nliCell3*`**（sqrt8 `nliCell3QZECFICwt0sqrt8` 已闭）+ 4 直挂
+- **SORRIED 49（wt2A 小模块验收落库 `1ec06b28`，2026-11-20 实测仓面计数；根面复跑池后）
+  = Assembly 49（48 `nli*` + 1 hLP）+ Text 0**。
+  48 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + **2 `nliCell3*`**（sqrt8 已闭；wt2A 已闭）+ 4 直挂
   （`nliKcblrqcIneqDef` / `nliLpIneqs` / `nliMainNonlinearTerminalV11` / `nliOx3q1h`）。
-- 根面 **589 = 585 native + 标准三 + `sorryAx`**；基座 585 未动。
+- 根面 **589 = 585 native + 标准三 + `sorryAx`**；基座 585 未动。wt2A 已闭只减 sorry 源（50→49），根面 axiom 形状待池归零后复跑确认。
 - **运行态事故（2026-11-19，`lp-packed-single-leaf-w2`）**：主仓
   `lean/.lake/build/lib/lean/Kepler/LP/` 有 **969 个自指符号链接**（193 `.olean`、194 `.ilean`、
   194 `.trace`、388 `.hash`），由 farm 父目录穿透后 `ln -sfn` 误替换；`W6Align/` 幸存。
@@ -66,8 +66,8 @@
 
 ## 1. 在飞
 
-**当前在飞：wt2A 六模块已落库 `d733f61d`（10,027 行纯新增，67/67 标准三；Assembly 3 行接线未提交，官方探针等池）+ wt2A Assembly 定向闭包恢复（单 worker，当前 K033）+ IXPOTPA 证前闸已收线 NUMERICAL_ONLY（γ23-y2 单调辅助命题精确反例，§8 续1351）+ wt1 A′ 一阶段施工（接管会话发车，1 车道日软帽，§8 续1349）；joint-6 二阶符号双片 pilot 已收线 UNRESOLVED，四条精确辅助落库 `4fad4b72`，两条全盒主目标 0/2（§8 续1345）；L1 支撑件已落库 `53c9a79a`、七条二阶符号证书未闭（§8 续1343）；ZTG 解耦4 条件资产已落库 `3e12214e`、每债 hstep=0/9；RQWUDDU 已收线。96/96 角点闭合；wt2A 候选 bank 已亲验，Assembly 终验等池。** joint-6 **W1 增量 2 HM 已落库 `4800c0ca`**（编排者亲验，§8 续1335）；wt2A 于 14:15 获用户「启动1」明批发车（§8 续1336），在飞生产车道与池恢复共享 3 槽 guard。**池恢复已按 wt2A 重排：候选 Assembly 闭包 8,867 件，预填 6 件已验新 olean 后既有缺件 1,493；定向链只跑该闭包，可绕过 1,027 件非目标编译。旧 v2 调度器已由安全切换终止；K030 自然完成 RC=0 / 6,310.68 s，切换任务 `bash-ae5fb4gl` 已于 19:01 启动定向链，当前 K033。全池其余 1,212 件待 wt2A 后续跑；完整池仍只挂终验仪式（根面 589 同集探针 + K_REACH 记账 + e2e 树可视化重建），但 wt2A 定向闭包已是下一真实 −1 的关键路径。****今日累计落库十六笔**：P0 `4b5e7958` / P1 `36fa6434` / P2 `7f4bfb59` / sqrt8 债闭合 `8c7dfc34`（SORRIED 51→50）/ C840 `7665487e` + 锥外库存清理 `47f67379` / joint-6 W0 `ef273509` + W1 增量1 `488455f7` + 增量2 `4800c0ca` + 增量3=K `c5038406` + 增量4=P `40b1b174` + 解耦4条件资产 `3e12214e` + L1支撑件 `53c9a79a` + 二阶符号辅助 `4fad4b72` / iyou 波侧 `9d8061de` / wt2A 六模块 `d733f61d`；另五批文档入档；全仓 lean ~166 万行（自 ~1,300 万）。
-证明车道施工期间主仓 tracked 零改动；当前 wt2A 仅 Assembly 3 行接线未 commit（六模块已落库 `d733f61d`）；编译走 3 槽信号量 + guard 护栏（≤3 lean ∧ ≤24 GB ∧ pressure<2）。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
+**当前在飞：wt2A 已闭（六模块 `d733f61d` + 验收下沉 `1ec06b28`；小模块 90 件闭包亲验标准三，完整 Assembly/根面复跑待池）+ wt2A Assembly 定向闭包恢复（单 worker，当前 K033）+ IXPOTPA 证前闸已收线 NUMERICAL_ONLY（γ23-y2 单调辅助命题精确反例，§8 续1351）+ wt1 A′ 一阶段施工（接管会话发车，1 车道日软帽，§8 续1349）；joint-6 二阶符号双片 pilot 已收线 UNRESOLVED，四条精确辅助落库 `4fad4b72`，两条全盒主目标 0/2（§8 续1345）；L1 支撑件已落库 `53c9a79a`、七条二阶符号证书未闭（§8 续1343）；ZTG 解耦4 条件资产已落库 `3e12214e`、每债 hstep=0/9；RQWUDDU 已收线。96/96 角点闭合；wt2A 候选 bank 已亲验，Assembly 终验等池。** joint-6 **W1 增量 2 HM 已落库 `4800c0ca`**（编排者亲验，§8 续1335）；wt2A 于 14:15 获用户「启动1」明批发车（§8 续1336），在飞生产车道与池恢复共享 3 槽 guard。**池恢复已按 wt2A 重排：候选 Assembly 闭包 8,867 件，预填 6 件已验新 olean 后既有缺件 1,493；定向链只跑该闭包，可绕过 1,027 件非目标编译。旧 v2 调度器已由安全切换终止；K030 自然完成 RC=0 / 6,310.68 s，切换任务 `bash-ae5fb4gl` 已于 19:01 启动定向链，当前 K033。全池其余 1,212 件待 wt2A 后续跑；完整池仍只挂终验仪式（根面 589 同集探针 + K_REACH 记账 + e2e 树可视化重建），但 wt2A 定向闭包已是下一真实 −1 的关键路径。****今日累计落库十七笔**：P0 `4b5e7958` / P1 `36fa6434` / P2 `7f4bfb59` / sqrt8 债闭合 `8c7dfc34`（SORRIED 51→50）/ C840 `7665487e` + 锥外库存清理 `47f67379` / joint-6 W0 `ef273509` + W1 增量1 `488455f7` + 增量2 `4800c0ca` + 增量3=K `c5038406` + 增量4=P `40b1b174` + 解耦4条件资产 `3e12214e` + L1支撑件 `53c9a79a` + 二阶符号辅助 `4fad4b72` / iyou 波侧 `9d8061de` / wt2A 六模块 `d733f61d` + wt2A 验收下沉 `1ec06b28`；另六批文档入档；全仓 lean ~166 万行（自 ~1,300 万）。
+证明车道施工期间主仓 tracked 零改动；wt2A 六模块与验收下沉均已 commit（`d733f61d` / `1ec06b28`），完整 Assembly/根面复跑待池；编译走 3 槽信号量 + guard 护栏（≤3 lean ∧ ≤24 GB ∧ pressure<2）。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
@@ -80,7 +80,7 @@
 | `ox3q1h-p0-split-w1` | **已收线 P0 完成（§8 续1318）** | 记账缺口闭合 100%：39,792→**3,524 点**（−91.1%）；5,516 非顶点对 margin 全正 [exact]（min +1.32e-3）+ 19 合取全可行 + 184/184 升 [exact]；S2A_SLOTS **1,159 件**就绪、S2b 56 文件批产表就绪（G4CORNER 压缩式 0.39–0.88M 行 vs 现式 2.36M）；**S2a/S2b 执行等用户批（Lean 算力，随 2 生产槽轮转）** |
 | `ztg-joint6-build-w1` / `ztg-joint6-kp-w1` / `ztg-joint6-l1-w1` / `ztg-joint6-sign-pilot-w1` | **96/96 角 + L1 支撑件落库 `53c9a79a`；二阶符号双片 pilot 已收线 UNRESOLVED，4 条辅助落库 `4fad4b72`（§8 续1345）** | L1 七模块 89/89 标准三；pilot 两条全盒主目标 **0/2**，不能消费对应 `of_nonpos`，未接 Assembly。归一化 Bernstein 仅 y4 方向统一、朴素中点两片均 0/64、核心单调性只有采样；无精确反例、不判定理为假。SORRIED −0，下一闸仍是精确全盒证书，未自动扩七片或续派 |
 | `ztg-decouple4-g4-w1` | **已收线 UNRESOLVED；条件资产落库 `3e12214e`（§8 续1342）** | 32 有效 γ4 角 + 128 元组 + 通用 slice 归约 + 四个 conditional bank 已亲验落库；每债 9 片 hstep 仍 **0/9**，盒级 hG/无条件 bank 未闭，无 Assembly hunk。三轮一阶包络均太宽（最好首片偏导仍 [-8.74,10.30]），只否定当前包络，不否定数学路线；下一闸 = 新高次符号证书/剖分，禁假 hstep/农场 |
-| `cell3-wt2a-prod-w1` | **六模块已落库 `d733f61d`（§8 续1350）；Assembly 3 行接线待池** | 62/62；六模块源 6/6 逐字节匹配已验证快照，编排者本轮重编 RC=0/error 0（峰值 5.98–7.02 GB）；AuditCells **67/67** 恰标准三、零 sorryAx/error；目标 `bank_wt2A : bank_QZECFICwt2A` 最小探针亲验标准三。**Assembly 接线未提交、未记 −1**；闭包缺件 1,491，当前 K033。终验 = 修改版 Assembly 独立编译 + 亲跑 `#print axioms Kepler.Assembly.nliCell3QZECFICwt2A` 恰标准三 |
+| `cell3-wt2a-prod-w1` | **已闭（§8 续1352）；六模块 `d733f61d` + 验收下沉 `1ec06b28`** | 62/62；六模块本轮重编 RC=0/error 0，AuditCells **67/67** 标准三、零 sorryAx/error。`Kepler.Targets.Wt2A` 定义同名 `Kepler.Assembly.nliCell3QZECFICwt2A`，闭包 **90 / 缺 0**，亲跑 `#print axioms` 恰标准三（3.54 s / 5.69 GB）。**SORRIED 50→49（源码层）**；完整 Assembly/根面复跑待池（缺 1,491，当前 K033） |
 | `lean436-pilot-w1` | **已收线「留 4.32」（§8 续1329）** | **判据成立，升级问题就此关闭**：① 硬破 = `Interval/Trans.lean` 内核 decide 在 4.36 任何可达参数编译不了（maxRecDepth≤1M 报深、≥2M SIGABRT 9.2GB 崩；4.32 下 11 s 过）——归因 4.33 #13956 + 4.34 内核重写；**其锥全树 = Interval 证书农场 1,072 文件 / 94,431 处 `by decide`**（CertTM/NliBanks/Gamma4Val/Base 桥全在内）；换 native_decide 被 §2 禁，只能报上游。② 样本闭包 139 模块四轮战役：out-of-box 43/139，5 处一行补丁 + heartbeat 提升后至多 59/139（止损下界）。③ **elaboration 件系统性慢 3–25×**（LuneVolume 18→443 s）——4.36 重编只会更慢。④ 信任面：K009 axiom 面两版本逐条一致；GoodListShard 两件 4.36 下多出 Classical.choice（形状漂移） |
 | `hol-cost-gap-census-w1` | **已收线（§8 续1331）** | **HOL 成本底账首次逐债落地 [exact]**（azure 23,223 行/5,002.1 CPU·h/中位 404.6 s；编排者亲复跑逐数复现）；两锚点勘误（WKGUESBsym ~280×→**4.1×** informal 混币 / IXPOTPA 163.36 s→163,524 s = 45.4 h 千秒误标秒）；红旗三簇全在 ②b 单叶证力（RQWUDDU ~2,780×、QITNPEA1 族 248–1,271×、sym 双债 98–137×）；**我们反超三条**（ox3q1h 0.03–0.11×、TEWNSCJ 0.76×、TerminalV11 0.19× [EST]；Rule P 单叶反快 HOL 13–15×）；**kit：K1 条件 GO（FHBa H1 入口，不动 joint-6）/ K2 通用 NO-GO / RQWUDDU prescan 并入 P0-a/b 批呈批**；全表 = 快照 CENSUS.tsv，判词 = nli-campaign §9.6 |
 | `notame7-census-w1` | running（用户 10:00 批「批p0」） | **零 Lean 普查**：照 `strategy/trust585-pruned-kernelization-20261120.md` §7 P0——notame7 python 逐字移植 + 移植保真锚（tame 终图必不满足 / untame 必满足）→ Tri 五根 + 一个中 Pent 根的**可剪占比 + 剪枝后 pops + finals 双口径一致性**（剪枝 soundness 实证侧检验）+ 死因分布；结论对照 §5 停机闸（≥20–30× 复合 → P1/P2 升级建议，不足判停） |
@@ -277,6 +277,11 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-20（20:20 实测，续1352，接管会话）**：**用户裁「改验收目标到小模块」：wt2A 验收下沉 `Kepler.Targets.Wt2A` 落库 `1ec06b28`，SORRIED 50→49（源码层；根面复跑待池）。**
+  ① 变更 = 同一全名 `Kepler.Assembly.nliCell3QZECFICwt2A`、同一陈述 `Kepler.Text.bank_QZECFICwt2A`、同一证明项 `Kepler.NliBanks27.bank_wt2A`，从 `Assembly` 容器下沉到新模块 `lean/Kepler/Targets/Wt2A.lean`；`Assembly` 只 import、不重复声明。闭包 **8,867 → 90**，缺 olean **0**，与 585 shard / Text / Interval 分支彻底解耦。
+  ② 亲验：新模块 `lean -o` RC=0 / error 0（3.54 s / 5.69 GB）；探针 `import Kepler.Targets.Wt2A` 后 `#check` 类型恰 `Kepler.Text.bank_QZECFICwt2A`，亲跑 `#print axioms Kepler.Assembly.nliCell3QZECFICwt2A` 恰 `[propext, Classical.choice, Quot.sound]`，零 sorryAx。六模块 67/67 审计仍有效。
+  ③ 记账边界：SORRIED 源码计数 **50→49**（48 nli + 1 hLP）；**根面 axiom 形状仍待池**——完整 Assembly/Final 复跑前，根面仍显示 `585 + 标准三 + sorryAx`，不把 49 当成根面已复验。新裁决入 `DECISIONS.md` 同日「中间债验收目标可下沉到小模块」条；条件 = 同一全名/陈述/证明项 + 小模块闭包完整 + 单一声明 + 终局根面闸不放松。
+  ④ 池：K032 588.61 s，当前 K033；缺件 1,491，单 worker 不变（用户裁）。下一条：续1353（本会话）。
 - **2026-11-20（20:04 实测，续1351）**：**IXPOTPA 证前闸收线 NUMERICAL_ONLY：精确反例否决 γ23-y2 单调角点归约，原定理未被反证；旧施工 GO 撤回，SORRIED −0。**
   ① 反例 A=(247/100,239/100,2,√8,2,2)、B=(247/100,12/5,2,√8,2,2) 均在真盒与 F3∩F4，eta 失效由 Fraction 交叉相乘确认，full/face delta 均严格正且不在折点。Lean 定义直译式与原始 JSON 栈机式双区间实现均给 `margin(A)≈0.03443262082709046>0`、`margin(B)≈0.03438734354308147>0`，`margin(A)-margin(B)∈[0.0000452772840089955173272708520938437…,0.0000452772840089955173272708520953340…]>0`。故 y2 增大时 γ23 严格下降；两点 γ23 支本身成立，**不是 bank 反例**。
   ② 编排者从快照亲跑 `bash work/replay.sh` = REPLAY PASS，并逐行核对 Lean `gamma23Full8X/gamma3X/dihY` 组合；另用 mpmath 原生高精度 atan 第三直接求值得 A−B=`0.0000452772840089955173272708520945889…`，与两区间实现一致。eta 三坐标严格增/失效下集的精确代数证据仍成立；共享角正值成立但失去全域最差角资格。

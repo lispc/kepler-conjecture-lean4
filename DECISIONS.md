@@ -3,6 +3,40 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-20 — 中间债验收目标可下沉到小模块（用户裁决；首用 wt2A）
+
+**背景**：wt2A 的目标 `nliCell3QZECFICwt2A` 的证明项只是
+`Kepler.NliBanks27.bank_wt2A` 的定义别名；但把它留在 `Kepler.Assembly`
+里，会使目标验收被迫编译完整 Assembly 容器（闭包 8,867 件，含与目标
+无关的 585 native shard / Text / Interval 分支）。池事故后容器缺 1,491
+件 olean，目标证明面却被无关分支拖住。用户 2026-11-20 明批
+「改验收目标到小模块」。
+
+**拍板**：中间债（非终局根定理）的验收目标可以下沉到一个独立小模块，
+但必须同时满足：
+
+1. **同一全名**：声明仍在 `Kepler.Assembly` 名字空间，全名不变
+   （首用 = `Kepler.Assembly.nliCell3QZECFICwt2A`）；
+2. **同一陈述、同一证明项**：只允许定义别名（`:= <已验证模块定理>`），
+   不允许改陈述、加前提、加 `of_*` 弱化、加 sorry/axiom/native_decide；
+3. **小模块闭包完整且亲验**：缺 olean = 0；编排者亲编 RC=0/error 0，
+   亲跑 `#print axioms` 恰 `[propext, Classical.choice, Quot.sound]`、
+   零 `sorryAx`；
+4. **单一声明**：`Kepler.Assembly` 只 `import` 该模块，不再重复声明；
+5. **终局闸不放松**：完整 Assembly 与根定理
+   `#print axioms Kepler.the_kepler_conjecture_e2e` 的复跑仍是最终验收；
+   中间记账须注明「根面复跑待池」。
+
+**首用**：`Kepler.Targets.Wt2A`（新模块，闭包 90 件、缺 0）定义
+`Kepler.Assembly.nliCell3QZECFICwt2A := Kepler.NliBanks27.bank_wt2A`；
+亲编 3.54 s / 5.69 GB，亲跑 `#print axioms` 恰标准三、零 sorryAx；
+Assembly 改为 import（`1ec06b28`）。SORRIED 源码计数 50→49
+（根面复跑待池，根面仍是 585 + 标准三 + sorryAx）。
+
+**边界**：只适用于「证明项是已验证模块定理的定义别名」的目标；有真实
+证明体、只是被容器构建卡住的目标不适用（必须等容器或走真正的模块化
+重构）。此裁决不改变 585 信任基座，也不改变终局根面验收。
+
 ## 2026-11-20 — toolchain 冻结 4.32 + 迁移债入档（4.36 评估判据；编排者定性 + 用户批试点）
 
 **判据来源**：`lean436-pilot-w1`（用户批「启动」，详见 pq §8 续1329 + 快照 DELIVERY）。
