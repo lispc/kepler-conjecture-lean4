@@ -75,8 +75,8 @@
 | `c840-swap-prep-w1` | **已收线 GO（§8 续1315）** | C8405387449 换装规格齐：**92,064 行/499 模块 → 2,001 行/3 模块（−97.83%，四案最轻）**——40,785 叶全选 goal 0 析取枝 + 81,074 盒 slot [4,4] 全钉死 ⇒ 6 变元实为 4 变元单叶（81 系数全正、精确 min +352.42）；CertP840 1,847 行已发射 + 131 行桥（逐字 T11Proofs:116-123）；**锥外**（e2e 图零命中，验收不含根面，编排者已亲核 import 面零命中）；执行工单 PREP §6 **待用户批**（~1 车道时 + 30s 编译闸） |
 | `sym-face-math-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 1」） | **零 Lean**：WKGUESBsym Face 旁路 Cert A **四条单调归约**二阶符号归约（joint6 kit 形状；AD 直证已 NO-GO 不重试）+ **4 case var_lt 反定向数据债修复**（WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128 重发重窄化，修后生成器，输出不落主仓）；GO ⇒ sym 族走 15–25 CPU·h 数学路线替代 1,045 CPU·h 农场（50–70×） |
 | `ox3q1h-p0-split-w1` | **已收线 P0 完成（§8 续1318）** | 记账缺口闭合 100%：39,792→**3,524 点**（−91.1%）；5,516 非顶点对 margin 全正 [exact]（min +1.32e-3）+ 19 合取全可行 + 184/184 升 [exact]；S2A_SLOTS **1,159 件**就绪、S2b 56 文件批产表就绪（G4CORNER 压缩式 0.39–0.88M 行 vs 现式 2.36M）；**S2a/S2b 执行等用户批（Lean 算力，建议池后排产）** |
-| `cases-swap-c840-w1` | 编排者会话后台 agent，running（用户 08:29 批「C840批」） | **执行**：照 c840-swap-prep PREP §6 工单把 92,064 行/499 模块树置换为 2,001 行/3 模块（−97.83%）——岛池编译（发射件首次编译，RC=0 责任 + P0 预留 1 行微调权）→ patch.diff（497 deletion + M×1 + A×1，Base 字节不动）→ T11Proofs:116-173 消费者零感知探针 → 交付等闸；锥外件不涉根面记账 |
-| `trust585-research-w1` | 编排者会话后台 agent，running（用户 08:37 批「侦查吧」） | **零 Lean 研究侦察（允许网络检索）**：585 信任基座 → 内核可验路线 revisit——585 解剖（两形状逐字 + 数据体量分布，**5 个 tri-single-seed 单独评估是否直接 decide 快速胜利**）+ 工具链现状（bv_decide/LRAT/内核 ByteArray 于 4.32 本地实查——**本树无 Mathlib 是第一拦路虎**；lean-sat/FCT 反射先例检索）+ 单 shard 离线编码探针 → 路线判定（B 证书重建 / C 反射重工程 / 诚实 NO-GO）+ 580× 成本模型；**侦察期 585 零触碰，pilot/农场算力均待另批** |
+| `cases-swap-c840-w1` | **已闭合落库 `7665487e`（§8 续1319）** | C8405387449 置换落库：92,064→2,003 行（−97.82%）；6 件 RC=0 + 编排者亲跑探针全标准三 + 消费者形状探针过；锥外件零根面记账 |
+| `trust585-research-w1` | **已收线混合判定（§8 续1320）** | tri 5 件 GO（585→580，1–2 天级；pilot 草案 §7 **待批**）；580 件 NO-GO 带翻案条件（bv_decide 同公理类铁证亲验 + 旧判决勘误 5× + FCT 规模差 6 量级）；trust-base.md §1.1 已同步 |
 | `cell3-wt1-tower-scout-w1` | **已收线 GO（nli-campaign §9.2 卡已改写）** | 二阶塔 A′ GO：原子表 + 塔结构 10¹–10² 叶（~50–60 证书）；A′ 施工等用户批 |
 | `cell3-sqrt8-build-w1` | **已闭合落库 `8c7dfc34`（§8 续1312）** | sqrt8 债闭合：NliSqrt8 26-cell antitone 电池 + Assembly 1a-3/7 接线；11 定理标准三编排者亲测；K_SORRIED −1 |
 | `ztg-bernstein-pilot-w1` | **已收线 GO（§8 续1293–1294）** | 三件全绿落库 `57eded64`（12 探针标准三）；千系数件=分钟级定标；量产等批 |
@@ -266,6 +266,17 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（09:03 实测，续1320）**：**trust585-research-w1 收线混合判定——tri 5 件 GO / 580 件 NO-GO（带翻案条件）；「终局标准三」路线第一次有了完整事实底。**
+  ① **GO 部分（pilot 草案 RESEARCH §7 待批）**：5 个 tri-single-seed 全可内核化——tri_shard_3/4 直 `decide`（各 1 pop，分钟级）；tri_shard_0/1/2 逐节点证书走查（certgen.py 设计 + TopReplayTriAll `decide+kernel` 批定理 + ~150–250 行仿真引理，≈26 核时 EST、内存批间有界、**非 farm**）；探针离线全量走完五根 = **312,764 pops 与 AFP ArchStat 官方 Tri 计数逐位吻合**。**5 条全换 = 基座 585→580，本机 1–2 天级。**
+  ② **NO-GO 部分（铁证级）**：core `bv_decide` 与 native_decide **同公理类**（toolchain `Lean/Meta/Native.lean:32-35` 原文，编排者亲验）⇒ 路线 B（SAT/BV 证书重建）工具端即死，成本端独立死因并存；旧判决勘误：真实区间 **2.2e4–6.8e6 核时**（原 4,450–6,550 为单片外推、较 AFP 1.87e9 结点锚**低估 ~5×**）；内存墙维持（单根 >14 GB）；FCT-Lean 先例（corun1024/4ct，26× 减速带）**规模差 6 个数量级不翻案**。翻案条件 = 数学级枚举压缩或内核求值代际跃迁。
+  ③ **附带更正（folklore）**：Mathlib 本机已建（`.lake/packages/mathlib` 8,264 oleans）——「无 Mathlib」仅指本仓代码不 import；`lrat_proof`（kernel-as-LRAT）在场可用、当前无靶。585 解剖/两形状逐字/探针脚本入快照；`docs/trust-base.md` §1.1 已同步。
+  ④ 建议：tri pilot 可批（便宜、非 farm、基座首次真减）；580 全量维持不做。在飞：sym-face-math / iyou（发射器判定时刻）。SORRIED 50 / AXIOM 585 不变。下一条：续1321。
+
+- **2026-11-20（09:00 实测，续1319）**：**C8405387449 置换落库（`7665487e`，−97.82%）——锥外补粘巨树清除；全仓 lean 257→~166 万行。**
+  ① 落库：92,064 行/499 模块 → **2,003 行/3 模块**（CertP840 1,847 + 桥 133 + Base 字节不动）；顶模块同名同签名（唯一消费面 T11Proofs:116-173 零改动）；六变元析取塌缩为四变元单叶（40,785/40,785 叶全选 goal 0 + 81,074 盒 slot [4,4] 钉死），81 系数全正、精确 min +352.42。编排者亲编 6 件 RC=0/error 0 + 亲跑 `#print axioms`（C8405387449_pos / CertP840 三名）+ 消费者形状探针全恰标准三 + LocalAuto1.olean 池回灌（Gamma4Env 同款）。
+  ② **闸实录（3 件运维学）**：池家族目录 `Cases/C8405387449/` 死链清理后整目录缺失——lean 无法写 -o，首跑闸链静默失败（**教训入 PR-52 候选：池回灌前 mkdir 家族目录**）；编排者 grep|head -3 管道 SIGPIPE 掐 lean 吞错误行（自查修复：全量输出落文件）；槽位再让位两次（SIGSTOP 调度器 + 杀 K015 13 min 牺牲先例沿用——**Pent K 区为小时级稀疏巨件带，27 件采样定标在该区失准**，K005 已 110+ min/K007 重试 70+ min）。车道事故（git apply 主仓误落地）自愈零损伤，PR-51 入册。
+  ③ 在飞：sym-face-math / iyou。SORRIED 50 / AXIOM 585 不变。下一条：续1320。
 
 - **2026-11-20（08:40 实测，续1318）**：**ox3q1h-p0-split-w1 收线 P0 完成——记账缺口闭合 100%（39,792→3,524 点，−91.1%），S2a/S2b 施工解锁、执行等批。**
   ① **数字**：按 SCOUT 推荐压缩档闭合 split 链 hcorner 缺口——19 条 split 合取 [exact] 全可行（min +1.41e-5 @ #161）；**5,516 个非顶点 (行,格点) 对 margin 全部严格正 [exact Fraction]，全局 min +1.32e-3 @ #71**；1,216 顶点对 ≥ 0 且 argmin 角恰为 0（与 CONJ_TABLE 逐 Fraction 全等）。逐字复用落库数据生成协议（g4cert.py：mpmath 60dps → slack → dyadic 2⁻⁶⁰ → Fraction）；**顺带把 SCOUT 的 184/184 角点电池从 [sampled] 升级为 [exact] 复证**，并把落库链 /8 实况钉到源级（`RSN` defs == K·(W/m)²/8 逐字）。

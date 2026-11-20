@@ -23,6 +23,14 @@
 （goodList 23 条 + top/archive 16 条已全部改回 kernel 证明，不再是公理：
 三波 `5ed1bb16`/`f686ca1a`/`2ef062e8` + 波四 `52275a1c`；基座于 2026-11-09 **定格**）。
 
+### 1.1 内核化路线研究（2026-11-20 `trust585-research-w1`，混合判定）
+
+用户探索「最终纯标准三」的可行性，研究侦察结论（全文 `~/c17_backup/lane_snapshots/trust585-research-w1/RESEARCH.md`）：
+
+- **tri 5 件 GO**：tri_shard_3/4 直 `decide` 快速胜利（各 1 pop，分钟级）；tri_shard_0/1/2 逐节点证书走查（≈26 核时 EST、内存批间有界、非 farm）——**5 条全换 = 585→580，本机 1–2 天级；pilot 草案 §7 待用户批**。
+- **580 shard-range NO-GO（含翻案条件）**：① core `bv_decide` 与 native_decide 同公理类（toolchain `Lean/Meta/Native.lean:32-35` 原文「add an axiom asserting e = true … basis for native_decide and bv_decide」——编排者亲验），**路线 B 工具端即死**；② 旧判决勘误：真实区间 **2.2e4–6.8e6 核时**（原 4,450–6,550 低估 ~5×，AFP 1.87e9 结点锚）+ 内存墙（单根 >14 GB 实测）；③ FCT-Lean 先例（corun1024/4ct，26× 减速带）规模差 6 个数量级不翻案。翻案条件 = 数学级枚举压缩或内核求值代际跃迁（ByteArray 网络端 UNRESOLVED 已如实标注）。
+- **库内可用武器如实**：Mathlib `lrat_proof`（kernel-as-LRAT-checker）本机已建（8,264 oleans——「无 Mathlib」folklore 仅指本仓代码不 import Mathlib，包体在场）；当前 585 无靶，未来小件可考虑。
+
 ---
 
 ## 2. 逐类对照（证据都在 `reference/`）

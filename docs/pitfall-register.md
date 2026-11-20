@@ -181,6 +181,19 @@ v9 实测）：`Y·(A+B+C)` 无法与 `Y·A+Y·B+Y·C` 配对——linarith 按�
 对策：写任何带时间戳的账目行之前先跑 `date`，禁止凭感觉填；条目已发出后
 发现时间戳错，加 ERRATA 不覆写。
 
+**PR-51 车道 git 操作必须带 cwd 守卫；`git clean` 不可用于 scratch 管理
+（2026-11-20 `cases-swap-c840-w1` 自愈事故）**：车道在 scratch 仓模拟 apply 时
+先跑了 `git clean`（误删自身 sim 目录），随后一条 `cd` 失败且无守卫 →
+`git apply` 落在**主仓工作树**（497 D + 1 M + 未跟踪件；index 未动）。08:38
+车道自查发现后即刻 checkout+rm 还原，终态 tracked 零改动、68 未跟踪件与开工
+同集（编排者闸前独立复核确认：`git status` 非?? 行=0、家族 499 件与 HEAD
+零差异）。对策：① 车道任何 `git apply/add/rm` 前必须断言 cwd（非
+`/tmp/<lane>/…` 即退出）；② scratch 清理一律 `rm -rf <具名目录>`，禁
+`git clean`（cwd 漂移时清错树且无确认）；③ 车道工具每次 git 操作后顺手对
+主仓跑 `git -C <主仓> status --porcelain | grep -v '^??'` 应为零（早检早报）。
+PR-15 的「apply 后必查 status」检测面保留；本条补「车道侧防误」面。单次
+自愈、零落地损伤，未达 §7.1 晋升门槛，先入册。
+
 **PR-50 `pgrep 'bin/lean -o' 会把 `/usr/bin/time` 包装进程一并命中（2026-11-19
 恢复链误杀）**：编排者看到「两个进程在编同一文件」误判为孤儿+现行双编译，
 按 PPID 取证杀了「较老」者——实为**同一编译的 wrapper+lean 对**（time 包装的
