@@ -71,7 +71,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `p0-probe-batch-w1` | **已恢复 running（用户 13:47「有额度了」；§8 续1334）** | 三探针批：13:34 撞配额断 → 13:39 首恢复 4 min（P0-b 进展 `logs/p0b_g2rate.log`）→ 13:47 二恢复断点续接；续接点 = η 支 vs HOL `eta_y` 语义核对（prog0 在 η²<2 处为正疑点）+ 孤儿 P0-a PID 89733（23 min / max_pieces 触顶疑点）收养或杀（PR-50）；快照收线时同步 |
+| `p0-probe-batch-w1` | **已收线（§8 续1337，原会话）** | **三探针全完、判词全 NO-GO + 一个重大附赠**：P0-a WKGUESB 纯覆盖 **NO-GO**（74 片 ≫30；剥离链几何；叶 ≈215,909 [EST] 顶到 60k–200k 上沿）；P0-b 叶率实测（prescan 1.10–1.16 s/叶 = 12× 便宜，但 kernel 27–31 s 主导 ⇒ 总 28–32 s/叶 [EST] ⇒ 旁路 1,680–1,920 CPU·h 更差 1.6–1.8×）；RQWUDDU prescan **NO-GO**（塌缩否定、闭叶更细；唯一收益 1.2× 常数）+ **【重大发现】case 盒 y1 下界 bug**（真域 ≥2.4635088 vs case 2.4，假域三支 −0.0247——编排者 60 dps 亲复算逐位复现）——修复列 F2c 发射前置待裁；快照 81 件/21 MB |
 | `iyou-build-w1` | **已收线 BLOCKED-forensics + 部分交付落库 `9d8061de`（§8 续1327）** | 目标 −1 **未达成（−0 如实）**：波侧 32 件全绿落库（编排者抽样亲编 + 五探针标准三）；**L23 家族三重机器证据判 BLOCKED**（kernel @64MB 判 8/12 叶假——replica 逐位复现掩盖的宽盒暗区 PR-52 / cap-47 TWOP 永不终止 / ~27% 病态子域）；接线 hunk + 15 件翻案工具留档快照；**翻案条件** = replica 暗区定界或新谓词（届时接第二笔）；iyou 保持 50 债之一 |
 | `c840-swap-prep-w1` | **已收线 GO（§8 续1315）** | C8405387449 换装规格齐：**92,064 行/499 模块 → 2,001 行/3 模块（−97.83%，四案最轻）**——40,785 叶全选 goal 0 析取枝 + 81,074 盒 slot [4,4] 全钉死 ⇒ 6 变元实为 4 变元单叶（81 系数全正、精确 min +352.42）；CertP840 1,847 行已发射 + 131 行桥（逐字 T11Proofs:116-123）；**锥外**（e2e 图零命中，验收不含根面，编排者已亲核 import 面零命中）；执行工单 PREP §6 **待用户批**（~1 车道时 + 30s 编译闸） |
 | `sym-face-math-w1` | **已收线（§8 续1323）** | var_lt 4 case 修复 **DONE**（逐字节对齐 bank，F2b 发射前置清除）；四条归约数学 **GO 且更干净**（全盒 ∂ min +0.0926…+0.0946、d2 20/20 全正——侦察 3 负值系 float64 伪象 PR-47 勘正；canonical + 3 置换）；**成本重标定：旁路 Cert A 700–2,200 CPU·h 与主路 F2b 1,045 平价或更差（「15–25 CPU·h」判废）**；AD NO-GO 机理翻案（零 ite 闭式 regime）；复活前置 = P0-a/P0-b 探针 **待批** |
@@ -273,6 +273,13 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-20（14:41 实测，续1337）**：**p0-probe-batch-w1 收线（原会话）——三探针全 NO-GO + RQWUDDU case 盒 bug 重大发现（编排者亲验：反例 60 dps 独立复算逐位复现）。**
+  ① 收线核查：快照 81 件/21 MB（DELIVERY 298 行 + 15 脚本 + 日志 + out/data）；主仓 tracked 干净（仅 IysL23* untracked）；零 Lean/零 certtm/零农场；emitter 三件 SHA256 无漂移。
+  ② **P0-a（WKGUESB 最小纯覆盖）NO-GO**：74 片 ≫30（54 b1 纯 + 19 不可角点纯化；翻转角点在区域角上 ⇒ 角点纯覆盖不存在，剥离链每区 ~20 片）；全盒叶 ≈215,909 [EST]（60k–200k 顶到上沿）。
+  ③ **P0-b（叶率校准）**：闭式 prescan 实测 1.10–1.16 s/叶（12× 便宜），但 kernel 项 27–31 s/叶主导 ⇒ 总 28–32 s/叶 [EST] ⇒ 旁路总成本 1,680–1,920 CPU·h，比主路 F2b 1,045 更差 1.6–1.8× ⇒ **旁路归档「数学全真、载体成本平价或更差」，L0a 不批，主路 F2b 维持**。
+  ④ **RQWUDDU prescan NO-GO**：d1 定号真实但塌缩形状摧毁 η 支关叶；修正臂闭叶更细（mean 0.0553 vs 0.0746）、full-run 不收；唯一收益 1.2× 常数 ⇒ **R1 归档「②b 不可手工弥补」，K2 路线机器证据封顶，K1 WKGUESB 消费线关闭（kit 期权化：FHBa H1 + 未来家族）**。
+  ⑤ **【重大发现】RQWUDDU case 盒 y1 下界 bug**：真 hminus = 1.231754422…（`NliHminus.lean:24`）⇒ 真域 y1 ≥ 2.4635088，case 用 2.4 ⇒ 假域 [2.4,2.4635) 上目标为假（反例三支 −0.0247；编排者用车道 60 dps 求值器独立复算逐位复现）⇒ 引擎永不收口。**修复 = y1 下界 2645184458/2^30 + `hminus ≥ 1.23175`（树内已有），列 F2c 发射前置，待用户裁**；同族逐 case 审 UNRESOLVED。
+  ⑥ 文档：campaign §9.3/§9.4 卡 + §9.5 两行 + §9.6 判词、handoff §0.2/§2、strategy §12 已同步。SORRIED 50 / AXIOM 585 不变。下一条：续1338。
 - **2026-11-20（14:15 实测，续1336）**：**用户「启动1」明批 wt2A 52-cell 量产接线，`cell3-wt2a-prod-w1` 异步发车（agent-1 / `agent-zvmm4vnz`）。**
   ① 范围 = 52 个剩余实 cell + 8 个剩余 vacuous 实例，按 y6 层拆约 6 模块 + 全 62 cell bank 组装 + `Assembly.lean:435` 最小接线；真实消费 `NliBanks19.bank_QZECFICwt2A_of_core` 与 `NliBanks20.w2a_cell/cell00_core`，逐 cell Fraction 预验证，不改旧陈述。终验 = 编排者亲跑 `#print axioms nliCell3QZECFICwt2A` 恰标准三，未过不记 −1。
   ② fresh 工作区 `/tmp/cell3-wt2a-prod-w1/`，快照同名；数据锚 = `cell3-wt2a-core-w2/work/work/cells_raw.json`。未设超时；每车道 ≤1 lean、复制式岛池、3 槽 guard；禁全树 build/农场/新公理。当前生产 = joint-6 K/P agent-0 + wt2A agent-1，池链仍 1 槽；三探针批继续由原会话管理。

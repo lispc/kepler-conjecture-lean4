@@ -1458,7 +1458,7 @@
   `~/c17_backup/lane_snapshots/ixpotpa-arch-w1/`（SCOUT.md + work/ 17 件，
   含 HOL 61 片耗时表、80 dps 最差角脚本、HOL 骨架复放器）。
 
-**`nliTskWKGUESBsym` —— 数学归约 GO + 成本重标定（状态：主路 F2b ~1,045 CPU·h 维持参考；旁路经 sym-face-math-w1 实测重标为 700–2,200 CPU·h 平价或更差，「15–25 CPU·h」判废；2026-11-20 `sym-face-math-w1` 收线）**：① **var_lt 数据债已修复**（4 case 修后生成器重发，AFTER==bank 逐位、BEFORE==bank 反向逐位 [exact]，F2b 发射前置清除）；② **四条单调归约全真且更干净**——全盒 min ∂γ4/∂y_k = +0.0926…+0.0946（40dps FD-of-RPN、argmin 在盒角、14/14 角 [exact]）、20/20 d2 混合偏导全正（原侦察 3 条负值系 float64 FD 伪象，PR-47 非对称点复推全转正）；S4 对称 ⇒ 一条 canonical 事实 + 3 个置换搬运；③ Route-1 atom-chain 平移 NO-GO（Fraction IA：4096 片仍 −1.86）；④ **AD NO-GO 机理翻案**（零 ite 闭式 regime：g₂ 闭式无 guard 发射，大片 45,297 叶双 CLOSED）但叶数对片内裕度超线性 ⇒ 全盒 60k–200k 叶 ≈ 700–2,200 CPU·h；⑤ 旁路复活前置 = P0-a（最小纯覆盖枚举压死/确认 60k–200k）+ P0-b（闭式叶率实测校准）两探针（≤1 车道时/个，**待用户批**），P0 过闸前不批 L0a 施工。**成本反差普查收线（2026-11-20 `hol-cost-gap-census-w1` §9.6，编排者亲复跑）**：HOL 形式化实耗 **256.8 CPU·h/234 叶** [exact] ⇒ 形式化对形式化反差 **~4.1×**——旧 ~280× 系 informal 13,337 s 锚（qed_log.txt:975，2010 OCaml 单发）混用，勘误；「贵得有理」（guard straddle 94–99%，HOL 也付大钱）。
+**`nliTskWKGUESBsym` —— 数学归约 GO + 成本重标定（状态：主路 F2b ~1,045 CPU·h 维持参考；旁路经 sym-face-math-w1 实测重标为 700–2,200 CPU·h 平价或更差，「15–25 CPU·h」判废；2026-11-20 `sym-face-math-w1` 收线）**：① **var_lt 数据债已修复**（4 case 修后生成器重发，AFTER==bank 逐位、BEFORE==bank 反向逐位 [exact]，F2b 发射前置清除）；② **四条单调归约全真且更干净**——全盒 min ∂γ4/∂y_k = +0.0926…+0.0946（40dps FD-of-RPN、argmin 在盒角、14/14 角 [exact]）、20/20 d2 混合偏导全正（原侦察 3 条负值系 float64 FD 伪象，PR-47 非对称点复推全转正）；S4 对称 ⇒ 一条 canonical 事实 + 3 个置换搬运；③ Route-1 atom-chain 平移 NO-GO（Fraction IA：4096 片仍 −1.86）；④ **AD NO-GO 机理翻案**（零 ite 闭式 regime：g₂ 闭式无 guard 发射，大片 45,297 叶双 CLOSED）但叶数对片内裕度超线性 ⇒ 全盒 60k–200k 叶 ≈ 700–2,200 CPU·h；⑤ 旁路复活前置 = P0-a（最小纯覆盖枚举压死/确认 60k–200k）+ P0-b（闭式叶率实测校准）两探针（≤1 车道时/个，**待用户批**），P0 过闸前不批 L0a 施工。**成本反差普查收线（2026-11-20 `hol-cost-gap-census-w1` §9.6，编排者亲复跑）**：HOL 形式化实耗 **256.8 CPU·h/234 叶** [exact] ⇒ 形式化对形式化反差 **~4.1×**——旧 ~280× 系 informal 13,337 s 锚（qed_log.txt:975，2010 OCaml 单发）混用，勘误；「贵得有理」（guard straddle 94–99%，HOL 也付大钱）。**三探针判词（2026-11-20 `p0-probe-batch-w1` 收线，编排者亲验）**：**旁路复活 = 否（NO-GO）**——P0-a 最小纯覆盖 **74 片 ≫30**（大片 A 1 + 补区域 73：54 b1 纯 + 19 不可角点纯化 STUCK；几何原因 = 翻转角点位于区域角上，剥离链每区 ~20 片，角点纯覆盖不存在）；P0-b 闭式 prescan 实测 **1.10–1.16 s/叶**（较 XLLIPLS 13.3 s/叶 **12× 便宜**）但 kernel 项 27–31 s/叶占主导 ⇒ 总叶率 **28–32 s/叶 [EST]**；全盒叶数 ≈**215,909 [EST]**（60k–200k 确认并顶到上沿）⇒ 旁路总成本 **1,680–1,920 CPU·h**，比主路 F2b 1,045 **更差 1.6–1.8×**。**裁决：L0a 不批、旁路归档「数学全真、载体成本平价或更差」、主路 F2b 维持参考；K1 的 WKGUESB 消费线随之关闭（kit 近期价值押 FHBa H1 收口 + 未来家族）。**
 
 - **这是什么**：`Assembly.lean:981`；HOL `ineq.hl:281`「TSKAJXY-WKGUESB
   sym」。盒 `[2hplus,√8] × [2.01,2hminus] × [2,2hminus] × [2hplus,√8] ×
@@ -1687,6 +1687,23 @@
   - `nliRestRQWUDDU`（`:1839`，ineq.hl:1332）：主支 min **−0.1536**；
     minimax 改写后 **+2.155e-3**（**ERRATA**：triage 旧记 0.00474，2.2× 紧，
     §1.6）。dih/η 双支同时贴边（§1.2）；MATH 备选高风险。
+    **三探针判词（2026-11-20 `p0-probe-batch-w1`，编排者亲验）**：
+    ① **mono-prescan 塌缩 NO-GO**（10⁵→10² 不成立）——d1 定号真实（主支
+    y1/y4 MONO+、两 η 支全 MONO+ [sampled+exact]），但逐支全局塌缩摧毁 η 支
+    关叶（全局 inf 深负）；修正臂闭叶尺寸**更细不更粗**（mean 0.0553 vs
+    0.0746），600 s full-run 两臂均不收（1.19M/1.50M 叶）；唯一收益 = 每节点
+    ~1.2× 常数加速。**R1 归档「②b 不可手工弥补」，农场口径维持 1,100 CPU·h
+    [EST]**。② **【重大发现】case 盒 y1 下界 bug**：真 hminus = 1.231754422…
+    （`NliHminus.lean:24`）⇒ 真域 y1 ≥ 2.4635088；case
+    `pipeline/interval/out/cases/RQWUDDU.json` y1 下界 = 2576980377/2^30 ≈ 2.4
+    （prep 丢 hminus 耦合外扩）⇒ **目标在 y1∈[2.4, 2.4635) 上为假**（反例
+    (2.4,2.0,2.72755,2.0,2.0,2.72754) 三支全 −0.0247，60 dps，编排者独立
+    复算逐位复现）⇒ bb_arb 类引擎在此 case 永不收口（假口袋无限二分 = 历次
+    full-run 不收直接原因）。**修复 = y1 下界改 2645184458/2^30 + Lean
+    `hminus ≥ 1.23175`（`NliBanks8:269` 已有）——零信任面变化，列 F2c 发射
+    前置，待用户裁**；同族其余 case 的 hminus 外扩逐 case 审（仅 minimax
+    在 hminus 边界达成时致命，其余 UNRESOLVED）。③ 真域 minimax +1.9657e−3
+    [sampled] 与审计 +2.155e−3 同结构同量级 ⇒ 审计口径正确。
   - `nliRestFHBVYXZa` / `nliRestFHBVYXZv2a`：解析路线已推进大半（9.2 两卡），
     本卡仅记其**农场兜底**口径。
 - **路线**：每债先写 60–100 行「主支 ∨ `eta126² < 1.34²` 两支改写」引理，
@@ -1738,7 +1755,7 @@
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |
-| `nliTskWKGUESBsym` | 数学归约 GO（四条全正、d2 伪象勘正）；var_lt 已修复；**成本重标定：旁路 700–2,200 CPU·h 与主路 F2b 1,045 平价或更差**——复活前置 P0-a/P0-b 探针待批（+RQWUDDU prescan 并批，§9.6）；普查勘正：HOL formal 256.8 h/234 叶 ⇒ 反差 4.1×（~280× 系 informal 混币） | 9.3 | §1.3 / §9.6 |
+| `nliTskWKGUESBsym` | 数学归约 GO；var_lt 已修复；**P0 三探针判词（11-20）：旁路 NO-GO**（74 片 ≫30 + 叶率只降 1.25–1.4× ⇒ 总 1,680–1,920 CPU·h 更差 1.6–1.8×）——主路 F2b 1,045 CPU·h 维持，L0a 不批；普查勘正：HOL formal 256.8 h/234 叶 ⇒ 4.1× | 9.3 | §1.3 / §9.3 / §9.6 |
 | `nliRestBIXPCGW7274157868a` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestBIXPCGW9455898160` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestFHBVYXZa` | 可启动（两车道） | 9.2 | §1.11–§1.14 |
@@ -1764,7 +1781,7 @@
 | `nliRestQITNPEA6206775865` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA9939613598` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEAv24003532128` | 等解冻①②（F1） | 9.4 | §1.3 |
-| `nliRestRQWUDDU` | 等解冻①②（F2c） | 9.4 | §1.2 / §1.6 |
+| `nliRestRQWUDDU` | 等解冻①②（F2c）；**case 盒 y1 下界 bug 已证**（真域 y1≥2.4635088 vs case 2.4，假域三支 −0.0247 编排者亲复算）——修复（下界 2645184458/2^30 + hminus≥1.23175）为 F2c 发射前置，**待用户裁**；prescan 塌缩 NO-GO ⇒ R1 归档 | 9.4 | §1.2 / §1.6 / §9.4 |
 | `nliRestTEWNSCJ` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestTXQTPVC` | 等解冻①②（F1） | 9.4 | §1.3 / §1.21 |
 | `nliRestZTGIJCF4_0_0_0_0` | 可启动（W3 精度档，−5；11-19 joint-6 侦察 GO） | 9.3 | §5 / DEBTS 行 9 |
@@ -1817,7 +1834,9 @@
   （Gate-0 `12c81dee` 立着；K2 ≠ CertTM2——只改搜索侧叶数、不动叶检查器）。
   **RQWUDDU mono-prescan 单点 GO：并入 sym P0-a/P0-b 探针批一次呈批**（1 车道日、
   零 Lean、纯 Python 叶数测量；若 10⁵→10² 塌缩不成立，R1 就地归档
-  「②b 不可手工弥补，农场口径维持」）。
+  「②b 不可手工弥补，农场口径维持」）。**（2026-11-20 判词：三探针全 NO-GO——
+  旁路关闭、R1 归档、K1 期权化，见 §9.3/§9.4 卡；RQWUDDU case 盒 y1 下界 bug
+  为附带重大发现，修复列 F2c 前置待裁。）**
 - **UNRESOLVED（宁缺毋编）**：HOL 侧 wt1/wt2A/IYOUOBFsharpv2 原版耗时（sharp-5
   无 Time 行；urban 重跑 0.68/0.14 h 仅参考）、LP 族（formal_lp 无计时档）、
   Isabelle 8 条 `by eval` 实测（只有 50,400 s 超时上限）、informal 枚举面逐类
