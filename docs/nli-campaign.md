@@ -1454,7 +1454,7 @@
   `~/c17_backup/lane_snapshots/ixpotpa-arch-w1/`（SCOUT.md + work/ 17 件，
   含 HOL 61 片耗时表、80 dps 最差角脚本、HOL 骨架复放器）。
 
-**`nliTskWKGUESBsym` —— 侦察收线 GO（状态：F2b 直入 ~1,045 CPU·h，var_lt 重发为前置；旁路 Face 证书半程实测；2026-11-19/20 `wkguesbsym-seg-scout-w1`）**
+**`nliTskWKGUESBsym` —— 数学归约 GO + 成本重标定（状态：主路 F2b ~1,045 CPU·h 维持参考；旁路经 sym-face-math-w1 实测重标为 700–2,200 CPU·h 平价或更差，「15–25 CPU·h」判废；2026-11-20 `sym-face-math-w1` 收线）**：① **var_lt 数据债已修复**（4 case 修后生成器重发，AFTER==bank 逐位、BEFORE==bank 反向逐位 [exact]，F2b 发射前置清除）；② **四条单调归约全真且更干净**——全盒 min ∂γ4/∂y_k = +0.0926…+0.0946（40dps FD-of-RPN、argmin 在盒角、14/14 角 [exact]）、20/20 d2 混合偏导全正（原侦察 3 条负值系 float64 FD 伪象，PR-47 非对称点复推全转正）；S4 对称 ⇒ 一条 canonical 事实 + 3 个置换搬运；③ Route-1 atom-chain 平移 NO-GO（Fraction IA：4096 片仍 −1.86）；④ **AD NO-GO 机理翻案**（零 ite 闭式 regime：g₂ 闭式无 guard 发射，大片 45,297 叶双 CLOSED）但叶数对片内裕度超线性 ⇒ 全盒 60k–200k 叶 ≈ 700–2,200 CPU·h；⑤ 旁路复活前置 = P0-a（最小纯覆盖枚举压死/确认 60k–200k）+ P0-b（闭式叶率实测校准）两探针（≤1 车道时/个，**待用户批**），P0 过闸前不批 L0a 施工。
 
 - **这是什么**：`Assembly.lean:981`；HOL `ineq.hl:281`「TSKAJXY-WKGUESB
   sym」。盒 `[2hplus,√8] × [2.01,2hminus] × [2,2hminus] × [2hplus,√8] ×
@@ -1468,7 +1468,7 @@
   自己也是 prep 预切 234 片消 hull 成本（239,884 cells/299–374 s），但
   bb_arb 隐式二分对分支面的发现成本与 HOL 同阶——**预切不会降低节点
   预算**，无需分段。
-- **必须先修的数据债（发射前置，全批 4 case 同病）**：case json 的
+- **数据债（✅ 已修复 2026-11-20 `sym-face-math-w1`：4 case 用 `392517111` 修后生成器重发，形状级自检 AFTER==bank 逐位/BEFORE==bank 反向逐位 [exact]，成本口径逐字节无损——发射前置清除；历史判词原文如下）**：case json 的
   var_lt 是 **2026-10-26 `392517111` 修复前的反定向**，与 bank 陈述
   （`PackingAuto21.lean:321-322`/ineq.hl:286-287）**不同向**——发射出的
   证明粘不上 bank；**recost 30 case 里全部 4 个 var_lt case 同病**
@@ -1732,9 +1732,9 @@
 | `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | 在飞（`iyou-build-w1` 净接管，目标 −1；双活裁决见 pq §8 续1312） | 9.1 | §1.2 / §1.6 |
-| `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债：发射前须重发重窄化**（wkguesbsym 侦察） | 9.4 | §1.3 |
-| `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债：发射前须重发重窄化**（wkguesbsym 侦察） | 9.4 | §1.3 |
-| `nliTskWKGUESBsym` | 侦察收线 GO：F2b 直入 ~1,045 CPU·h（var_lt 重发前置）+ Face 旁路半程 | 9.3 | §1.3 |
+| `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
+| `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |
+| `nliTskWKGUESBsym` | 数学归约 GO（四条全正、d2 伪象勘正）；var_lt 已修复；**成本重标定：旁路 700–2,200 CPU·h 与主路 F2b 1,045 平价或更差**——复活前置 P0-a/P0-b 探针待批 | 9.3 | §1.3 |
 | `nliRestBIXPCGW7274157868a` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestBIXPCGW9455898160` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestFHBVYXZa` | 可启动（两车道） | 9.2 | §1.11–§1.14 |
