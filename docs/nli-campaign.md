@@ -994,7 +994,7 @@
 - **止损**：单 cell 编译 >60 s 或 cell margin <1e-4 时复查 `cells_raw.json`。
 - **判词指针**：§1.15 / §1.19 / DEBTS 行 4 / FARM_PLAN §4 N2。
 
-**ZTG 解耦 4（`nliRestZTGIJCF4_1_1_0_0` / `_0_1_1_0` / `_0_1_0_1` / `_0_0_1_1`）—— 真缺件 = γ4 半边角点表（状态：hD 双证已闭、hG 待产；2026-11-19 18:41 接线车道实测钉死）**
+**ZTG 解耦 4（`nliRestZTGIJCF4_1_1_0_0` / `_0_1_1_0` / `_0_1_0_1` / `_0_0_1_1`）—— 真缺件 = γ4 半边角点表（状态：hD 双证已闭、hG 在飞；用户 2026-11-20 批「发3」，`ztg-decouple4-g4-w1` / agent-4，pq §8 续1340）**
 
 - **这是什么**：`Assembly.lean:1738/1777/1783/1795`；HOL `ineq.hl:486-499`
   `make_F4` 循环的四个实例（模板 `bank_ZTGIJCF4tmpl`，id 1821661595），
@@ -1497,7 +1497,7 @@
   `~/c17_backup/lane_snapshots/wkguesbsym-seg-scout-w1/`（SCOUT.md 15.2KB
   + work/ 29 项探针脚本/face 证书/cases_narrow；探针合计 ~70 min CPU）。
 
-**ZTG joint 6（`nliRestZTGIJCF4_0_0_0_0` / `_0_0_0_1` / `_0_0_1_0` / `_0_1_0_0` / `_1_0_0_0` / `_1_0_0_1`）—— 路线 B 角点表全家族成立（状态：可启动，W0–W4 战役包待批产；2026-11-19 `ztg-joint6-scout-w1` 收线 GO）**
+**ZTG joint 6（`nliRestZTGIJCF4_0_0_0_0` / `_0_0_0_1` / `_0_0_1_0` / `_0_1_0_0` / `_1_0_0_0` / `_1_0_0_1`）—— 路线 B 角点表全家族成立（状态：`0_0_0_0` 的 W0 + 96/96 角已落库、L1 在飞（用户批「发2」，agent-3，pq §8 续1340）；其余五债战役包待批产）**
 
 - **这是什么**：`Assembly.lean:1813/1807/1801/1789/1764/1758`；同
   `make_F4` 循环（ineq.hl:486-499，id 1821661595）的六个 joint 实例。
@@ -1704,7 +1704,7 @@
     复算逐位复现）⇒ bb_arb 类引擎在此 case 永不收口（假口袋无限二分 = 历次
     full-run 不收直接原因）。**修复 = y1 下界改 2645184458/2^30 + Lean
     `hminus ≥ 1.23175`（`NliBanks8:269` 已有）——零信任面变化，列 F2c 发射
-    前置，待用户裁**；同族其余 case 的 hminus 外扩逐 case 审（仅 minimax
+    前置；用户已批「发1」，修域 + HOL 两叶最小复刻在飞（agent-2，pq §8 续1340）**；同族其余 case 的 hminus 外扩逐 case 审（仅 minimax
     在 hminus 边界达成时致命，其余 UNRESOLVED）。③ 真域 minimax +1.9657e−3
     [sampled] 与审计 +2.155e−3 同结构同量级 ⇒ 审计口径正确。
   - `nliRestFHBVYXZa` / `nliRestFHBVYXZv2a`：解析路线已推进大半（9.2 两卡），
@@ -1784,10 +1784,10 @@
 | `nliRestQITNPEA6206775865` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA9939613598` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEAv24003532128` | 等解冻①②（F1） | 9.4 | §1.3 |
-| `nliRestRQWUDDU` | 等解冻①②（F2c）；**case 盒 y1 下界 bug 已证**（真域 y1≥2.4635088 vs case 2.4，假域三支 −0.0247 编排者亲复算）——修复（下界 2645184458/2^30 + hminus≥1.23175）为 F2c 发射前置，**待用户裁**；prescan 塌缩 NO-GO ⇒ R1 归档 | 9.4 | §1.2 / §1.6 / §9.4 |
+| `nliRestRQWUDDU` | **F2c 修域 + HOL 两叶最小复刻在飞（用户批「发1」，agent-2，pq 续1340）**；case 盒 y1 下界 bug 已证（真域 y1≥2.4635088 vs case 2.4，假域三支 −0.0247 编排者亲复算）；旧 prescan 塌缩 NO-GO ⇒ R1 归档，不重跑 | 9.4 | §1.2 / §1.6 / §9.4 |
 | `nliRestTEWNSCJ` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestTXQTPVC` | 等解冻①②（F1） | 9.4 | §1.3 / §1.21 |
-| `nliRestZTGIJCF4_0_0_0_0` | 可启动（W3 精度档，−5；11-19 joint-6 侦察 GO） | 9.3 | §5 / DEBTS 行 9 |
+| `nliRestZTGIJCF4_0_0_0_0` | **96/96 角已落库（P=`40b1b174`）；L1 七片 + 接线在飞（用户批「发2」，agent-3，pq 续1340）** | 9.3 | §5 / DEBTS 行 9 |
 | `nliRestZTGIJCF4_0_0_0_1` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 10 |
 | `nliRestZTGIJCF4_0_0_1_0` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 11 |
 | `nliRestZTGIJCF4_0_0_1_1` | hD 双证已闭；缺 hG=γ4≥0.065（角点表待批） | 9.1 | §1.10 / §5 |
