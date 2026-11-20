@@ -1213,7 +1213,7 @@
   （FARM_PLAN §4 N2 同款止损）。
 - **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：S2a / S2b 分别等批）**
+**`nliOx3q1h` —— S2a→S2b→S5（状态：**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a / S2b 执行等用户批**）**
 
 - **这是什么**：`Assembly.lean:1904`；陈述本体 `ox3q1hP25`
   （`PackingAuto25.lean:94`，2026-11-06 DEF-FIX 显式化为 **230 条非线性不等式
@@ -1776,7 +1776,7 @@
 | `nliKcblrqcIneqDef` | 等解冻④（无 LP 合取项可先收） | 9.3 | §1.1 / §1.7 |
 | `nliLpIneqs` | 等解冻④⑤ | 9.3 | §6 |
 | `nliMainNonlinearTerminalV11` | 3 MATH + 补粘可启动；85 支等解冻①② | 9.2 / 9.4 | §1.9 / §1.24 |
-| `nliOx3q1h` | S2a / S2b 等批 | 9.2 | §1.4 |
+| `nliOx3q1h` | **P0 已闭**（3,524 点档 [exact] 全正，S2A_SLOTS 1,159 件就绪；SCOUT 勘误 4 条入档）；S2a / S2b 执行等批 | 9.2 | §1.4 |
 | hLP `lpArchiveCertificatesDebt` | 等解冻④⑤ | 9.3 | §6 |
 
 > 维护：相关车道收线/落库后更新对应卡；新判词以 §1.x 为准，本节只同步状态行。
