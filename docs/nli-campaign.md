@@ -1702,11 +1702,14 @@
     （prep 丢 hminus 耦合外扩）⇒ **目标在 y1∈[2.4, 2.4635) 上为假**（反例
     (2.4,2.0,2.72755,2.0,2.0,2.72754) 三支全 −0.0247，60 dps，编排者独立
     复算逐位复现）⇒ bb_arb 类引擎在此 case 永不收口（假口袋无限二分 = 历次
-    full-run 不收直接原因）。**修复 = y1 下界改 2645184458/2^30 + Lean
-    `hminus ≥ 1.23175`（`NliBanks8:269` 已有）——零信任面变化，列 F2c 发射
-    前置；用户已批「发1」，修域 + HOL 两叶最小复刻在飞（agent-2，pq §8 续1340）**；同族其余 case 的 hminus 外扩逐 case 审（仅 minimax
-    在 hminus 边界达成时致命，其余 UNRESOLVED）。③ 真域 minimax +1.9657e−3
-    [sampled] 与审计 +2.155e−3 同结构同量级 ⇒ 审计口径正确。
+    full-run 不收直接原因）。**修复候选（pq §8 续1341 编排者勘误）= y1 下界
+    2645162983/2^30 + Lean `hminus ≥ 1.23175`**：旧 `2645184458` 实为
+    floor(2.46352·2³⁰)，高于真 2*hminus，拒绝；新分子是 floor(2.4635·2³⁰)，
+    三条覆盖定理已由编排者亲验标准三。本机 ignored JSON 已修，生成器尚未根治，
+    无可提交数据 diff。③ **同族 48 案复核**：9 FATAL_CEX + 1 SOUND_DEAD_HMINUS
+    + 38 UNRESOLVED；RQ 外其余 8 个致命件未修不得发射。④ 真域数值等振
+    +1.9657e−3 [sampled] 与审计 +2.155e−3 同结构同量级，但不是全局 minimax 证明，
+    也不推出修域后必收口。
   - `nliRestFHBVYXZa` / `nliRestFHBVYXZv2a`：解析路线已推进大半（9.2 两卡），
     本卡仅记其**农场兜底**口径。
 - **路线**：每债先写 60–100 行「主支 ∨ `eta126² < 1.34²` 两支改写」引理，
@@ -1784,7 +1787,7 @@
 | `nliRestQITNPEA6206775865` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA9939613598` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEAv24003532128` | 等解冻①②（F1） | 9.4 | §1.3 |
-| `nliRestRQWUDDU` | **F2c 修域 + HOL 两叶最小复刻在飞（用户批「发1」，agent-2，pq 续1340）**；case 盒 y1 下界 bug 已证（真域 y1≥2.4635088 vs case 2.4，假域三支 −0.0247 编排者亲复算）；旧 prescan 塌缩 NO-GO ⇒ R1 归档，不重跑 | 9.4 | §1.2 / §1.6 / §9.4 |
+| `nliRestRQWUDDU` | **修域/两叶车道已收线 mixed（pq 续1341）**：本地 ignored JSON 下界改为 2645162983/2^30，3 覆盖定理标准三；生成器未根治，另 8 致命 case 未修不得发射；HOL = 2 顶层 split / 10,194 Taylor 终端叶，下一闸 = result_tree 恢复后 1–3 真实叶兼容性；债未闭 | 9.4 | §1.2 / §1.6 / §9.4 |
 | `nliRestTEWNSCJ` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestTXQTPVC` | 等解冻①②（F1） | 9.4 | §1.3 / §1.21 |
 | `nliRestZTGIJCF4_0_0_0_0` | **96/96 角已落库（P=`40b1b174`）；L1 七片 + 接线在飞（用户批「发2」，agent-3，pq 续1340）** | 9.3 | §5 / DEBTS 行 9 |
@@ -1811,8 +1814,8 @@
   双格式聚合（batch1-oxl 无索引格式坑已修补定标）= 原版 Azure 形式化
   **23,223 行 / 5,002.1 CPU·h / 中位 404.6 s/叶**；三档案锚（ox3q1h 757.3 h /
   ZTGIJCF4 76.0 h / GLFVCVK4 主 bank 127.9 h）逐位复现；**编排者重跑
-  `hol_cost_v2.py` 全数核对**（WKGUESBsym 256.8 h/234 叶、RQWUDDU 0.4 h/2 叶、
-  IXPOTPA 45.4 h/61 叶）。全表 = 快照 `CENSUS.tsv`（49 nli + hLP + 3 参照 × 12 列）；
+  `hol_cost_v2.py` 全数核对**（WKGUESBsym 256.8 h/234 叶、RQWUDDU 0.4 h/2 条顶层
+  Time 记录、IXPOTPA 45.4 h/61 叶）。全表 = 快照 `CENSUS.tsv`（49 nli + hLP + 3 参照 × 12 列）；
   urban 重跑树（9,274.9 h，慢 ~1.85×）不混入「当年」口径。
 - **两锚点勘误**：① WKGUESBsym「~280×」= informal 13,337 s（qed_log.txt:975，
   2010 OCaml 单发）与形式化成本**混币**——formal vs formal **~4.1×**
@@ -1825,8 +1828,9 @@
   （HOL 单调塌缩 + 导数剪枝；源码锚 informal_search.hl:266 / m_verifier.hl:798 /
   recurse.hl:189）解释；**单叶我们反快 HOL 13–15×**（Rule P 27–31 s vs 中位
   404.6 s）；③ elaboration 税只对 LP 数据字面量（66 s/叶）与生成码体量成立。
-- **红旗（扣机制残差，全在 ②b 单叶证力）**：R1 RQWUDDU **~2,780×**（HOL 两叶
-  半盒证毕 945.4+479.2 s [exact]）；R2 QITNPEA1 族 **248–1,271×**（HOL idv 模板债
+- **红旗（扣机制残差，全在 ②b 单叶证力）**：R1 RQWUDDU **~2,780×**（HOL 两顶层
+  split、10,194 Taylor 终端叶 + 10,192 普通 glue、零 convex glue，945.4+479.2 s [exact]；
+  旧「两终端叶」口径见 pq 续1341勘误）；R2 QITNPEA1 族 **248–1,271×**（HOL idv 模板债
   ≤31 叶/≤4.5 h [exact]）；R3 IYOUOBF/RIBCYXU sym 98–137×（发射器无 straddle
   感知切维——候选 = 纯发射器改动，可随 P0 批同测）；R4 mild = wt1 一阶 2,902 叶
   已被二阶塔 A′ 自愈（kit 数学第一次救场的已发生实例）。
@@ -1839,7 +1843,8 @@
   零 Lean、纯 Python 叶数测量；若 10⁵→10² 塌缩不成立，R1 就地归档
   「②b 不可手工弥补，农场口径维持」）。**（2026-11-20 判词：三探针全 NO-GO——
   旁路关闭、R1 归档、K1 期权化，见 §9.3/§9.4 卡；RQWUDDU case 盒 y1 下界 bug
-  为附带重大发现，修复列 F2c 前置待裁。）**
+  为附带重大发现，正确候选下界 2645162983/2^30 已在本机 ignored 数据落地；
+  生成器根治、其余 8 致命 case 与真实 result_tree 恢复仍未决，见 pq 续1341。）**
 - **UNRESOLVED（宁缺毋编）**：HOL 侧 wt1/wt2A/IYOUOBFsharpv2 原版耗时（sharp-5
   无 Time 行；urban 重跑 0.68/0.14 h 仅参考）、LP 族（formal_lp 无计时档）、
   Isabelle 8 条 `by eval` 实测（只有 50,400 s 超时上限）、informal 枚举面逐类
