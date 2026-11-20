@@ -181,6 +181,18 @@ v9 实测）：`Y·(A+B+C)` 无法与 `Y·A+Y·B+Y·C` 配对——linarith 按�
 对策：写任何带时间戳的账目行之前先跑 `date`，禁止凭感觉填；条目已发出后
 发现时间戳错，加 ERRATA 不覆写。
 
+**PR-53 内核 `decide` 深求值跑主线程：lean 的 `-s/--tstack` 无效，抬栈走 shell
+`ulimit`；车道沙盒 hard 限被 clamp 时编排者侧代编（2026-11-20 iyou L23 实证）**：
+57 条目肥叶证书在默认 8 MB 栈爆（`Stack overflow detected. Aborting.`，94 s）；
+lean 自带 `-s`/`--tstack`（256 MB/1 GB 两档实测）**均无效**——该 flag 只作用于
+spawn 线程，kernel decide 求值走**主线程**吃 ulimit 的进程栈。修复：在**同一
+shell 调用内**先 `ulimit -s <值>` 再起编译（子进程继承）；本机硬限 65520 KB，
+**16 MB 不够、64 MB 顶格过**（57 条目实测；先小后大探边界）。另两条实测伴随
+事实：① 车道沙盒被 clamp 到软=硬=8176 KB 且 setrlimit 被拒 ⇒ 深求值编译**只能
+编排者侧代编**；② 深求值代价类 = 千秒级墙钟 + **数十 GB 峰值 RSS**（L23 N00
+@64MB：1,097 s / 78.7 GB，重度换页）——排班须单件 + pressure 监控，不吃 24 GB
+运行中闸（该闸只查起前不查运行中）。
+
 **PR-52 发射器 replica「逐位复现」≠ kernel 语义一致——验波必须含 kernel 真类抽样；
 进度心跳必须墙钟制（2026-11-20 `iyou-build-w1` L23 实证）**：L23 叶数据坏源的定性
 走了三步才到位——最初疑「salvage 谎报」，replica 对 20:15 json 逐位复现（lb/ntr/salv
