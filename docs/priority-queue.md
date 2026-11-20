@@ -66,7 +66,7 @@
 
 ## 1. 在飞
 
-**当前授权在飞 1 条车道 + 池恢复链（编排者后台）。** `iyou-build-w1`（双活裁决后净接管，§8 续1312：前任 11h 卡死无自检被 TaskStop、卡死发射器 76231 已杀；wave_a 在跑）。**池恢复链 v4**（PID 31920，3,331 件、3 槽并行、断点续跑；sqrt8 闸序列让位 SIGSTOP 后已 SIGCONT 复跑，ETA 今晚）。**今晨三笔连落：P1 `36fa6434` + P2 `7f4bfb59`（cases-swap-p12-w1 批产，−94.0% 合计）+ sqrt8 债闭合 `8c7dfc34`（SORRIED 51→50）**，编排者亲编亲测全绿（§8 续1312）。`ztg-bernstein-pilot-w1`（`57eded64`）/ `cell3-wt1`（`e8d58205`）/ 三零-Lean 侦查批（Ox3q1h / WKGUESBsym / cases-prep）/ `ztg-joint6-scout-w1` / `ixpotpa-arch-w1` 全部收线入档（§8 续1288–1311）；A fat1 暂缓不自动 resume。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
+**当前授权在飞 1 条车道 + 池恢复链（编排者后台）。** `iyou-build-w1`（双活裁决后净接管，§8 续1312：前任 11h 卡死无自检被 TaskStop、卡死发射器 76231 已杀；wave_a 在跑）。**池恢复链 v4**（PID 31920，断点续跑；**ETA 后移勘误（09:1x 实测）：原「今晚」被 CertShards 重尾推翻**——剩 478 件（HexR 219/Pent 130/Hex 66/PentR 系 56/…），Pent 已完成 16 件实测 p50 ~200 s、K005 6,774 s 稀疏巨件，诚实外推 **明天（11-21）白天–夜**；件小行少（全 CertShards 共 13.3k 行）纯求值耗时，无代码缩减面）。**今晨三笔连落：P1 `36fa6434` + P2 `7f4bfb59`（cases-swap-p12-w1 批产，−94.0% 合计）+ sqrt8 债闭合 `8c7dfc34`（SORRIED 51→50）**，编排者亲编亲测全绿（§8 续1312）。`ztg-bernstein-pilot-w1`（`57eded64`）/ `cell3-wt1`（`e8d58205`）/ 三零-Lean 侦查批（Ox3q1h / WKGUESBsym / cases-prep）/ `ztg-joint6-scout-w1` / `ixpotpa-arch-w1` 全部收线入档（§8 续1288–1311）；A fat1 暂缓不自动 resume。QITNPEA1 共享下界、taum 数学侦察与其它暂缓资产不自动续发。
 证明车道的主仓 tracked 零改动；编译走 3 槽信号量 + guard 护栏（≤3 lean ∧ ≤24 GB ∧ pressure<2）。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
