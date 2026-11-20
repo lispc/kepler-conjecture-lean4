@@ -970,7 +970,7 @@
 
 ### 9.1 有完整执行包（启动即可做）
 
-**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：在飞；用户 2026-11-20 批「启动1」，`cell3-wt2a-prod-w1` / agent-1，pq §8 续1336）**
+**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：候选 bank 证成，编排者六模块 + 67 公理复验 PASS；Assembly 岛验收等池恢复，pq §8 续1338）**
 
 - **这是什么**：`Assembly.lean:431`；HOL `ineq.hl:1443`（「QZECFIC wt2 A」）。
   6 维盒 `[√2,√2]³ × [2hminus,√8]² × [2,2hminus]`（前三维钉死在 √2），
@@ -980,7 +980,10 @@
   显式三维核「`deltaX ≥ 0 ⇒ 0 < w2aF`」）；`NliBanks20`（`ebd11b13`，1,576 行，
   机器层 + 通用 `w2a_cell` + 代表 cell00 范式 `cell00_core`/
   `bank_wt2A_of_cell00`，探针 10/10 标准三）。
-- **还缺**：52 个剩余实 cell 的量产 + Assembly 接线（纯机械生成）。
+- **候选已完成**：52 个剩余实 cell + 8 个剩余 vac + 全 62-cell 覆盖/bank + Assembly 最小接线 patch；
+  编排者独立重编六模块全 RC=0，67/67 公理审计恰标准三（含 `NliBanks27.bank_wt2A`）。
+- **还缺（终验阻塞）**：主仓 Assembly 闭包缺 1,502 olean（首缺 `Kepler.Graphs`），池恢复链已退出；
+  待池恢复后重编修改版 Assembly 并亲跑目标 `#print axioms`，通过才落库并记 −1。当前 patch 未落库。
 - **启动做法**：① 生成器 ~300 行 python（模板 = cell00 的 214 行/cell 结构，
   数据 = 快照 `cells_raw.json` 53 实 cell；书写规范遵守 PR-43 的 linarith
   原子化）；② 按 y6 层拆 6 文件量产 52 cell；③ Assembly 接线：逐 cell 按
