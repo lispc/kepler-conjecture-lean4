@@ -1030,7 +1030,10 @@
   角色勘误**；胶水机制仅对根张量含负系数的债保留为剪枝必走模板。
 - **判词指针**：§1.10 / §5（含 ERRATA）/ DEBTS 行 5–8 / FARM_PLAN §4 N3。
 
-**`nliTskIYOUOBFsharpv2` —— 四轴单调 + 2 维三块（状态：在飞；`iyou-build-w1` 2026-11-20 双活裁决后净接管——前任 11h 被卡死发射器楔死无自检已 TaskStop（PR-27 实证）、76231 已杀；67 源/18 olean 对账完成，wave_a 在跑，L23 34 叶等 36051 发射器（09:15 硬顶）；目标 SORRIED −1）**
+**`nliTskIYOUOBFsharpv2` —— 四轴单调 + 2 维三块（状态：**BLOCKED-forensics 可翻案**，2026-11-20 `iyou-build-w1` 收口 −0 如实；L23 家族三重机器证据判死当前路线）**
+- **波侧兑现并已落库**：32 件 kernel 验证模块（6 D 树 + L1 全系 + IysBase/Close + `IyouSharpV2` 接口件 `bank_TSKAJXYIYOUOBFsharpv2_of_slots` 标准三）纯新增入仓；IysClose 六 identity 修复（两段式 simp + ring_nf，仅证零陈述）。
+- **L23 三重死因（全实测）**：① 20:15 版叶数据被 kernel 判假（N00 @64MB 栈：8/12 叶 false——**replica 逐位复现 ≠ kernel 语义一致**，宽盒 regime 暗区，PR-52）；② cap-47 修版发射器 TWOP 填充维无限分裂汇（永不终止，墙钟心跳揭出）；③ ~27% 肥盒含病态子域（55-triple 核 depth 70+ 仍占主，≤51 门救不了收敛）。
+- **翻案条件**：发射器 replica 修复（43<false≤55 暗区定界）或新谓词/新表示出现 ⇒ 接第二笔（接线 hunk `patch_assembly_iyou_v2.diff` 与 15 件翻案工具已留档快照）；翻案前 iyou 保持 50 债之一，K_SORRIED 不变。
 
 - **这是什么**：`Assembly.lean:946`；HOL `ineq.hl:242`「TSKAJXY-IYOUOBF
   sharp v2」。盒 `[2hplus,√8] × [2,2.001]² × [2,2hminus] × [2,2.001]²`；
@@ -1731,7 +1734,7 @@
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
 | `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
-| `nliTskIYOUOBFsharpv2` | 在飞（`iyou-build-w1` 净接管，目标 −1；双活裁决见 pq §8 续1312） | 9.1 | §1.2 / §1.6 |
+| `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |
 | `nliTskWKGUESBsym` | 数学归约 GO（四条全正、d2 伪象勘正）；var_lt 已修复；**成本重标定：旁路 700–2,200 CPU·h 与主路 F2b 1,045 平价或更差**——复活前置 P0-a/P0-b 探针待批 | 9.3 | §1.3 |

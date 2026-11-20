@@ -181,6 +181,19 @@ v9 实测）：`Y·(A+B+C)` 无法与 `Y·A+Y·B+Y·C` 配对——linarith 按�
 对策：写任何带时间戳的账目行之前先跑 `date`，禁止凭感觉填；条目已发出后
 发现时间戳错，加 ERRATA 不覆写。
 
+**PR-52 发射器 replica「逐位复现」≠ kernel 语义一致——验波必须含 kernel 真类抽样；
+进度心跳必须墙钟制（2026-11-20 `iyou-build-w1` L23 实证）**：L23 叶数据坏源的定性
+走了三步才到位——最初疑「salvage 谎报」，replica 对 20:15 json 逐位复现（lb/ntr/salv
+全同）后又疑「数据没错」；最终 64MB 栈下的 kernel decide 判 **8/12 叶事实为假**。
+根因 = **replica 与 kernel 在宽盒 regime 有语义暗区**（43-triple 真类与 55-triple 假类
+之间的区域未定界），replica 自洽完全掩盖了它。对策：① 波验证**必须**含 kernel 真类
+抽样——代表性叶送过真实内核（本例一次 1,097 s 的编译就揭穿了整批数据），replica
+复现不构成免检；② cap-47 发射器的 TWOP 填充维在真维耗尽后**无限对半分裂**（旧版
+零宽维天然免疫）——发射器改动引入新死症时，旧免疫不算新安全；③ **评估心跳用
+eval 计数有盲区**（卡在循环前的根检查则永不打印，82229 楔死被它藏了数小时）——
+长跑监控一律墙钟心跳。翻案资产：BLOCKED-forensics 与 15 件工具在
+`~/c17_backup/lane_snapshots/iyou-build-w1/`。
+
 **PR-51 车道 git 操作必须带 cwd 守卫；`git clean` 不可用于 scratch 管理
 （2026-11-20 `cases-swap-c840-w1` 自愈事故）**：车道在 scratch 仓模拟 apply 时
 先跑了 `git clean`（误删自身 sim 目录），随后一条 `cd` 失败且无守卫 →
