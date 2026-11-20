@@ -970,7 +970,7 @@
 
 ### 9.1 有完整执行包（启动即可做）
 
-**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：等批；用户 2026-11-19 明示先不启动）**
+**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：在飞；用户 2026-11-20 批「启动1」，`cell3-wt2a-prod-w1` / agent-1，pq §8 续1336）**
 
 - **这是什么**：`Assembly.lean:431`；HOL `ineq.hl:1443`（「QZECFIC wt2 A」）。
   6 维盒 `[√2,√2]³ × [2hminus,√8]² × [2,2hminus]`（前三维钉死在 √2），
