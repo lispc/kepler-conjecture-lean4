@@ -77,6 +77,7 @@
 | `ox3q1h-p0-split-w1` | **已收线 P0 完成（§8 续1318）** | 记账缺口闭合 100%：39,792→**3,524 点**（−91.1%）；5,516 非顶点对 margin 全正 [exact]（min +1.32e-3）+ 19 合取全可行 + 184/184 升 [exact]；S2A_SLOTS **1,159 件**就绪、S2b 56 文件批产表就绪（G4CORNER 压缩式 0.39–0.88M 行 vs 现式 2.36M）；**S2a/S2b 执行等用户批（Lean 算力，随 2 生产槽轮转）** |
 | `ztg-joint6-build-w1` | **W0 `ef273509` + W1 增量1 `488455f7` 已落库（§8 续1325/1328）；W1 续跑中** | 六债联合施工：W1 增量1 = 0_0_0_0 债 **margin 前三难角全闭**（ZTGJoint0000Corners 769 行：rank-1 razor 角纯 in-tree 消费 / rank-2 hminus 全套模板含「18 dihY 位塌缩 3 典范值」结构发现 / rank-3 冒烟件；编排者亲编 20/20 审计标准三 + 探针绿 + Corner0/Arctan2 回灌）；**校正预算至 0_0_0_0 完整 −1 = 2.5–4 车道日**（余 93 角 + L1 七片 + 接线）；逐增量交付等闸 |
 | `lean436-pilot-w1` | **已收线「留 4.32」（§8 续1329）** | **判据成立，升级问题就此关闭**：① 硬破 = `Interval/Trans.lean` 内核 decide 在 4.36 任何可达参数编译不了（maxRecDepth≤1M 报深、≥2M SIGABRT 9.2GB 崩；4.32 下 11 s 过）——归因 4.33 #13956 + 4.34 内核重写；**其锥全树 = Interval 证书农场 1,072 文件 / 94,431 处 `by decide`**（CertTM/NliBanks/Gamma4Val/Base 桥全在内）；换 native_decide 被 §2 禁，只能报上游。② 样本闭包 139 模块四轮战役：out-of-box 43/139，5 处一行补丁 + heartbeat 提升后至多 59/139（止损下界）。③ **elaboration 件系统性慢 3–25×**（LuneVolume 18→443 s）——4.36 重编只会更慢。④ 信任面：K009 axiom 面两版本逐条一致；GoodListShard 两件 4.36 下多出 Classical.choice（形状漂移） |
+| `hol-cost-gap-census-w1` | running（用户 12:28 批「发」） | **零 Lean 普查**：逐债「HOL 当年实测 vs 我们现估」反差表（49 nli + hLP，出处逐条，缺数据标 UNRESOLVED）+ 三件套机制归因（内核vs运行时 / 全树重放vs自适应剪枝 / elaboration 税）+ **红旗行**（扣掉机制后反差仍异常的债 = 路线改进候选）+ **「形式化自适应剪枝 kit」跨债评估**（sym-face 四归约 + WKGUESBsym d2 + Ox3q1h split 同一块数学的一次性框架化，GO/NO-GO 建议）；预算半天 |
 | `notame7-census-w1` | running（用户 10:00 批「批p0」） | **零 Lean 普查**：照 `strategy/trust585-pruned-kernelization-20261120.md` §7 P0——notame7 python 逐字移植 + 移植保真锚（tame 终图必不满足 / untame 必满足）→ Tri 五根 + 一个中 Pent 根的**可剪占比 + 剪枝后 pops + finals 双口径一致性**（剪枝 soundness 实证侧检验）+ 死因分布；结论对照 §5 停机闸（≥20–30× 复合 → P1/P2 升级建议，不足判停） |
 | `cases-swap-c840-w1` | **已闭合落库 `7665487e`（§8 续1319）** | C8405387449 置换落库：92,064→2,003 行（−97.82%）；6 件 RC=0 + 编排者亲跑探针全标准三 + 消费者形状探针过；锥外件零根面记账 |
 | `trust585-research-w1` | **已收线混合判定（§8 续1320）** | tri 5 件 GO（585→580，1–2 天级；pilot 草案 §7 **待批**）；580 件 NO-GO 带翻案条件（bv_decide 同公理类铁证亲验 + 旧判决勘误 5× + FCT 规模差 6 量级）；trust-base.md §1.1 已同步 |
@@ -269,6 +270,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（12:29 实测，续1330）**：**hol-cost-gap-census-w1 发车（用户批「发」）——成本反差普查 + 剪枝 kit 跨债评估。**
+  ① 动机：用户问「nli 债里我们估计耗时 vs HOL 当年反差最大的是哪些」。已知锚点：585 枚举面（千倍级，全清楚）、WKGUESBsym（HOL 无析取 QED 13,337 s vs 我们 F2b 1,045 CPU·h，~280×）、Ox3q1h（757.3 CPU·h vs 结构化后拉平，档案已归因「85× = 导数剪枝有无」）。三件套机制已知（内核vs运行时 / 全树重放vs自适应剪枝 / elaboration 税）。
+  ② 普查目标：逐债反差表 + 机制归因核对 + **红旗行**（扣机制后仍异常 = 路线改进候选）+ **「形式化自适应剪枝 kit」GO/NO-GO**——三笔侦察（sym-face 四归约全正 / WKGUESBsym d2 20/20 / Ox3q1h split 表）已独立摸到「二阶导数符号剪枝」同一块数学，一次性框架化可望多债共享缩减。
+  ③ 并行裁定注记：4.36 判据（续1329）后**上游 issue 呈批待用户另批**（对外动作）；4.32 冻结 + 迁移债两候选重写形（证书数据扁平化 / 反射检查器迭代化）已入档。
+  ④ 在飞：joint-6 W1 批次 / 成本普查 + 1 槽池链。SORRIED 50 / AXIOM 585 不变。下一条：续1331。
 
 - **2026-11-20（12:07 实测，续1329）**：**lean436-pilot-w1 收线——「留 4.32」判据成立，升级问题就此关闭（零悔收尾）。**
   ① **决定性硬破**：`Interval/Trans.lean` 的内核 decide（sinInterval/sinRed 深求值）在 4.36 kernel 下**任何可达参数都编译不了**——maxRecDepth ≤1M 报 maximum recursion depth（5 处中 4 处要 1M）、≥2M 直接 SIGABRT 崩进程（9.2 GB RSS）；4.32 下 11 s 通过。归因 4.33 #13956（kernel 改 maxRecDepth 限界）+ 4.34 内核重写。**其锥全树 = Interval 证书农场 1,072 文件 / 94,431 处 `by decide`**（CertBool→Cert→Expr→Trans，CertTM/CertTMDiv2、NliBanks11/19/20/21、Gamma4Val 系、Base 桥全在内）；换 native_decide 被 §2 禁——**无本地修法，已注「上报上游」**。
