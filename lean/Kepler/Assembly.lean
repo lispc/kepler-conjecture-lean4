@@ -27,6 +27,8 @@
 import Kepler.Statement
 import Kepler.NliBanks16
 import Kepler.NliBanks18  -- nliCell3QZECFICwt0corner 真证（math5-w4）
+import Kepler.NliBanks27  -- nliCell3QZECFICwt2A 62-cell 真证（cell3-wt2a-prod-w1）
+import Kepler.Targets.Wt2A  -- nliCell3QZECFICwt2A 验收下沉（90 件闭包，2026-11-20）
 import Kepler.Graphs
 import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
@@ -430,9 +432,9 @@ theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry
 
 /-- 1a 5/7：HOL ineq entry `QZECFIC wt2 A`（ineq.hl:1443；PA21
 `bank_QZECFICwt2A`，盒 [√2,√2]³×[2hmin,√8]²×[2,2hmin]，`h0cut y4/y5`
-参数化双支）。资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliCell3QZECFICwt2A : bank_QZECFICwt2A := sorry
+参数化双支）。证明已下沉至 `Kepler.Targets.Wt2A`（同一 `Kepler.Assembly`
+名字空间、同一陈述/证明项），使目标验收闭包从完整 Assembly 容器降到 90 件；
+此处不再重复声明。 -/
 
 
 /-! ## W2b 服务块（nli-w2b-hminus 车道 2026-10-28）：`hminus` 下界与
