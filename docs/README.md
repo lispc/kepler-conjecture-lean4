@@ -17,6 +17,9 @@
   更早队列/战术/J 战役表在
   [`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
+- [`handoff-2026-11-20.md`](handoff-2026-11-20.md) — **2026-11-20 交接（换 agent 用）**
+  （额度停车道令 [1310] 重置 11-23；W1 增量2 待闸 / 三探针批断点 + 孤儿进程 /
+  池链 v5 链尾三件套 / 裁决存量 / 今日普查两勘误与 kit 裁决）。
 - [`handoff-2026-11-18.md`](handoff-2026-11-18.md) — **2026-11-18 交接（换 agent 用）**
   （基线 AQ / TSKAJXY 装配落地 / SF 111 / farm-ops 排产 / 复现命令与易失池风险 / 待裁决 4 项）。
 - [`handoff-2026-11-17.md`](handoff-2026-11-17.md) — **2026-11-16/17 战役收获与现状交接**
