@@ -970,7 +970,7 @@
 
 ### 9.1 有完整执行包（启动即可做）
 
-**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：候选 bank 证成，编排者六模块 + 67 公理复验 PASS；Assembly 岛验收等池恢复，pq §8 续1338）**
+**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：候选 bank 证成，编排者六模块 + 67 公理复验 PASS；用户 18:54 明批终验，Assembly 定向闭包恢复中，pq §8 续1346）**
 
 - **这是什么**：`Assembly.lean:431`；HOL `ineq.hl:1443`（「QZECFIC wt2 A」）。
   6 维盒 `[√2,√2]³ × [2hminus,√8]² × [2,2hminus]`（前三维钉死在 √2），
@@ -982,8 +982,10 @@
   `bank_wt2A_of_cell00`，探针 10/10 标准三）。
 - **候选已完成**：52 个剩余实 cell + 8 个剩余 vac + 全 62-cell 覆盖/bank + Assembly 最小接线 patch；
   编排者独立重编六模块全 RC=0，67/67 公理审计恰标准三（含 `NliBanks27.bank_wt2A`）。
-- **还缺（终验阻塞）**：主仓 Assembly 闭包缺 1,502 olean（首缺 `Kepler.Graphs`），池恢复链已退出；
-  待池恢复后重编修改版 Assembly 并亲跑目标 `#print axioms`，通过才落库并记 −1。当前 patch 未落库。
+- **还缺（终验执行中，pq 续1346）**：完整 patch 已应用工作区、七文件逐字节匹配，六件已验
+  olean 已复制进主池，未 commit。候选 Assembly 闭包 8,867 件，既有缺件 1,493；恢复已改为
+  定向闭包单 worker，不再等待无关全池件。旧调度暂停但当前 K030 Lean 未杀，待其自然结束后
+  安全切换。随后重编修改版 Assembly 并亲跑目标 `#print axioms`，通过才落库并记 −1。
 - **启动做法**：① 生成器 ~300 行 python（模板 = cell00 的 214 行/cell 结构，
   数据 = 快照 `cells_raw.json` 53 实 cell；书写规范遵守 PR-43 的 linarith
   原子化）；② 按 y6 层拆 6 文件量产 52 cell；③ Assembly 接线：逐 cell 按
@@ -1762,7 +1764,7 @@
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
 | `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
-| `nliCell3QZECFICwt2A` | 等批 | 9.1 | §1.15 / §1.19 |
+| `nliCell3QZECFICwt2A` | **终验执行中（pq 续1346）**：候选 bank 67/67 标准三；完整 patch 已应用未 commit，Assembly 定向闭包恢复中 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |
