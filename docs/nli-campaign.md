@@ -1718,9 +1718,11 @@
     full-run 不收直接原因）。**修复候选（pq §8 续1341 编排者勘误）= y1 下界
     2645162983/2^30 + Lean `hminus ≥ 1.23175`**：旧 `2645184458` 实为
     floor(2.46352·2³⁰)，高于真 2*hminus，拒绝；新分子是 floor(2.4635·2³⁰)，
-    三条覆盖定理已由编排者亲验标准三。本机 ignored JSON 已修，生成器尚未根治，
-    无可提交数据 diff。③ **同族 48 案复核**：9 FATAL_CEX + 1 SOUND_DEAD_HMINUS
-    + 38 UNRESOLVED；RQ 外其余 8 个致命件未修不得发射。④ 真域数值等振
+    三条覆盖定理已由编排者亲验标准三。本机 ignored JSON 已修；2026-11-20 生成器根修
+    `537ed78d`（hminus choice box clamp）。③ **同族 48 案复核**：根修前 9 FATAL_CEX +
+    1 SOUND_DEAD_HMINUS + 38 UNRESOLVED；根修后 **1 FATAL + 1 DEAD + 46 UNRESOLVED**
+    （余 1 件 RQWUDDU = [2.4635,2.4635088) spurious slice，真域外，不是真反例）；
+    RQ 外其余 8 件已转 UNRESOLVED。④ 真域数值等振
     +1.9657e−3 [sampled] 与审计 +2.155e−3 同结构同量级，但不是全局 minimax 证明，
     也不推出修域后必收口。
   - `nliRestFHBVYXZa` / `nliRestFHBVYXZv2a`：解析路线已推进大半（9.2 两卡），
@@ -1800,7 +1802,7 @@
 | `nliRestQITNPEA6206775865` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA9939613598` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEAv24003532128` | 等解冻①②（F1） | 9.4 | §1.3 |
-| `nliRestRQWUDDU` | **修域/两叶车道已收线 mixed（pq 续1341）**：本地 ignored JSON 下界改为 2645162983/2^30，3 覆盖定理标准三；生成器未根治，另 8 致命 case 未修不得发射；HOL = 2 顶层 split / 10,194 Taylor 终端叶，下一闸 = result_tree 恢复后 1–3 真实叶兼容性；债未闭 | 9.4 | §1.2 / §1.6 / §9.4 |
+| `nliRestRQWUDDU` | **生成器根修 `537ed78d`（2026-11-20）**：hminus choice box clamp 到 [1.23175,1.23176]；48 案 9→1 FATAL + 1 DEAD + 46 UNRESOLVED；剩余 1 件 RQWUDDU 是 [2.4635,2.4635088) spurious slice（真域外），不是真反例；清零需更紧形式 hminus 界或 case-box 排除引理；HOL result_tree 兼容探针仍未做；债未闭 | 9.4 | §1.2 / §1.6 / §9.4 |
 | `nliRestTEWNSCJ` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestTXQTPVC` | 等解冻①②（F1） | 9.4 | §1.3 / §1.21 |
 | `nliRestZTGIJCF4_0_0_0_0` | **96 角 + L1 支撑件落库 `53c9a79a`；二阶符号双片 pilot 已收线 UNRESOLVED，4 条辅助落库 `4fad4b72`（pq 续1345）；七条全盒证书与 Assembly 未闭** | 9.3 | §5 / DEBTS 行 9 |
@@ -1857,7 +1859,9 @@
   「②b 不可手工弥补，农场口径维持」）。**（2026-11-20 判词：三探针全 NO-GO——
   旁路关闭、R1 归档、K1 期权化，见 §9.3/§9.4 卡；RQWUDDU case 盒 y1 下界 bug
   为附带重大发现，正确候选下界 2645162983/2^30 已在本机 ignored 数据落地；
-  生成器根治、其余 8 致命 case 与真实 result_tree 恢复仍未决，见 pq 续1341。）**
+  2026-11-20 生成器根修 `537ed78d`：hminus choice box clamp 到 [1.23175,1.23176]，
+  48 案审计 9→1 FATAL（余 1 件 RQWUDDU 为 [2.4635,2.4635088) spurious slice，
+  真域外，不是真反例）；真实 result_tree 恢复仍未决，见 pq 续1357。）**
 - **UNRESOLVED（宁缺毋编）**：HOL 侧 wt1/wt2A/IYOUOBFsharpv2 原版耗时（sharp-5
   无 Time 行；urban 重跑 0.68/0.14 h 仅参考）、LP 族（formal_lp 无计时档）、
   Isabelle 8 条 `by eval` 实测（只有 50,400 s 超时上限）、informal 枚举面逐类
