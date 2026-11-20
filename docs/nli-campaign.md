@@ -1492,14 +1492,18 @@
   `~/c17_backup/lane_snapshots/wkguesbsym-seg-scout-w1/`（SCOUT.md 15.2KB
   + work/ 29 项探针脚本/face 证书/cases_narrow；探针合计 ~70 min CPU）。
 
-**ZTG joint 6（`nliRestZTGIJCF4_0_0_0_0` / `_0_0_0_1` / `_0_0_1_0` / `_0_1_0_0` / `_1_0_0_0` / `_1_0_0_1`）—— 路线 B 角点表全家族成立（状态：`0_0_0_0` 的 96 角 + L1 支撑件落库 `53c9a79a`，七条二阶符号证书未闭；其余五债战役包待批产）**
+**ZTG joint 6（`nliRestZTGIJCF4_0_0_0_0` / `_0_0_0_1` / `_0_0_1_0` / `_0_1_0_0` / `_1_0_0_0` / `_1_0_0_1`）—— 路线 B 角点表全家族成立（状态：`0_0_0_0` 的 96 角 + L1 支撑件落库 `53c9a79a`、4 条二阶符号辅助落库 `4fad4b72`，七条全盒证书未闭；其余五债战役包待批产）**
 
 - **L1 施工收线（pq §8 续1343，UNRESOLVED）**：七纯新增模块的导数/连续性/
   条件 ConcaveOn/96 角消费/of_nonpos 接口均已亲验，89/89 恰标准三；
   但七条 `ztgDMainSecond≤0` 全盒证书均未完成，Assembly 未接，SORRIED −0。
   下一步只能直接生成精确片内符号证书，必要时 R1 片切；采样凹性不是 Lean 证据。
-- **二阶符号双片 pilot（在飞，pq §8 续1344）**：用户「只发2」，`ztg-joint6-sign-pilot-w1`
-  / agent-5；仅 y1 左片 + y2 全片，逐条独立标准三验收，不自动扩七片、不接 Assembly。
+- **二阶符号双片 pilot 已收线 UNRESOLVED（pq §8 续1345）**：`ztg-joint6-sign-pilot-w1`
+  留下 `ZTGJoint0000SignPilot` 149 行、两个紧凑分子和 4 条恒等式/符号桥，编排者独立
+  重编与公理审计均过，落库 `4fad4b72`。但 y1 左片、y2 全片的整段 `ztgDMainSecond≤0`
+  主目标 **0/2**，不能消费对应 `of_nonpos`，无 Assembly、SORRIED −0。归一化 Bernstein
+  仅 y4 方向统一，朴素有界中点两片均 0/64；核心单调性仍只有采样，未借 hold 中 CertTM
+  填洞，也无精确反例。只判本 pilot 未决，不判整条数学路线 NO-GO；未自动扩七片或续派。
 - **这是什么**：`Assembly.lean:1813/1807/1801/1789/1764/1758`；同
   `make_F4` 循环（ineq.hl:486-499，id 1821661595）的六个 joint 实例。
   rad2 支已被 `1b401275` 的 ×10 `rad2_refuted` 证假——六债全走
@@ -1791,7 +1795,7 @@
 | `nliRestRQWUDDU` | **修域/两叶车道已收线 mixed（pq 续1341）**：本地 ignored JSON 下界改为 2645162983/2^30，3 覆盖定理标准三；生成器未根治，另 8 致命 case 未修不得发射；HOL = 2 顶层 split / 10,194 Taylor 终端叶，下一闸 = result_tree 恢复后 1–3 真实叶兼容性；债未闭 | 9.4 | §1.2 / §1.6 / §9.4 |
 | `nliRestTEWNSCJ` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestTXQTPVC` | 等解冻①②（F1） | 9.4 | §1.3 / §1.21 |
-| `nliRestZTGIJCF4_0_0_0_0` | **96 角 + L1 支撑件落库 `53c9a79a`；二阶符号双片 pilot 在飞（agent-5，pq 续1344）；七条全盒证书与 Assembly 未闭** | 9.3 | §5 / DEBTS 行 9 |
+| `nliRestZTGIJCF4_0_0_0_0` | **96 角 + L1 支撑件落库 `53c9a79a`；二阶符号双片 pilot 已收线 UNRESOLVED，4 条辅助落库 `4fad4b72`（pq 续1345）；七条全盒证书与 Assembly 未闭** | 9.3 | §5 / DEBTS 行 9 |
 | `nliRestZTGIJCF4_0_0_0_1` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 10 |
 | `nliRestZTGIJCF4_0_0_1_0` | 可启动（W1 trio 共享表，−3） | 9.3 | §5 / DEBTS 行 11 |
 | `nliRestZTGIJCF4_0_0_1_1` | hD 双证已闭；缺 hG=γ4≥0.065（角点表待批） | 9.1 | §1.10 / §5 |
