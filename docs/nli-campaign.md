@@ -1434,8 +1434,9 @@
   不终止），死因改写。
 - **考古问答（AGENTS §8 纪律）**：HOL 原版**没有数学分解**——它走
   2h0=2.52 切 y1 消 h0cut ite → Xconvert 转 x 空间 → **61 片自适应分割**
-  （33+28）→ Solovyev 形式化区间算术，重放实测 **163.36 s**（azure 61 条
-  Time 行求和）。能终止的关键 = `allow_derivatives=true` 的**单调性维数
+  （33+28）→ Solovyev 形式化区间算术，重放合计 **163,524 s = 45.4 CPU·h**（azure 61 条
+  Time 行求和；**ERRATA 2026-11-20 hol-cost-gap-census-w1 §9.6 + 编排者复跑**：旧记
+  「163.36 s」系千秒误标秒，量级差 ~10³；61 片、单调塌缩同构等判读不受影响）。能终止的关键 = `allow_derivatives=true` 的**单调性维数
   塌缩**（bb_arb 没有的东西）——原版从不盲细分，先做单调变量端点代入；
   其分割树与我们独立推出的 eta 下集边界**完全同构**（考古与数学双向印证）。
   Isabelle 侧只有 tame 枚举部，非线性部不在仓内，无可考古对象。
@@ -1457,7 +1458,7 @@
   `~/c17_backup/lane_snapshots/ixpotpa-arch-w1/`（SCOUT.md + work/ 17 件，
   含 HOL 61 片耗时表、80 dps 最差角脚本、HOL 骨架复放器）。
 
-**`nliTskWKGUESBsym` —— 数学归约 GO + 成本重标定（状态：主路 F2b ~1,045 CPU·h 维持参考；旁路经 sym-face-math-w1 实测重标为 700–2,200 CPU·h 平价或更差，「15–25 CPU·h」判废；2026-11-20 `sym-face-math-w1` 收线）**：① **var_lt 数据债已修复**（4 case 修后生成器重发，AFTER==bank 逐位、BEFORE==bank 反向逐位 [exact]，F2b 发射前置清除）；② **四条单调归约全真且更干净**——全盒 min ∂γ4/∂y_k = +0.0926…+0.0946（40dps FD-of-RPN、argmin 在盒角、14/14 角 [exact]）、20/20 d2 混合偏导全正（原侦察 3 条负值系 float64 FD 伪象，PR-47 非对称点复推全转正）；S4 对称 ⇒ 一条 canonical 事实 + 3 个置换搬运；③ Route-1 atom-chain 平移 NO-GO（Fraction IA：4096 片仍 −1.86）；④ **AD NO-GO 机理翻案**（零 ite 闭式 regime：g₂ 闭式无 guard 发射，大片 45,297 叶双 CLOSED）但叶数对片内裕度超线性 ⇒ 全盒 60k–200k 叶 ≈ 700–2,200 CPU·h；⑤ 旁路复活前置 = P0-a（最小纯覆盖枚举压死/确认 60k–200k）+ P0-b（闭式叶率实测校准）两探针（≤1 车道时/个，**待用户批**），P0 过闸前不批 L0a 施工。
+**`nliTskWKGUESBsym` —— 数学归约 GO + 成本重标定（状态：主路 F2b ~1,045 CPU·h 维持参考；旁路经 sym-face-math-w1 实测重标为 700–2,200 CPU·h 平价或更差，「15–25 CPU·h」判废；2026-11-20 `sym-face-math-w1` 收线）**：① **var_lt 数据债已修复**（4 case 修后生成器重发，AFTER==bank 逐位、BEFORE==bank 反向逐位 [exact]，F2b 发射前置清除）；② **四条单调归约全真且更干净**——全盒 min ∂γ4/∂y_k = +0.0926…+0.0946（40dps FD-of-RPN、argmin 在盒角、14/14 角 [exact]）、20/20 d2 混合偏导全正（原侦察 3 条负值系 float64 FD 伪象，PR-47 非对称点复推全转正）；S4 对称 ⇒ 一条 canonical 事实 + 3 个置换搬运；③ Route-1 atom-chain 平移 NO-GO（Fraction IA：4096 片仍 −1.86）；④ **AD NO-GO 机理翻案**（零 ite 闭式 regime：g₂ 闭式无 guard 发射，大片 45,297 叶双 CLOSED）但叶数对片内裕度超线性 ⇒ 全盒 60k–200k 叶 ≈ 700–2,200 CPU·h；⑤ 旁路复活前置 = P0-a（最小纯覆盖枚举压死/确认 60k–200k）+ P0-b（闭式叶率实测校准）两探针（≤1 车道时/个，**待用户批**），P0 过闸前不批 L0a 施工。**成本反差普查收线（2026-11-20 `hol-cost-gap-census-w1` §9.6，编排者亲复跑）**：HOL 形式化实耗 **256.8 CPU·h/234 叶** [exact] ⇒ 形式化对形式化反差 **~4.1×**——旧 ~280× 系 informal 13,337 s 锚（qed_log.txt:975，2010 OCaml 单发）混用，勘误；「贵得有理」（guard straddle 94–99%，HOL 也付大钱）。
 
 - **这是什么**：`Assembly.lean:981`；HOL `ineq.hl:281`「TSKAJXY-WKGUESB
   sym」。盒 `[2hplus,√8] × [2.01,2hminus] × [2,2hminus] × [2hplus,√8] ×
@@ -1737,7 +1738,7 @@
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |
-| `nliTskWKGUESBsym` | 数学归约 GO（四条全正、d2 伪象勘正）；var_lt 已修复；**成本重标定：旁路 700–2,200 CPU·h 与主路 F2b 1,045 平价或更差**——复活前置 P0-a/P0-b 探针待批 | 9.3 | §1.3 |
+| `nliTskWKGUESBsym` | 数学归约 GO（四条全正、d2 伪象勘正）；var_lt 已修复；**成本重标定：旁路 700–2,200 CPU·h 与主路 F2b 1,045 平价或更差**——复活前置 P0-a/P0-b 探针待批（+RQWUDDU prescan 并批，§9.6）；普查勘正：HOL formal 256.8 h/234 叶 ⇒ 反差 4.1×（~280× 系 informal 混币） | 9.3 | §1.3 / §9.6 |
 | `nliRestBIXPCGW7274157868a` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestBIXPCGW9455898160` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestFHBVYXZa` | 可启动（两车道） | 9.2 | §1.11–§1.14 |
@@ -1783,3 +1784,44 @@
 | hLP `lpArchiveCertificatesDebt` | 等解冻④⑤ | 9.3 | §6 |
 
 > 维护：相关车道收线/落库后更新对应卡；新判词以 §1.x 为准，本节只同步状态行。
+
+### 9.6 成本反差普查（`hol-cost-gap-census-w1`，2026-11-20 收线；编排者亲复跑逐数复现）
+
+- **HOL 侧成本底账首次逐债落地 [exact]**：azure `results/output` 39,196 行 `Time` 日志
+  双格式聚合（batch1-oxl 无索引格式坑已修补定标）= 原版 Azure 形式化
+  **23,223 行 / 5,002.1 CPU·h / 中位 404.6 s/叶**；三档案锚（ox3q1h 757.3 h /
+  ZTGIJCF4 76.0 h / GLFVCVK4 主 bank 127.9 h）逐位复现；**编排者重跑
+  `hol_cost_v2.py` 全数核对**（WKGUESBsym 256.8 h/234 叶、RQWUDDU 0.4 h/2 叶、
+  IXPOTPA 45.4 h/61 叶）。全表 = 快照 `CENSUS.tsv`（49 nli + hLP + 3 参照 × 12 列）；
+  urban 重跑树（9,274.9 h，慢 ~1.85×）不混入「当年」口径。
+- **两锚点勘误**：① WKGUESBsym「~280×」= informal 13,337 s（qed_log.txt:975，
+  2010 OCaml 单发）与形式化成本**混币**——formal vs formal **~4.1×**
+  （1,045/256.8），「贵得有理」；② IXPOTPA「重放 163.36 s」实为
+  **163,524 s = 45.4 CPU·h**（千秒误标秒，route c 判读不受影响）。
+- **反差谱系**：我们**反超三条** = ox3q1h **0.03–0.11×**（「85×」是 naive-farm
+  口径，结构化角点表落地后反转）、TEWNSCJ 0.76×、TerminalV11 0.19× [EST 押 F1
+  校准]；5–10× 档（WKGUESBsym/TXQTPVC/FHBVYXZb/PEMKWU/GLFVCVK4）与 20–137×
+  农场档（QITNPEA 群/BIXPCGW/FHBa farm 口径/sym 双债）由机制 **②a 叶数**
+  （HOL 单调塌缩 + 导数剪枝；源码锚 informal_search.hl:266 / m_verifier.hl:798 /
+  recurse.hl:189）解释；**单叶我们反快 HOL 13–15×**（Rule P 27–31 s vs 中位
+  404.6 s）；③ elaboration 税只对 LP 数据字面量（66 s/叶）与生成码体量成立。
+- **红旗（扣机制残差，全在 ②b 单叶证力）**：R1 RQWUDDU **~2,780×**（HOL 两叶
+  半盒证毕 945.4+479.2 s [exact]）；R2 QITNPEA1 族 **248–1,271×**（HOL idv 模板债
+  ≤31 叶/≤4.5 h [exact]）；R3 IYOUOBF/RIBCYXU sym 98–137×（发射器无 straddle
+  感知切维——候选 = 纯发射器改动，可随 P0 批同测）；R4 mild = wt1 一阶 2,902 叶
+  已被二阶塔 A′ 自愈（kit 数学第一次救场的已发生实例）。
+- **kit 裁决**：**K1 引理族整合件条件 GO**——整合已落库资产（Gamma4Deriv1–8 /
+  d2 对角闭式 + 凹桥 / FhbFloorMono / V5 角点链 / peel 模板），唯一新数学 =
+  d2 混合偏导闭式族（~2–4 车道日含 pilot）；入口 = **FHBa H1 落地时顺手收口**
+  （1–2 车道日，**不得让在飞 joint-6 改道**）。**K2 发射器 mono 塌缩通用 NO-GO**
+  （Gate-0 `12c81dee` 立着；K2 ≠ CertTM2——只改搜索侧叶数、不动叶检查器）。
+  **RQWUDDU mono-prescan 单点 GO：并入 sym P0-a/P0-b 探针批一次呈批**（1 车道日、
+  零 Lean、纯 Python 叶数测量；若 10⁵→10² 塌缩不成立，R1 就地归档
+  「②b 不可手工弥补，农场口径维持」）。
+- **UNRESOLVED（宁缺毋编）**：HOL 侧 wt1/wt2A/IYOUOBFsharpv2 原版耗时（sharp-5
+  无 Time 行；urban 重跑 0.68/0.14 h 仅参考）、LP 族（formal_lp 无计时档）、
+  Isabelle 8 条 `by eval` 实测（只有 50,400 s 超时上限）、informal 枚举面逐类
+  耗时；我们侧 F2 全系 TRUNC 下界 [EST]（F1 唯一校准点）、iyou-sharpv2 替代
+  路线现值。
+- **判词指针**：快照 `~/c17_backup/lane_snapshots/hol-cost-gap-census-w1/`
+  （DELIVERY.md + CENSUS.tsv + 7 聚合脚本）；pq 续1331；strategy §12 ERRATA。
