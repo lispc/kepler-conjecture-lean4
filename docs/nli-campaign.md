@@ -1421,8 +1421,12 @@
   `~/c17_backup/lane_snapshots/cell3-sqrt8-reeval-w1/SCOUT.md`
   （含 `sqrt8_card.md` 合入本卡、`work/` 可复现脚本与 B&B 日志）。
 
-**`nliRestIXPOTPA` —— 分解路线成立（状态：可启动，选项 c GO；2026-11-19 考古+分解侦察收线，③包整体清空）**
+**`nliRestIXPOTPA` —— 分解路线成立（状态：分解侦察 GO；证前完整证书闸在飞 agent-6，pq §8 续1348；旧 GO 不等于 Lean 施工 GO）**
 
+- **证前完整证书闸（用户 19:32 明批）**：先核对陈述并精确证实/证伪 eta 单调下集与
+  F3∩F4 的 γ23，再要求完整有限外证零 pending + 独立重放；全过后才做 1 个最难 cell
+  和真实 glue 的 Lean 标准三定标。采样不再给施工 GO，不做约 10³ Lean cell、Assembly
+  或农场，未过只报反例/UNRESOLVED，不预支减债。
 - **这是什么**：`Assembly.lean:1408`；HOL `ineq.hl:1265`。**全债最宽盒**
   （DEBTS 实测 w=2.372）：`[2hminus,2hplus] × [2,2hminus]² × [√8,4hminus] ×
   [2,2hminus]²`。poly 析取支网格最小 −519.9，真最小 +0.05–0.17（在另一支）。
@@ -1779,7 +1783,7 @@
 | `nliRestGLFVCVK4y4crit` | 等解冻①②（F2b） | 9.4 | §1.3 |
 | `nliRestGLFVCVK4y4subcrit` | 等解冻①②（F2b） | 9.4 | §1.3 |
 | `nliRestGLFVCVK4y4supercrit` | 等解冻①②（F2b） | 9.4 | §1.3 |
-| `nliRestIXPOTPA` | 可启动（分解路线 c GO，~3–6 车道日；11-19 考古收线，③包整体清空） | 9.3 | §1.3 / §8 |
+| `nliRestIXPOTPA` | **证前完整证书闸在飞（agent-6，pq 续1348）**：分解侦察 GO 不等于 Lean 施工 GO；须完整外证零 pending + 独立重放 + 代表件标准三后才量产 | 9.3 | §1.3 / §8 |
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
