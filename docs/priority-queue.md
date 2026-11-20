@@ -73,6 +73,8 @@
 |---|---|---|
 | `iyou-build-w1` | 编排者会话后台 agent，running（双活裁决后净接管，§8 续1312） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:950）目标 **SORRIED −1**：对账 67 源/18 olean 完成；wave_a 在跑（2 根 + 6 D 树 + L1 系 + Gamma4Env 四件补池 + IyouSharpV2 首编）；L23 34 叶等 36051 发射器（09:15 硬顶，块缓冲判据已批）；接线走 patch 等闸 |
 | `c840-swap-prep-w1` | 编排者会话后台 agent，running（用户 08:02 批「只发 C8405387449」） | **零 Lean 纯侦察**：C8405387449（92,064 行，现存最大待换装树，T11Proofs:21 唯一活 import）的 PREP 规格——消费面/锥归属/多项式化/Fraction 精确证书可行性/桥模板（逐字取自在树已证）/删除面与 +19% 校准行数预算；GO 则出执行工单草案，NO-GO 如实；产物 → 快照 `c840-swap-prep-w1/`；**P3 五族滚装未批保持待裁** |
+| `sym-face-math-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 1」） | **零 Lean**：WKGUESBsym Face 旁路 Cert A **四条单调归约**二阶符号归约（joint6 kit 形状；AD 直证已 NO-GO 不重试）+ **4 case var_lt 反定向数据债修复**（WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128 重发重窄化，修后生成器，输出不落主仓）；GO ⇒ sym 族走 15–25 CPU·h 数学路线替代 1,045 CPU·h 农场（50–70×） |
+| `ox3q1h-p0-split-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 2」） | **零 Lean 零陈述改动**：split 链 hcorner **39,792 非顶点格点记账缺口**（40×）纯重发修复——按侦察勘误后口径（推荐压缩档 3,524 点；624 y4-patch 点不需要；真括号下 184/184 已正）执行 + 逐点 margin [exact] 全正验证 + S2a/S2b 解锁确认与 ~1,350 槽件清单快照；预算 0.5–1 车道日 |
 | `cell3-wt1-tower-scout-w1` | **已收线 GO（nli-campaign §9.2 卡已改写）** | 二阶塔 A′ GO：原子表 + 塔结构 10¹–10² 叶（~50–60 证书）；A′ 施工等用户批 |
 | `cell3-sqrt8-build-w1` | **已闭合落库 `8c7dfc34`（§8 续1312）** | sqrt8 债闭合：NliSqrt8 26-cell antitone 电池 + Assembly 1a-3/7 接线；11 定理标准三编排者亲测；K_SORRIED −1 |
 | `ztg-bernstein-pilot-w1` | **已收线 GO（§8 续1293–1294）** | 三件全绿落库 `57eded64`（12 探针标准三）；千系数件=分钟级定标；量产等批 |
@@ -262,6 +264,11 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（08:15 实测，续1314）**：**两零-Lean 侦察发车（用户批「发 1 2」）：sym-face-math-w1 + ox3q1h-p0-split-w1。**
+  ① `sym-face-math-w1`：WKGUESBsym Face 旁路 Cert A 四条单调归约的二阶符号归约（ZTG-joint6 kit 形状；AD 直证 NO-GO 不重试；PR-47 复推判据在单）+ 4 case var_lt 反定向数据债修复（2026-10-26 修后生成器重发 WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128，输出不落主仓）——GO ⇒ sym 三债 15–25 CPU·h 替代 1,045 CPU·h（50–70×），var_lt 不修则 sym 族任何发射粘不上 bank。
+  ② `ox3q1h-p0-split-w1`：split 链 hcorner 39,792 非顶点格点记账缺口（40×）纯重发（零陈述改动；按 ox3q1h 侦察勘误后口径：压缩档 3,524 点推荐 / 624 y4-patch 点作废 / 真括号 184/184 已正）+ 逐点 [exact] margin 全正验证 + S2a（~1,350 槽件）解锁确认——P0 不修则 ox3q1h 整条施工链（S2a→S2b→S5）起不来。
+  ③ 两车道均零 Lean 零槽（池链 + iyou 独占槽位不受影响）；主仓零写入。在飞合计 4 线：c840-swap-prep / sym-face-math / ox3q1h-p0-split / iyou-build-w1 + 池恢复链 v4。P3 五族、wt1 A′、joint-6 W 包、wt2A 量产、升级试点保持待裁。SORRIED 50 / AXIOM 585 不变。下一条：续1315。
 
 - **2026-11-20（08:03 实测，续1313）**：**C8405387449 换装规格侦察发车（用户裁「只发 C8405387449」；P3 五族滚装保持待裁）+ 全仓行数分布实测入档。**
   ① 行数实测（08:02 全量 walk，修正 xargs 分批假总数）：全仓 lean **2,569,760 行 / 11,708 件**（含在飞未跟踪 Iys 67 件/39,958 行）；分布 Text 116.4 万（内 Text/LP 41.9 万 hold 区 + TameSpine 7.5 万）> Cases 106.0 万 > LP 20.1 万（hold）> Graphs 8.7 万（585 基座禁动）；Cases 内 top = C2125338128M 95,022 / C8405387449 92,064 / CQITNPEAx（P0 新形态）46,990 / C2485876245b 33,062（emitter NO-GO）… 小件长尾 ~69 万行（~6,900 家族均 ~100 行，无单家置换价值）。**今晨累计净缩 ~1,043 万行（−80%）**。
