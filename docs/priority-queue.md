@@ -76,6 +76,7 @@
 | `sym-face-math-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 1」） | **零 Lean**：WKGUESBsym Face 旁路 Cert A **四条单调归约**二阶符号归约（joint6 kit 形状；AD 直证已 NO-GO 不重试）+ **4 case var_lt 反定向数据债修复**（WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128 重发重窄化，修后生成器，输出不落主仓）；GO ⇒ sym 族走 15–25 CPU·h 数学路线替代 1,045 CPU·h 农场（50–70×） |
 | `ox3q1h-p0-split-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 2」） | **零 Lean 零陈述改动**：split 链 hcorner **39,792 非顶点格点记账缺口**（40×）纯重发修复——按侦察勘误后口径（推荐压缩档 3,524 点；624 y4-patch 点不需要；真括号下 184/184 已正）执行 + 逐点 margin [exact] 全正验证 + S2a/S2b 解锁确认与 ~1,350 槽件清单快照；预算 0.5–1 车道日 |
 | `cases-swap-c840-w1` | 编排者会话后台 agent，running（用户 08:29 批「C840批」） | **执行**：照 c840-swap-prep PREP §6 工单把 92,064 行/499 模块树置换为 2,001 行/3 模块（−97.83%）——岛池编译（发射件首次编译，RC=0 责任 + P0 预留 1 行微调权）→ patch.diff（497 deletion + M×1 + A×1，Base 字节不动）→ T11Proofs:116-173 消费者零感知探针 → 交付等闸；锥外件不涉根面记账 |
+| `trust585-research-w1` | 编排者会话后台 agent，running（用户 08:37 批「侦查吧」） | **零 Lean 研究侦察（允许网络检索）**：585 信任基座 → 内核可验路线 revisit——585 解剖（两形状逐字 + 数据体量分布，**5 个 tri-single-seed 单独评估是否直接 decide 快速胜利**）+ 工具链现状（bv_decide/LRAT/内核 ByteArray 于 4.32 本地实查——**本树无 Mathlib 是第一拦路虎**；lean-sat/FCT 反射先例检索）+ 单 shard 离线编码探针 → 路线判定（B 证书重建 / C 反射重工程 / 诚实 NO-GO）+ 580× 成本模型；**侦察期 585 零触碰，pilot/农场算力均待另批** |
 | `cell3-wt1-tower-scout-w1` | **已收线 GO（nli-campaign §9.2 卡已改写）** | 二阶塔 A′ GO：原子表 + 塔结构 10¹–10² 叶（~50–60 证书）；A′ 施工等用户批 |
 | `cell3-sqrt8-build-w1` | **已闭合落库 `8c7dfc34`（§8 续1312）** | sqrt8 债闭合：NliSqrt8 26-cell antitone 电池 + Assembly 1a-3/7 接线；11 定理标准三编排者亲测；K_SORRIED −1 |
 | `ztg-bernstein-pilot-w1` | **已收线 GO（§8 续1293–1294）** | 三件全绿落库 `57eded64`（12 探针标准三）；千系数件=分钟级定标；量产等批 |
@@ -265,6 +266,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（08:37 实测，续1317）**：**trust585-research-w1 发车（用户批「侦查吧」）——585 信任基座内核化路线研究侦察；终局口径不动，探索性立项。**
+  ① 动机：用户问「最终还是想做到标准三，旧『计算量太大』结论有必要 revisit 吗」。旧判决（4,450–6,550 核时 + 内存不可行）只关闭了**朴素重放**一条路；侦察对象 = 新路线：**B**（SAT/BV 证书重建——枚举组合事实是主战场，内核只验紧凑证书）与 **C**（FCT/Gonthier 式反射检查器重工程）。
+  ② 侦察面：585 解剖（两形状逐字 + tri-single-seed 5 件**单独评估是否已是直接 decide 快速胜利**）+ 工具链现状（本树无 Mathlib——bv_decide/LRAT 在 4.32 core/Batteries 的确切可用性是第一拦路虎，本地实查非猜）+ 单 shard 离线编码探针（量内核代价量级）。
+  ③ 立场如实入档：做成 = **严格超越 HOL 与 Isabelle**（Isabelle 的 8 条 `by eval` 也未内核验证）——beyond state of the art 一线；政策对齐（AGENTS §2「能改 kernel decide 的必须改」）；但 49 条 nli 债仍优先（便宜得多）。**侦察期 585 零触碰；pilot 与任何农场形状算力均待用户另批。**
+  ④ 在飞 6 线：cases-swap-c840（执行）/ sym-face-math / ox3q1h-p0-split / iyou-build-w1 / trust585-research + 池链 v4。SORRIED 50 / AXIOM 585 不变。下一条：续1318。
 
 - **2026-11-20（08:29 实测，续1316）**：**C840 执行发车（用户批「C840批」）：`cases-swap-c840-w1` 照 PREP §6 工单执行换装。**
   ① 任务：92,064 行/499 模块 → 2,001 行/3 模块（−97.83%）——岛池编译（PREP 级发射件 CertP840 1,847 行 + 桥 131 行**首次**过内核，执行车道拥有 RC=0 责任与 1 行级微调权；`List.Mem.head` 替换编译验证）→ patch.diff（497 全内容 deletion + 顶 M×1 + CertP840 A×1，Base 字节不动；相对 HEAD `6c602ef8`）→ T11Proofs:116-173 消费者零感知探针 → 交付编排者闸。
