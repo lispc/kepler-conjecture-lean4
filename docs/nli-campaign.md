@@ -984,8 +984,8 @@
   编排者独立重编六模块全 RC=0，67/67 公理审计恰标准三（含 `NliBanks27.bank_wt2A`）。
 - **还缺（终验执行中，pq 续1346）**：完整 patch 已应用工作区、七文件逐字节匹配，六件已验
   olean 已复制进主池，未 commit。候选 Assembly 闭包 8,867 件，既有缺件 1,493；恢复已改为
-  定向闭包单 worker，不再等待无关全池件。旧调度暂停但当前 K030 Lean 未杀，待其自然结束后
-  安全切换。随后重编修改版 Assembly 并亲跑目标 `#print axioms`，通过才落库并记 −1。
+  定向闭包单 worker，不再等待无关全池件。K030 已自然完成（6,310.68 s），定向链已接管，
+  当前 K031。随后重编修改版 Assembly 并亲跑目标 `#print axioms`，通过才落库并记 −1。
 - **启动做法**：① 生成器 ~300 行 python（模板 = cell00 的 214 行/cell 结构，
   数据 = 快照 `cells_raw.json` 53 实 cell；书写规范遵守 PR-43 的 linarith
   原子化）；② 按 y6 层拆 6 文件量产 52 cell；③ Assembly 接线：逐 cell 按
