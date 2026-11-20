@@ -77,6 +77,7 @@
 | `ox3q1h-p0-split-w1` | **已收线 P0 完成（§8 续1318）** | 记账缺口闭合 100%：39,792→**3,524 点**（−91.1%）；5,516 非顶点对 margin 全正 [exact]（min +1.32e-3）+ 19 合取全可行 + 184/184 升 [exact]；S2A_SLOTS **1,159 件**就绪、S2b 56 文件批产表就绪（G4CORNER 压缩式 0.39–0.88M 行 vs 现式 2.36M）；**S2a/S2b 执行等用户批（Lean 算力，随 2 生产槽轮转）** |
 | `ztg-joint6-build-w1` | running（用户 09:1x 批「先启动 joint-6 W0–W4」） | **六债联合施工**：`nliRestZTGIJCF4_{0_0_0_0,0_0_0_1,0_0_1_0,0_1_0_0,1_0_0_0,1_0_0_1}` 一次闭 6 债（目标 K_SORRIED 50→44）；照 ztg-joint6-scout W0–W4 战役包逐段施工、**每 W 阶段独立交付等闸**；复用已落库 ZTG 资产（NliBanksZTGIJCF4Dih/Route/Bounds + 今晨 peel/L2 试点三件）；预算 4–7 车道日级（W0 交付时给实测校正） |
 | `lean436-pilot-w1` | running（用户 09:1x 批「启动」） | **升级评估（只出判据不改主仓）**：4.36.0 沙箱装链 + 复制式岛池自底向上闭包 + 30–50 代表样本（含 ZTG 试点三件复测 / CertD / 小 K-shard / NliBanks21 / GoodListShard 形状）+ 4.32/4.36 时速对照；全净 → 「可切换」判据 + 成本账；有破 → 「留 4.32」判据 + 破例清单；**切不切最终由用户裁** |
+| `notame7-census-w1` | running（用户 10:00 批「批p0」） | **零 Lean 普查**：照 `strategy/trust585-pruned-kernelization-20261120.md` §7 P0——notame7 python 逐字移植 + 移植保真锚（tame 终图必不满足 / untame 必满足）→ Tri 五根 + 一个中 Pent 根的**可剪占比 + 剪枝后 pops + finals 双口径一致性**（剪枝 soundness 实证侧检验）+ 死因分布；结论对照 §5 停机闸（≥20–30× 复合 → P1/P2 升级建议，不足判停） |
 | `cases-swap-c840-w1` | **已闭合落库 `7665487e`（§8 续1319）** | C8405387449 置换落库：92,064→2,003 行（−97.82%）；6 件 RC=0 + 编排者亲跑探针全标准三 + 消费者形状探针过；锥外件零根面记账 |
 | `trust585-research-w1` | **已收线混合判定（§8 续1320）** | tri 5 件 GO（585→580，1–2 天级；pilot 草案 §7 **待批**）；580 件 NO-GO 带翻案条件（bv_decide 同公理类铁证亲验 + 旧判决勘误 5× + FCT 规模差 6 量级）；trust-base.md §1.1 已同步 |
 | `cell3-wt1-tower-scout-w1` | **已收线 GO（nli-campaign §9.2 卡已改写）** | 二阶塔 A′ GO：原子表 + 塔结构 10¹–10² 叶（~50–60 证书）；A′ 施工等用户批 |
@@ -268,6 +269,12 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（10:01 实测，续1324）**：**外部评审产出的剪枝路线入档 + P0 普查发车（用户批「批p0」）+ 编排者接受三处修正。**
+  ① **外部 agent 评审交付**：`strategy/trust585-pruned-kernelization-20261120.md`（挑战 `docs/trust585-kernelization-report.md`）——**编排者接受其三处修正**（580 整体 NO-GO 降 UNRESOLVED 带 notame7 具体线索 / FCT 六量级锚前提被修 / LRAT 判死收窄为默认 tactic 换皮），已回写指针（`45fb3848`）。
+  ② **核心新路线（该文档 §3–§7）**：`notame7` 整棵死子树剪枝——库内四条已证不变量（`inv_notame`/`inv_inv_notame`/`untame_notame`/`inv_inv_next_tame`）+ 现成证明模板（`filterout_untame_succs'` GeneratorProps:968-999）+ `tame_classification` 证明体替换集成（**陈述逐字不动；585 不删即退出根面**）。编排者补三条谨慎：notame7 中间图命中率未测（P0 本体）/ kernel decide 栈深风险（L23 57 条目正在亲历）/ 验收式届时需用户改裁。**战略 upside**：路线落地 ⇒ 标准三结构性可达 + CertShards 大区退出验收关键路径（双重回报）。
+  ③ `notame7-census-w1` 发车（P0）：移植保真锚（本普查效度瓶颈）→ Tri 五根 + 中 Pent 根可剪占比普查 + finals 双口径一致性检验 → §5 停机闸判读（≥20–30× 复合才谈 P1/P2）。
+  ④ 在飞 6 线（+P0）：joint-6 / 436 试点 / iyou（L23 编排者侧 64MB 栈测试编译中）/ notame7 普查 + 1 槽池链 + 可视化服。SORRIED 50 / AXIOM 585 不变。下一条：续1325。
 
 - **2026-11-20（09:51 实测，续1323）**：**sym-face-math-w1 收线——var_lt 数据债修复 DONE（4 case 全绿）；四条归约数学 GO 且更干净；但「15–25 CPU·h」成本预期被实测推翻（编排者先前 50–70× 报价判废，如实勘误）。**
   ① **var_lt（任务 B）**：修复 commit `392517111`（2026-10-26）在 HEAD 内确认；修后生成器重发 WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128 四 case，与 recost 快照逐字节相同（成本口径无损）[exact]；形状级自检跑真实 `emit_lean.build_goals`——**4/4 AFTER==bank 逐位含顺序、BEFORE==bank 反向逐位**——**F2b 发射前置清除**（sym 族任何发射的硬前置已解）。
