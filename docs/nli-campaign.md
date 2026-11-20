@@ -970,7 +970,7 @@
 
 ### 9.1 有完整执行包（启动即可做）
 
-**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：候选 bank 证成，编排者六模块 + 67 公理复验 PASS；用户 18:54 明批终验，Assembly 定向闭包恢复中，pq §8 续1346）**
+**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：**已闭合 `1ec06b28`，2026-11-20**；六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`，90 件闭包亲验标准三；SORRIED 50→49，根面复跑待池）**
 
 - **这是什么**：`Assembly.lean:431`；HOL `ineq.hl:1443`（「QZECFIC wt2 A」）。
   6 维盒 `[√2,√2]³ × [2hminus,√8]² × [2,2hminus]`（前三维钉死在 √2），
@@ -1770,7 +1770,7 @@
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
 | `nliCell3QZECFICwt1` | 可启动（二阶塔 A′：50–60 证书 / 手写 ~4–5.5k + P1 生成块；11-19 塔侦察 GO，待批产） | 9.2 | §1.9 / §1.15 |
-| `nliCell3QZECFICwt2A` | **终验执行中（pq 续1346）**：候选 bank 67/67 标准三；完整 patch 已应用未 commit，Assembly 定向闭包恢复中 | 9.1 | §1.15 / §1.19 |
+| `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复跑待池 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |
