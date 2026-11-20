@@ -41,7 +41,7 @@
 
 ### 债在哪
 
-- **现役**：`priority-queue.md` 文件头（基线 AQ：SORRIED 51 = 50 `nli*` + 1 hLP、
+- **现役**：`priority-queue.md` 文件头（基线 AQ：SORRIED 51 = 50 `nli*` + 1 hLP；wt2A 小模块验收后 2026-11-20 为 49 = 48 `nli*` + 1 hLP、
   Text 0、AXIOM 585）+ [`trust-base.md`](trust-base.md)（信任基座依据与逐类对照）+
   [`e2e-reachability-map.md`](e2e-reachability-map.md)（逐基线 SORRIED/AXIOM 清单，
   tsv 为仪器原样输出）。

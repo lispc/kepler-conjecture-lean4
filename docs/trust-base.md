@@ -162,8 +162,8 @@ python3 scripts/trust_manifest.py --check   # 只校验（CI 用）
 
 ## 6. 仍然是真活的部分
 
-- **锥内 51 条 `sorry`**（基线 AQ `e4c384e6`，2026-11-18；`docs/e2e-reachability-map.tsv` 的
-  `--- SORRIED ---` 段：Assembly 51 [50 `nli*` + 1 hLP] + Text 0）。
+- **锥内 49 条 `sorry`**（2026-11-20 `1ec06b28` 后；AQ 基线 `e4c384e6` 的仪器段仍为 51：
+  Assembly 51 [50 `nli*` + 1 hLP] + Text 0；wt2A 小模块验收后为 Assembly 49 [48 `nli*` + 1 hLP] + Text 0，根面复跑后更新 tsv）。
 - **三类**自造缺陷：`else True` 回落 / 索引盲谓词 / 空量化注册表
   （`Prop := sorry` 那类已于 `b85eaade` 清零）。
 
