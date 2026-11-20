@@ -72,7 +72,7 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `iyou-build-w1` | 编排者会话后台 agent，running（双活裁决后净接管，§8 续1312） | 真证 `nliTskIYOUOBFsharpv2`（Assembly.lean:950）目标 **SORRIED −1**：对账 67 源/18 olean 完成；wave_a 在跑（2 根 + 6 D 树 + L1 系 + Gamma4Env 四件补池 + IyouSharpV2 首编）；L23 34 叶等 36051 发射器（09:15 硬顶，块缓冲判据已批）；接线走 patch 等闸 |
-| `c840-swap-prep-w1` | 编排者会话后台 agent，running（用户 08:02 批「只发 C8405387449」） | **零 Lean 纯侦察**：C8405387449（92,064 行，现存最大待换装树，T11Proofs:21 唯一活 import）的 PREP 规格——消费面/锥归属/多项式化/Fraction 精确证书可行性/桥模板（逐字取自在树已证）/删除面与 +19% 校准行数预算；GO 则出执行工单草案，NO-GO 如实；产物 → 快照 `c840-swap-prep-w1/`；**P3 五族滚装未批保持待裁** |
+| `c840-swap-prep-w1` | **已收线 GO（§8 续1315）** | C8405387449 换装规格齐：**92,064 行/499 模块 → 2,001 行/3 模块（−97.83%，四案最轻）**——40,785 叶全选 goal 0 析取枝 + 81,074 盒 slot [4,4] 全钉死 ⇒ 6 变元实为 4 变元单叶（81 系数全正、精确 min +352.42）；CertP840 1,847 行已发射 + 131 行桥（逐字 T11Proofs:116-123）；**锥外**（e2e 图零命中，验收不含根面，编排者已亲核 import 面零命中）；执行工单 PREP §6 **待用户批**（~1 车道时 + 30s 编译闸） |
 | `sym-face-math-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 1」） | **零 Lean**：WKGUESBsym Face 旁路 Cert A **四条单调归约**二阶符号归约（joint6 kit 形状；AD 直证已 NO-GO 不重试）+ **4 case var_lt 反定向数据债修复**（WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128 重发重窄化，修后生成器，输出不落主仓）；GO ⇒ sym 族走 15–25 CPU·h 数学路线替代 1,045 CPU·h 农场（50–70×） |
 | `ox3q1h-p0-split-w1` | 编排者会话后台 agent，running（用户 08:15 批「发 2」） | **零 Lean 零陈述改动**：split 链 hcorner **39,792 非顶点格点记账缺口**（40×）纯重发修复——按侦察勘误后口径（推荐压缩档 3,524 点；624 y4-patch 点不需要；真括号下 184/184 已正）执行 + 逐点 margin [exact] 全正验证 + S2a/S2b 解锁确认与 ~1,350 槽件清单快照；预算 0.5–1 车道日 |
 | `cell3-wt1-tower-scout-w1` | **已收线 GO（nli-campaign §9.2 卡已改写）** | 二阶塔 A′ GO：原子表 + 塔结构 10¹–10² 叶（~50–60 证书）；A′ 施工等用户批 |
@@ -264,6 +264,13 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 ---
 
 ## 8. 变更日志（新 → 旧）
+
+- **2026-11-20（08:22 实测，续1315）**：**c840-swap-prep-w1 收线 GO（惊喜件）——92,064 行/499 模块 → 2,001 行/3 模块（−97.83%），四案最轻；执行发车等用户批。**
+  ① **塌缩机器证据（全 [exact]）**：40,785/40,785 叶全选 goal 0 析取枝（`(193/50)·Δ4² − 4·x1·Δ > 0`，零叶用 `delta_y < 0`）；全树 81,074 盒 slot 0/3 钉死 [4,4]（y1=y4=2 ⇒ x1=x4=4）——6 变元析取实为 4 变元单叶（cayleytr0 同款塌缩 + CertA 级 81 系数小证书，multidegree (2,2,2,2)）；精确 min ≈ **+352.4177168373**，16 角枚举 + 随机有理点 + 200k float64 + check_tree 三重 + Expr 恒等式五口径交叉。
+  ② **发射件已落 stage/**：CertP840.lean 1,847 行/202 decls（P0/P1/P2 管线原件零改动复用）+ 131 行 ∃-goal 桥（陈述 byte-equal；eval 恒等式逐字取自在树 T11Proofs:116-123；`List.mem_cons_self` 在 v4.32.2 core 为 private → 桥改公有 `List.Mem.head`，执行车道复核点）。
+  ③ **消费面复核（编排者亲查）**：`^import.*T11Proofs` 全仓零命中 ✓（LocalAuto22:6295 仅注释提及，PREP §1 已如实载明）；锥归属 = e2e 图对 C8405387449/T11Proofs **零 K_REACH 命中（锥外补粘资产，与 P2 同级）**——验收不含根面记账，只须 T11Proofs 链不变；V11 聚合槽（LocalAuto23Vas:3477 h840 假设槽）不经本树零耦合。**勘误**：续1313 菜单向用户称「锥内」，按侦察取证更正为锥外。
+  ④ **考古**：HOL `main_estimate_ineq.hl:1180`（dih<1.1 枝已线性化 tan2lower=3.86）+ 2013 QED 实录 **220 cells/31 ms**——现树 40,785 叶为 prec-64 过切分；Isabelle AFP 零命中如实记录。
+  ⑤ 执行预算：串行编译 ≈30 s/峰值 ≤6.5 GB（CertA 同形 14.5 s/6.4 GB 定标；发射件为实测行数不适用 +19% 内插）；工单草案 PREP §6（~1 车道时，p12 模式）。在飞：sym-face-math / ox3q1h-p0-split / iyou-build-w1 + 池链 v4。SORRIED 50 / AXIOM 585 不变。下一条：续1316。
 
 - **2026-11-20（08:15 实测，续1314）**：**两零-Lean 侦察发车（用户批「发 1 2」）：sym-face-math-w1 + ox3q1h-p0-split-w1。**
   ① `sym-face-math-w1`：WKGUESBsym Face 旁路 Cert A 四条单调归约的二阶符号归约（ZTG-joint6 kit 形状；AD 直证 NO-GO 不重试；PR-47 复推判据在单）+ 4 case var_lt 反定向数据债修复（2026-10-26 修后生成器重发 WKGUESB/IYOUOBF/RIBCYXU/QITNPEAv2_4003532128，输出不落主仓）——GO ⇒ sym 三债 15–25 CPU·h 替代 1,045 CPU·h（50–70×），var_lt 不修则 sym 族任何发射粘不上 bank。
