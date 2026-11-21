@@ -79,6 +79,9 @@
 
 ### 怎么跑闸 / 怎么开工
 
+- [`compile-speed.md`](compile-speed.md) — **编译速度基线/复测入口**（2026-11-21
+  `compile-speed-research-w1`：import 固定费、分层归因、`-j2`、import kit、按内存排槽；
+  含编排者勘误与 UNRESOLVED；完整 harness/PLAYBOOK 在同名快照）。
 - [`fill-worker-playbook.md`](fill-worker-playbook.md) — 工人纪律、闸规则、雷区表。
 - [`lane-brief-template.md`](lane-brief-template.md) — 工单模板（§0 硬约束逐字复制）。
 - [`../lean/scripts/auto_gate.sh`](../lean/scripts/auto_gate.sh) — 五道机械闸；
