@@ -57,6 +57,51 @@
 `LAKE_JOBS=1` 无效，默认全核扇出（合成项目 40 个模块：2.75 s wall / 23.7 CPU-s）。
 可控旋钮只有 `moreLeanArgs` 或自建驱动。
 
+### 3.1 B 方案（import kit）到底是什么
+
+现状：几乎每个 Interval/Text/LP 模块开头都是
+
+```lean
+import Mathlib   -- 一次载入约 8.8k 个 Mathlib 模块 / 约 5.4 GB olean
+```
+
+于是每个模块先付 **3.4 s / 5.5 GB** 的固定费，再编译自己。
+
+kit 化 = 只 import 这个文件**真正用到**的子模块。例如一个只需要实数、`linarith`、`ring`
+的文件：
+
+```lean
+import Mathlib.Data.Real.Basic
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Ring
+```
+
+车道合成探针实测：**3.59 s / 5.62 GB → 0.99 s / 1.41 GB**（wall −73%、RSS −75%）。
+
+**为什么不能直接全仓改：**
+
+- Lean 的 import 是传递闭包；少一个子模块，文件里某个 lemma/tactic/instance 就变成
+  `unknown identifier`，编译直接失败。它是 **fail-fast**，不会静默造假；但 11,241 个模块
+  各自到底用了哪些 Mathlib 名字，没有现成清单，只能逐模块编译验证。
+- `Kepler.Interval.Basic` 只有一行 `import Mathlib`，但 **7,844 个 Kepler 模块**经它继承
+  整个 Mathlib 面；改这一行 = 改这 7,844 个文件的可用引理面，风险最大。
+- 车道只验证了 `linarith` / `ring` / `norm_num` 三条 tactic 的 toy 文件；真实 Cases/Text
+  文件可能还依赖 `positivity`、`field_simp`、`interval_cases`、`Real.pi` 引理等，必须实测。
+
+**B 的试点做法（尚未执行，需用户批）：**
+
+1. 选一个**新增/孤立**模块（不动 `Interval.Basic`），把 `import Mathlib` 换成最小 kit；
+2. `lean -o /tmp/...` 编译，RC=0 / error=0；
+3. 再跑 `#print axioms`，确认仍恰标准三（正常情况漏 import 会先编译失败，但双检不省）；
+4. 记录 wall/RSS，与 `import Mathlib` 基线对比；
+5. 通过后试一个小簇（同目录 3–5 件），再决定是否拆入口：
+   `Kepler.Interval.Basic`（最小）+ `...BasicMathlib`（全量），新文件只依赖最小入口。
+
+**收益边界**：小模块/轻件的 wall 与 RSS 大降，可让 3 槽更安全；重证明件的 import 只占
+0.05–0.6%，kit 不解决它们；`CertShards` 的 ~1.6 GB 地板主要是数据 olean，不是 Mathlib，
+kit 对它们收益有限，需另测。import 不是公理，**不改信任面**；但改源文件 import 面属于
+代码改动，需要用户批 + 正常编译闸。
+
 ## 4. 不要做
 
 - 无界 `lake build` / 全树构建（Lake 5.0 全核扇出；AGENTS §4 永久禁止）。
