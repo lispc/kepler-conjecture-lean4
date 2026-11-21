@@ -288,6 +288,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
   ② 纪律：单 lean + 3 槽 guard；计时避开池/P1 争用并记录并发，合成基准只在 `/tmp`；禁全树 `lake build`/auto_gate/农场/certtm；真实模块只用 `lean -o /tmp` 单文件。
   ③ 主仓 tracked 零改动、不 commit；交付 `REPORT.md` / `PLAYBOOK.md` / `bench/` / `data/` / `logs/` / `MANIFEST.sha256`；判词 GO/PARTIAL/UNRESOLVED，不承诺“必须变快”。
   ④ 当前环境：池恢复单 worker 1 lean ~1.6 GB，wt1 P1 与 G4 均已收线；SORRIED 49 / AXIOM 585 不变。下一条：续1366。
+  ⑤ **重复派单勘误**：本 session 于 13:58 未见到本条新登记，误派重复 agent-9；14:14 已取消，仅做过初步阅读、无交付。保留接管会话的唯一 `compile-speed-research-w1`，其 probe、工作区与池进程均不清理、不停止。
 - **2026-11-21（12:04 实测，续1364）**：**fat1 红旗解剖收线 UNRESOLVED：8 条 prep Time 不是 8 终端叶；原内部 result_tree 不可恢复，Lean pilot 未启动，SORRIED −0。**
   ① 原 output 只有 stdout 与 8 条 prep 记录，合计 **3,193.891564 s = 0.887192101 h**，没有逐案 Result_* 或序列化树。urban 同定理 8/8 哈希一致，精确聚合 **2,948 Taylor pass + 2,940 普通 glue，mono/raw/convex/pass_mono 全 0**；这些计数只属 urban，不冒充原运行逐叶数据。`HOL_TREE.tsv` 恢复 8/8 prep 盒、操作、父子、时间与哈希。编排者亲跑快照 `REPLAY.sh` = PASS，并独立用 Decimal/TSV 重算记录数、时间、计数与比值全一致。
   ② 发布值精确比 = `1128/0.887192101 = 1271.4270×`（0.89h 四舍五入口径为 1267.4157×）。以 urban 2,948 做**混合运行规范化**：叶数因子 `100000/2948 = 33.9213×`，全包单叶因子 `40.6/(3193.891564/2948) = 37.4743×`，乘积 1271.1765×；它解释量级但不是原 per-leaf 实测，也不能把残差全归求值器。条件投影 2,948×(13.6+27)s = **33.2468889h**，排除 2,940 glue、树恢复和 bank 接线，不是全树 GO。
