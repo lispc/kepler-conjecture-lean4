@@ -1,5 +1,8 @@
 # shard-math-roadmap — 数学/算法层 shard 压缩路线
 
+> **2026-11-21 用户指示：W1/W2/W3 三条先记录在案，暂缓开发；以后再说。**
+> 本文只做存档与重启入口，不代表已批；任何一条开工前仍需用户重新裁决。
+
 > 来源：`shard-math-research-w1`（2026-11-21 收线，判词 **GO（条件式）**）。
 > 数字出处：快照 `~/c17_backup/lane_snapshots/shard-math-research-w1/REPORT.md`
 > + `data/{inventory,cost_model,recovery_timings}.tsv` + `prototype/`；

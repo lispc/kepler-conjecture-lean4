@@ -237,6 +237,22 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
 
+### 3.1 shard 压缩三候选（2026-11-21 用户：先记录，以后再说）
+
+> 状态：**暂缓，不开发**。细节与“不要再试”清单见
+> [`shard-math-roadmap.md`](shard-math-roadmap.md)；数字出处见 §8 续1367 与
+> `~/c17_backup/lane_snapshots/shard-math-research-w1/`。以下只为以后重启时
+> 保留入口，不代表已批。
+
+| 候选 | 内容与已知证据 | 重启前置 / 裁决点 |
+|---|---|---|
+| **W1** notame7 进 native `next_tame` | `next_tame` 与 AFP 同形、不含 notame7；剪枝因子 Tri 1.68× / Pent 1.96×（终图集逐根相等）；soundness 零件全在库，缺 frontier-`inv` | 第一问 = **pruned-loop ⇒ unpruned-loop bridge 是否成立**（成立则 585 陈述不变、免 SF）；不成立再走改 `next_tame` + SF + 用户改裁 |
+| **W2** 成本均衡合并 585 → K+5 | 合并墙钟 −36%、RSS 1.6 GB 不变、总时间不升；K=3 时 **8 条公理**（与 Isabelle 8 条 `by eval` 同量级） | 与 AGENTS §1「恰好 585」冲突 ⇒ **必须用户改裁**；失去分片级续跑 |
+| **W3** Interval cases-swap P3-GO 批 | 149,727 行 → ≈32.6k（−78%）；五族精确 Bernstein min 已在 `cases-swap-prep-w1/PREP.md` §3 验证；不改信任面 | **未批缓行**；CertD/CertP 单文件 11–22 GB，只能单槽；批产前先做 C2125338128M |
+
+**不要重试**（机器证据已关闭）：CertShards 跨根记忆化/根覆盖、根内去重、343 死根、
+Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
+
 ---
 
 ## 4. 当前 nli 数学路线与禁重复项
@@ -284,6 +300,11 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-21（14:55 实测，续1368）**：**用户指示「W1/W2/W3 三条先记录到文档中，以后再说」——暂缓入档，不开发、不批产、不 scouting。**
+  ① §3.1 新增 shard 压缩三候选表（W1 notame7 native / W2 合并 585→K+5 / W3 Interval P3），每条带已知证据与重启前置/裁决点；`docs/shard-math-roadmap.md` 顶部加“暂缓”横幅。
+  ② 明确写入“不要重试”清单：跨根记忆化/根覆盖、根内去重、343 死根、Interval 叶级去重/对称、靠重分片省总时间。
+  ③ 重启入口：W1 先验 pruned-loop bridge 是否免 SF；W2 必须先改裁「恰好 585」；W3 必须先批产且单槽 11–22 GB。
+  ④ 主仓 tracked 零改动（仅文档）；SORRIED 49 / AXIOM 585 不变。下一条：续1369。
 - **2026-11-21（15:00 实测，续1367）**：**`shard-math-research-w1` 收线 GO（条件式）：三候选 + 四条机器负结果 + 两条口径勘误；主仓零改动、SORRIED −0。**
   ① **W1** notame7 进 native `next_tame`：`TameEnum.lean:16` 与 AFP 同形、确无 notame7；剪枝因子 Tri **1.68×**/Pent **1.96×**（终图集逐根相等）；`filterout_untame_succs'` 四块 soundness 零件在库（private，需公开包装），缺一个 frontier-`inv`；改陈述 ⇒ **SF + 用户改裁**，建议先 ≤1 车道日 Hex 三样本 scouting。
   ② **W2** 成本均衡合并：同批根 4→1 文件墙钟 −36%、RSS 不动（1.59 GB）；固定成本 ≈2.45 s/文件，合并只省 ≤24 min 但公理数可 585→K+5（K=3 时 **8 条**，与 Isabelle 8 条 `by eval` 同量级）；**需改裁「恰好 585」**。
