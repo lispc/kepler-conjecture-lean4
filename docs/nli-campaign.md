@@ -1095,8 +1095,13 @@
 - **止损**：余量 1.104e-3 若被区间舍入吃掉 ⇒ 先重测再续，不硬凑。
 - **判词指针**：§1.6 / §1.11 / DEBTS 行 42。
 
-**`nliCell3QZECFICwt1` —— cell3 二号（状态：二阶段收线 NOT accepted；Domain/Tower 落库 `2572bddf`（606 行，26/26 标准三），缺口 = `hP1` + E00/E01/E11；P1 原子范围证书 blocker；BLOCKED-on-cost 史见下，选项 (b) 已实测成立）**
+**`nliCell3QZECFICwt1` —— cell3 二号（状态：Domain/Tower 落库 `2572bddf`，缺口 = `hP1` + E00/E01/E11；P1 原子紧界证书闸在飞 agent-7，pq §8 续1359；BLOCKED-on-cost 史见下）**
 
+- **P1 原子紧界证书闸（用户 08:10 批）**：只攻 9 个 D-slot 原子的紧 sound 界与
+  一个 2³ 代表子盒；禁止重试 WIP 已判 >50× 损失的朴素结构式 IA，也不以采样 −0.017
+  冒充证书。代表片全槽可靠区间、聚合 ≤0、零 pending + 独立重放后，才做最难原子/片
+  和真实 glue 的 Lean 标准三定标。部分原子闭合只记 ATOM_CERTIFIED，不自动扩完整 P1、
+  三边或 Assembly，不预支 −1。
 - **这是什么**：`Assembly.lean:425`；HOL `ineq.hl:1425`「QZECFIC wt1」。
   盒 `[√2,√2]³ × [2hminus,2hplus] × [2,2hminus]²`，`h0cut y4` 单折点参数化；
   要证 `bank_QZECFICwt1`（`PackingAuto21.lean:230`）。兄弟件 wt2A 的机器层
@@ -1771,7 +1776,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | **二阶段收线 NOT accepted（2026-11-20）**：Domain/Tower 落库 `2572bddf`（606 行，26/26 标准三）；剩余 `hP1` + E00/E01/E11；P1 原子范围证书 blocker | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | **P1 原子紧界证书闸在飞（agent-7，pq 续1359）**：剩余 `hP1` + E00/E01/E11；先过一个 2³ 代表子盒完整外证与代表 Lean 定标，不预支 −1 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复跑待池 | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
