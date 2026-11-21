@@ -33,6 +33,10 @@
   [`handoff-2026-11-14.md`](handoff-2026-11-14.md)（OCBICBY 移交）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
+- [`certshard-code-shape.md`](certshard-code-shape.md) — **CertShards 重片同语义代码写法**
+  （2026-11-21 `certshard-code-shape-w1`：99.9% 时间在 IR 解释器；C1+C2+C3
+  Pent 1.237×/Quad 1.205×/HexR 1.298×（含 C4）；全部 DEF-FIX，未施工；
+  含 C4–C9 负结果与 Hex 首测）。
 - [`shard-math-roadmap.md`](shard-math-roadmap.md) — **编译量压缩路线（数学/算法层）**：
   notame7 native、585 合并、Interval P3、通用 Bernstein 定理；含“不要再试”清单
   （2026-11-21 `shard-math-research-w1`，数字出处见 pq 续1367 与同名快照）。
