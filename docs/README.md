@@ -33,6 +33,9 @@
   [`handoff-2026-11-14.md`](handoff-2026-11-14.md)（OCBICBY 移交）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
+- [`shard-math-roadmap.md`](shard-math-roadmap.md) — **编译量压缩路线（数学/算法层）**：
+  notame7 native、585 合并、Interval P3、通用 Bernstein 定理；含“不要再试”清单
+  （2026-11-21 `shard-math-research-w1`，数字出处见 pq 续1367 与同名快照）。
 - [`history/nli-six-lanes-2026-11-18.md`](history/nli-six-lanes-2026-11-18.md) —
   **2026-11-18 六车道总结**：实测加速、失败边界、Lean 资产与下一步（历史总结）。
 - [`DECISIONS.md`](../DECISIONS.md) — 用户裁决与长期政策（根级唯一 current 文档）。
