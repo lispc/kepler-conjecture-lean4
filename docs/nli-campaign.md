@@ -1810,7 +1810,7 @@
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
-| `nliRestQITNPEA1_1_2` | 等解冻①②（F2a）；解析替代暂缓中 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 |
+| `nliRestQITNPEA1_1_2` | **HOL 八节点红旗解剖在飞（agent-8，pq 续1363）**：先恢复真实 result_tree 并做 1–3 个真实叶兼容/成本探针；旧解析暂缓、全树农场不启动 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 / §9.6 |
 | `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
@@ -1881,6 +1881,9 @@
   2026-11-20 生成器根修 `537ed78d`：hminus choice box clamp 到 [1.23175,1.23176]，
   48 案审计 9→1 FATAL（余 1 件 RQWUDDU 为 [2.4635,2.4635088) spurious slice，
   真域外，不是真反例）；真实 result_tree 恢复仍未决，见 pq 续1357。）**
+- **fat1 红旗解剖在飞（2026-11-21，pq §8 续1363）**：`qitnpea1-fat1-hol8-w1` / agent-8
+  恢复 8 条 Time 记录对应的真实 result_tree，逐节点定位 Taylor/凸 glue、切分、商式表示与
+  求值器残差；仅 1–3 个真实终端盒做 Lean 标准三和成本探针，不全树复刻、不重启旧解析路线。
 - **UNRESOLVED（宁缺毋编）**：HOL 侧 wt1/wt2A/IYOUOBFsharpv2 原版耗时（sharp-5
   无 Time 行；urban 重跑 0.68/0.14 h 仅参考）、LP 族（formal_lp 无计时档）、
   Isabelle 8 条 `by eval` 实测（只有 50,400 s 超时上限）、informal 枚举面逐类
