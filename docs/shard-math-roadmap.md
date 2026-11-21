@@ -26,6 +26,10 @@
 - **裁决点**：改 `next_tame` = 改陈述 ⇒ **SF 通道 + 用户改裁**；重生成 580 文件 +
   coverage + 全量验收。建议先开 ≤1 车道日的**零 Lean scouting**（Hex 三样本因子），
   再决定是否发施工车道。
+- **优先验证的备选（可免 SF）**：不改 `next_tame`，在 shard **证明侧**加一条
+  pruned-loop ⇒ unpruned-loop 的 bridge（消费 `filterout_untame_succs'` 的 soundness
+  方向），陈述保持原样、585 公理面不动；若 bridge 方向不成立或 `loop` 语义不匹配，
+  再退回「改 `next_tame` + SF」。scouting 车道的第一问应是这条 bridge 是否成立。
 
 ## 2. W2 — CertShards：成本均衡合并（第二优先，需改验收口径）
 
