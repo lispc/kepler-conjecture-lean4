@@ -71,7 +71,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `chainidx2-hol-path-w1` | **running（用户 2026-11-22「1」；agent-15 / `agent-37fou8qq`，§8 续1388）** | 只做 chain_idx2/c2_mfuna/y4 的原版证明结构：精确对象映射、真实 split 路径/终端/Taylor 参数、与当前 21 项 Bernstein 分解差异；至多一个原版终端独立数值核对。零 Lean/零编译/零全树或 Bernstein 重跑；映射不明或原版无直接凹性结构即 NO-GO/UNRESOLVED，不预支 −1 |
+| `chainidx2-hol-path-w1` | **running（误停后用户明确 resume；agent-15 / `agent-k31n7ojm`，§8 续1390）** | 只做 chain_idx2/c2_mfuna/y4 的原版证明结构：精确对象映射、真实 split 路径/终端/Taylor 参数、与当前 21 项 Bernstein 分解差异；至多一个原版终端独立数值核对。零 Lean/零编译/零全树或 Bernstein 重跑；映射不明或原版无直接凹性结构即 NO-GO/UNRESOLVED，不预支 −1 |
 | `precompile-prod-quad-w1` | **running（用户 2026-11-22「1」批准；§8 续1387，async 已送达）** | 把探针 recipe 生产化，消除三件临时手段：① 11 个 no-op 初始化器桩 → 真实源码 dylib；② 2 个跨包特化垫片 → 真实 Mathlib/Plausible native 闭包；③ 重建 olean 与缓存 olean SHA 不同 → 统一重建 + 源码/olean/dylib 三哈希 manifest。Phase B 复验 QuadR K051/K068/K071：RC=0、`#print axioms` 逐字节相同、陈述哈希对 trust-base 548/571/575、加载列表无 stub/shim、K068/K071 ≥2×。Phase C（仅 B 全过）：`Pent/K100` 单件，真实闭包，单槽独占，[EST] PentData/PentTop `-c` ~220/~250 s、RSS 10–20 GB；>2–4 h 或贴近 24 GB 即止。不碰 Hex、不量产、禁桩/手写语义；主仓 tracked/.lake 零改动、禁 lake、单 lean + guard、复制式岛 0 symlink、585 不变 |
 | `precompile-shard-probe-w1` | **已收线 GO（条件式）（§8 续1386；编排者独立复跑 Gate1/K068/Gate3 + K068/K071 公理哈希）** | `precompileModules` + `--load-dynlib` 已证能把 CertShards 的 IR 解释执行换成本机执行：热枚举 **14.03→3.15 s（4.45×）**，`QuadR/K068` **110.43→8.56 s（12.9×；编排者 107.41→8.14 s）**，`K071` **1,341.63→97.36 s（13.78×；编排者 native 97.14 s）**。一次性 **~90–100 s / 峰值 5.45 GB / dylib 7.06 MB**（QuadData 21.15 s + QuadTop 64.88 s；编排者 21.89+68.31 s）。K051/K068/K071 的 `#print axioms` 基线/native 逐字节相同；陈述哈希 `a6a1ebeb84ff6a2b`/`c9122927f44dcfea`/`b24391d051620466` 与 `trust-base.tsv` 548/571/575 行一致；零新增公理，585 不变。**未 production 化**：11 个 no-op 初始化器桩、2 个跨包特化垫片、`-c` 重建 olean 与缓存 olean SHA 不同三件待消除；Pent/Hex 未测（PentData `-c` [EST] ~220 s/RSS 10–20 GB；HexTop 单编已 20.71 GB）。[EST] 580 件 ~98 h → ~7–8 h。主仓 tracked/.lake 零改动，快照 180/180 OK、0 symlink |
 | `ox3q1h-s2ba-vertex-w1` | **PAUSED／暂不采用（用户 2026-11-22 裁决，§8 续1384）** | 16 批 976 点源全生成；B00–B10 共 11 批/656 点/22,000 定理通过车道自审计，累计 4,282.54 s、olean 5,009,386,192 bytes、单批 maxRSS 22,409,494,528 bytes。B11 中断无 olean，四适配 0/4。46,742,179-byte patch 留快照 `PAUSED.md`/`PAUSED_SHA256SUMS`，**不 apply/commit/push，不直接续跑**；未由编排者独立重编，SORRIED −0。重启须先换更小的共享证书表示并重新过代表批成本闸 |
@@ -309,6 +309,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-22（17:21 实测，续1390）**：**`chainidx2-hol-path-w1` 误停后恢复原 agent，断点与任务边界不变。**
+  ① 原 `agent-37fou8qq` 被用户手抖停止；用户随即明确 resume。已只 resume 同一 **agent-15**，最新回执 **`agent-k31n7ojm` running**，未新开 lane、未设置超时。先核对最后工具结果和现有进程，已有结果直接接收，未观察才重做最后必要一步，禁止双开或重复已完成提取。
+  ② 仍只做原版 y4 split/Taylor 结构、至多一个终端独立核对，零 Lean/编译/HOL全树/Bernstein重跑；主仓 tracked/.lake/reference 只读，不动其它车道或已停止恢复链，不预支 −1。SORRIED 49 / AXIOM 585 不变。下一条：续1391。
 - **2026-11-22（16:34 验收，续1389）**：**`chainidx2-y4-sign-cert-w1` 收线 BLOCKED：预注册最终深度的精确上界仍正，当前证书路线不采用；无 Lean、SORRIED −0。**
   ① 公式经双实现验收，稀疏 N/DD 四角点复核通过；但 21 项精确上界总和为 root `+0.3303225029127749`、split2/cell00/corner2 `+0.31798148090412515`、最终 split16/cell00/corner2 `+0.28001511031005605`。最终深度不能继续细分，故 **0/16 空间 cell、0/64 证书单位闭合**；只评最终深度 1 单位，其余 63 未算。正上界不是 concavity 反例。
   ② 独立重放：18 个直接项全重算、3 个 root 继承项全接受，21/21 上界与生成器一致、残差 0、pending=0。编排者亲跑 `scripts/final_audit.py` 得 FINAL AUDIT PASS，并亲验 `SHA256SUMS` **241/241 OK**；未重复执行耗时非线性全量重放。验收正本 `chainidx2-y4-sign-cert-w1/ORCHESTRATOR_CHECK/AUDIT.md`，另附 3 项验收哈希全 OK。
