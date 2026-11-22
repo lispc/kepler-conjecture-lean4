@@ -52,6 +52,37 @@ python3 server.py . 8791
 - 旧 `e2e-tree/tree.db`（18,884 节点 / 208 模块 / 134 债源）只是历史快照，旧 8790
   服务已停止，避免与当前 8791 混淆；不得仅改 meta 冒充新树。
 
+### 1.2 当前 Text 模块/声明源图（2026-11-22，`SOURCE_STATIC`，无 olean）
+
+**Text 页面：`http://127.0.0.1:8792/`（已实测分族、import DAG 与模块源码）。** 页面目录：
+
+```
+~/.zcode/v2/visualizations/571e2f5484263141668294a63494107b5f37ee99532a11d2a7d3d625ceaa225b/text-current-tree/
+  index.html  app.js  style.css  server.py  build_db.py  build_current_text.py
+  current_text.tsv  manifest.json  tree.db
+```
+
+重建与启动：
+
+```bash
+cd <上面这个目录>
+PYTHONDONTWRITEBYTECODE=1 python3 -I build_current_text.py
+python3 server.py . 8792
+```
+
+- 快照：HEAD `072a0d0c`；**1,097 个 tracked Text 模块 / 83,265 条声明**，
+  页面共 1,110 节点（加源根与 12 分族）与 **4,730** 条分族/Text 内部 import 边，
+  `missing_parent=0`、`missing_edge=0`。
+- 全目录源码扫描得 **43,367 处直接 `sorry`，分布于 206 个模块**：
+  **42,889** 是 `Text/LP` 的 bound 骨架（hold），另有 **478** 条其它锥外 Text 占位。
+  账本 **Text 0 是 e2e 锥内口径**，不能误写为整个 `Text/` 目录零 sorry；这些节点也不
+  自动属于当前根面 49 债。页面顶部与债务提示均明确分开。
+- `manifest.json` 保存 HEAD、模块/声明/sorry 计数、分族计数、输入清单与生成器 SHA256。
+  `/api/source` 对模块节点返回当前文件开头，例如 `Text/LP/LPLeafRoot75.lean` 的
+  真实骨架，不伪造 proof-term 或闭合状态。
+- 全程不需要 olean，不改 Assembly/Graphs/585。此页用于**模块/声明导航和 import DAG**，
+  不替代 proof-term 可达图、`e2e_reach_map` 或 `#print axioms`。
+
 ## 2. 数据快照
 
 > **快照（2026-11-03 深夜已重建到基线 E）**：页面 `tree.db` = 主仓当前 HEAD
