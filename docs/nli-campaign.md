@@ -682,6 +682,7 @@
 - **唯一 #2028 树已独立复核**：1,478事件、248 Taylor pass +247 ordinary glue、max_depth10，248/248精确ifloat界一致。编排者只离线重跑验证器，四份树数据逐字节一致；没有重跑HOL或新增形式证明。
 - **三例表示一致，但现成checker未接受**：`LLLRRLLLR`/`RRRRRRR`/`RRLRRRL`的RPN与Lean直接定义在9个点集上的值/梯度/Hessian一致，且落在HOL enclosure内；unchanged Rule P、base C、朴素IA均为0/3。编排者重跑确认，除6个CPU时间外诊断JSON所有字段精确一致。这排除了当前证据下的“RPN错式”归因，但点采样不是全盒二阶证明。
 - **边界**：只否定这三例的现成checker兼容性，不是原命题反例，也不外推其余245叶。需要新的证明路线或额外二阶证力；零Lean/patch/减债。最终审计在快照`ORCHESTRATOR_CHECK/FINAL_AUDIT.md`（pq §8 续1406）。
+- **短证书备选已发车（pq §8 续1408）**：`qitnpea1-shared-floor-w1` 检查共享`γ4≥23/2000`或1_1分离后的二盒/分段常数面。先按当前Lean核对分母和边界反例，精确全盒包络、完整覆盖及双实现齐全才交候选；旧数值候选不直接量产Lean。
 
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
@@ -1131,10 +1132,11 @@
 - **止损**：余量 1.104e-3 若被区间舍入吃掉 ⇒ 先重测再续，不硬凑。
 - **判词指针**：§1.6 / §1.11 / DEBTS 行 42。
 
-**`nliCell3QZECFICwt1` —— cell3 二号（状态：`cell3-wt1-joint-taylor-w1` 已收线 `UNRESOLVED_ORIGINAL_MAX_DEPTH`，pq §8 续1407；首盒完整联合Taylor在原版深度上限内零严格负cell，非反例；目标未闭，SORRIED −0）**
+**`nliCell3QZECFICwt1` —— cell3 二号（状态：`cell3-wt1-ddmatan-refine-w1` 在飞，pq §8 续1408；前一联合Taylor首盒在原版深度上限内零严格负cell，当前专攻更紧matan''包络，目标未闭，SORRIED −0）**
 
 - **固定 16 盒外证闸已收线（pq §8 续1371）**：16/16 均完成主证和第二实现重放，480/480 对象、pending=0，主/重放各 1,617,824 个完整张量商系数检查；只有 5/16 盒双向聚合上端严格为负。其余 11 盒是独立槽区间合成精确失败，首盒正误差主要来自相关 D4 项，**不是 `w1F2≤0` 点反例**。因此未进入 P1 内核化、三边、Targets 或 Assembly，无 Lean patch。后续需要保留相关性的 D4/槽证书或新的有限路线，不得删掉失败盒/D4 或用采样顶替。编排者复核在快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
 - **首盒完整联合 Taylor 已实跑但未闭（pq §8 续1407）**：155节点DAG保留全部D4/D5/D6/SE及共同子式，目标直接为y坐标`ddf(y5,y5)=w1F2`。201条记录=196完整对象+4 domain error+1深度耗尽，200 split、0严格负cell；独立mpmath.iv重放196/196一致。编排者从零复跑并核对除时间外全部确定性字段、双41 SHA。停止来自原版`max_depth=200`和`ddmatan=±0.65`包络，只说明当前Python复刻表示/引擎/首盒UNRESOLVED，不是`w1F2≤0`或原命题反例；没有Lean候选，不扩其余15盒、不预支减债。
+- **下一步已发车（pq §8 续1408）**：`cell3-wt1-ddmatan-refine-w1` 只研究首盒matan''的sound紧包络。HOL formal也只有±0.65，因此须从Lean真实分段定义新推解析界并双实现验证，不得把matan当普通atan或继续盲目加深；有改善证据后才复用旧DAG细分，全盒严格负且覆盖齐才交候选。
 - **P1 原子紧界证书闸已收线（pq §8 续1361）**：配对 Bernstein 保留商相关性，
   9 个 D-slot 硬原子及代表盒全部 24 原子 + 6 个 matan 自变量均获精确有理界；
   编排者独立重放全网格系数后，代表盒 `p0_i0j1k1` 聚合严格为负、pending=0。
@@ -1822,7 +1824,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-joint-taylor-w1` 已验收 `UNRESOLVED_ORIGINAL_MAX_DEPTH`（pq 续1407）：首盒155节点完整联合对象、201记录/200 split、0严格负，第二实现196/196一致；仅当前Python复刻引擎未闭，非反例，无Lean候选，不预支减债 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-joint-taylor-w1` 已验收 `UNRESOLVED_ORIGINAL_MAX_DEPTH`（pq 续1407）：首盒155节点完整联合对象、201记录/200 split、0严格负，第二实现196/196一致；后续`cell3-wt1-ddmatan-refine-w1`在飞专攻matan''紧界（pq续1408），无Lean候选，不预支减债 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
@@ -1842,7 +1844,7 @@
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
-| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 三终端诊断已独立验收（pq 续1406）**：真实树与248终端精确ifloat复核PASS；三例dual均PASS，但unchanged IA/RuleP/BaseC均未接受；重放除CPU时间外逐字段一致。未做Lean，其余245终端未测，不预支减债 | 9.4 | §1.18 / §1.22 / §1.25–1.27 / §9.6 |
+| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 三终端诊断已独立验收（pq 续1406）**：真实树与248终端精确ifloat复核PASS；三例dual均PASS，但unchanged IA/RuleP/BaseC均未接受；重放除CPU时间外逐字段一致。未做Lean，其余245终端未测；`qitnpea1-shared-floor-w1`在飞检查共享/分段短证书（pq续1408），不预支减债 | 9.4 | §1.18 / §1.22 / §1.25–1.27 / §9.6 |
 | `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
