@@ -102,10 +102,19 @@ import Mathlib.Tactic.Ring
 kit 对它们收益有限，需另测。import 不是公理，**不改信任面**；但改源文件 import 面属于
 代码改动，需要用户批 + 正常编译闸。
 
-### 3.2 `precompileModules`：IR 解释器 → 本机共享库（2026-11-22 用户要求只记录，暂不实测）
+### 3.2 `precompileModules`：IR 解释器 → 本机共享库（2026-11-22 用户要求只记录；已做 5 分钟机制探针）
 
-> 状态：**方案存档，未开启、未 A/B、未改 lakefile 或编译驱动。** 目前所有收益均为
-> UNRESOLVED，不得在排产中预支。
+> 状态：**方案存档 + 2026-11-22 编排者 5 分钟 `/tmp` 机制探针；真实 shard A/B 未做，
+> 未改主仓 lakefile/驱动。** 探针只证明执行模式成立，不预支真实数据模块收益。
+
+**机制探针（2026-11-22，编排者，`/tmp`，主仓零改动）**：core-only `fib35`，
+`precompileModules=true` 把 `Bench.Fib` 编成 dylib；`lake env lean --load-dynlib=... Bench/Use2.lean`
+（源文件无 `set_option`）→ **0.25 s / 0.17 user**；同一文件不加载 dylib →
+**4.86 s / 4.76 user**（约 **19×**）。只设 `interpreter.prefer_native=true` 但不加载
+dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s。**结论：
+`--load-dynlib` 加载预编译模块是开关，`precompileModules` 单独不够（裸 `lean` 不会自动
+加载）。** 真实 shard 的 blocker 是巨型数据模块（`QuadData` 32.9 MB / `PentData`
+344.8 MB / `HexTop` 295 MB olean）的 C 编译时间与 dylib 体积，**未测**。
 
 **机制依据。** 当前 `native_decide` 在 Lean 4.32 的 `Lean/Meta/Native.lean:31-67`
 固定走 `addAndCompile` → `evalConst` → 检查 `Bool = true` → 生成 native 公理；
@@ -116,13 +125,15 @@ kit 对它们收益有限，需另测。import 不是公理，**不改信任面*
 
 **未来有界试点（需用户另批）：**
 
-1. 只在 `/tmp` 复制 Graphs 共享依赖，先对 `Pent/K100` 做 precompile A/B；不得全仓
-   11,241 模块一次开启。基线约 101 s、C1+C2+C3 原型约 82 s（见
+1. 只在 `/tmp` 复制 Graphs 共享依赖，先对 **`QuadData`/`QuadTop` + 一个 `QuadR`
+   shard** 做 precompile A/B（最小数据面）；Quad 过闸再 Pent/K100。不得全仓 11,241
+   模块一次开启。基线约 1,357 s（K071）、C1+C2+C3 原型约 1,126 s（见
    [`certshard-code-shape.md`](certshard-code-shape.md)）。
-2. 通过 Lake setup/dynlib 路径加载本机库；只改 TOML 后仍用旧的裸 `lean` 命令，
-   未必加载共享库。记录首次 C 编译/链接成本和每 shard 的增量成本。
-3. 再测 `QuadR/K071`、一个 HexR 根与 `HexTop` 数据模块，防止只在小样本成立；
-   巨型数据 olean 的本机编译可能本身很重。
+2. 通过 Lake setup/dynlib 路径加载本机库；裸 `lean` 必须显式 `--load-dynlib`（机制
+   探针已证）。记录首次 C 编译/链接成本和每 shard 的增量成本。
+3. Quad 过闸后再测 `Pent/K100`、一个 HexR 根与 `HexTop` 数据模块，防止只在小样本
+   成立；巨型数据 olean 的本机编译可能本身很重。**止损**：QuadData 的 C 编译 +
+   dylib 若 >2–4 h 或 >数 GB，或 shard 加速 <2×，停止并交 UNRESOLVED。
 4. 比较 CPU/wall/RSS/olean/native-lib 体积，并逐条核对布尔结果、定理陈述、585 公理
    名字/数量/类别。禁止新增 `extern`/`implemented_by`/公理；native 与 olean 必须同
    源同哈希，不能混用 stale 产物。

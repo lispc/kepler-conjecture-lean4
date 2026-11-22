@@ -306,6 +306,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-22（14:02 实测，续1382）**：**`precompileModules` 机制探针阳性（19×），真实 shard A/B 未做；是否发有界探针车道待用户裁。**
+  ① 用户 2026-11-22 问是否启动 agent 试 `precompileModules`（`docs/compile-speed.md` §3.2）；编排者先在 `/tmp` 做 5 分钟 core-only 机制探针，主仓零改动。
+  ② 结果：`fib35` 的 `native_decide`，`Bench.Fib` 用 `precompileModules=true` 编成 dylib；`lake env lean --load-dynlib=... Bench/Use2.lean`（源文件无 `set_option`）→ **0.25 s / 0.17 user**；同文件不加载 dylib → **4.86 s / 4.76 user**（约 **19×**）。只开 `interpreter.prefer_native=true` 但无 dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 均 ~0.25 s。**开关 = `--load-dynlib` 加载预编译模块；`precompileModules` 单独不够。**
+  ③ 真实 shard 未测：blocker = `QuadData` 32.9 MB / `PentData` 344.8 MB / `HexTop` 295 MB olean 的 C 编译时间与 dylib 体积；需 `/tmp` island、子集 `lean_lib`、同一源码/哈希、`#print axioms` 585 不变。`docs/compile-speed.md` §3.2 已更新（探针 + Quad 先行 + 止损 2–4 h/数 GB/<2×）。
+  ④ 建议：发**一个有界探针车道**（先 `QuadData`/`QuadTop` + 一个 `QuadR` shard；过闸再 `Pent/K100`；Hex 最后），不直接全仓/生产。**未发车，等用户拍板**。SORRIED 49 / AXIOM 585 不变。下一条：续1383。
 - **2026-11-22（09:23 实测，续1381）**：**用户「两个都发」——`ox3q1h-s2ba-vertex-w1` 与 `chainidx2-y4-sign-cert-w1` 异步发车并登记 running 回执。**
   ① `ox3q1h-s2ba-vertex-w1`（agent-13 / `agent-twwokvao`）：独立 hcorner S2b-a。先精确重建 1,040 顶点库与 Batch1 差集 **976**，不得把 3,524 split 格点冒充顶点；真实未闭代表批编译+第二实现+全定理标准三后才量产。禁 S2a/S2b-b/S5/Assembly，K/B 冻结，不预支 −1。
   ② `chainidx2-y4-sign-cert-w1`（agent-14 / `agent-p6g73swk`）：只做 y4 一件 `f″≤0`/ConcaveOn 新证书。清已证正分母、保留商式交叉项、精确 Bernstein/半代数；整盒优先，**至多 64 cell**，全外证 pending=0 且严格上界<0 后才消费已落 Consumer/Domain kit 写 Lean。禁原样 IA/N·D、采样充证、无界细分、第二代表件/P0/S2a 全量。
