@@ -102,6 +102,37 @@ import Mathlib.Tactic.Ring
 kit 对它们收益有限，需另测。import 不是公理，**不改信任面**；但改源文件 import 面属于
 代码改动，需要用户批 + 正常编译闸。
 
+### 3.2 `precompileModules`：IR 解释器 → 本机共享库（2026-11-22 用户要求只记录，暂不实测）
+
+> 状态：**方案存档，未开启、未 A/B、未改 lakefile 或编译驱动。** 目前所有收益均为
+> UNRESOLVED，不得在排产中预支。
+
+**机制依据。** 当前 `native_decide` 在 Lean 4.32 的 `Lean/Meta/Native.lean:31-67`
+固定走 `addAndCompile` → `evalConst` → 检查 `Bool = true` → 生成 native 公理；
+本仓重片 profile 约 99.9% 为 IR `interpretation`，且 `LEAN_CC` 零调用。Lake 的
+`precompileModules`（本 toolchain `lake/README.md:196-207`、`Lake/Config/LeanLibConfig.lean:75-82`）
+则会把模块编成本机共享库，并在 import 时加载，官方用途就是加速求值/metaprogram。
+这是目前唯一与实测瓶颈直接对应的执行模式候选。
+
+**未来有界试点（需用户另批）：**
+
+1. 只在 `/tmp` 复制 Graphs 共享依赖，先对 `Pent/K100` 做 precompile A/B；不得全仓
+   11,241 模块一次开启。基线约 101 s、C1+C2+C3 原型约 82 s（见
+   [`certshard-code-shape.md`](certshard-code-shape.md)）。
+2. 通过 Lake setup/dynlib 路径加载本机库；只改 TOML 后仍用旧的裸 `lean` 命令，
+   未必加载共享库。记录首次 C 编译/链接成本和每 shard 的增量成本。
+3. 再测 `QuadR/K071`、一个 HexR 根与 `HexTop` 数据模块，防止只在小样本成立；
+   巨型数据 olean 的本机编译可能本身很重。
+4. 比较 CPU/wall/RSS/olean/native-lib 体积，并逐条核对布尔结果、定理陈述、585 公理
+   名字/数量/类别。禁止新增 `extern`/`implemented_by`/公理；native 与 olean 必须同
+   源同哈希，不能混用 stale 产物。
+5. 采用前需把构建方式写入 manifest 并确认仍属现有 `native_decide` 信任类别；否则
+   不采用。外部编译求值程序只能用于导航，不能凭其输出直接生成验收证明。
+
+**与其它杠杆的关系：**若本机执行有数量级收益，优先于 C1+C3；若只有小幅收益，先做
+C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decide +kernel` 也不是
+免费替代品（既有全基座内核重放已判不可行）。
+
 ## 4. 不要做
 
 - 无界 `lake build` / 全树构建（Lake 5.0 全核扇出；AGENTS §4 永久禁止）。

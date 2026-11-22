@@ -20,6 +20,20 @@ python3 server.py . 8790
 
 页面已用浏览器实测：树展开、DAG/BFS 切换、模块下钻、129 条债务路径、搜索与聚焦均正常。
 
+### 1.1 无 olean 使用模式（2026-11-22 实测）
+
+- 现有 durable `tree.db` 可直接启动，**不需要任何 olean**。本轮已启动
+  `python3 server.py . 8790` 并亲验 `http://127.0.0.1:8790/`：根节点、DAG 子节点、
+  模块入口均正常。
+- 该 DB 的 `meta` 现值为 **18,884 节点 / 208 模块 / 134 债务源 / 99,586 DAG 边**；
+  它是历史 proof-term 快照，**不是当前仓面 49 债**，页面与引用必须带 stale 标注，
+  不得仅改 meta 冒充新树。
+- 若要重建**当前完整 proof-term 树**，导出器仍须 import `Kepler.Assembly` 并遍历环境，
+  因而仍需相应 olean；这与单纯打开旧 DB 是两件事。
+- 若近期只要当前 nli，可另做**源码静态 NLI 视图**（从 Assembly/Targets 源与账本提取），
+  无需 olean；但它不是 proof-term 可达图，必须另标 `SOURCE_STATIC`，不能替代官方
+  `e2e_reach_map` 或 `#print axioms` 验收。本轮只启动历史页面，未伪造当前 49 DB。
+
 ## 2. 数据快照
 
 > **快照（2026-11-03 深夜已重建到基线 E）**：页面 `tree.db` = 主仓当前 HEAD
