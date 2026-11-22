@@ -970,7 +970,7 @@
 
 ### 9.1 有完整执行包（启动即可做）
 
-**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：**已闭合 `1ec06b28`，2026-11-20**；六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`，90 件闭包亲验标准三；SORRIED 50→49，根面复跑待池）**
+**`nliCell3QZECFICwt2A` —— 52-cell 量产（状态：**已闭合 `1ec06b28`，2026-11-20**；六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`，90 件闭包亲验标准三；SORRIED 50→49，根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385））**
 
 - **这是什么**：`Assembly.lean:431`；HOL `ineq.hl:1443`（「QZECFIC wt2 A」）。
   6 维盒 `[√2,√2]³ × [2hminus,√8]² × [2,2hminus]`（前三维钉死在 √2），
@@ -1795,7 +1795,7 @@
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
 | `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`（pq 续1361）**；全盒 hP1 其余 15 盒、E00/E01/E11 与 Assembly 未闭，SORRIED −0 | 9.2 | §1.9 / §1.15 |
-| `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复跑待池 | 9.1 | §1.15 / §1.19 |
+| `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
 | `nliTskRIBCYXUsym` | 等解冻①②；**var_lt 数据债已修复**（同上） | 9.4 | §1.3 |

@@ -83,6 +83,9 @@
 
 ### 怎么跑闸 / 怎么开工
 
+- **[`tools.md`](tools.md)** — 工具总入口：当前 NLI/Text 源图、HOL 单根 instrument、
+  受 guard 的单模块编译与复制式岛、`#print axioms`、precompile/dylib、trust manifest、
+  检索/补丁/哈希工具，以及已停止 olean 恢复链的交接位置。
 - [`compile-speed.md`](compile-speed.md) — **编译速度基线/复测入口**（2026-11-21
   `compile-speed-research-w1`：import 固定费、分层归因、`-j2`、import kit、按内存排槽；
   含编排者勘误与 UNRESOLVED；完整 harness/PLAYBOOK 在同名快照）。
