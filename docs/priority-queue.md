@@ -304,6 +304,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-22（08:26 实测，续1376）**：**用户纠正“要现状不要历史”后，当前 49 债 NLI 源树已生成并上线 `8791`；不注释 Graphs、不等 olean、不伪造 proof-term。**
+  ① 先查正式重建可能：旧 island 池只是主池链接镜像，当前缺件仍相同（全池 2,544），无法直接重导完整 proof-term。改为新建独立 `nli-current-tree/` 与全新 DB，不动旧 DB/Assembly/Graphs/585。
+  ② 名单 = 最后正式根面 AQ 51 债扣除已小模块验收的 sqrt8/wt2A；生成器逐项回查当前 `Assembly.lean`，**49/49 仍含 sorry**。结果 **55 节点 = 1 源根 + 5 分族 + 49 债，54 边，missing_parent=0 / missing_edge=0**，HEAD `c8b26e16`；`manifest.json` 含行号与 SHA256。
+  ③ 浏览器亲验 `http://127.0.0.1:8791/`：根/五族展开、49 债全显，wt1 Gate 1 与 S2a/fat1 在飞状态正确；`/api/debt` count=49，wt1 `/api/source` 返回当前 `Assembly.lean:431` 的 `:= sorry`。旧历史 8790 服务已停止。
+  ④ 口径 = **SOURCE_STATIC 当前源码债务/分族树**，边不是 proof-term DAG，不替代 `e2e_reach_map` 或 `#print axioms`；当前完整 proof-term 仍需 Assembly olean。文档见 `docs/e2e-tree-visualization.md` §1.1。SORRIED 49 / AXIOM 585 不变。下一条：续1377。
 - **2026-11-22（08:03 实测，续1375）**：**`precompileModules` 方案入档（不实测）+ 无 olean 可视化边界与历史页面实测。**
   ① `docs/compile-speed.md` §3.2 新增执行模式候选：Lean 4.32 `native_decide` 固定 `addAndCompile → evalConst`，Lake `precompileModules` 可生成本机共享库供 import 加载。存档内容含 K100→QuadR/HexR 有界 A/B、Lake setup/dynlib 加载方式、首次 C 编译成本、native/olean 同哈希、585 公理逐条不变与信任类别闸。**未改 lakefile/驱动、未做 A/B、未预支收益**；`docs/certshard-code-shape.md` §5 同步指针。
   ② 现有可视化 durable `tree.db` 不经 olean 直接启动成功：`python3 server.py . 8790`，编排者浏览器亲验 `http://127.0.0.1:8790/` 根节点、DAG 子节点与模块入口。DB meta = **18,884 节点 / 208 模块 / 134 债源 / 99,586 DAG 边**，属历史 proof-term 快照，**不是当前 49 债**；`docs/e2e-tree-visualization.md` §1.1 已加 stale 边界。

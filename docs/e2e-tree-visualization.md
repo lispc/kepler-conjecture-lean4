@@ -20,19 +20,37 @@ python3 server.py . 8790
 
 页面已用浏览器实测：树展开、DAG/BFS 切换、模块下钻、129 条债务路径、搜索与聚焦均正常。
 
-### 1.1 无 olean 使用模式（2026-11-22 实测）
+### 1.1 当前 NLI 源树（2026-11-22，`SOURCE_STATIC`，无 olean）
 
-- 现有 durable `tree.db` 可直接启动，**不需要任何 olean**。本轮已启动
-  `python3 server.py . 8790` 并亲验 `http://127.0.0.1:8790/`：根节点、DAG 子节点、
-  模块入口均正常。
-- 该 DB 的 `meta` 现值为 **18,884 节点 / 208 模块 / 134 债务源 / 99,586 DAG 边**；
-  它是历史 proof-term 快照，**不是当前仓面 49 债**，页面与引用必须带 stale 标注，
-  不得仅改 meta 冒充新树。
-- 若要重建**当前完整 proof-term 树**，导出器仍须 import `Kepler.Assembly` 并遍历环境，
-  因而仍需相应 olean；这与单纯打开旧 DB 是两件事。
-- 若近期只要当前 nli，可另做**源码静态 NLI 视图**（从 Assembly/Targets 源与账本提取），
-  无需 olean；但它不是 proof-term 可达图，必须另标 `SOURCE_STATIC`，不能替代官方
-  `e2e_reach_map` 或 `#print axioms` 验收。本轮只启动历史页面，未伪造当前 49 DB。
+**当前页面：`http://127.0.0.1:8791/`（已实测展开全部 49 债与当前源码）。** 页面目录：
+
+```
+~/.zcode/v2/visualizations/571e2f5484263141668294a63494107b5f37ee99532a11d2a7d3d625ceaa225b/nli-current-tree/
+  index.html  app.js  style.css  server.py  build_db.py  build_current_nli.py
+  current_nli.tsv  manifest.json  tree.db
+```
+
+重建与启动：
+
+```bash
+cd <上面这个目录>
+PYTHONDONTWRITEBYTECODE=1 python3 -I build_current_nli.py
+python3 server.py . 8791
+```
+
+- 快照：HEAD `c8b26e16`；**55 节点 = 1 源根 + 5 分族 + 49 当前债**，54 条分族边，
+  `missing_parent=0`、`missing_edge=0`。S2a/fat1 在飞与 wt1 Gate 1 状态标在节点类型里。
+- 名单方法：最后正式根面 AQ 的 51 债，扣除已经小模块亲验闭合的 sqrt8/wt2A；
+  随后逐项回查当前 `lean/Kepler/Assembly.lean`，**49/49 声明仍含 sorry**。
+  `manifest.json` 保存 HEAD、49 行号、输入/生成器 SHA256 与 DB 计数。
+- 全程不需要 olean，不注释 Graphs、不改 Assembly/585，也不复用旧 DB 冒充现状。
+  浏览器实测：根与五个分族展开、49 债全显、`/api/debt` count=49、wt1 的
+  `/api/source` 返回当前 `Assembly.lean:431` 的 `:= sorry`。
+- **口径边界**：这是当前 NLI 的**源码静态债务/分族树**，边不是 proof-term DAG，
+  不能替代 `e2e_reach_map` 或 `#print axioms`。重建当前完整 proof-term 树仍须 import
+  `Kepler.Assembly` 并遍历环境，因此仍需相应 olean。
+- 旧 `e2e-tree/tree.db`（18,884 节点 / 208 模块 / 134 债源）只是历史快照，旧 8790
+  服务已停止，避免与当前 8791 混淆；不得仅改 meta 冒充新树。
 
 ## 2. 数据快照
 
