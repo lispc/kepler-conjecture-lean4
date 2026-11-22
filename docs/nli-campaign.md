@@ -1813,7 +1813,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。新增 `cell3-wt1-hol-arch-w1` zero-Lean 原版D4相关性考古（pq 续1398），不重跑16盒、不预支减债 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-hol-arch-w1` 原版联合Taylor结构已定位（pq 续1400）；直接w1F2证书仍UNRESOLVED，下一步仅首盒完整w1aF联合对象，不预支减债 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
