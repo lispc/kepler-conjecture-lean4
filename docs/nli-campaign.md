@@ -1254,13 +1254,13 @@
   （FARM_PLAN §4 N2 同款止损）。
 - **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` BUDGET_EXHAUSTED（pq §8 续1397 口径勘误）；`chainidx2-hol-path-w1` 已收线 NO-GO（pq §8 续1391）；`ox3q1h-c2-joint-taylor-w1` 已收线 UNRESOLVED（parser 运行时阻塞，pq §8 续1395）；`ox3q1h-c2-hol-faithful-w1` outer58 HOL闭合、Lean待窗口（pq §8 续1402）+ `hol-taylor-theorem-map-w1` 定理图已交付（pq §8 续1401）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
+**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` BUDGET_EXHAUSTED（pq §8 续1397 口径勘误）；`chainidx2-hol-path-w1` 已收线 NO-GO（pq §8 续1391）；`ox3q1h-c2-joint-taylor-w1` 已收线 UNRESOLVED（parser 运行时阻塞，pq §8 续1395）；`ox3q1h-c2-hol-faithful-w1` outer58 HOL闭合；`c2-outer58-lean-prep-w1` Lean合同准备在飞（pq §8 续1403/1404）+ `hol-taylor-theorem-map-w1` 定理图已交付（pq §8 续1401）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
 
 - **S2a 代表定标收线（pq §8 续1380）**：`chain_idx2` 的整盒二阶导符号证书未闭，S2a 0/1,159。原始 N/D 900 s 超时、共享原子上界 +181050.6515、保留商式 N·D 上界 +6.68e98，均不能作证且不是命题反例。第二代表件、P0 安装、mono、def 重发、S2b/S5 未做。已落库 `2b521ae0`：`Ox3q1hS2aConsumerKit`（开区间二阶导/移位凹性桥）与 `Ox3q1hS2aDomainKit`（宽盒/`deltaY>0`/update 域），编排者独立重编与 import 审计 **7/7 标准三**。后续必须先闭一件 `chain_idx2` 的精确符号包络。
 - **S2b-a 当前量产方案暂停且不采用（pq §8 续1384）**：代表批通过后展开的逐点高精度有理数证书在源码、编译内存、时间和 olean 上都过重；用户明确暂停并不采用现有 patch。完成量、成本和审计口径只以 pq 与快照 `ox3q1h-s2ba-vertex-w1/PAUSED.md` 为准；未由编排者独立重编、未落库、未减债。重启须先换更小的共享证书表示，不直接续跑剩余批次。
 - **chain_idx2/y4 自设预算耗尽（pq §8 续1397 口径勘误）**：双实现公式校验通过，但自设16 cell×4角=64单位预算内的精确上界仍为正；最终21项独立重放齐全、pending=0，没有 Lean 新证或顶层减债。**16×4不是HOL约束，只能判该预算内未闭，不得判当前数学路线或原命题失败，也不得把64当禁止线。**`chainidx2-hol-path-w1` 的NO-GO仅限于“直接转移y4凹性结构”：原版证明整个 `c2_mfuna>0`，二阶导只用于联合 Taylor 误差；不得把它扩张解释为直接HOL正性路线不可行（pq §8 续1391/1396）。
 - **HOL 直接正性 pilot 设计 ERRATA（pq §8 续1395/1396）**：outer≤64叶、两轮parser修正、3600s rerun均为编排者自设，不是HOL约束；outer 58 开工前已知84叶，64闸门属于无效验收设计。实际只发生运行时阻塞，HOL rerun=0、真实inner path/pp未恢复，直接联合Taylor数学路线未真正测试，不得据此判否。新 `ox3q1h-c2-hol-faithful-w1` 从fat1已验兼容层开始，按原版pp/eps/max_depth/剖分与全部真实叶复现；资源问题只记PAUSE_COST/UNRESOLVED，不冒充数学失败。
-- **outer58 的 HOL 联合 Taylor 已闭合（pq §8 续1402）**：忠实复现得到真实84叶/83glue，实际pp与hash完整导出；编排者独立84叶重放确认原生精确负上界全等，C++第二实现为12 PASS/72 OPEN，未冒充双实现全闭。当前只覆盖outer58，其余69个outer和六个Lean外包薄壳未决；PhaseD独占期间未启动Lean，下一步是 `data/lean_window.json` 的84叶/83glue内核候选，不预支减债。
+- **outer58 的 HOL 联合 Taylor 已闭合（pq §8 续1402）**：忠实复现得到真实84叶/83glue，实际pp与hash完整导出；编排者独立84叶重放确认原生精确负上界全等，C++第二实现为12 PASS/72 OPEN，未冒充双实现全闭。当前只覆盖outer58，其余69个outer和六个Lean外包薄壳未决；PhaseD独占期间未启动Lean；现由 `c2-outer58-lean-prep-w1` 把84叶/83glue、实际pp和完整Hessian整理成可实施的Lean合同，缺关键闭包即LEAN_NOT_READY，不生成84叶WIP、不预支减债。
 - **这是什么**：`Assembly.lean:1904`；陈述本体 `ox3q1hP25`
   （`PackingAuto25.lean:94`，2026-11-06 DEF-FIX 显式化为 **230 条非线性不等式
   合取** = `ineqdata3q1h.hl` 46 record × 5 支）。这是 quarter case 的证书
@@ -1814,7 +1814,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-hol-arch-w1` 原版联合Taylor结构已定位（pq 续1400）；直接w1F2证书仍UNRESOLVED，下一步仅首盒完整w1aF联合对象，不预支减债 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-hol-arch-w1` 原版联合Taylor结构已定位（pq 续1400）；直接w1F2证书仍UNRESOLVED；`cell3-wt1-joint-taylor-w1` 已恢复施工，只做首盒完整w1aF联合对象与第二实现，不预支减债 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
