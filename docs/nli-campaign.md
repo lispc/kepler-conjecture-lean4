@@ -1811,7 +1811,7 @@
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
-| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 在飞（pq 续1374）**：仅 #2028 单根 instrumented rerun + 1–3 真实终端兼容闸；旧 8 prep 记录不等于终端，未预支减债 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 / §9.6 |
+| `nliRestQITNPEA1_1_2` | **BLOCKED_RUNTIME（pq 续1377）**：本机无 OCaml/Camlp5/verifier，未实际重跑；静态单根输入/插桩已备但 .hl 未编译。当前 2028=OXLZLEZ，fat1=#13037；真实树/终端/Lean 未获，未预支减债 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 / §9.6 |
 | `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
