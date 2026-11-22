@@ -190,9 +190,10 @@ dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s�
   HexR/K005 的 5-root shard 实测 2,389.82 s 当成每 root ×1,095，至少 5× 分母错误，
   且未计 precompile）。Hex 290 件实测 prod **1.85 h**；**Hex 无同岛基线，正式加速比
   UNRESOLVED**；HexR2 5 件 1,743.2 s（占 Hex 26%，max 899.78 s）重跑需专用窗口。
-- **主池接入审计（2026-11-23 `precompile-integration-w1`，只读）**：300 个缺失 shard +
-  HexTop **300/300 可安装**（0 依赖 blocker）；安装提案 301 文件 / 286.4 MiB，**未安装**；
-  shadow 池 580/580 MATCH；根面 replay **BLOCKED**（首缺 `Kepler.Graphs`），安装后仍缺
+- **主池接入（2026-11-23 `precompile-integration-w1`）**：300 个缺失 shard + HexTop
+  **300/300 可安装**（0 依赖 blocker）；**已安装 301/301 到主仓 `.lake`**（SHA/字节后验
+  一致，回滚=删 `install301.tsv` 301 路径）；安装后主池 **580/580 审计 MATCH**
+  （2.14 s / 1.68 GB）；根面 replay **仍 BLOCKED**（首缺 `Kepler.Graphs`），安装后仍缺
   1,028/1,031 非 shard（Text/TameSpine/Graphs/Interval），需常规定向编译。
 
 **机制依据。** 当前 `native_decide` 在 Lean 4.32 的 `Lean/Meta/Native.lean:31-67`

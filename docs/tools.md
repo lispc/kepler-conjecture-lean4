@@ -197,13 +197,13 @@ python3 scripts/trust_manifest.py --check
 `STOPPED_SHA256SUMS`。后续负责人须先重扫当前闭包、核对 regular-file olean、确认无
 其他实例，再重新提交恢复范围/worker 数供裁决；不要沿用旧 ETA 或直接把旧分母相减。
 
-**2026-11-23 补充（`precompile-integration-w1`，只读审计，未安装）**：Phase D 的
+**2026-11-23 补充（`precompile-integration-w1`；审计 GO 后已安装）**：Phase D 的
 **300 个缺失 shard（HexR 219/Hex 66/PentR3 10/HexR2 5）+ HexTop** 已完成可安装性审计，
 **300/300 GO**（shadow 池 = 主池 Kepler 树复制 + overlay；plain lean import 300/300、
-公理/陈述哈希 300/300 MATCH、依赖闭包 340 模块 0 blocker）。安装提案
-`~/c17_backup/lane_snapshots/precompile-integration-w1/INSTALL_PROPOSAL.md`：
-**301 文件 / 300,299,752 B（≈286.4 MiB）**，主池当前 0 existing，回滚 = 删除 301 路径；
-**尚未安装，需用户另批，且不得直接写主仓 `.lake`**。根面 replay 仍 **BLOCKED**：
+公理/陈述哈希 300/300 MATCH、依赖闭包 340 模块 0 blocker）。**2026-11-23 07:25 已安装
+301/301 到主仓 `.lake`**（SHA/字节后验一致；主池 olean 7,704→8,005；回滚 = 删除
+`precompile-integration-w1/data/install301.tsv` 的 301 个 relpath）。安装后主池
+**580/580 审计 MATCH**（2.14 s / 1.68 GB）。**根面 replay 仍 BLOCKED**：
 首缺 `Kepler.Graphs`；安装 301 后仍缺 **1,028（Final 口径）/1,031（重扫口径）** 非 shard
 模块（Text 446 / Graphs 非 shard 297 / TameSpine 267 / Interval 18），需常规定向编译；
 harness `precompile-integration-w1/prod/run_acceptance_replay.sh` 当前 RC=2。
