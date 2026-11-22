@@ -1254,7 +1254,7 @@
   （FARM_PLAN §4 N2 同款止损）。
 - **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` BUDGET_EXHAUSTED（pq §8 续1397 口径勘误）；`chainidx2-hol-path-w1` 已收线 NO-GO（pq §8 续1391）；`ox3q1h-c2-joint-taylor-w1` 已收线 UNRESOLVED（parser 运行时阻塞，pq §8 续1395）；`ox3q1h-c2-hol-faithful-w1` 忠实复现在飞（pq §8 续1396）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
+**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` BUDGET_EXHAUSTED（pq §8 续1397 口径勘误）；`chainidx2-hol-path-w1` 已收线 NO-GO（pq §8 续1391）；`ox3q1h-c2-joint-taylor-w1` 已收线 UNRESOLVED（parser 运行时阻塞，pq §8 续1395）；`ox3q1h-c2-hol-faithful-w1` 忠实复现在飞（pq §8 续1396）+ `hol-taylor-theorem-map-w1` zero-Lean 定理图支持（pq §8 续1398）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
 
 - **S2a 代表定标收线（pq §8 续1380）**：`chain_idx2` 的整盒二阶导符号证书未闭，S2a 0/1,159。原始 N/D 900 s 超时、共享原子上界 +181050.6515、保留商式 N·D 上界 +6.68e98，均不能作证且不是命题反例。第二代表件、P0 安装、mono、def 重发、S2b/S5 未做。已落库 `2b521ae0`：`Ox3q1hS2aConsumerKit`（开区间二阶导/移位凹性桥）与 `Ox3q1hS2aDomainKit`（宽盒/`deltaY>0`/update 域），编排者独立重编与 import 审计 **7/7 标准三**。后续必须先闭一件 `chain_idx2` 的精确符号包络。
 - **S2b-a 当前量产方案暂停且不采用（pq §8 续1384）**：代表批通过后展开的逐点高精度有理数证书在源码、编译内存、时间和 olean 上都过重；用户明确暂停并不采用现有 patch。完成量、成本和审计口径只以 pq 与快照 `ox3q1h-s2ba-vertex-w1/PAUSED.md` 为准；未由编排者独立重编、未落库、未减债。重启须先换更小的共享证书表示，不直接续跑剩余批次。
@@ -1813,7 +1813,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`（pq 续1361）**；全盒 hP1 其余 15 盒、E00/E01/E11 与 Assembly 未闭，SORRIED −0 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。新增 `cell3-wt1-hol-arch-w1` zero-Lean 原版D4相关性考古（pq 续1398），不重跑16盒、不预支减债 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
