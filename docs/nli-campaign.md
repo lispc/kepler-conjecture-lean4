@@ -25,6 +25,24 @@
   - `FARM`：证书回放（bb_arb/TM）才能关；
   - `LP`：`lpArchiveCertificatesDebt`（hLP），43,078 条 LP 终端记录。
 
+### 0.1 证否口径复核（2026-11-22，pq §8 续1397）
+
+> 只区分原命题、当前数学方法、资源预算和运行时；实时状态仍以 pq 为准。
+
+| 车道 | 复核结论 | 后续口径 |
+|---|---|---|
+| `ox3q1h-c2-joint-taylor-w1` | **工单设计无效**：64叶/两轮修parser/3600s均自设，且开工前已排除全部outer | 数学路线未真正测试；全部限制ERRATA，由忠实HOL复现替代 |
+| `chainidx2-y4-sign-cert-w1` | 16×4是自设预算，不是HOL约束 | 改记BUDGET_EXHAUSTED，不据此否定当前数学路线或原命题 |
+| `ztg-g4-concave-closure-w1` | Day-1/4⁵剖分是自设预算；实测只否定当前包络/引擎在预算内的表现 | UNRESOLVED/BUDGET_EXHAUSTED，不宣称数学或引擎永远不可行 |
+| `chainidx2-hol-path-w1` | NO-GO只针对“直接转移y4凹性结构” | 不得扩张成直接HOL正性证明不可行 |
+| `ox3q1h-s2a-build-w1` | 当前N/D、原子/商式包络与超时证据成立，但均不否证原命题 | 保留当前包络UNRESOLVED/BLOCKED；不得把三轮/900s当数学上限 |
+| `cell3-wt1-closure-w1` | 独立槽聚合的精确上界确实未闭，且不是原命题反例 | 对“独立槽聚合”判否有效；保留相关性路线仍开放 |
+| `fat1-terminal-export-w1` | 三个实测终端的unchanged checker失败，双求值一致 | 只否定这三例的现成checker兼容性，不外推245例或全局引擎 |
+| `k1-d2-pruning-pilot-w1` | 混合偏导mixed有真域内反例，且优化成本方向不成立 | 对自拟K1优化判否有效，不涉及原定理真假 |
+| `ox3q1h-s2ba-vertex-w1` | 用户按实测源码/RSS/olean成本决定暂停 | 工程不采用，不是数学证伪；未来不得另设无依据4×门槛 |
+
+共同规则：预算耗尽、样本未过和运行时失败都必须列出覆盖与未覆盖，不能包装成数学不可行。详见 `AGENTS.md` §7.2。
+
 ## 1. 当前分诊（2026-11-15）
 
 来源：`nli-triage-w1`（`a09ad494` 前）的 54+1 对账 + 后续两次闭合。
@@ -1236,11 +1254,11 @@
   （FARM_PLAN §4 N2 同款止损）。
 - **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` 已收线 BLOCKED（pq §8 续1389）；`chainidx2-hol-path-w1` 已收线 NO-GO（pq §8 续1391）；`ox3q1h-c2-joint-taylor-w1` 已收线 UNRESOLVED（parser 运行时阻塞，pq §8 续1395）；`ox3q1h-c2-hol-faithful-w1` 忠实复现在飞（pq §8 续1396）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
+**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` BUDGET_EXHAUSTED（pq §8 续1397 口径勘误）；`chainidx2-hol-path-w1` 已收线 NO-GO（pq §8 续1391）；`ox3q1h-c2-joint-taylor-w1` 已收线 UNRESOLVED（parser 运行时阻塞，pq §8 续1395）；`ox3q1h-c2-hol-faithful-w1` 忠实复现在飞（pq §8 续1396）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
 
 - **S2a 代表定标收线（pq §8 续1380）**：`chain_idx2` 的整盒二阶导符号证书未闭，S2a 0/1,159。原始 N/D 900 s 超时、共享原子上界 +181050.6515、保留商式 N·D 上界 +6.68e98，均不能作证且不是命题反例。第二代表件、P0 安装、mono、def 重发、S2b/S5 未做。已落库 `2b521ae0`：`Ox3q1hS2aConsumerKit`（开区间二阶导/移位凹性桥）与 `Ox3q1hS2aDomainKit`（宽盒/`deltaY>0`/update 域），编排者独立重编与 import 审计 **7/7 标准三**。后续必须先闭一件 `chain_idx2` 的精确符号包络。
 - **S2b-a 当前量产方案暂停且不采用（pq §8 续1384）**：代表批通过后展开的逐点高精度有理数证书在源码、编译内存、时间和 olean 上都过重；用户明确暂停并不采用现有 patch。完成量、成本和审计口径只以 pq 与快照 `ox3q1h-s2ba-vertex-w1/PAUSED.md` 为准；未由编排者独立重编、未落库、未减债。重启须先换更小的共享证书表示，不直接续跑剩余批次。
-- **chain_idx2/y4 当前证书路线已收线 BLOCKED（pq §8 续1389）**：双实现公式校验通过，但 root、split2 与预注册最终深度 split16 的精确上界都为正；最终 21 项独立重放齐全、pending=0，仍不能形成负性证书。编排者亲跑 final_audit 并核验全部交付 SHA；没有 Lean 新证或顶层减债。正上界不是命题反例，禁止原样续跑或突破 cell 上限。`chainidx2-hol-path-w1` 已收线 NO-GO：原版证明整个 `c2_mfuna>0`，二阶导只用于联合 Taylor 误差，并不存在可直接转移的 y4 凹性 cell/结构；不得把原外层盒或 Taylor 总量当成下一证书工程（pq §8 续1391）。
+- **chain_idx2/y4 自设预算耗尽（pq §8 续1397 口径勘误）**：双实现公式校验通过，但自设16 cell×4角=64单位预算内的精确上界仍为正；最终21项独立重放齐全、pending=0，没有 Lean 新证或顶层减债。**16×4不是HOL约束，只能判该预算内未闭，不得判当前数学路线或原命题失败，也不得把64当禁止线。**`chainidx2-hol-path-w1` 的NO-GO仅限于“直接转移y4凹性结构”：原版证明整个 `c2_mfuna>0`，二阶导只用于联合 Taylor 误差；不得把它扩张解释为直接HOL正性路线不可行（pq §8 续1391/1396）。
 - **HOL 直接正性 pilot 设计 ERRATA（pq §8 续1395/1396）**：outer≤64叶、两轮parser修正、3600s rerun均为编排者自设，不是HOL约束；outer 58 开工前已知84叶，64闸门属于无效验收设计。实际只发生运行时阻塞，HOL rerun=0、真实inner path/pp未恢复，直接联合Taylor数学路线未真正测试，不得据此判否。新 `ox3q1h-c2-hol-faithful-w1` 从fat1已验兼容层开始，按原版pp/eps/max_depth/剖分与全部真实叶复现；资源问题只记PAUSE_COST/UNRESOLVED，不冒充数学失败。
 - **这是什么**：`Assembly.lean:1904`；陈述本体 `ox3q1hP25`
   （`PackingAuto25.lean:94`，2026-11-06 DEF-FIX 显式化为 **230 条非线性不等式
