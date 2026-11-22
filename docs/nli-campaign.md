@@ -1236,8 +1236,9 @@
   （FARM_PLAN §4 N2 同款止损）。
 - **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2a-build-w1` P0 安装 + S2a 在飞（pq §8 续1374）；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a / S2b 执行等用户批**）**
+**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2a-build-w1` 已收线 BLOCKED at `chain_idx2`，S2a 0/1,159；共享 Consumer/Domain kit 落库 `2b521ae0`（pq §8 续1380）；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a / S2b 执行等用户批**）**
 
+- **S2a 代表定标收线（pq §8 续1380）**：`chain_idx2` 的整盒二阶导符号证书未闭，S2a 0/1,159。原始 N/D 900 s 超时、共享原子上界 +181050.6515、保留商式 N·D 上界 +6.68e98，均不能作证且不是命题反例。第二代表件、P0 安装、mono、def 重发、S2b/S5 未做。已落库 `2b521ae0`：`Ox3q1hS2aConsumerKit`（开区间二阶导/移位凹性桥）与 `Ox3q1hS2aDomainKit`（宽盒/`deltaY>0`/update 域），编排者独立重编与 import 审计 **7/7 标准三**。后续必须先闭一件 `chain_idx2` 的精确符号包络。
 - **这是什么**：`Assembly.lean:1904`；陈述本体 `ox3q1hP25`
   （`PackingAuto25.lean:94`，2026-11-06 DEF-FIX 显式化为 **230 条非线性不等式
   合取** = `ineqdata3q1h.hl` 46 record × 5 支）。这是 quarter case 的证书
