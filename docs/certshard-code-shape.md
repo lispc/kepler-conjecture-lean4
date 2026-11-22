@@ -102,8 +102,13 @@ Pent **+0.8%**、p90 **+0.3%**；C5 `splitFace` 融合 **慢 19%**；C6
 
 ## 5. 下一步（未批，未开工）
 
-0. **执行模式候选（2026-11-22 仅入档）**：`precompileModules` 的 IR 解释器 → 本机共享库
-   A/B 设想见 [`compile-speed.md`](compile-speed.md) §3.2；未实测、未改配置，收益不预支。
+0. **执行模式已实测 GO（有界，2026-11-22 `precompile-shard-probe-w1`）**：
+   `precompileModules` + `--load-dynlib` 在真实 QuadR 上 **K068 12.9× / K071 13.8×**
+   （编排者复跑 K068 13.2×），一次性 ~100 s / 5.45 GB / dylib 7 MB；详见
+   [`compile-speed.md`](compile-speed.md) §3.2。**尚未 production 化**（三件探针手段
+   待消除）。native 后 C1/C3 省的是解释执行工作量，边际比例缩小；C2 的
+   `buildBuckets` 固定费在 native 下也已 <0.1 s，绝对收益变小。**建议先做执行模式，
+   再重估 C1+C2+C3；两者不冲突，但不要按原比例叠加。**
 1. **C1+C3 施工**（证明面小）：预计 Pent 类 −11–12%，先验证 DEF-FIX 流程。
 2. **C2 施工**（证明面中等）：固定费 −8.3 s/文件，对 1-root/5-root 小分片绝对收益
    最大。

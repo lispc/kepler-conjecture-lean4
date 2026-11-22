@@ -102,10 +102,11 @@ import Mathlib.Tactic.Ring
 kit 对它们收益有限，需另测。import 不是公理，**不改信任面**；但改源文件 import 面属于
 代码改动，需要用户批 + 正常编译闸。
 
-### 3.2 `precompileModules`：IR 解释器 → 本机共享库（2026-11-22 用户要求只记录；已做 5 分钟机制探针）
+### 3.2 `precompileModules`：IR 解释器 → 本机共享库（机制探针 + 真实 shard 探针 GO 条件式）
 
-> 状态：**方案存档 + 2026-11-22 编排者 5 分钟 `/tmp` 机制探针；真实 shard A/B 未做，
-> 未改主仓 lakefile/驱动。** 探针只证明执行模式成立，不预支真实数据模块收益。
+> 状态：**机制成立 + 真实 QuadR shard 有界探针收线 GO（条件式）**
+> （2026-11-22 `precompile-shard-probe-w1`，编排者独立复跑）；**尚未 production 化、
+> 未改主仓 lakefile/驱动**。探针证明执行模式与收益；Pent/Hex 未实测。
 
 **机制探针（2026-11-22，编排者，`/tmp`，主仓零改动）**：core-only `fib35`，
 `precompileModules=true` 把 `Bench.Fib` 编成 dylib；`lake env lean --load-dynlib=... Bench/Use2.lean`
@@ -114,7 +115,40 @@ kit 对它们收益有限，需另测。import 不是公理，**不改信任面*
 dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s。**结论：
 `--load-dynlib` 加载预编译模块是开关，`precompileModules` 单独不够（裸 `lean` 不会自动
 加载）。** 真实 shard 的 blocker 是巨型数据模块（`QuadData` 32.9 MB / `PentData`
-344.8 MB / `HexTop` 295 MB olean）的 C 编译时间与 dylib 体积，**未测**。
+344.8 MB / `HexTop` 295 MB olean）的 C 编译时间与 dylib 体积，**当时未测；Quad 已由
+下节探针实测，Pent/Hex 仍未测**。
+
+**真实 shard 探针（2026-11-22，`precompile-shard-probe-w1`；编排者独立复跑）**：在
+`/tmp` island 内用同一 `lean -c` 调用重建热闭包 olean+C、clang 链 dylib，`--load-dynlib`
+运行真实 `QuadR` shard：
+
+| 门 | 车道实测 | 编排者复跑 |
+|---|---|---|
+| 1 热枚举（10 roots × 20k pop，不跑 shard） | 14.03 → 3.15 s（4.45× wall / 5.18× user），输出 `(1583,8)` 相同 | **14.03 → 3.15 s（4.45× wall / 5.24× user），输出相同** |
+| 2 `QuadR/K068`（只热 dylibs，数据不预编译） | 110.43 → 9.76 s（11.3×） | — |
+| 2′ `QuadR/K068`（热+数据 dylibs） | 110.43 → 8.56 s（12.9×） | **107.41 → 8.14 s（13.2× wall / 13.75× user）** |
+| 3 `QuadData` / `QuadTop` 的 `lean -c` + clang | 21.15 + 64.88 s；峰值 5.45 GB；dylib 2.28 + 4.78 MB | **21.89 + 68.31 s；峰值 5.42 GB；dylib 2.28 + 4.78 MB** |
+| 3′ `QuadR/K071`（~22 min 长 shard） | 1,341.63 → 97.36 s（13.78×） | **native 97.14 s / 96.65 user（基线沿用车道 1,341.63/1,338.90；前车道 1,366.77 user）** |
+
+- 一次性成本 **~90–100 s / 峰值 5.42 GB / dylib 合计 7.06 MB**；每 shard 省 ~100 s（K068）
+  到 ~1,244 s（K071）。[EST] 192 件计时 32.49 h → 580 件 ~98 h，12–14× 后 **~7–8 h，
+  省 ~90 h 量级**（Pent/Hex 未测，不外推为实测）。
+- 信任面：K051/K068/K071 的基线/native `#print axioms` 逐字节相同；公理陈述哈希
+  `a6a1ebeb84ff6a2b` / `c9122927f44dcfea` / `b24391d051620466` 与
+  `docs/trust-base.tsv` 第 548/571/575 行一致（编排者重算 K068/K071 均 MATCH）。
+  未新增 axiom/sorry/native_decide；585 名字/数量/类别不变。
+- **production 化前必须消除三件探针手段**：① 11 个非预编译模块的 no-op 初始化器桩；
+  ② 2 个跨包特化垫片（Mathlib `List.elem`、Plausible `List.foldr/sum`）须由真实
+  Mathlib/Plausible native 闭包提供；③ `-c` 重建 olean 与主仓缓存 olean 同源同体积但
+  SHA 不同，manifest 须记“源码+olean+dylib”三哈希或统一重建。
+- 工程前置：预编译模块的 `initialize_M` 会调每个 import 的初始化器（缺失即 NULL 崩溃）；
+  `Graph.fgraph` 定义在 `RelativeCompleteness`，须一并编译；`LEAN_PATH` 首项必须含完整
+  import 闭包；Lake `:dynlib` facet 会构建 `Mathlib:shared` 并写主仓 `.lake`（探针已弃用，
+  改手动 `lean -c`+clang，污染已清理）。复现脚本 `run_shard_perf.sh` 在 macOS bash 3.2
+  的 `set -u` 下空 `ARGS` 会报 unbound，需用 `${ARGS[@]+"${ARGS[@]}"}`（编排者复跑补丁）。
+- **Pent/Hex 未开**：`PentData` 344.8 MB → `-c` [EST] ~220 s、RSS 可能 10–20 GB；
+  `HexTop` 前车道单编 20.71 GB，加 codegen 很可能贴 24 GB 闸。Pent 先只做 `Pent/K100`
+  单件；Hex 须专用窗口 + RSS 探针。**均需用户另批，不量产。**
 
 **机制依据。** 当前 `native_decide` 在 Lean 4.32 的 `Lean/Meta/Native.lean:31-67`
 固定走 `addAndCompile` → `evalConst` → 检查 `Bool = true` → 生成 native 公理；
@@ -123,17 +157,18 @@ dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s�
 则会把模块编成本机共享库，并在 import 时加载，官方用途就是加速求值/metaprogram。
 这是目前唯一与实测瓶颈直接对应的执行模式候选。
 
-**未来有界试点（需用户另批）：**
+**后续试点（Quad 已过闸；以下需用户另批）：**
 
-1. 只在 `/tmp` 复制 Graphs 共享依赖，先对 **`QuadData`/`QuadTop` + 一个 `QuadR`
-   shard** 做 precompile A/B（最小数据面）；Quad 过闸再 Pent/K100。不得全仓 11,241
-   模块一次开启。基线约 1,357 s（K071）、C1+C2+C3 原型约 1,126 s（见
-   [`certshard-code-shape.md`](certshard-code-shape.md)）。
-2. 通过 Lake setup/dynlib 路径加载本机库；裸 `lean` 必须显式 `--load-dynlib`（机制
-   探针已证）。记录首次 C 编译/链接成本和每 shard 的增量成本。
-3. Quad 过闸后再测 `Pent/K100`、一个 HexR 根与 `HexTop` 数据模块，防止只在小样本
-   成立；巨型数据 olean 的本机编译可能本身很重。**止损**：QuadData 的 C 编译 +
-   dylib 若 >2–4 h 或 >数 GB，或 shard 加速 <2×，停止并交 UNRESOLVED。
+1. **Production 化三件**（真实初始化器闭包、真实 Mathlib/Plausible native 闭包、
+   “源码+olean+dylib”三哈希 manifest），先复跑 K051/K068/K071；通过后再做
+   **`Pent/K100` 单件**试点（`PentData`/`PentTop` 的 `-c` [EST] ~220/~250 s，RSS 可能
+   10–20 GB，单槽独占）。不得全仓 11,241 模块一次开启。
+2. 已选**手动 `lean -c` + clang** 路线（Lake `:dynlib` 会 `fetchImportLibs
+   compileSelf=true` 构建 `Mathlib:shared` 并写主仓 `.lake`）；裸 `lean` 必须显式
+   `--load-dynlib`（机制探针已证）。每批记录首次 C 编译/链接成本和每 shard 增量成本。
+3. Pent 通过后再测一个 HexR 根与 `HexTop` 数据模块；前车道 `HexTop` 单编已 20.71 GB，
+   加 codegen 须专用窗口先做 RSS 探针。**止损**：任一数据模块 `lean -c` >2–4 h 或
+   dylib >数 GB，或 shard 加速 <2×，停止并交 UNRESOLVED。
 4. 比较 CPU/wall/RSS/olean/native-lib 体积，并逐条核对布尔结果、定理陈述、585 公理
    名字/数量/类别。禁止新增 `extern`/`implemented_by`/公理；native 与 olean 必须同
    源同哈希，不能混用 stale 产物。
@@ -155,6 +190,9 @@ C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decid
 
 ## 5. 未闭合（UNRESOLVED）
 
+- `precompileModules`：Quad 热闭包+数据已实测（K068/K071），**Pent/Hex 未测**；
+  production 化三件（真实初始化器、真实跨包 native 闭包、三哈希 manifest）未做；
+  K071 的基线未由编排者重跑（只复跑 native，基线沿用车道/前车道）。
 - `Kepler.Assembly` / `Kepler.Final` 岛件与 `Graphs`/`LP` 分片的 `-j` 曲线：测量窗口内
   `Graphs` 318/951、`LP` 6/1,150 olean 缺失；探针 `probe/mods/P_assembly.lean` 已备。
 - `interpretation` 桶的逐文件触发机制（可用线索：linarith 14–21 ms/次 + 巨型项 simp/unfold）。
