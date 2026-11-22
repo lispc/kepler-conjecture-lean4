@@ -677,6 +677,12 @@
   审查的小文件；不直接重生成约 3,000 行整件，也不把旧 patch_with_series（含已落库
   依赖）应用主仓。审计见快照 `ORCHESTRATOR_CHECK/AUDIT.md`；SORRIED 51 / AXIOM 585 不变。
 
+## 1.27 fat1 真实树与三终端诊断（`fat1-terminal-export-w1`，2026-11-22）
+
+- **唯一 #2028 树已独立复核**：1,478事件、248 Taylor pass +247 ordinary glue、max_depth10，248/248精确ifloat界一致。编排者只离线重跑验证器，四份树数据逐字节一致；没有重跑HOL或新增形式证明。
+- **三例表示一致，但现成checker未接受**：`LLLRRLLLR`/`RRRRRRR`/`RRLRRRL`的RPN与Lean直接定义在9个点集上的值/梯度/Hessian一致，且落在HOL enclosure内；unchanged Rule P、base C、朴素IA均为0/3。编排者重跑确认，除6个CPU时间外诊断JSON所有字段精确一致。这排除了当前证据下的“RPN错式”归因，但点采样不是全盒二阶证明。
+- **边界**：只否定这三例的现成checker兼容性，不是原命题反例，也不外推其余245叶。需要新的证明路线或额外二阶证力；零Lean/patch/减债。最终审计在快照`ORCHESTRATOR_CHECK/FINAL_AUDIT.md`（pq §8 续1406）。
+
 ## 2. 已闭件 1：`nliRestQITNPEA4003532128a`
 
 - 债点：`Assembly.lean:1394`；bank `PackingAuto21:460`；盒
@@ -1835,7 +1841,7 @@
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
-| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 三终端诊断已产出、待独立验收（pq 续1388）**：真实树与 248 终端精确 ifloat 复核 PASS；三例 dual 均 PASS，但 unchanged IA/RuleP/BaseC 均未接受。未做 Lean，其余 245 终端未测，不预支减债 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 / §9.6 |
+| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 三终端诊断已独立验收（pq 续1406）**：真实树与248终端精确ifloat复核PASS；三例dual均PASS，但unchanged IA/RuleP/BaseC均未接受；重放除CPU时间外逐字段一致。未做Lean，其余245终端未测，不预支减债 | 9.4 | §1.18 / §1.22 / §1.25–1.27 / §9.6 |
 | `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
