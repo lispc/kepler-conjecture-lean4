@@ -102,13 +102,12 @@ Pent **+0.8%**、p90 **+0.3%**；C5 `splitFace` 融合 **慢 19%**；C6
 
 ## 5. 下一步（未批，未开工）
 
-0. **执行模式已实测 GO（有界，2026-11-22 `precompile-shard-probe-w1`）**：
-   `precompileModules` + `--load-dynlib` 在真实 QuadR 上 **K068 12.9× / K071 13.8×**
-   （编排者复跑 K068 13.2×），一次性 ~100 s / 5.45 GB / dylib 7 MB；详见
-   [`compile-speed.md`](compile-speed.md) §3.2。**尚未 production 化**（三件探针手段
-   待消除）。native 后 C1/C3 省的是解释执行工作量，边际比例缩小；C2 的
-   `buildBuckets` 固定费在 native 下也已 <0.1 s，绝对收益变小。**建议先做执行模式，
-   再重估 C1+C2+C3；两者不冲突，但不要按原比例叠加。**
+0. **执行模式已生产化 PASS（2026-11-22 `precompile-prod-quad-w1`）**：真实初始化器/
+   跨包闭包/三哈希 manifest 三件已消除；QuadR **K068 13.9× / K071 14.2×**、Pent/K100
+   **10.7×**（编排者复跑 user 14.2×/14.9×/13.6×）；一次性 ~50 min / 峰值 24.52 GB /
+   bundle 99.7 MB；详见 [`compile-speed.md`](compile-speed.md) §3.2。**PentData 峰值越
+   24 GB 硬闸，Pent 量产须专用窗口**；Hex 未测。native 后 C1/C3 的解释工作量边际缩小，
+   C2 固定费在 native 下 <0.1 s；**先做执行模式，再重估 C1+C2+C3，不按原比例叠加。**
 1. **C1+C3 施工**（证明面小）：预计 Pent 类 −11–12%，先验证 DEF-FIX 流程。
 2. **C2 施工**（证明面中等）：固定费 −8.3 s/文件，对 1-root/5-root 小分片绝对收益
    最大。
