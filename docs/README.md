@@ -88,9 +88,10 @@
   检索/补丁/哈希工具，以及已停止 olean 恢复链的交接位置。
 - [`compile-speed.md`](compile-speed.md) — **编译速度基线/复测入口**（2026-11-21
   `compile-speed-research-w1`：import 固定费、分层归因、`-j2`、import kit、按内存排槽；
-  2026-11-22 `precompile-shard-probe-w1` → `precompile-prod-quad-w1`：生产化后 QuadR
-  13.9–14.2×、Pent/K100 10.7×；PentData 24.52 GB 越 24 GB 闸，Pent 需专用窗口，未量产；
-  含编排者勘误与 UNRESOLVED；完整 harness/PLAYBOOK 在同名快照）。
+  2026-11-22/23 `precompile-shard-probe-w1` → `precompile-prod-quad-w1` →
+  `precompile-prod-all-w1`：生产化后 Quad/Pent/Hex **580/580** 全量跑通，总 **7.184 h**，
+  192 件基线聚合 **13.889×**；旧 Hex 730 h 估计作废；PentData/HexTop 近 25 GB 线，
+  未接入正式构建；含编排者勘误与 UNRESOLVED；完整 harness/PLAYBOOK 在同名快照）。
 - [`fill-worker-playbook.md`](fill-worker-playbook.md) — 工人纪律、闸规则、雷区表。
 - [`lane-brief-template.md`](lane-brief-template.md) — 工单模板（§0 硬约束逐字复制）。
 - [`../lean/scripts/auto_gate.sh`](../lean/scripts/auto_gate.sh) — 五道机械闸；

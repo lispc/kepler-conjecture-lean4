@@ -102,12 +102,11 @@ import Mathlib.Tactic.Ring
 kit 对它们收益有限，需另测。import 不是公理，**不改信任面**；但改源文件 import 面属于
 代码改动，需要用户批 + 正常编译闸。
 
-### 3.2 `precompileModules`：IR 解释器 → 本机共享库（生产化 PASS；Pent 需专用窗口）
+### 3.2 `precompileModules`：IR 解释器 → 本机共享库（三族全量 580/580 PASS）
 
-> 状态：**生产化三件已消除 + Quad 复验 PASS + Pent/K100 单件功能 PASS**
-> （2026-11-22 `precompile-prod-quad-w1`，编排者独立复跑 manifest/A-B/公理）；
-> **未改主仓 lakefile/驱动，未量产任何家族**。PentData 峰值 24.52 GB 越 24 GB 硬闸，
-> Pent 量产须专用窗口；Hex 未测。
+> 状态：**生产化三件已消除 + Quad/Pent/Hex 全量 580/580 PASS**（2026-11-23
+> `precompile-prod-all-w1`，编排者独立复核）；总 **7.184 h**，192 件基线聚合 **13.889×**，
+> 580/580 审计 MATCH；HexTop 23.66 GB < 25 GB。**未改主仓 lakefile/驱动，未接入正式构建**。
 
 **机制探针（2026-11-22，编排者，`/tmp`，主仓零改动）**：core-only `fib35`，
 `precompileModules=true` 把 `Bench.Fib` 编成 dylib；`lake env lean --load-dynlib=... Bench/Use2.lean`
@@ -173,6 +172,25 @@ dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s�
   dylib 已入快照，984 个 per-module dylib 未全入（三哈希在 manifest，可按
   `prod/build_prod.sh` 重建）。
 
+**全量三族（Phase D，2026-11-23；编排者独立复核）**：
+
+| 族 | 件数 | prod 总 wall | 基线 | 聚合加速 |
+|---|---:|---:|---|---|
+| Quad | 92 | 1,893.8 s（0.53 h） | 38 件 7,893.0 s | **15.963×** |
+| Pent | 198 | 17,308.0 s（4.81 h） | 154 件 109,063.2 s | **13.760×** |
+| Hex | 290 | **6,659.4 s（1.85 h）** | 无同岛基线 | 不宣称 |
+| **合计** | **580** | **25,861.2 s（7.184 h）** | **192 件 116,956.2 s（32.488 h）** | **13.889×** |
+
+- 580/580 RC=0；逐件 median **12.815×**、p90 14.320×、min 4.030×、max 19.980×。
+- `HexTop` `lean -c` **1042.99 s / 23.66 GB**；bundle 重建 **120,357,712 B（985 成员）**；
+  K068 冒烟冷 13.70 s / 温 7.73 s；最高采样 pressure **1**。
+- 580/580 `#print axioms` 审计 MATCH（哈希对 `trust-base.tsv` 580 行）；编排者独立复跑
+  K068（8.35 s，`c9122927f44dcfea`）与 HexR/K092（0.79 s，`64eb61add8ec5fdd`）均 MATCH。
+- **ERRATA**：旧 `[EST] HexR 1,095 roots ≈ 730 h / 全基座 770 h` **作废**（把
+  HexR/K005 的 5-root shard 实测 2,389.82 s 当成每 root ×1,095，至少 5× 分母错误，
+  且未计 precompile）。Hex 290 件实测 prod **1.85 h**；**Hex 无同岛基线，正式加速比
+  UNRESOLVED**；HexR2 5 件 1,743.2 s（占 Hex 26%，max 899.78 s）重跑需专用窗口。
+
 **机制依据。** 当前 `native_decide` 在 Lean 4.32 的 `Lean/Meta/Native.lean:31-67`
 固定走 `addAndCompile` → `evalConst` → 检查 `Bool = true` → 生成 native 公理；
 本仓重片 profile 约 99.9% 为 IR `interpretation`，且 `LEAN_CC` 零调用。Lake 的
@@ -180,15 +198,15 @@ dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s�
 则会把模块编成本机共享库，并在 import 时加载，官方用途就是加速求值/metaprogram。
 这是目前唯一与实测瓶颈直接对应的执行模式候选。
 
-**后续（Production 化与 Quad/Pent 已过闸；以下需用户另批）：**
+**后续（三族 580 件已全量跑通；以下需用户另批）：**
 
-1. **Quad 家族量产**（92 件）：现配方已过 K051/K068/K071；一次性 ~50 min + ~100 MB
-   bundle，需先批“批量编译 + 逐 shard 验收”流程。不得全仓 11,241 模块一次开启。
-2. **Pent 家族**：数据 dylib 已建，但 `PentData` 24.52 GB 越 24 GB 硬闸 → 必须专用
-   窗口（无其它 lean）或降内存；`Pent/K100` 已验 10.7×，量产前重测峰值与 pressure。
-3. **Hex**：`HexTop` 未建（前车道单编 20.71 GB），先专用窗口做 `HexTop` RSS 探针，
-   再决定是否值得。**止损**：任一数据模块 `lean -c` >2–4 h 或 dylib >数 GB，或 shard
-   加速 <2×，停止并交 UNRESOLVED。
+1. **接入正式构建/验收**：把生产 bundle + 三哈希 manifest 接入未来 585/589 的全量
+   replay 流程；需决定安装/分发方式（bundle 与 toolchain 绑定、CI 复现、主仓 `.lake`
+   的安装边界）。不得全仓 11,241 模块一次开启。
+2. **Hex 基线**：Hex 290 件零同岛基线；若需正式加速比，补测代表件或全族 base（成本高），
+   否则只保留 prod 时间。HexR2 5 件重跑需专用窗口。
+3. **Pent/Hex 专用窗口**：`PentR3/K000+K001` 合计 4,766.6 s；HexR2 5 件 1,743.2 s；
+   重跑建议独占、无其它 lean。**止损**：单进程 >25 GB 或 pressure ≥3 停止。
 4. 比较 CPU/wall/RSS/olean/native-lib 体积，并逐条核对布尔结果、定理陈述、585 公理
    名字/数量/类别。禁止新增 `extern`/`implemented_by`/公理；native 与 olean 必须同
    源同哈希，不能混用 stale 产物。
@@ -210,9 +228,10 @@ C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decid
 
 ## 5. 未闭合（UNRESOLVED）
 
-- `precompileModules`：生产化三件已完成（984 模块三哈希 manifest），Quad K068/K071 与
-  Pent/K100 已实测；**PentData 峰值 24.52 GB 越 24 GB 硬闸**，Pent 量产未批；Hex 未测。
-  K071 base 未由编排者重跑（22 min），基线沿用车道/前车道。
+- `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；
+  580/580 审计）；**Hex 无同岛基线**，正式加速比 UNRESOLVED；**PentData/HexTop 峰值
+  24.52/23.66 GB 近 25 GB 线**，量产/重跑需专用窗口；580 之外的 shard 未测；生产 bundle
+  尚未接入正式构建。K071 base 未由编排者重跑（22 min），基线沿用车道/前车道。
 - `Kepler.Assembly` / `Kepler.Final` 岛件与 `Graphs`/`LP` 分片的 `-j` 曲线：测量窗口内
   `Graphs` 318/951、`LP` 6/1,150 olean 缺失；探针 `probe/mods/P_assembly.lean` 已备。
 - `interpretation` 桶的逐文件触发机制（可用线索：linarith 14–21 ms/次 + 巨型项 simp/unfold）。

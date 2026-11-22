@@ -28,6 +28,10 @@
   `HexR` root 5 = **2,389.82 s**（39.8 min），`Hex` root 100 = **5.58 s**
   （根间差 ~428×）。[EST] HexR 1,095 根 ≈ 730 h、全基座 ≈ 770 h
   （只测 1 根，方差未测，不是实测）。
+  **ERRATA（2026-11-23 Phase D）**：`[EST] 730 h / 770 h` **作废**——把 HexR/K005 的
+  5-root shard 2,389.82 s 当成每 root ×1,095（至少 5× 分母错误），且未计 precompile。
+  Phase D 实测 Hex 290 件 prod **1.85 h**（HexR 219 件 0.97 h，Hex 0.39 h，HexR2 0.48 h）；
+  Hex 无同岛基线，正式加速比 UNRESOLVED；HexR2 5 件 1,743.2 s 是重尾。
 - **分片 profile**（`Pent/K100`，101.17 user-s）：import **0.676 s**、
   `interpretation` **105 s**、elaboration/typecheck <5 ms。组件份额：
   枚举 88%、`buildBuckets` 10.6%（每文件一次，编译器已提升出 `fun j` 循环）、
@@ -102,12 +106,13 @@ Pent **+0.8%**、p90 **+0.3%**；C5 `splitFace` 融合 **慢 19%**；C6
 
 ## 5. 下一步（未批，未开工）
 
-0. **执行模式已生产化 PASS（2026-11-22 `precompile-prod-quad-w1`）**：真实初始化器/
-   跨包闭包/三哈希 manifest 三件已消除；QuadR **K068 13.9× / K071 14.2×**、Pent/K100
-   **10.7×**（编排者复跑 user 14.2×/14.9×/13.6×）；一次性 ~50 min / 峰值 24.52 GB /
-   bundle 99.7 MB；详见 [`compile-speed.md`](compile-speed.md) §3.2。**PentData 峰值越
-   24 GB 硬闸，Pent 量产须专用窗口**；Hex 未测。native 后 C1/C3 的解释工作量边际缩小，
-   C2 固定费在 native 下 <0.1 s；**先做执行模式，再重估 C1+C2+C3，不按原比例叠加。**
+0. **执行模式已全量跑通（2026-11-23 `precompile-prod-all-w1`）**：Quad/Pent/Hex
+   **580/580** prod RC=0，总 **7.184 h**；192 件有基线聚合 **13.889×**；580/580 公理审计
+   MATCH。分族：Quad 0.53 h（15.963×）、Pent 4.81 h（13.760×）、Hex **1.85 h**（无基线）。
+   HexTop 23.66 GB；bundle 120.36 MB；详见 [`compile-speed.md`](compile-speed.md) §3.2。
+   **旧 Hex `[EST] 730 h` 作废**（5× per-root 误乘 + 未计 precompile）。**PentData/
+   HexTop 近 25 GB 线，重跑需专用窗口**；native 后 C1/C3 的解释工作量边际缩小，C2 固定费
+   在 native 下 <0.1 s；**先做执行模式，再重估 C1+C2+C3，不按原比例叠加。**
 1. **C1+C3 施工**（证明面小）：预计 Pent 类 −11–12%，先验证 DEF-FIX 流程。
 2. **C2 施工**（证明面中等）：固定费 −8.3 s/文件，对 1-root/5-root 小分片绝对收益
    最大。
