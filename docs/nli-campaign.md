@@ -1236,11 +1236,11 @@
   （FARM_PLAN §4 N2 同款止损）。
 - **判词指针**：§1.9（含 ERRATA）/ §1.15 / DEBTS 行 3 / FARM_PLAN §4 N2。
 
-**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` 外证未闭、原 agent 已恢复（pq §8 续1384）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
+**`nliOx3q1h` —— S2a→S2b→S5（状态：`ox3q1h-s2ba-vertex-w1` **PAUSED／暂不采用**；`chainidx2-y4-sign-cert-w1` 外证未闭、BLOCKED 收尾；`chainidx2-hol-path-w1` 原版结构提取在飞（pq §8 续1388）；旧 S2a 代表仍 BLOCKED，共享 kit `2b521ae0`；**P0 重发已闭**（2026-11-20 `ox3q1h-p0-split-w1`）：39,792→**3,524 点** −91.1% 缺口闭合率 100%、5,516 非顶点 (行,格点) 对 margin 全正 [exact Fraction] 全局 min **+1.32e-3**、19 split 合取全可行（min +1.41e-5）、184/184 角点电池从 [sampled] 升 [exact] 复证；S2a 槽件 **1,159 件逐件枚举就绪**（13 mono 槽全有回退档）、S2b 批产表就绪（现式 2.36M 行 / G4CORNER 压缩式 0.39–0.88M 行）；SCOUT 勘误 4 条入档（mono 13/19 非 12/19 等，详见快照 DELIVERY §ERRATA）；**S2a/y4 精确符号证书待闭；S2b 当前量产方案暂不采用**）**
 
 - **S2a 代表定标收线（pq §8 续1380）**：`chain_idx2` 的整盒二阶导符号证书未闭，S2a 0/1,159。原始 N/D 900 s 超时、共享原子上界 +181050.6515、保留商式 N·D 上界 +6.68e98，均不能作证且不是命题反例。第二代表件、P0 安装、mono、def 重发、S2b/S5 未做。已落库 `2b521ae0`：`Ox3q1hS2aConsumerKit`（开区间二阶导/移位凹性桥）与 `Ox3q1hS2aDomainKit`（宽盒/`deltaY>0`/update 域），编排者独立重编与 import 审计 **7/7 标准三**。后续必须先闭一件 `chain_idx2` 的精确符号包络。
 - **S2b-a 当前量产方案暂停且不采用（pq §8 续1384）**：代表批通过后展开的逐点高精度有理数证书在源码、编译内存、时间和 olean 上都过重；用户明确暂停并不采用现有 patch。完成量、成本和审计口径只以 pq 与快照 `ox3q1h-s2ba-vertex-w1/PAUSED.md` 为准；未由编排者独立重编、未落库、未减债。重启须先换更小的共享证书表示，不直接续跑剩余批次。
-- **chain_idx2/y4 外证仍未闭**：双实现公式校验与 Bernstein fast/slow 对账已过，但 root/corner 与 cross 分母证书尚未闭合；没有 Lean 新证或顶层减债。多次 agent 恢复遇连接错误已留痕；最新回执为原 agent-14 / `agent-0dmvr1to` running，续作仍须复用持久化断点与有限 cell 闸。
+- **chain_idx2/y4 外证仍未闭**：双实现公式校验与 Bernstein fast/slow 对账已过，但现行 root、split2 与预注册最终深度 split16 仍未闭合；原车道正在独立重放收尾，没有 Lean 新证或顶层减债。新增 `chainidx2-hol-path-w1` 只提取原版真实 split/Taylor 结构与一个终端对照，不重跑现行失败路线（pq §8 续1388）。
 - **这是什么**：`Assembly.lean:1904`；陈述本体 `ox3q1hP25`
   （`PackingAuto25.lean:94`，2026-11-06 DEF-FIX 显式化为 **230 条非线性不等式
   合取** = `ineqdata3q1h.hl` 46 record × 5 支）。这是 quarter case 的证书
@@ -1814,7 +1814,7 @@
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
-| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 真实 #2028 树已 PASS（pq 续1384）**：OCaml 兼容修复完成，树结构、终端与 glue 计数已导出；当前只做三条注册真实终端的双求值/unchanged-checker 兼容闸，不重跑树，未预支减债 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 / §9.6 |
+| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 三终端诊断已产出、待独立验收（pq 续1388）**：真实树与 248 终端精确 ifloat 复核 PASS；三例 dual 均 PASS，但 unchanged IA/RuleP/BaseC 均未接受。未做 Lean，其余 245 终端未测，不预支减债 | 9.4 | §1.18 / §1.22 / §1.25 / §1.26 / §9.6 |
 | `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
