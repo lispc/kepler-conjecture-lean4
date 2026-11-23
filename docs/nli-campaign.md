@@ -43,6 +43,16 @@
 
 共同规则：预算耗尽、样本未过和运行时失败都必须列出覆盖与未覆盖，不能包装成数学不可行。详见 `AGENTS.md` §7.2。
 
+### 0.2 战略排序（2026-11-23 只读复盘，pq §8 续1419）
+
+> 本节只给排序与依赖，不维护计数；实时数字仍以 pq 为准。
+> 完整报告：`~/c17_backup/lane_snapshots/nli-strategy-review-w1/REPORT.md`。
+
+- **主线**：根面恢复 → wt1（唯一近闭件）→ ZTG joint-6 trio → ZTG 余债/解耦 4 → qitnpea 共享 floor；fat1/ox3q1h 先零 Lean 预认证。
+- **分档读法**：T1 近闭 1；T2 可走共享 kit 15；T3 农场 27 + T3-mixed 1 + T4 阻塞 2 + T5 LP 3（含 hLP）共 33 条，不纳入 1–2 周数学承诺。
+- **不用**：certtm/TM 宽盒量产（Gate-0 已 NO-GO；窄盒 Rule P 有 XLLIPLS 先例）；precompile 只加速 585 native shard 重建/复验，不作用于 NLI 的 kernel decide。
+- **合取债纪律**：ox3q1h / TerminalV11 / LpIneqs / Kcblrqc 只报已闭分量，不把部分分支写成 −1。
+
 ## 1. 当前分诊（2026-11-15）
 
 来源：`nli-triage-w1`（`a09ad494` 前）的 54+1 对账 + 后续两次闭合。
