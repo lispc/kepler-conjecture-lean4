@@ -71,7 +71,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `olean-recovery-2w-w1` | **running（用户 2026-11-23「2 worker 启动」；§8 续1416，async 已送达）** | 2-worker 恢复 `Assembly+NliBanks27` 闭包剩余 **1,031** 非 shard（301 已安装；Text 446/Graphs 297/TameSpine 267/Interval 18 + 3 种子差）；只向主池写缺失 `.olean`（regular file），先重扫、拓扑序、2 worker；总 lean ≤3、RSS ≤24 GB、pressure<2；禁 `lake build`、禁 exec/PPID 自检；失败重试 1 次，连续失败/同批 >5% 停；不设超时、每 25 件 checkpoint；完成跑根面 harness，不伪造 PASS；主仓 tracked 零改动、585 不变 |
+| `olean-recovery-2w-w1` | **running（09:28 重扫 missing=704；首轮 324 rc=0/6 deferred；混世界已绕过；§8 续1416 + tools §7）** | 2-worker 恢复 `Assembly+NliBanks27` 闭包剩余 **704**（09:28 快照；初始 1,031 → 首轮 324 rc=0；301 已安装；实时以 STATUS.md/pq 为准；主池 300 canonical vs 360 non-canonical，三件预编译恢复，禁重编跨世界消费者/覆盖 `CertCheck.olean`）；只向主池写缺失 `.olean`（regular file），先重扫、拓扑序、2 worker；总 lean ≤3、RSS ≤24 GB、pressure<2；禁 `lake build`、禁 exec/PPID 自检；失败重试 1 次，连续失败/同批 >5% 停；不设超时、每 25 件 checkpoint；完成跑根面 harness，不伪造 PASS；主仓 tracked 零改动、585 不变 |
 | `taylor-second-bounded-lean-w1` | **running（用户2026-11-23批「1 2」；agent-22 / `agent-j9951xz3`，§8 续1418）** | 分层实现三变量diff2c/6 Hessian、second_bounded递归、pp=3 base200/右结合或严格有理外包；gated真实叶`LRLRLRLRL`严格负，单文件RC0/error0/恰标准三才过，未过不扩577。部分通用件可交付但叶未闭记LEAF_NOT_READY，单Lean第三槽guard，不预支−1 |
 | `cell3-wt1-edges-w1` | **E00/E01/E11 EXTERNAL_CANDIDATE_READY（§8 续1420；编排者从零重跑+双65SHA全OK）** | 三边6分支10终叶零未决，主/第二实现及独立覆盖全过；E00左减右增证全局最小在折点，下界4.514331609e−5>4.5e−5，E01下界0.003877895、E11下界0.014596426。修正Python dmatan小参数首项−1→−1/3并清空旧叶重跑；核查前两盒所有接受输入均严格正，不触该分支。仅一维外候选，非Lean/HOL证明，SORRIED−0 |
 | `cell3-wt1-matanDD-lean-w1` | **A PASS落库`884bd80d` + B LEAN_NOT_READY（§8 续1417；编排者重编+模块build+6/6公理审计）** | 新`Wt1MatanDDAnti`186行6定理：正支三阶导<0、StrictAntiOn及端点包络，独立RC0/error0/零新警告，6/6恰标准三。B选pp=3宽余量叶`LRLRLRLRL`，w1F2上端−0.012718625，完整6 Hessian/domain/正matan输入合同已导出；缺diff2c/second_bounded/base200右结合桥，无Lean叶/577 WIP，不预支−1 |
@@ -313,6 +313,8 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 - 现役数字只在本文件头维护；其它文档引用，不另抄一份。
 - 当前战略讨论稿：[`../strategy/nil-math-20261118-glm53.md`](../strategy/nil-math-20261118-glm53.md)。
   其中 Bernstein/LP 的强度判断按 §4 的澄清使用，不视为实测结论。
+- **2026-11-23 NLI 战略复盘与车道规划**：[`../strategy/nli-strategy-20261123.md`](../strategy/nli-strategy-20261123.md)
+  （49 件分档 1/15/27/1/2/3；主线 wt1→ZTG trio；5 个方向；混世界 A/C 待裁）。
 - 2026-11-18 重组前全文：[`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)。
 - 更早队列/战术/J 战役表：[`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - 续990–1242 全文见 2026-11-18 重组前快照；续306–989 见

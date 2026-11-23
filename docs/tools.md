@@ -210,6 +210,19 @@ harness `precompile-integration-w1/prod/run_acceptance_replay.sh` 当前 RC=2。
 `PROD_MANIFEST.tsv` 的 986 行是 985 依赖模块 + bundle，不含 580 个消费者 shard；
 shard olean 的 SHA 以 `phaseD/olean` 归档 + `measurements_all.csv` 字节为准。
 
+**2026-11-23 09:28 补充（恢复重启 + 混世界）**：2-worker 恢复已重扫并续跑，
+closure 8,868 / present 8,164 / **missing 704**（09:28 快照；实时以 pq 与
+`olean-recovery-2w-w1/STATUS.md` 为准）。首轮 324 件 rc=0，6 件 deferred：5 件因并发
+`lake build` 临时缺 `PackingAuto13`，1 件 `CertPent` 因池内两个 `Inhabited Graph`
+世界不兼容。`Kepler/Graphs/CertPent|CertHex|TopReplayHex` 已用 `goodlist-w4` 的
+source-identical canonical 预编译 olean 恢复并审计（198/290 条 trust-base 公理 + 标准三，
+无 `sorryAx`）。**主池仍混用 300 个 canonical（Phase D shards）与 360 个 non-canonical
+（旧 shards/CertCheck 等）**；恢复期间禁止与 `lake build` 共用主池，未来车道不得重编
+跨世界消费者或覆盖 `CertCheck.olean`。永久修复 A（重建 280 旧 shard，天数）/
+C（保留混合池 + 不变量）待裁决；证据与复现见
+`~/c17_backup/lane_snapshots/olean-recovery-2w-w1/SHARD_WORLD_BLOCKER.md`。
+下一个里程碑 = missing 0 + 根面 harness。
+
 ## 8. 检索、补丁和哈希工具
 
 ### 8.1 快速检索

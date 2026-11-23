@@ -33,6 +33,9 @@
   [`handoff-2026-11-14.md`](handoff-2026-11-14.md)（OCBICBY 移交）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
+- [`../strategy/nli-strategy-20261123.md`](../strategy/nli-strategy-20261123.md) —
+  **NLI 战略复盘与 1–2 周车道规划**（2026-11-23：49 件分档 1/15/27/1/2/3；
+  主线根面恢复→wt1→ZTG trio；5 个方向与池混世界约束）。
 - [`certshard-code-shape.md`](certshard-code-shape.md) — **CertShards 重片同语义代码写法**
   （2026-11-21 `certshard-code-shape-w1`：99.9% 时间在 IR 解释器；C1+C2+C3
   Pent 1.237×/Quad 1.205×/HexR 1.298×（含 C4）；全部 DEF-FIX，未施工；

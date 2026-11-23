@@ -47,6 +47,8 @@
 
 > 本节只给排序与依赖，不维护计数；实时数字仍以 pq 为准。
 > 完整报告：`~/c17_backup/lane_snapshots/nli-strategy-review-w1/REPORT.md`。
+> 落库版规划：[`../strategy/nli-strategy-20261123.md`](../strategy/nli-strategy-20261123.md)
+> （2026-11-23，含 5 个车道方向与混世界约束）。
 
 - **主线**：根面恢复 → wt1（唯一近闭件）→ ZTG joint-6 trio → ZTG 余债/解耦 4 → qitnpea 共享 floor；fat1/ox3q1h 先零 Lean 预认证。
 - **分档读法**：T1 近闭 1；T2 可走共享 kit 15；T3 农场 27 + T3-mixed 1 + T4 阻塞 2 + T5 LP 3（含 hLP）共 33 条，不纳入 1–2 周数学承诺。
