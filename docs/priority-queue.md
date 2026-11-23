@@ -329,7 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
-- **2026-11-23（双派单，续1431）**：**用户批 S5+S6——NliKit 机件层两条零 Lean 前期车道异步发车。**
+- **2026-11-23（S6 收线 + 盒扫调度裁定，续1432）**：**`nlikit-reduce-survey-w1` 收线（两份产出全对账）；盒扫 ETA>12h 报告，裁定不调序。**
+  ① **S6 快照验收 PASS**（`~/c17_backup/lane_snapshots/nlikit-reduce-survey-w1/`，SHA 全 OK；编排者抽验承重判定命中原文：`NliBanks20.lean:509` wt2A 盒端点型守卫 vs `NliSqrt8.lean:77` sqrt8 两点型守卫——**原语 1 守卫形态 DIFFERS 属实，不可合并**；`ZTGTrioSym.ztg_main_0010_of_1000` 即原语 2 精确骨架 = REUSE）。价值实证：ZTG kit+M2 **858 行服务 3 债** vs wt2A 六模块 1.16 万行单债。
+  ② **两条勘误**：a) "439→199 轨道压缩"仅见于 trio 车道 STATUS 的数值预认证口径，M2 本体不含角点表（续1430 ④表述已修正于此）；b) wt2A cell 数 HEAD 实测 **61 编号 cell**（缺 cell30、2 条显式 `_vac`）vs 文档口径 62——ERRATA 候选。
+  ③ **QITNPEA floor 口径钉死**：共享面三债 = `2_0/1_2/1_0`（w≤2，服务余量精确 1/20000）；`1_1`（w=3）不在服务面（−7/1250）**仍属农场**；堵点 = 全盒覆盖证书（七法皆部分树/包络过宽），**非表示问题**——"表示 READY、证书 MISSING"，不预支 −3。
+  ④ 盒扫 15:45 报告：三个 p1_i0 大盒 57k–63k 记录（若 30k 叶级则单盒 verify 6h+），ETA>12h；首盒 verify 曾在 pressure=2 持续>10 min 按裁定杀掉重跑（5,625/9,463 终叶处，15:30）。**裁定不调序**（大盒已在飞 = 最长作业优先，总时长最优），槽位替换照旧，verify wall_s 逐盒记 SWEEP.tsv。SORRIED 49 / AXIOM 585 不变。下一条：续1433。
+- **2026-11-23（战略落库 + 工程闸落库，续1430）**- **2026-11-23（双派单，续1431）**：**用户批 S5+S6——NliKit 机件层两条零 Lean 前期车道异步发车。**
   ① `nlikit-boxtree-spec-w1`（S5，P-A 规格）：统一树类型 + glue 定理陈述草案（叶全负⇒整盒负；精确有理 kernel decide 口径）；wt2A/sqrt8 回归用例；**wt1 Lean 装配成本重估**（盒扫实测 5–6× 后修订 wt1-close 规格，含分量记账替代方案）——wt1-close 工单等它修订。
   ② `nlikit-reduce-survey-w1`（S6，P-B 对照）：sqrt8/wt2A/ZTG joint-6（含 trio M2 的 Klein-4 轨道压缩 439→199）/QITNPEA floor 四债归约写法逐行对照 → 三原语统一陈述草案（REUSE/ADAPTER/MISSING 三级，严禁 ADAPTER 写成 REUSE）+ 每债接入改动量 + 语义风险表（引 nb20 方向/y5 单调反例/RQ 盒 y1 三起历史事故）。
   ③ 边界：两者零 Lean、只读主仓、产出全进快照；`ztg-joint6-trio-w1` 在飞只读不打扰。两派单均已送达（async）。SORRIED 49 / AXIOM 585 不变。下一条：续1432。
