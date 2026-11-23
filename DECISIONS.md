@@ -3,6 +3,32 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-11-23 — 验收 root 显式化 + 池健康三条硬检查（用户批 practices P0-1/2/3；三起 ERRATA 入档）
+
+**背景**：2026-11-23 根面池恢复（missing 0）后重跑 e2e 可视化，暴露三起被 stale 池掩盖的
+仓库缺陷，同日全部修复：
+
+- **E1**（`84c3b4b4`）：`1ec06b28` 下沉 wt2A 时遗留孤儿 docstring，**`Assembly.lean` 自
+  2026-11-20 起语法不可编译**三日；池内 11-17 旧 `Assembly.olean` 使一切"亲验"照常通过。
+- **D1**（`319af31e`）：`Reduction3HbridgeElim` import 了无源码路径的幻影模块名，历来靠
+  手工放置的 olean 解析；已改为真实路径并退役幻影件。
+- **池口径**：恢复链的 `missing 0` 只是 **Final 闭包口径**；全仓非锥模块仍缺 ~600+ olean
+  （T11Glue、`Kepler.LP.HelloChecker` 等），"池完整"不等于"全仓可编译"。
+
+**拍板**（用户 2026-11-23 批）：
+
+1. **验收 root = `Kepler.Final`**：lakefile 命名 target `KeplerAcceptance`；
+   `defaultTargets = ["Kepler"]`（闭包 1,249）不含根定理——任何 `lake build`「成功」都不是验收。
+   验收语言仍唯一是 `#print axioms Kepler.the_kepler_conjecture_e2e`。
+2. **全树构建入口物理隔离**：`make build/check/reprove` 与 CI 的全树 `lake build` 改为拒绝并指路；
+   原命令保留为 `*-legacy-unsafe`（考古用，勿跑）。AGENTS §4 禁令不变。
+3. **sorry 三口径单一 TSV**：`scripts/sorry_census.py` → `docs/sorry-census.tsv`，
+   `--check` 对账 `asm∩map = 49`；锥内 `sorry` 报数必须给 Text/Assembly 分解（§6 口径的机械化）。
+4. **池健康三条硬检查**（三起 ERRATA 的直接教训，适用于此后每一次落库）：
+   - **改 `Assembly.lean` 的落库，必须以 `Assembly.olean` 全编译 rc=0 为闸**——不许拿池内旧 olean 当通过；
+   - **池的"完整"必须声明口径**（Final 闭包 / 全仓），报 `missing` 数字时同报分母；
+   - **import 名必须对应真实源码路径**：新模块 import 行落库前 `test -f` 对应 `.lean`。
+
 ## 2026-11-20 — 中间债验收目标可下沉到小模块（用户裁决；首用 wt2A）
 
 **背景**：wt2A 的目标 `nliCell3QZECFICwt2A` 的证明项只是
