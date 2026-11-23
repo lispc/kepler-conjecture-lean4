@@ -329,6 +329,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-23（派单+仪器，续1426）**：**用户明批「W3发」——`interval-p3-c2125-w1` 车道异步发车（roadmap §3 W3 首案 `C2125338128M`）；同批编排者重跑 e2e proof-term 可视化。**
+  ① W3 首案：Bernstein 单叶+桥换装，规格照抄 `cases-swap-prep-w1/PREP.md` §3（精确 min 已 Fraction 验证，不许重推），形态模板 = 已落库 P0/P1/P2/C840；发射 10–20 min + 单槽直编 11–22 GB；验收 = 新叶定理 `#print axioms` 恰标准三 + 消费方重验；单文件 wall>90 min / RSS 触 24 GB ⇒ PAUSE_COST。P0–P3 阶段制，交付 patch 不落库（编排者按 §5 流程）。
+  ② e2e 可视化：池 missing=0 后重跑 `lean/scripts/export_e2e_tree.lean`（LEAN_PATH=主池，绕过 2026-11-03 失效的 `/tmp/lfainteg` 路径）→ `build_db.py` → 8790 服务；旧 8790 DB（c1 时代 129 债）为历史快照不得冒充。结果出来编排者核对节点/债数后另记。
+  ③ 同批用户要求展开待裁决项（混世界 A/C、D1、practices P0-1/P0-2、ZTG trio、wt1-close 排序）——口头汇报，不另开工单。SORRIED 49 / AXIOM 585 不变。下一条：续1427。
 - **2026-11-23（收线+亲验，续1425）**：**`olean-recovery-2w-w1` 完成；编排者亲跑根面探针，589 同集自基线 AQ 后首次复现。**
   ① 恢复终点：closure 8,868 / missing **0**，`Kepler.Final` 闭包 8,869 全齐；本轮新装 1,033（1,029 rc=0 + 1 staged D1 + 3 审计 prebuilt），7 failure 全解 0 deferred；6h05m、169 件/h、峰值 lean RSS 22.17 GB（闸内）；平台 1h 强杀致 13 次幂等续跑（rescan 跳过已有，无双开）；主池 9,048 regular、0 symlink、主仓零 tracked 改动。
   ② **编排者亲跑** `run_acceptance_replay.sh --pool <主池>`（14:0x，log `/tmp/acceptance_replay_orch_1425/`）：`axioms_printed=589 unique=589`、`std=[Classical.choice, Quot.sound, propext]`、`npresent_585=585/585`、`UNEXPECTED_AXIOMS=['sorryAx']`、probe RC=0、harness RESULT=FAIL **仅因 sorryAx（=锥内 49 债，预期）**。与车道输出逐字一致。
