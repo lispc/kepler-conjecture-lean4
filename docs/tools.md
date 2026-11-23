@@ -279,3 +279,14 @@ shasum -a 256 -c SHA256SUMS
 3. 编译只走受 guard 的单文件路线，保留完整日志和 RC。
 4. 数学交付必须独立重编 + `#print axioms`；根面结论必须编排者亲跑 Final。
 5. 无法核实就标 UNRESOLVED；静态导航、数值采样、进程退出和旧 olean 都不能冒充证明。
+
+## 编排者内存护栏 memlim.sh（2026-11-23 用户明批）
+
+**背景**：FamilyG2Base 编译 footprint 133 GB（RSS 16 GB）把 swap 推到 97% 并被系统杀（续1445）；macOS 无 cgroups、`ulimit -v/-m` 不生效——轮询杀是唯一可靠的进程级内存限制。
+
+**用法**：`~/c17_backup/memlim.sh [--rss-gb N] [--name TAG] -- cmd args...`
+- 后台启动 cmd，每 `MEMLIM_POLL`（默认 5 s）轮询 **cmd 子树总 RSS**（BFS 覆盖 `lake env → time → lean` 深链）；≥ N GB → SIGKILL 子树，日志记 `BUDGET_EXHAUSTED(memcap)`，退出 137。默认 N=30。
+- 内置 PPID=1 孤儿自杀（AGENTS §4）。日志 `${MEMLIM_LOG:-/tmp/memlim_<TAG>.log}`。
+- **v2 关键语义**：只杀 cmd 子树，绝不碰调用者进程组（v1 按进程组杀误伤父 shell，部署前废弃）。
+- 实测（2026-11-23）：正常通过 / 3 GB hog @2 GB cap 杀（rc=137，父 shell 存活；hog 的子树 RSS 读数 6 GB——bytearray 页计口径偏大，护栏判定偏保守，可接受）/ 包装 `lake env lean` 链 / `--version` 零耗。
+- **车道义务**：所有 lean 编译一律包 memlim（编排者按件定 cap：W4 全尺寸 12 GB / ZTG M3 15 GB / wt1-close 8 GB）；`BUDGET_EXHAUSTED(memcap)` 是资源护栏事件，不是数学判词（§7.2）。
