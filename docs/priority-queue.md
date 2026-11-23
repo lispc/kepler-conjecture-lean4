@@ -329,6 +329,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-23（W4 止损收线：符号塔方法级 NO-GO + 两备选交用户，续1449）**：**UNRESOLVED-3 修复会话到期，车道按预设边界（续1448）停手。编排者复核快照后记录：**
+  ① **方法级 NO-GO（钉死对象）**：「**12 变量符号塔 in Lean elaboration**」在当前表示/当前引擎/本机 36 GB 下不可行——实测基座：N=243 = 141.7 s/8.4 GB、N=729(sym) = 2h46m/footprint 133 GB OOM、每层 ×3–7 无拐点（瓶颈 = 端点因子 elaboration 面）。**不外推**：不是命题判词、不是 S5/闭叶数据形态的判词、不阻塞任何其它路线（§7.2 口径）。C 口径未修通：需要 5 项联动重构（u-defs/nnL/u-app/branchval/step 调用去 A/B 化），10+ 次 compile 迭代每次暴露下一个发射 bug——**工程量超会话预算，非架构墙**；修复方向与反例在 REWRITE.md §3。
+  ② **资产保全（复核过）**：快照 SHA256SUMS 20 条（19 OK；1 条 FAIL 系清单自列伪失败）+ 实有 66 文件（车道报"52 项"口径 ≠ 清单条目数，小出入登记）；REWRITE.md 终版（曲线/消融/反例/两备选）、patch.diff（BernTower 等顶模块改 + 9 新文件，5,957 行，未落库）、Evidence 34 件、logs。**可复用资产**：`BernTower.lean`（peel1/2 + step_lt 通用 glue，113 行）、**hgo-shape**（combo_uapp ≡ combo_bodies 的 rfl 桥——CertD/ZTG 塔形可套用，ZTG trio M4/M5 证书同为 Bernstein peel 承载，有直接协同）、`emit_meas.py` 参数化测量发射器、A 曲线。
+  ③ **两备选交用户裁决（车道已停手待命）**：(i) sym 分层链隔夜（Base 2h46m 实测 + 4 段 6–10 h ≈ 9–13 h，产出 C2485876245b 翻案 = 旧表示内的一个 case，**SORRIED −0**，纯战略数据点）；(ii) S5 闭叶数据形态（战略既定方向；其形状将由 farm-pilot 数字 + wt1-close 括线落库在明日自然定型，折叠进 NliKit 规划）。SORRIED 49 / AXIOM 585 不变。下一条：续1448。
 - **2026-11-23（W4 A 系列全绿 + hgo-shape 突破 + C 口径二次裁决，续1448）**：**A 系列四点全 RC=0**（N=9/27/81/243 = 4.2/6.6/20.7/141.7 s，RSS 5.5→8.4 GB，footprint 恒 ~133 MB；每层 ×3–7 **无超线性拐点**——瓶颈是恒定的 branchval/nnL 条目 elaboration，不是 ring）。**hgo-shape 修复**（k<L 子项加 `have hgo : combo_uapp = combo_bodies := rfl` + `rw`，解 heq-ring 的 u-app-atom 阻塞）使 FamilyG1 全塔与 A 系列 RC=0、axioms 隐含标准三——此修复对仓内其它塔形有潜在复用价值（登记，不扩 scope）。sym 全尺寸外推 7–17 h 不可行（与 133 GB OOM 互证 ✓）。
   **UNRESOLVED-3 第一个会话结算**：heq-ring 39 处失败根因定位 = C 闭包乘数 vs nnL 符号乘数不匹配；hgo-shape 已解症状；剩余 = closed 模式的 nnL/u-def 签名与全部 u-app 去除 A/B 参数化（修复路径明确、机械重构，估一会话）。
   **编排者二次裁决：再给一轮有界会话修 C**。理由：①路径完全指定（非开放式）；②收益实测（A 系列已绿，closed 条目 → 有理常数 ⇒ 全尺寸有望分钟级，vs sym 7–17 h）；③成本有界良性（失败即按既定边界回退，无其它车道被阻塞）。**边界（同前，再次写死）**：本会话仍失败 → 「12 变量符号塔 in Lean elaboration」方法级 NO-GO（限当前表示/引擎），停在两备选交用户：(i) sym 分层链隔夜 9–13 h（Base 2h46m 已实测 + L6/L5/L43/L21），(ii) S5 闭叶数据形态（战略方向）。验证门槛不变：M81 C-vs-sym 逐项数值 diff → M243 → 全尺寸包 memlim 12 GB 且起跑前报备。SORRIED 49 / AXIOM 585 不变。下一条：续1447。
