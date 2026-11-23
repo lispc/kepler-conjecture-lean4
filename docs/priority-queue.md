@@ -329,7 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
-- **2026-11-23（S5 收线 + wt1-close 规格改写，续1434）**：**`nlikit-boxtree-spec-w1` 收线（SPEC/REGRESSION/WT1_REESTIMATE 三份，快照 SHA 全 OK，编排者抽验 cell30 零引用/行数/cover_sound 均命中）。**
+- **2026-11-23（派单，续1435）**：**用户批 `hol-tree-harvest-w1` 发车（农场架构 §4.4 的搜索侧）——异步已送达。**
+  ① 任务：解析 `azure/ineqs.txt`（23,237 实例，bisect 嵌套树）→ 我方 48 债家族映射表（P0，REUSE/ADAPTER/MISSING 逐家判定）→ 3 条 M4 试点深翻（建议 ZTGIJCF4/QITNPEA/BIXPCGW 各一：x→我方编码 SF 逐案映射审计 + 冒烟角数值对账）→ SPEC 契约格式候选叶表（永久 CANDIDATE 标记）。
+  ② 输入锚点：`ineq.hl`（4,011 行语义）、fat1 解析先例（case 2028）、S5 外来树契约、wt1 HOL 9 支（ineqs.txt:15866）。
+  ③ 纪律：零 Lean、`reference/` 只读、映射不干净标 MISSING 回退自搜不硬凑、候选表永不表述为证明。SORRIED 49 / AXIOM 585 不变。下一条：续1436。
+- **2026-11-23（S5 收线 + wt1-close 规格改写，续1434）**- **2026-11-23（S5 收线 + wt1-close 规格改写，续1434）**：**`nlikit-boxtree-spec-w1` 收线（SPEC/REGRESSION/WT1_REESTIMATE 三份，快照 SHA 全 OK，编排者抽验 cell30 零引用/行数/cover_sound 均命中）。**
   ① **wt1-close 原「单 lean 单模块」规格判死**：16 盒叶表 EST 30k–470k 叶 × 17–29 行/叶 = 0.5M–13.6M 行（比仓内最大生成债大 1.5–2 个数量级）。**替代 = 分量装配**：P0 模式闸（毫秒重放实测，硬前置）→ 577 叶盒 E2E 试点 → 逐盒落库；−1 只在 16/16 领取。RSS 按分片文件成立（1.6–6 GB）；工期 S1 场景 0.8–2.6 车道日成立、S2 超 1.5–3× ⇒ 分量记账不硬凑。
   ② **验证成本崩塌**：按 W4 ℤ-decide 口径（1.65 ms/条锚），全 16 盒验证 CPU ≤ **2.1 CPU-h**（S2 上界）——Rule P 27–31 s/叶口径退役为保守界；瓶颈转移至盒扫收线 + 分片排产。
   ③ **SPEC**：统一 `Cover` 归纳类型 + glue `cover_sound`（`hsound` 开接口，wt2A/sqrt8 符号叶与 wt1 decide 叶同挂）；端点 IFloat200（Base200:8-20 逐名对应）；叶 = 纯数据行 + `leafCheck_sound` 一次证明，全 ℤ 域折叠；与 LeafContract DIFFERS 已写明（证明载体→数据行）。回归判定：wt2A/sqrt8 树层**完全同构**（切点 IFloat200 可译、叶常数逐字对表）；glue 只替代分派层 ~500 行/债，语义归约桥保留。
