@@ -329,6 +329,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-23（D1 修复落库 + IysL23 清树，续1429）**：**用户批 D1；`319af31e` 幻影 import 修正 + 36 件 iyou 散落件搬快照。**
+  ① D1 执行：`Reduction3HbridgeElim.lean` 的 `import Kepler.Text.Reduction3ElementsOfListNtrans`（无源码路径幻影，历来靠手工 olean，恢复链曾 staged 编译）→ 真实路径 `Kepler.Text.TameSpine.Reduction3ElementsOfListNtrans` + ERRATA 注记。闸：真实 olean 新建 rc=0（14:58）、HbridgeElim 重编 rc=0/error=0、**幻影 olean 退役**、抽编直接消费方 `LnrxInductionSpine` rc=0、根面 Final 探针 **589/589 unique 无损**；二进制扫描证实引用幻影名的池件仅 HbridgeElim 自身，上游公开名不受影响，零陈述/证明变更。
+  ② **IysL23* 37 件处置**：来历查明 = `iyou-sharpv2-slots-w1`（2026-11-19，nliTskIYOUOBFsharpv2 债）另一批发射（快照 patch 是单文件 `IysL23LeavesN.lean` 变体，主树是 N00–N33 分批变体），从未编译验证；车道判词 = 结构性交付完成但编译波被槽位饿死（BLOCKED，−0）；11-20 交接档已裁定"不要 commit"。**处置 = 36 件 .lean 搬入 `iyou-sharpv2-slots-w1/stray_main_tree_20261123/` 保存（未来 IYOUOBF 闭债车道可对照两批选优）+ `.DS_Store` 删除，主树归零**。SORRIED 49 / AXIOM 585 不变。下一条：续1430。
 - **2026-11-23（ERRATA+落库+仪器，续1428）**：**`84c3b4b4` Assembly 语法修复 + HEAD 根面复核 589 + e2e 可视化上线 + W3 首案落库 `ce1b9c87`。**
   ① **仓库缺陷 E1（新发现并修复）**：`1ec06b28`（11-20 wt2A 下沉）删除 `nliCell3QZECFICwt2A` 定理时遗留孤儿 docstring，**Assembly.lean 自 11-20 起语法不可编译**，被池内 11-17 旧 `Assembly.olean` 掩盖三日（期间所有"亲验"都是新模块编译或旧 olean 探针）。修复 = 孤儿 docstring 改普通注释 + ERRATA 注记（零陈述/证明变更，`84c3b4b4`）；编排者重编 Assembly rc=0/error=0（olean 14:31 入池，峰值 8.8 GB/54 s）+ Final rc=0（14:32）。教训：改 Assembly 的落库必须以 Assembly 全编译过闸——stale 池时代此闸失效（雷区候选）。
   ② **HEAD 根面亲验**：Final 编译探针输出解析 = **589 公理 / 589 unique / sorryAx 恰 1 / native 585**（=/tmp/assembly-refresh/final.log）；至此根面 589 为 **HEAD 精确态**（续1425 是池 olean 态，勘误升级）。
