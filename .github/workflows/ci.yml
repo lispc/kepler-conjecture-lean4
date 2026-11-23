@@ -1,25 +1,21 @@
 name: ci
 
+# P0-2（eng-acceptance-gate-w1，2026-11-23 用户明批）：全树构建已从 CI 移除。
+# push/PR 不再触发任何编译——AGENTS §4 禁全树构建（lake 无并行度开关，
+# 全核扇出实测 12 路并发 → 内存枯竭；且 defaultTargets "Kepler" 闭包不含根定理，
+# build 成功不构成验收）。本 workflow 只保留 workflow_dispatch 手动触发的静态闸
+# （零编译、零 lake）：lakefile 验收 target 断言 + sorry census 对账。
+# 验收 root = Kepler.Final（P0-1）；根面验收仍是编排者亲跑的
+# `#print axioms Kepler.the_kepler_conjecture_e2e`，不由 CI 代言。
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
-  build:
+  static-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install elan
-        run: |
-          curl -sSf https://elan.lean-lang.org/elan-init.sh | sh -s -- -y
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Get Mathlib cache
-        working-directory: lean
-        run: lake exe cache get
-      - name: Build
-        working-directory: lean
-        run: lake build
-      - name: Axiom audit (hello-checker)
-        working-directory: lean
-        run: lake env lean scripts/AxiomAudit.lean
+      - name: Acceptance target assertion (lakefile + docs + root file)
+        run: python3 scripts/check_acceptance_targets.py
+      - name: Sorry census reconciliation (P0-3)
+        run: python3 scripts/sorry_census.py --check --no-tsv

@@ -124,6 +124,13 @@
    编排者亲跑的 `#print axioms`；roots 步挂了不拒绝，记日志。**
 3. 闸 PASS 才 commit；**一个落库一笔 commit**，message 写清 文件/件数/commit 关系。
 4. 对表：更新 `docs/priority-queue.md` §1（在飞）与 §8（一条日志）。
+5. **验收 root = Kepler.Final**（P0-1，2026-11-23 用户明批）：lakefile 命名验收
+   target `KeplerAcceptance`（roots = `["Kepler.Final"]`）是根面验收声明的编译
+   入口；`defaultTargets = ["Kepler"]`（闭包 1,249 模块）不含根定理——任何
+   `lake build`「成功」都不是验收，验收语言仍是 §1 的 `#print axioms`
+   `Kepler.the_kepler_conjecture_e2e`（探针亦入 `lean/scripts/AxiomAudit.lean`，
+   静态自检 `scripts/check_acceptance_targets.py` / `make acceptance-check`）。
+   全树构建禁令（§4）不变。
 
 ## 6. 文档纪律
 

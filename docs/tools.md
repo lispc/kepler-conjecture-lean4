@@ -132,6 +132,13 @@ bash /tmp/land-batch-w1/orch_compile.sh \
 #print axioms the_kepler_conjecture_e2e
 ```
 
+**验收 root = Kepler.Final**（P0-1，2026-11-23 用户明批）：lakefile 命名验收
+target `KeplerAcceptance`（`roots = ["Kepler.Final"]`）是根面验收声明的编译入口；
+`defaultTargets = ["Kepler"]` 的闭包（1,249 模块）不含根定理，全树构建被
+AGENTS §4 禁止。静态自检（零编译）：`python3 scripts/check_acceptance_targets.py`
+或 `make acceptance-check`（含 P0-3 sorry census 对账）。根探针也已并入
+`lean/scripts/AxiomAudit.lean`（P0-2）。
+
 依赖池恢复后，可由编排者用 §3 的 wrapper 编译 `lean/Kepler/Final.lean` 并亲读输出。
 当前恢复链已停止，**不要把小模块审计写成完整 Assembly/Final 根面复验**。
 

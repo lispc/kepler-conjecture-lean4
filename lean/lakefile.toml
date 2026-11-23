@@ -8,3 +8,14 @@ rev = "v4.32.2"
 
 [[lean_lib]]
 name = "Kepler"
+
+# P0-1（eng-acceptance-gate-w1，2026-11-23 用户明批）：命名验收 target。
+# 验收 root = Kepler.Final —— 唯一验收语言是
+# `#print axioms Kepler.the_kepler_conjecture_e2e`（lean/Kepler/Final.lean 文末），
+# 其编译闭包 = 8,869 模块，≠ defaultTargets "Kepler" 的 1,249 模块闭包。
+# 本 target 不进 defaultTargets；全树构建仍被 AGENTS §4 禁止
+# （见 Makefile 闸门与 .github/workflows/ci.yml 的 workflow_dispatch 静态闸）。
+# 静态自检：python3 scripts/check_acceptance_targets.py
+[[lean_lib]]
+name = "KeplerAcceptance"
+roots = ["Kepler.Final"]
