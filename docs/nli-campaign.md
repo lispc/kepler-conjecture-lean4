@@ -1142,13 +1142,13 @@
 - **止损**：余量 1.104e-3 若被区间舍入吃掉 ⇒ 先重测再续，不硬凑。
 - **判词指针**：§1.6 / §1.11 / DEBTS 行 42。
 
-**`nliCell3QZECFICwt1` —— cell3 二号（状态：matan''正支反单调六定理已落库 `884bd80d`；`taylor-second-bounded-lean-w1`与`cell3-wt1-edges-w1`在飞，pq §8 续1418；第二盒交付待验收，真实叶/三边未闭，SORRIED −0）**
+**`nliCell3QZECFICwt1` —— cell3 二号（状态：matan''正支反单调六定理已落库 `884bd80d`；E00/E01/E11一维外候选已验收（pq续1420），`taylor-second-bounded-lean-w1`在飞；第二盒交付待验收，P1真实叶/Lean总装未闭，SORRIED −0）**
 
 - **固定 16 盒外证闸已收线（pq §8 续1371）**：16/16 均完成主证和第二实现重放，480/480 对象、pending=0，主/重放各 1,617,824 个完整张量商系数检查；只有 5/16 盒双向聚合上端严格为负。其余 11 盒是独立槽区间合成精确失败，首盒正误差主要来自相关 D4 项，**不是 `w1F2≤0` 点反例**。因此未进入 P1 内核化、三边、Targets 或 Assembly，无 Lean patch。后续需要保留相关性的 D4/槽证书或新的有限路线，不得删掉失败盒/D4 或用采样顶替。编排者复核在快照 `ORCHESTRATOR_CHECK/AUDIT.md`。
 - **首盒完整联合 Taylor 已实跑但未闭（pq §8 续1407）**：155节点DAG保留全部D4/D5/D6/SE及共同子式，目标直接为y坐标`ddf(y5,y5)=w1F2`。201条记录=196完整对象+4 domain error+1深度耗尽，200 split、0严格负cell；独立mpmath.iv重放196/196一致。编排者从零复跑并核对除时间外全部确定性字段、双41 SHA。停止来自原版`max_depth=200`和`ddmatan=±0.65`包络，只说明当前Python复刻表示/引擎/首盒UNRESOLVED，不是`w1F2≤0`或原命题反例；没有Lean候选，不扩其余15盒、不预支减债。
 - **matan''紧包络已闭首盒外候选（pq §8 续1410）**：积分表示给出matan''>0且严格递减，端点求值即得精确一元包络；20项级数+显式尾界解决零点/负支/相消，闭式与Lean `matanDD`一致。1153条记录形成577个严格负叶，pp=3×569/4×8，零未决；精确体积覆盖、577/577独立重放和3462/3462 matan检查全过，编排者从零重跑并验双72 SHA。该结果只限首盒当前Python表示，不是HOL/Lean形式证明，未扩其余15盒/全P1/Assembly，不预支减债。
 - **matan''正支引理已落库，真实叶接口仍缺（pq §8 续1417）**：`Wt1MatanDDAnti` 六定理经编排者独立重编、单模块build与6/6公理审计，恰标准三，commit `884bd80d`。选定pp=3宽余量叶`LRLRLRLRL`并导出完整合同，但整盒diff2c、6项second_bounded递归和base200右结合桥未备，故B为LEAN_NOT_READY，不生577 WIP。`cell3-wt1-second-box-w1`继续验证不同h0cut分支的可移植性。
-- **通用二阶底座与三边已发车（pq §8 续1418）**：`taylor-second-bounded-lean-w1` 分层攻diff2c、second_bounded递归和base200/右结合，单片`LRLRLRLRL`通过前不扩577；`cell3-wt1-edges-w1` zero-Lean逐边构造E00/E01/E11精确正下界与覆盖，E10只走对称。两线均不预支Lean或顶层减债。
+- **通用二阶底座与三边（pq §8 续1418/1420）**：`taylor-second-bounded-lean-w1` 继续分层攻diff2c、second_bounded递归和base200/右结合，单片`LRLRLRLRL`通过前不扩577。`cell3-wt1-edges-w1` 已验收E00/E01/E11外候选：E00由左右导数符号证全域最小在折点，下界4.514331609e−5>4.5e−5，E01/E11下界0.003877895/0.014596426；6分支10叶零未决，编排者从零重跑与65 SHA全过。修正Python dmatan小参数首项错误，另核前两盒所有接受输入均不触该分支。仅为外候选，三边Lean化/总装未做。
 - **P1 原子紧界证书闸已收线（pq §8 续1361）**：配对 Bernstein 保留商相关性，
   9 个 D-slot 硬原子及代表盒全部 24 原子 + 6 个 matan 自变量均获精确有理界；
   编排者独立重放全网格系数后，代表盒 `p0_i0j1k1` 聚合严格为负、pending=0。
@@ -1836,7 +1836,7 @@
 |---|---|---|---|
 | `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
-| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-joint-taylor-w1` 已验收 `UNRESOLVED_ORIGINAL_MAX_DEPTH`（pq 续1407）：首盒155节点完整联合对象、201记录/200 split、0严格负，第二实现196/196一致；后续`cell3-wt1-ddmatan-refine-w1`已验收首盒`EXTERNAL_CANDIDATE_READY`（pq续1410）：577叶全负且覆盖完整、第二实现577/577；仅Python外候选；后续matan''正支六定理已落库`884bd80d`（pq续1417）；真实叶仍LEAN_NOT_READY；`taylor-second-bounded-lean-w1`与`cell3-wt1-edges-w1`在飞（pq续1418），第二盒交付待验收，不预支减债 | 9.2 | §1.9 / §1.15 |
+| `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-joint-taylor-w1` 已验收 `UNRESOLVED_ORIGINAL_MAX_DEPTH`（pq 续1407）：首盒155节点完整联合对象、201记录/200 split、0严格负，第二实现196/196一致；后续`cell3-wt1-ddmatan-refine-w1`已验收首盒`EXTERNAL_CANDIDATE_READY`（pq续1410）：577叶全负且覆盖完整、第二实现577/577；仅Python外候选；后续matan''正支六定理已落库`884bd80d`（pq续1417）；真实叶仍LEAN_NOT_READY；E00/E01/E11外候选已验收（pq续1420），`taylor-second-bounded-lean-w1`在飞，第二盒交付待验收，不预支减债 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
 | `nliTskIYOUOBFsharpv2` | **BLOCKED-forensics（2026-11-20）**：三重机器证据（kernel 判 8/12 叶假 / TWOP 永不终止 / ~27% 病态子域）；波侧 32 件已落库；翻案 = replica 暗区定界或新谓词（hunk+工具留档） | 9.1 | §1.2 / §1.6 |
 | `nliTskIYOUOBFsym` | 等解冻①②；**var_lt 数据债已修复**（sym-face-math-w1 11-20，4 case 逐字节重发对齐 bank，发射前置清除） | 9.4 | §1.3 |
