@@ -329,6 +329,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-23（W4 A 系列全绿 + hgo-shape 突破 + C 口径二次裁决，续1448）**：**A 系列四点全 RC=0**（N=9/27/81/243 = 4.2/6.6/20.7/141.7 s，RSS 5.5→8.4 GB，footprint 恒 ~133 MB；每层 ×3–7 **无超线性拐点**——瓶颈是恒定的 branchval/nnL 条目 elaboration，不是 ring）。**hgo-shape 修复**（k<L 子项加 `have hgo : combo_uapp = combo_bodies := rfl` + `rw`，解 heq-ring 的 u-app-atom 阻塞）使 FamilyG1 全塔与 A 系列 RC=0、axioms 隐含标准三——此修复对仓内其它塔形有潜在复用价值（登记，不扩 scope）。sym 全尺寸外推 7–17 h 不可行（与 133 GB OOM 互证 ✓）。
+  **UNRESOLVED-3 第一个会话结算**：heq-ring 39 处失败根因定位 = C 闭包乘数 vs nnL 符号乘数不匹配；hgo-shape 已解症状；剩余 = closed 模式的 nnL/u-def 签名与全部 u-app 去除 A/B 参数化（修复路径明确、机械重构，估一会话）。
+  **编排者二次裁决：再给一轮有界会话修 C**。理由：①路径完全指定（非开放式）；②收益实测（A 系列已绿，closed 条目 → 有理常数 ⇒ 全尺寸有望分钟级，vs sym 7–17 h）；③成本有界良性（失败即按既定边界回退，无其它车道被阻塞）。**边界（同前，再次写死）**：本会话仍失败 → 「12 变量符号塔 in Lean elaboration」方法级 NO-GO（限当前表示/引擎），停在两备选交用户：(i) sym 分层链隔夜 9–13 h（Base 2h46m 已实测 + L6/L5/L43/L21），(ii) S5 闭叶数据形态（战略方向）。验证门槛不变：M81 C-vs-sym 逐项数值 diff → M243 → 全尺寸包 memlim 12 GB 且起跑前报备。SORRIED 49 / AXIOM 585 不变。下一条：续1447。
 - **2026-11-23（用户三指令执行：派两件 + 清盘 + 内存护栏，续1447）**：**用户指令：「按照你建议发」（farm 3 pilot + ZTG M3）+「清理下磁盘，没用的东西删掉」+「内存加个保护比如 virtual mem 到 30g 直接杀」。**
   ① **派 `farm-m4-pilot-w1`（新，零 Lean）**：ZTG139/Q384169/BIX945134 三债借树叶表逐叶离线实测（复用 wt1-close 的 iv_arith/wt1_audit 方法论；每债 **8 CPU·h 硬预算** 超限自记 BUDGET_EXHAUSTED）；产出逐叶 verdict / ≤2 刀修补收敛 / 括线缺口清单 / decide 义务外推（1.6 ms/条锚、注明下界估计）→ **M4 解冻裁决数据**。
   ② **ZTG M3 工单送达（resume `ztg-joint6-trio-w1`）**：六模块 ~16k 行编译过闸——严格串行 + >10 min 编译先报备 + 全部包 memlim（15 GB cap）+ 岛协议 + 续1446 ③ 三条实操坑（lake env 覆盖 LEAN_PATH / 完整 Kepler 树岛 / 折行公理解析）；源文件落库由编排者统一执行，M4/M5/M6 不在本工单。
