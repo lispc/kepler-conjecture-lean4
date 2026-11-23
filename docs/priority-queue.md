@@ -329,6 +329,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-23（四裁决+双派单，续1427）**：**用户裁决四项——①混世界「之后肯定切 canonical，现状维持」⇒ C 即刻生效（不变量已在档），A（重建 280 旧 shard，precompile 流水线实测口径约一夜）排在 W3/W4/盒扫全收线后的空闲窗口；② D1 先考古再定（已考古：**孤立单点**——全仓仅 `Reduction3HbridgeElim.lean:79` 一行 import 了无路径名 `Kepler.Text.Reduction3ElementsOfListNtrans`，非生成器批量病；建议单行修 + ERRATA + 池内 staged 件退役 + 消费链重编，~0.5 车道日，待用户点头）；③ practices P0-1/P0-2 批 ⇒ `eng-acceptance-gate-w1` 异步发车（含 P0-3 sorry census；零 Lean，patch 交付不落库）；④ ZTG trio 批 ⇒ `ztg-joint6-trio-w1` 异步发车（strategy 方向4 原文工单，本轮范围仅 W1 三债 `0_0_0_1`/`0_0_1_0`/`1_0_0_0`，验收 SORRIED 49→46）。
+  **两派单均已送达（async）。**
+- **同批仪器（e2e 可视化重跑，续1426 续）**：导出器两跑失败根因 = 手搓 LEAN_PATH 顺序/组成与 lake 不同（伞 `Mathlib.olean` 在 packages/mathlib 构建目录，存在但需 lake 口径路径解析）；用 `lake env printenv LEAN_PATH` 原样后 **export 成功：241,159 节点 / 205,626 边 / directSorryAx 源 52**。**52 ≠ 账本 49，diff 出 3 个：`nliCell3QZECFICwt0sqrt8`（8c7dfc34 已闭）、`nliCell3QZECFICwt2A`（1ec06b28 已闭）、`nliTskXLLIPLS`（e4c384e6 真证）——全部已闭仍现 sorry ⇒ 实锤池内 `Assembly.olean`/`Final.olean` 为 11-17 15:49 旧件（早于 11-18/20 三笔闭合）**。含义与勘误：续1425 的「589 亲跑复现」验证的是池 olean 状态的公理集（公理集对 sorry 位置不敏感，589 成立），但非 HEAD 精确态。处置：编排者正以 HEAD 直编重刷 Assembly+Final（Final 编译即跑根面探针），完成后预期 debt 节点 52→49、589 同集复核；**池宽 stale 扫描**（present-but-stale olean 普查）记为待办。SORRIED 49 / AXIOM 585 不变。下一条：续1428。
 - **2026-11-23（派单+仪器，续1426）**：**用户明批「W3发」——`interval-p3-c2125-w1` 车道异步发车（roadmap §3 W3 首案 `C2125338128M`）；同批编排者重跑 e2e proof-term 可视化。**
   ① W3 首案：Bernstein 单叶+桥换装，规格照抄 `cases-swap-prep-w1/PREP.md` §3（精确 min 已 Fraction 验证，不许重推），形态模板 = 已落库 P0/P1/P2/C840；发射 10–20 min + 单槽直编 11–22 GB；验收 = 新叶定理 `#print axioms` 恰标准三 + 消费方重验；单文件 wall>90 min / RSS 触 24 GB ⇒ PAUSE_COST。P0–P3 阶段制，交付 patch 不落库（编排者按 §5 流程）。
   ② e2e 可视化：池 missing=0 后重跑 `lean/scripts/export_e2e_tree.lean`（LEAN_PATH=主池，绕过 2026-11-03 失效的 `/tmp/lfainteg` 路径）→ `build_db.py` → 8790 服务；旧 8790 DB（c1 时代 129 债）为历史快照不得冒充。结果出来编排者核对节点/债数后另记。
