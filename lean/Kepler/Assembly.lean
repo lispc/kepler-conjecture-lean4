@@ -430,11 +430,13 @@ theorem nliCell3QZECFICwt0sqrt8 : bank_QZECFICwt0sqrt8 :=
 -- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
 theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry
 
-/-- 1a 5/7：HOL ineq entry `QZECFIC wt2 A`（ineq.hl:1443；PA21
-`bank_QZECFICwt2A`，盒 [√2,√2]³×[2hmin,√8]²×[2,2hmin]，`h0cut y4/y5`
-参数化双支）。证明已下沉至 `Kepler.Targets.Wt2A`（同一 `Kepler.Assembly`
-名字空间、同一陈述/证明项），使目标验收闭包从完整 Assembly 容器降到 90 件；
-此处不再重复声明。 -/
+-- 1a 5/7：HOL ineq entry `QZECFIC wt2 A`（ineq.hl:1443；PA21
+-- `bank_QZECFICwt2A`，盒 [√2,√2]³×[2hmin,√8]²×[2,2hmin]，`h0cut y4/y5`
+-- 参数化双支）。证明已下沉至 `Kepler.Targets.Wt2A`（同一 `Kepler.Assembly`
+-- 名字空间、同一陈述/证明项），使目标验收闭包从完整 Assembly 容器降到 90 件；
+-- 此处不再重复声明。（ERRATA 2026-11-23：`1ec06b28` 下沉时遗留孤儿 docstring
+-- 使 Assembly 自 11-20 起语法不可编译，被池内旧 olean 掩盖三日；改普通注释修复，
+-- 零陈述/证明变更。）
 
 
 /-! ## W2b 服务块（nli-w2b-hminus 车道 2026-10-28）：`hminus` 下界与
