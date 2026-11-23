@@ -47,15 +47,15 @@
 
 | 里程碑 | 当前状态 | 下一步 |
 |---|---|---|
-| M0 / 根面与可达图 | **sqrt8 后仓面 SORRIED 50 / AXIOM 585**（`8c7dfc34`，2026-11-20；仪器复跑池后） | 所有落库后重跑仪器；数字只在本文件头和地图维护 |
+| M0 / 根面与可达图 | **wt2A 后仓面 SORRIED 49 / AXIOM 585**（`1ec06b28`，2026-11-20；根面 589 HEAD 精确态复现于 `84c3b4b4` 后，§8 续1425/1428） | 所有落库后重跑仪器；数字只在本文件头和地图维护 |
 | M1a / Text 清债 | **完成：Text 0** | 不重开旧 Text 战役；历史矩阵见 §2.1d |
-| M1b / 接口 | hTC 0；**hNL 49 + hLP 1** | 主攻 nli 数学压缩；LP 独立处理 |
+| M1b / 接口 | hTC 0；**hNL 48 + hLP 1** | 主攻 nli 数学压缩；LP 独立处理 |
 | M2 / 信任基座 | 585 定格；manifest 数据源/生成器钉定已完成 | 抽样 replay、Docker 一键复现与最终公理断言，重算窗口另批 |
-| M3 / 北极限 | **50 = 49 `nli*` + 1 hLP**（sqrt8 已闭） | 先数学归约与复用，再证剩余计算核心；不以生成行数作为进展 |
+| M3 / 北极限 | **49 = 48 `nli*` + 1 hLP**（sqrt8、wt2A 已闭） | 先数学归约与复用，再证剩余计算核心；不以生成行数作为进展 |
 
 ### 0.1 剩余债务边界
 
-- **hNL**：50 条。逐条路线和已证负结果以 [`nli-campaign.md`](nli-campaign.md) 为准；
+- **hNL**：48 条。逐条路线和已证负结果以 [`nli-campaign.md`](nli-campaign.md) 为准；
   当前新侦察集中在二阶代数凹性、同盒联合包络、Bernstein 后端。
 - **hLP**：`lpArchiveCertificatesDebt`，待证 42,889 条 bound 叶（189 infeasible 已闭）。
   **现有 bound 叶已经使用 `Y/D` 对偶向量 + `checkDualCMTF` 弱对偶检查 + `by decide`**；
@@ -66,7 +66,7 @@
 
 ## 1. 在飞
 
-**在飞：`cell3-wt1-box-sweep-w1`（零 Lean 扫 wt1 余 14 盒，5 进程并行，首盒 p1_i1j0k0 验收中，§8 续1422a）+ `interval-bernstein-univ-w1`（W4，Phase 2a-2b，§8 续1424）+ `ztg-joint6-trio-w1`（W1 三债 49→46；P1 的 M2 对称/转移模块过闸 18/18 标准三，角点 439→199，进 M3，§8 续1427/1430）。** 下一阶段规划：[`strategy/nli-next-phase-20261123b.md`](../strategy/nli-next-phase-20261123b.md)（共享机件层 + 分层收口，§8 续1430）。待批挂账：`nlikit-boxtree-spec-w1` / `nlikit-reduce-survey-w1`（零 Lean，立即可派）、W3 剩 4 族、T11Glue/AxiomAudit 全文件补池（非锥池缺口 ~600+）、池内容级 stale 普查、混世界 A 空闲窗口、农场 3 条有界 pilot（M4 证据包）。最近收线：`eng-acceptance-gate-w1` **落库`93d0f1f9`（P0-1/2/3 工程闸 + census；§8 续1430）** + `interval-p3-c2125-w1` **落库`ce1b9c87`（W3 首案 −82.9% 行数，恰标准三；§8 续1428）** + `olean-recovery-2w-w1` **完成（missing 0；根面 589 于 `84c3b4b4` 后为 HEAD 精确态；§8 续1425/1428）** + `lean4-large-project-practices-w1` **交付验收 PASS（§8 续1423）** + `taylor-second-bounded-lean-w1` **底座落库`13dee7c8` + LEAF_NOT_READY（§8 续1422）** + `cell3-wt1-second-box-w1` **EXTERNAL_CANDIDATE_READY（m4=0、2192叶，编排者独立重跑，§8 续1421）** + `cell3-wt1-edges-w1` **E00/E01/E11 EXTERNAL_CANDIDATE_READY（编排者从零重跑，§8 续1420）** + `cell3-wt1-matanDD-lean-w1` **A PASS落库`884bd80d` + B LEAN_NOT_READY（§8 续1417）** + `qitnpea1-shared-floor-w1` **UNRESOLVED（共享面有正面证据但无完整覆盖，编排者REPLAY全过，§8 续1411）** + `cell3-wt1-ddmatan-refine-w1` **EXTERNAL_CANDIDATE_READY（首盒577叶，编排者独立重跑，§8 续1410）** + `cell3-wt1-joint-taylor-w1` **UNRESOLVED_ORIGINAL_MAX_DEPTH（编排者独立重跑，§8 续1407）** + `fat1-terminal-export-w1` **TERMINAL_DIAGNOSTICS_COMPLETE／PARTIAL（编排者已验收，§8 续1406）** + `c2-outer58-lean-prep-w1` **PASS_LEAN_NOT_READY（§8 续1405）** + `ox3q1h-c2-hol-faithful-w1` **HOL_OUTER58_CLOSED_LEAN_WINDOW_PENDING（§8 续1402）** + `hol-taylor-theorem-map-w1` **SOURCE_COMPLETE／REPLAY_NOT_RUN（§8 续1401）** + `cell3-wt1-hol-arch-w1` **SOURCE_ARCHAEOLOGY_COMPLETE（直接w1F2证书仍UNRESOLVED，§8 续1400）** + `ox3q1h-c2-joint-taylor-w1` **UNRESOLVED（parser 运行时阻塞，无证书，§8 续1395）** + `precompile-prod-all-w1` **PASS（Quad/Pent/Hex 580/580，7.184 h，192 件基线聚合 13.889×；§8 续1409）** + `chainidx2-hol-path-w1` **NO-GO（原版无可直接转移的 y4 凹性结构，§8 续1391）** + `ox3q1h-s2ba-vertex-w1`（**PAUSED／暂不采用**，§8 续1384）+ `chainidx2-y4-sign-cert-w1`（**BUDGET_EXHAUSTED，不得据此判路线失败**，§8 续1397）+ `ox3q1h-s2a-build-w1` 已收线 BLOCKED at `chain_idx2`（共享 kit `2b521ae0`，S2a 0/1,159，§8 续1380）+ IXPOTPA 证前闸已收线 NUMERICAL_ONLY（γ23-y2 单调辅助命题精确反例，§8 续1351）+ fat1 红旗解剖已收线 UNRESOLVED（§8 续1364）+ K1 d2 混合偏导剪枝 pilot 已收线 **NO-GO**（§8 续1358）+ G4 四债凹性-only 车道已收线 **UNRESOLVED**（§8 续1362）+ **wt1 全盒收尾已收线 BLOCKED at Gate 1**（§8 续1371）+ joint-6 二阶符号双片 pilot 已收线 UNRESOLVED（§8 续1345）+ ZTG 解耦4 条件资产已落库 `3e12214e`、每债 hstep=0/9。
+**在飞：`cell3-wt1-box-sweep-w1`（零 Lean 扫 wt1 余 14 盒，5 进程并行，首盒 p1_i1j0k0 验收中；协议修订=verify 豁免 pressure=2 杀 + checkpoint 强制，§8 续1437）+ `hol-tree-harvest-w1`（P0 已收核 PASS：27 农场债全 REUSE 共 4,254 叶；P1 三试点深翻中，§8 续1436）+ `interval-bernstein-univ-w1`（W4，Phase 2a-2b，§8 续1424）+ `ztg-joint6-trio-w1`（W1 三债 49→46；P1 的 M2 对称/转移模块过闸 18/18 标准三，角点 439→199，进 M3，§8 续1427/1430）。** 下一阶段规划：[`strategy/nli-next-phase-20261123b.md`](../strategy/nli-next-phase-20261123b.md)（共享机件层 + 分层收口，§8 续1430）。待批挂账：W3 剩 4 族、T11Glue/AxiomAudit 全文件补池（非锥池缺口 ~600+）、池内容级 stale 普查、混世界 A 空闲窗口、农场 3 条有界 pilot（M4 证据包）。最近收线：`eng-acceptance-gate-w1` **落库`93d0f1f9`（P0-1/2/3 工程闸 + census；§8 续1430）** + `interval-p3-c2125-w1` **落库`ce1b9c87`（W3 首案 −82.9% 行数，恰标准三；§8 续1428）** + `olean-recovery-2w-w1` **完成（missing 0；根面 589 于 `84c3b4b4` 后为 HEAD 精确态；§8 续1425/1428）** + `lean4-large-project-practices-w1` **交付验收 PASS（§8 续1423）** + `taylor-second-bounded-lean-w1` **底座落库`13dee7c8` + LEAF_NOT_READY（§8 续1422）** + `cell3-wt1-second-box-w1` **EXTERNAL_CANDIDATE_READY（m4=0、2192叶，编排者独立重跑，§8 续1421）** + `cell3-wt1-edges-w1` **E00/E01/E11 EXTERNAL_CANDIDATE_READY（编排者从零重跑，§8 续1420）** + `cell3-wt1-matanDD-lean-w1` **A PASS落库`884bd80d` + B LEAN_NOT_READY（§8 续1417）** + `qitnpea1-shared-floor-w1` **UNRESOLVED（共享面有正面证据但无完整覆盖，编排者REPLAY全过，§8 续1411）** + `cell3-wt1-ddmatan-refine-w1` **EXTERNAL_CANDIDATE_READY（首盒577叶，编排者独立重跑，§8 续1410）** + `cell3-wt1-joint-taylor-w1` **UNRESOLVED_ORIGINAL_MAX_DEPTH（编排者独立重跑，§8 续1407）** + `fat1-terminal-export-w1` **TERMINAL_DIAGNOSTICS_COMPLETE／PARTIAL（编排者已验收，§8 续1406）** + `c2-outer58-lean-prep-w1` **PASS_LEAN_NOT_READY（§8 续1405）** + `ox3q1h-c2-hol-faithful-w1` **HOL_OUTER58_CLOSED_LEAN_WINDOW_PENDING（§8 续1402）** + `hol-taylor-theorem-map-w1` **SOURCE_COMPLETE／REPLAY_NOT_RUN（§8 续1401）** + `cell3-wt1-hol-arch-w1` **SOURCE_ARCHAEOLOGY_COMPLETE（直接w1F2证书仍UNRESOLVED，§8 续1400）** + `ox3q1h-c2-joint-taylor-w1` **UNRESOLVED（parser 运行时阻塞，无证书，§8 续1395）** + `precompile-prod-all-w1` **PASS（Quad/Pent/Hex 580/580，7.184 h，192 件基线聚合 13.889×；§8 续1409）** + `chainidx2-hol-path-w1` **NO-GO（原版无可直接转移的 y4 凹性结构，§8 续1391）** + `ox3q1h-s2ba-vertex-w1`（**PAUSED／暂不采用**，§8 续1384）+ `chainidx2-y4-sign-cert-w1`（**BUDGET_EXHAUSTED，不得据此判路线失败**，§8 续1397）+ `ox3q1h-s2a-build-w1` 已收线 BLOCKED at `chain_idx2`（共享 kit `2b521ae0`，S2a 0/1,159，§8 续1380）+ IXPOTPA 证前闸已收线 NUMERICAL_ONLY（γ23-y2 单调辅助命题精确反例，§8 续1351）+ fat1 红旗解剖已收线 UNRESOLVED（§8 续1364）+ K1 d2 混合偏导剪枝 pilot 已收线 **NO-GO**（§8 续1358）+ G4 四债凹性-only 车道已收线 **UNRESOLVED**（§8 续1362）+ **wt1 全盒收尾已收线 BLOCKED at Gate 1**（§8 续1371）+ joint-6 二阶符号双片 pilot 已收线 UNRESOLVED（§8 续1345）+ ZTG 解耦4 条件资产已落库 `3e12214e`、每债 hstep=0/9。
 证明车道施工期间主仓 tracked 零改动；wt2A 六模块与验收下沉均已 commit（`d733f61d` / `1ec06b28`），完整 Assembly/根面复跑待池；编译走 3 槽信号量 + guard 护栏（≤3 lean ∧ ≤24 GB ∧ pressure<2）。车道快照在 `~/c17_backup/lane_snapshots/<lane>/`。
 
 | 车道 | 回执 | 唯一目标与止损 |
@@ -329,11 +329,24 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-23（盒扫协议裁定修订，续1437）**：**盒扫第二次 verify 被杀（pressure=2 持续 >10 min；verify 无 checkpoint，两跑共损 ~3h CPU）→ 车道请求裁定，编排者裁 A+B 并亲测压力与进程。**
+  ① 实测：pressure=2 时 lean 仅 2 进程（ZTG trio 编译 4.7 GB + W4 FamilyG2Base 直编 8.9 GB = 13.6 GB，cap ≤3 lean ∧ ≤24 GB 内合法）——压力源是这两条在飞 lean，不是 verify（0.4–1.7 GB）；杀 verify 对 pressure 无实质帮助。
+  ② **A（即刻生效）**：RSS <2 GB 的 verify 豁免 pressure=2 杀；仅 pressure ≥3 持续 5 min 才杀、且先杀最大 RSS 进程；pressure 4 立即全杀。原「pressure=2 持续 10 min 杀 verify」条款废止。
+  ③ **A 配套**：pressure ≥2 期间暂停派**新** search worker（在跑 4 个继续）；在跑 verify 不受影响。
+  ④ **B（强制）**：下次启动 verify 前实现 checkpoint 验证器（逐 chunk JSONL 追加落盘 + 续跑跳过已完成；验证逻辑不得改动）——ZTG/W4 编译还会持续数小时，pressure=2 窗口必然重现。
+  ⑤ 已送达车道（含「ZTG/W4 两个 lean 进程合法、不得为其让位杀 verify」）。首盒完成后仍按约定编排者抽盒独立复核。SORRIED 49 / AXIOM 585 不变。下一条：续1436。
+- **2026-11-23（harvest P0 收核 PASS，续1436）**：**`hol-tree-harvest-w1` P0 家族映射表验收 PASS（编排者独立复核）——27 条农场债全部 REUSE（盒全等），借树可行性一次看清。**
+  ① 解析器 23,237/23,237 全成功（ineqs.txt SHA 逐字比对一致；index 23,237 叶 / instances 807 / families 208 三计数全对上）。
+  ② 映射记账闭合：inventory 49 债 = **44 映射**（42 REUSE + 2 例外均解释：QZECFICwt0 系 sqrt8 兄弟支并入致并集 dim4 假差异、逐 id 仍盒全等；IYOUOBFsharpv2 HOL 农场只有 sym 实例，sharp 实例级 MISSING → 回退自搜或 sym 树粗初始化）+ **5 非单树目标**（Ox3q1h / TerminalV11 / LpIneqs / KcblrqcIneqDef / lpArchive）零命中正确；49=44+5 无一悬空。
+  ③ 机器重算与车道逐位相等：tier3_farm **27 债 4,254 叶全 REUSE**；44 债合计 **5,107 叶**（ZTG 10 件 440 叶手工加总吻合）；ineq.hl 锚抽查 5 处全中（985=BIXPCGW 9455898160 / 1121=QITNPEA 5400790175 b / 456=template_F4 / 827=mk_QITNPEA1 / 242=sharp v2）；hminus 1.23175442209030439… 与 `NliBanks7.hminus_ge_123175`（1.23175 ≤ hminus）一致。
+  ④ **P1 三试点绿灯**（派单已授权）：`ZTGIJCF4_0_0_0_0`（139 叶最深 13）+ `QITNPEA3848804089`（169）+ `BIXPCGW9455898160`（134）；x→我方编码 SF 逐案审计 + 冒烟角对账；零 Lean 红线不变。
+  ⑤ 数据卫生项（不碍判定）：`debt_instance_map.tsv` 给 GLFVCVK4 五债各挂全族 id（每条显示 846 叶）；以主表窄口径（846/46/67/9/79）为准，P1 时改窄或注明 family-scope。
+  含义：27 农场债**全部可借树**（借树不借信任——叶级验证仍走我方编码 kernel decide，M4 pilot 按「借树+修补+ℤ重放」实测即可出可裁决成本）。快照 `hol-tree-harvest-w1/`（HARVEST.md + data 7 件 + scripts 6 件）。SORRIED 49 / AXIOM 585 不变。下一条：续1435。
 - **2026-11-23（派单，续1435）**：**用户批 `hol-tree-harvest-w1` 发车（农场架构 §4.4 的搜索侧）——异步已送达。**
   ① 任务：解析 `azure/ineqs.txt`（23,237 实例，bisect 嵌套树）→ 我方 48 债家族映射表（P0，REUSE/ADAPTER/MISSING 逐家判定）→ 3 条 M4 试点深翻（建议 ZTGIJCF4/QITNPEA/BIXPCGW 各一：x→我方编码 SF 逐案映射审计 + 冒烟角数值对账）→ SPEC 契约格式候选叶表（永久 CANDIDATE 标记）。
   ② 输入锚点：`ineq.hl`（4,011 行语义）、fat1 解析先例（case 2028）、S5 外来树契约、wt1 HOL 9 支（ineqs.txt:15866）。
   ③ 纪律：零 Lean、`reference/` 只读、映射不干净标 MISSING 回退自搜不硬凑、候选表永不表述为证明。SORRIED 49 / AXIOM 585 不变。下一条：续1436。
-- **2026-11-23（S5 收线 + wt1-close 规格改写，续1434）**- **2026-11-23（S5 收线 + wt1-close 规格改写，续1434）**：**`nlikit-boxtree-spec-w1` 收线（SPEC/REGRESSION/WT1_REESTIMATE 三份，快照 SHA 全 OK，编排者抽验 cell30 零引用/行数/cover_sound 均命中）。**
+- **2026-11-23（S5 收线 + wt1-close 规格改写，续1434）**：**`nlikit-boxtree-spec-w1` 收线（SPEC/REGRESSION/WT1_REESTIMATE 三份，快照 SHA 全 OK，编排者抽验 cell30 零引用/行数/cover_sound 均命中）。**
   ① **wt1-close 原「单 lean 单模块」规格判死**：16 盒叶表 EST 30k–470k 叶 × 17–29 行/叶 = 0.5M–13.6M 行（比仓内最大生成债大 1.5–2 个数量级）。**替代 = 分量装配**：P0 模式闸（毫秒重放实测，硬前置）→ 577 叶盒 E2E 试点 → 逐盒落库；−1 只在 16/16 领取。RSS 按分片文件成立（1.6–6 GB）；工期 S1 场景 0.8–2.6 车道日成立、S2 超 1.5–3× ⇒ 分量记账不硬凑。
   ② **验证成本崩塌**：按 W4 ℤ-decide 口径（1.65 ms/条锚），全 16 盒验证 CPU ≤ **2.1 CPU-h**（S2 上界）——Rule P 27–31 s/叶口径退役为保守界；瓶颈转移至盒扫收线 + 分片排产。
   ③ **SPEC**：统一 `Cover` 归纳类型 + glue `cover_sound`（`hsound` 开接口，wt2A/sqrt8 符号叶与 wt1 decide 叶同挂）；端点 IFloat200（Base200:8-20 逐名对应）；叶 = 纯数据行 + `leafCheck_sound` 一次证明，全 ℤ 域折叠；与 LeafContract DIFFERS 已写明（证明载体→数据行）。回归判定：wt2A/sqrt8 树层**完全同构**（切点 IFloat200 可译、叶常数逐字对表）；glue 只替代分派层 ~500 行/债，语义归约桥保留。
