@@ -76,7 +76,11 @@
   └────────────────────────────────────────────────────────────────
 -/
 
-import Kepler.Text.Reduction3ElementsOfListNtrans
+import Kepler.Text.TameSpine.Reduction3ElementsOfListNtrans
+-- ERRATA 2026-11-23（用户批，D1）：原 import `Kepler.Text.Reduction3ElementsOfListNtrans`
+-- 指向无源码路径（源在 `Text/TameSpine/` 下），历来仅靠手工放置的幻影 olean 解析；
+-- 恢复链（olean-recovery-2w-w1）据此 staged 编译过幻影件。本行修正为真实路径，
+-- 幻影 olean 已退役；零陈述/证明变更。
 import Kepler.Text.TameSpine.TameList35
 import Kepler.Text.TameSpine.TameList5
 import Kepler.Text.TameSpine.TameList72
