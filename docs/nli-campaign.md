@@ -562,6 +562,9 @@
   无 DELIVERY/patch，主仓未落库；本次 timeout 不判路线不可行。
 - **数值路线仍有信息**：Δ<0 cell 可对核义务 vacuous；y6 全高矩形损失过大，必须分层。
   但最终为 62 cell（9 vacuous、53 实 cell），远超原 12-cell 目标，说明低成本估计未成立。
+  **ERRATA 2026-11-23（续1434，S5/S6 两车道独立实测）**：HEAD 实存 **61 编号 cell**——设计 62 中
+  `cell30` 全仓零引用从未发射；另六模块行数落库时纯新增 10,027（commit 口径，无错），当前文件总量
+  ~11.3k（后续深化 lane 增行），两口径并存引用时注意区分。
 - **机器层未通过**：886 行 `NliBanks20.lean` 的日志 RC=1，仍有 rewrite/defeq/导数/
   单调性/lfun 错误；master、三维核、bank 消费与 Assembly patch 均未完成。不得把
   62-cell 数值下界或生成数据写成 Lean 证书。
