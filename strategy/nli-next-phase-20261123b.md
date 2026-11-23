@@ -110,7 +110,29 @@ Bernstein 在原版只是外部基准例题——**"忠实复刻 HOL"在数值�
 | **M1** | 工程闸 + census + 池清理 | `eng-acceptance-gate-w1` 落库；`sorry_census --check` 过；D1/E1 两个 ERRATA 入 `DECISIONS.md` | 本周——**已达成**（`93d0f1f9`，pq 续1430） |
 | **M2** | 机件层三包骨架 | `NliKit.BoxTree` glue 定理 + wt2A/sqrt8 回归一致；`NliKit.Reduce` 三原语 + ZTG trio 首用；`NliKit.Cert` 形态定义 | 1–2 周 |
 | **M3** | 49 → 38±3 | wt1 −1、ZTG trio −3、QITNPEA floor −3、sym×3 −3（EST）；每条根面 589→递减且无意外公理 | 2–3 周 |
-| **M4** | 农场解冻**证据包**（不请求现在解冻） | 用 P-A 统一发射器对 3 条代表性农场债做有界 pilot，给出"每条债的真实 CPU·h + 机件复用率" | 与 M3 并行 |
+| **M4** | 农场解冻**证据包**（不请求现在解冻） | 用 P-A 统一发射器对 3 条代表性农场债做有界 pilot，给出"每条债的真实 CPU·h + 机件复用率" | 与 M3 并行——**架构已定（§4.4），pilot 按"借树+修补+ℤ重放"实测** |
+
+### 4.4 农场架构裁定（2026-11-23 用户拍板）：离线搜索 + 便宜重放，搜索结果直接借 HOL 的
+
+原版考古（`reference/flyspeck/azure/`）证实：原版农场 = **GNU parallel 120 路并发**批量重放
+**23,237 个实例**（`ineqs.txt`，逐例带离线调好的 bisect 树），单例验证均值 **~1.0 s**（639 例记账，
+`formal_tests/ineq_ids.hl`），验收 = **23,242 条 md5 定理哈希对表**（`theorem_nonlinear_digest.hl`）。
+核心架构 = **搜索（离线，不进证明账单）/ 验证（重放已给树）分离**。
+
+我们的对应物与差距：
+
+| 环节 | 原版 | 我们现状 | 动作 |
+|---|---|---|---|
+| 搜索 | `ineqs.txt` 离线调树 | 盒扫 JSON（wt1 已在产）+ **可直接借 HOL 树**（农场债名 = HOL 家族名：ZTGIJCF4×142、QITNPEA×163、BIXPCGW×67；其余需 prep-/变体映射） | 新车道（待批）：HOL 树收割/翻译（解析 + x→我方编码 SF 逐案映射 + 冒烟角对账） |
+| 验证重放 | 原生 OCaml float 区间，~1 s/例 | Rule P 27–31 s/叶（旧）；**W4 ℤ-decide 1.6 ms/条（新，`interval-bernstein-univ-w1` 实测）** | 叶级验证一律走 ℤ-decide 口径；Rule P 只留窄盒特例 |
+| 验收 | md5 digest 23,242 条对表 | manifest + `#print axioms`（同构更严） | 不变 |
+
+**信任边界**：借树不借信任——外来树只是候选（搜索不在证明账单里），验证独立（kernel decide on
+our encodings）；最坏情形 = 叶太粗 → 离线修补或拒绝；零新增公理、零信任面变化。
+**含义**：27 农场债的 21,156 CPU·h 旧估是按"贵重放"算的，按本架构重估可能降 1–2 个量级；
+M4 的 3 条 pilot 必须按"借树+修补+ℤ重放"实测，产出可裁决的真实数字。
+**已执行**：S5（`nlikit-boxtree-spec-w1`）规格增补——外来树摄入列为一等输入模式、
+WT1_REESTIMATE 加"借树 vs 自搜"对照、验证口径换 ℤ-decide（续1433）。
 
 M3 的 38±3 是 EST：ZTG trio 之后的 W2–W4 三债、qitnpea floor 的共享面覆盖（现 UNRESOLVED）、
 sym×3 的 Rule P 管线成本都未实测，任一失败都会让数字回落到 42–45。
