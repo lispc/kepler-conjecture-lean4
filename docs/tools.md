@@ -223,6 +223,8 @@ C（保留混合池 + 不变量）待裁决；证据与复现见
 `~/c17_backup/lane_snapshots/olean-recovery-2w-w1/SHARD_WORLD_BLOCKER.md`。
 下一个里程碑 = missing 0 + 根面 harness。
 
+**2026-11-23 13:53 补充（恢复收线 + 根面复现，续1425）**：`olean-recovery-2w-w1` 完成：closure 8,868 / missing **0**（Final 闭包 8,869 全齐；本轮新装 1,033，详见 pq §8 续1425）。**编排者亲跑** `run_acceptance_replay.sh --pool <主池>`：589 = 585 native + 标准三 + `sorryAx`，585/585 在册、UNEXPECTED 仅 `sorryAx`（harness FAIL 只由 49 条锥内 sorry 债触发，预期态）——根面自基线 AQ `e4c384e6` 后首次可复现。根面验收从此按本文 §4 口径随时可跑；混世界 A/C 与 D1 缺陷处置仍待裁决（见 pq 续1425）。
+
 ## 8. 检索、补丁和哈希工具
 
 ### 8.1 快速检索
