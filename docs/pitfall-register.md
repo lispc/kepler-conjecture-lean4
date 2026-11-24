@@ -355,6 +355,20 @@ sync_snapshot()）；② **快照验证必须文件级（数量 + 字节 + SHA/m
 
 ## E. 数学认知陷阱
 
+**PR-58 `Set (Fin n → ℝ)` 域构造与假设传递五则**（2026-11-24
+`wt1c2-opendomain-fix-w1` 实证，DELIVERY §4）：① `∩` 在 `Set (Fin 3 → ℝ)`
+上有 `Pi.instInter`/`Set.inter` 实例歧义——unfold/show/rfl 会静默失配；成员
+拆装走纯 defeq（rcases/匿名构造子），显式 `Set.inter` 又会使
+`simp only [Set.mem_inter_iff]` 失配（引理项走 instInter 路径）；② 本版
+Mathlib `mem_inter_iff` 是显式 binder `(x a b)`，须全参应用；③ `mul_le_mul`
+第 4 参是 `0 ≤ b`（上界左元）；④ `positivity` 不认 `x 0` 这类投影应用——
+正性条件先 `have` 出数值引理再喂；⑤ linarith 数字界必须与各单项系数方向
+**配对齐全**（Δ 分解式 X² 系数为负须配上界——失败多为漏配上界，非原子问题）。
+另附编排者侧同日教训（续1480）：**落库后验收下游文件必须带 `-o` 装池或对齐
+LEAN_PATH**——不带 `-o` 的裸编译过的是源码自检，下游仍对池内旧接口 olean
+编译，error-recovery 会插 `sorryAx` 造出「假污染」读数（先查池 olean mtime
+是否 ≥ 本轮源 commit）。
+
 **PR-19 `Coplanar` 两个读法不许混用**（stepB W3b）：Mathlib `Coplanar ℝ`
 （秩 ≤2）与 `Kepler.Geom.Coplanar`（存在形 `∃ a b c, … ∧ u = a•v+b•w+c•x`）
 不是同一谓词，互转需桥接件；同文件内统一一种，跨读法显式加桥。

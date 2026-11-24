@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（DEF-FIX `wt1c2-opendomain` 落库 `a8dbd405`——编排者三件套亲验全过，续1480）**：**`wt1c2-opendomain-fix-w1` 完工收线（快照 SHA 16/16、patch apply-check PASS、删除面仅 Wt1C2 −9、LeafContract 纯新增 +319、Wt1Tower\* 零改动）。**
+  ① **落库内容**：`Wt1C2Data.box` 六数字界 → 三正性（additive 变体 `w1aF_eq_w1FexOpen3_of_pos`；两消费证明直调 `Wt1TowerDeriv` 裸版，15 假设全取 data 字段）；LeafContract 新增 `leafU` 显式有理开盒（触面仅 x0 −1/10⁶、x1 −1/10⁹，上沿全留数字界内）+ 12 条件小引理 + `leafU_c2data`/`selectedBox_subset_leafU`/`leafU_nonempty`——**冻结常量与 gated 定理逐字节零改动**；12/12 条件无一触发止损（Δ 滑差盒 ≥2.84、各括号 ≥2.72 严格正）。
+  ② **编排者亲验**：主池装新 olean 后双文件 RC=0/error=0；**8 定理 `#print axioms` 恰标准三零 sorryAx**（四 Wt1C2 + 四 LeafContract）；**根面 589 复验同集**（585 unique native + 标准三 + sorryAx）。
+  ③ **编排者操作教训（入坑册 PR-58 附注）**：第一遍验证不带 `-o` → LeafContract 对池内旧接口 olean 编译出 RC=1 + error-recovery `sorryAx` 假污染读数；坐实池 olean mtime 后带 `-o` 装池重编即全绿——落库验收必须源-olean 对齐。
+  ④ **缺陷 #9 就此解除**：`SelectedLeafEvidence` 不可居住性已构造性反证（`leafU_nonempty`）；贴面叶（~93%）证书构造路径打通。工程情报五则入坑册 PR-58（∩ 实例歧义/mem_inter_iff binder/mul_le_mul 第4参/positivity 投影/linarith 配对）。
+  ⑤ **通知 `wt1-leaf-chain-w1`**：phase 2 按 post-fix 签名写，模板 = `leafU_c2data`；主池 TaylorSecond olean 已刷新。SORRIED 49 / AXIOM 585 不变。下一条：续1479。
 - **2026-11-24（`wt1-taylor-leaf-w1` 收线 BUDGET_EXHAUSTED + 探针落库 `226e0b87` + 派续作车道，续1479）**：**编排者验收（SHA 37/37、patch apply-check PASS、探针三件套亲验 RC=0/error=0/`m12_eq` 恰标准三）后 Probe1.lean 落库；BUDGET_EXHAUSTED = agent 预算耗尽（§7.2），非数学 NO-GO。**
   ① **三数现状（Phase B 成本模型输入）**：import 基线（LeafContract+Gamma4Val+NliQitnpea12ArctanSeries）**162.5 s / 5.59 GB** 首编、热复编 7–16.5 s；完整单叶定理链编译三数未取得（链未完成，续作车道任务）。
   ② **tactic 范式四条（探针实证，生成器设计约束）**：小 ℚ interval 树 `norm_num`+`rfl` 可闭；~20 op 深树一击 `norm_num` 卡死（typeclass stuck）；`decide` 不能 delta-展开普通 def；⇒ **生成器必须逐节点发射等式引理**（Probe1 注释在库）。
