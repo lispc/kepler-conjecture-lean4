@@ -329,6 +329,14 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（`wt1-taylor-leaf-w1` 收线 BUDGET_EXHAUSTED + 探针落库 `226e0b87` + 派续作车道，续1479）**：**编排者验收（SHA 37/37、patch apply-check PASS、探针三件套亲验 RC=0/error=0/`m12_eq` 恰标准三）后 Probe1.lean 落库；BUDGET_EXHAUSTED = agent 预算耗尽（§7.2），非数学 NO-GO。**
+  ① **三数现状（Phase B 成本模型输入）**：import 基线（LeafContract+Gamma4Val+NliQitnpea12ArctanSeries）**162.5 s / 5.59 GB** 首编、热复编 7–16.5 s；完整单叶定理链编译三数未取得（链未完成，续作车道任务）。
+  ② **tactic 范式四条（探针实证，生成器设计约束）**：小 ℚ interval 树 `norm_num`+`rfl` 可闭；~20 op 深树一击 `norm_num` 卡死（typeclass stuck）；`decide` 不能 delta-展开普通 def；⇒ **生成器必须逐节点发射等式引理**（Probe1 注释在库）。
+  ③ **实质发现：组合子传播 D11 不过零是结构性的**——`Bounds.lean` interval jet 全盒传播 dependence-loss（最松 +5.29，antitone 相干修正后仍 +0.0068）；**可行路线 = 塔式显式 `w1F2` 公式扁平区间求值 + 2³ 子盒 hull**（= 原版 taylor_bound 形态）——Phase B 的 Lean 链按此形态建。
+  ④ **D11 数值打通**：15874/LLLLRLRLR（pre-fix 可居住）**[−0.07788, −0.02340]** ✓；最薄 margin 片（0.0154，post-fix 可居住）[−0.08521, −0.01542]；**20/117 终端 post-fix 可居住且 D11<0**（`interior_ranking.json`）；114/117 Δ>0。镜像 3 处转录 bug 修正（d4AD 12y5³ / g-slot u′×A / t-slot v″ 64→128）后数值微分逐点验证。
+  ⑤ **附录 A/B（修复章程供料已交）**：4 片 pre-fix 内叶精确余量（y4 全为 8.844e-06 域界间隙）+ 显式 U 盒；m4=1 贴面率 ~93% 确认；m4=0 区脚本就绪未跑（预算）。
+  ⑥ **派 `wt1-leaf-chain-w1`（fresh session 接 CHECKPOINT）**：内叶 15874/LLLLRLRLR 端到端定理链（LeafKit + gen_leaf.py 逐节点等式引理 + 2³ 子盒 D11 链 + c2data 桥装配）→ 目标无条件定理 `∀ x∈leafBox, w1F2 … ≤ D11hi ∧ D11hi<0`；phase 2（c2data）开工前报编排者对 pre/post-fix 签名；交付含完整链三数。
+  ⑦ SORRIED 49 / AXIOM 585 不变。下一条：续1478。
 - **2026-11-24（taylor-leaf 请槽核查 → P-A 双 lean 违纪纠正，曲线流A保住，续1478）**：
   ① **核查（编排者亲查进程树）**：全机 3 lean = P-A 车道**超占 2 个**（BoxTreeWt2AS3 + BoxTreeSqrt8S1 重编并行，双 shell 双 memlim 均在 `nlikit-pa` 名下，cap 被自行 20→26GB）+ 曲线流A S53 + 修复车道未起编。
   ② **裁决：不停第二路曲线**（taylor-leaf 按预批请槽，但正解是纠正超占非停曲线）——P-A 双开违反「每车道 ≤1 lean」硬纪律：在跑两个放完不杀，此后严格串行；cap 定 20GB 不许再动；起编前自查 lean 总数 ≤2。taylor-leaf 获通知：P-A 多余编译放完即有槽（自查 `pgrep -x lean` ≤2 起编，pressure<2 前置）。
