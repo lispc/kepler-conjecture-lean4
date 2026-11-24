@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（1 箱 Taylor 标定探针派出；w1aF 全表扫描 400/597；Route E 339/403，续1515）**：
+  ① **已派 `wt1-taylor-probe-w1`**（fresh，Lean ≤1，派单回执已收）：1 个 pass 箱 `15868/LLRLR`（最薄，L2 = +1.033e−3）端到端 Taylor 证书——`WholeBoxJet w1F3` → `MTaylorInterval` → 新写 `taylor3_upper`（3 变量单侧二阶，Mathlib 一维 Taylor 沿线段 `g(t)=f(c+t·h)`）→ `∀x∈box, 0 < w1F3 x`；两条编码（证明项 jet / `ZPlan` 反射）选实测更省 olean 的一条。
+  ② **探针的唯一目的 = 钉死 D4/D5 下界**（基线卡：HOL 0 B/pass、证明时重算；我方物化 ⇒ D4 `STRUCTURAL-DIFF`、下界 `UNRESOLVED`；D5 Lean 侧初筛 2.7–5.0×）。必测：olean 分项（定义 / value+first / 6 Hessian / 终端 / 证明项，至少 4 档前缀差分）、墙钟、峰值 RSS、`#print axioms` 恰标准三；产出 `PARITY_CARD_PROBE.md`（五类判词）。
+  ③ **扫描**：w1aF 全 597 箱 L2 已到 **400/597**（≈0.97 s/箱，4 Python workers，零 Lean）；结果出来即判主线——全闭则锁定 `w1aF`，有失败箱则先给细分增量，不硬推。
+  ④ **卡点纪律**：探针若 3 轮结构性卡死或单件 >450 行，交付部分证书 + 已测字节 + 卡点，不硬凑；产物必须可复跑。
+  ⑤ Route E **339/403**（剩 64）。SORRIED 49 / AXIOM 585 不变。下一条：续1514。
 - **2026-11-25（HOL 基线车收线：每 pass 0 数值、证明时重算；六维卡 STRUCTURAL-DIFF，1 箱标定探针为放行前置，续1514）**：
   ① **`holparity-baseline-w1` 收线**：两路官方日志复核 HOL = **619 pass + 610 glue**（`azure/results/output/trig/out/out.txt:168-386`、`azure/results/urban/out/1/15850/2/15899/stdout:1134-1376`；9 条定理 hash 在 `text_formalization/general/theorem_nonlinear_digest.hl:23240-23248`）；`out.txt:134-151` 有 3 个库加载自检块（20/27/1），是 grep 陷阱（与审计的 873/860 对账一致）。HOL 9 cell = **1,543.027 s + 加载 591.974 s**。我方 597/588 出处 `wt1-gap-attrib-w1/logs/w1_base_x.log:10`，是**原版终端检验树的叶/内节点**，hP1 只是同盒换谓词。
   ② **结构性事实（新登记 SD-2）**：HOL 每个 pass **只存 `Result_pass(int,bool)` + `pp`**（`verifier/certificate.hl:18-36`），f/∇f/∂²f 在证明时重算（`taylor/m_taylor.hl:769-782`）并在形式验证阶段**再算一遍**（`verifier/m_verifier.hl:1495-1510`）；`m_taylor_arith*.hl` 是机制不是数据（0 个 ≥20 位数字串）；数据只有 `azure/ineqs.txt`（33.4 MB/23,237 行），wt1 9 行 5,613 B。⇒ `docs/hol-parity-gate.md` §7 新增 **SD-2**（证书单位：0 数值/重算 vs 物化 34 有理/箱）。
