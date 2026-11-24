@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（wt1 优先令：曲线流B重启 + redo74 重建，续1481）**：**用户定「优先把 wt1 完全解决」；编排者先补齐 Route E（发射路线）在飞数据。**
+  ① **redo74.txt 丢失事故（PR-57 同族第二次）**：/tmp 队列状态文件 `redo74.txt`（74 片 v6 口径重测清单）在 /tmp 里不存在、快照也未收录——若直接重启流B，74 片会被当"已完成"永久跳过（v8 今日 147 行里前 74 行全是 v6 旧口径）。**重建**：summary 首 74 数据行（mtime 交叉验证：前 74 行 NO-LOG = v6 归档时代、74 行后 11-24 15:34+ = v8）；`redo74.txt` 74 行落回 /tmp。教训：队列/状态文件与 /tmp 驱动同生共死——**驱动脚本引用的任何状态文件必须与驱动一起落快照**。
+  ② **流B 重启**：`run_dual.sh 0` 后台（PID 1177，orphan 检查存活，guard go lean=2/15.5GB/p=1），起编 SMP_L15868_1_2_S02。双流恢复，曲线剩余 ≈ 330 片（329 缺 + 74 redo − 73 v8 已完成）。
+  ③ **槽格局**：P-A + 曲线A + 曲线B = 3 lean；leaf-chain 在 Python 阶段，其起编按 ≤2 自查等待（动态让位）。
+  ④ SORRIED 49 / AXIOM 585 不变。下一条：续1480。
 - **2026-11-24（DEF-FIX `wt1c2-opendomain` 落库 `a8dbd405`——编排者三件套亲验全过，续1480）**：**`wt1c2-opendomain-fix-w1` 完工收线（快照 SHA 16/16、patch apply-check PASS、删除面仅 Wt1C2 −9、LeafContract 纯新增 +319、Wt1Tower\* 零改动）。**
   ① **落库内容**：`Wt1C2Data.box` 六数字界 → 三正性（additive 变体 `w1aF_eq_w1FexOpen3_of_pos`；两消费证明直调 `Wt1TowerDeriv` 裸版，15 假设全取 data 字段）；LeafContract 新增 `leafU` 显式有理开盒（触面仅 x0 −1/10⁶、x1 −1/10⁹，上沿全留数字界内）+ 12 条件小引理 + `leafU_c2data`/`selectedBox_subset_leafU`/`leafU_nonempty`——**冻结常量与 gated 定理逐字节零改动**；12/12 条件无一触发止损（Δ 滑差盒 ≥2.84、各括号 ≥2.72 严格正）。
   ② **编排者亲验**：主池装新 olean 后双文件 RC=0/error=0；**8 定理 `#print axioms` 恰标准三零 sorryAx**（四 Wt1C2 + 四 LeafContract）；**根面 589 复验同集**（585 unique native + 标准三 + sorryAx）。
