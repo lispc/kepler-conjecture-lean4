@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（w1aF 全表扫描中期：5/5 只是样本；14 L2 失败 + 37 包络失败 + 8 簿记失败；已 resume Taylor 车细化，续1516）**：
+  ① **ERRATA（编排者上一条汇报）**：「w1aF 5/5 闭合」只是 5 个最薄样本箱；全表扫描（597 箱 → 617 行，kink 分裂）中期 250/597 显示：`L2(w1aF)` **14 行** ≤0 或 <1e−4（最小 −2.27e−3，集中在 15866/15867 非 kink）；`wtspec.build_box`/`jetlib.matan_jet` 断言失败 **37 行**（槽 `tA` 等区间下界 ≤0 或 matan 参数下界 ≤−1）；`TypeError` **8 行**（kink 簿记）。**「5/5」不得写成全表 GO**。
+  ② **性质判定（编排者手查）**：37 行不是数学越界，是**包络放大**——`15866/LRRRLR` 的 `tA ∈ [−2.07e−4, +2.50e−3]`（真值应为正），触发 `build_box` 的 `I.lo > 0`；14 行 L2 失败中已知 `15866/LLLRRLR`（−1.02e−3）在 (2,2,2) 8 子箱全闭（最小 +3.79e−3）。⇒ 细分/更紧包络可解，**不是 NO-GO**；但「597 箱」的 D1 暂不成立，须按细分后实际箱数重判。
+  ③ **已 resume Taylor 车**（同一 agent，零 Lean）：完成全表 → 逐失败箱诊断（`t>0` vs matan 域；点区间判真假）→ (2,2,2)/(3,3,3)/(4,4,4) 最小细分 → `refine_summary.json`（总箱数、最差 L2、真实越界清单）；D1 重判线：≤743（1.2×619）= `PARITY`，743–1238 = `WITHIN-BAND`，>1238 = `OVER-BAND`（只能用户明批）。8 行 TypeError 先修簿记后只重跑该箱。
+  ④ **探针不受影响**：`wt1-taylor-probe-w1` 用 `15868/LLRLR`（扫描 `ok`，L2=+1.03e−3），仍是 D4/D5 标定；主线 `w1aF` 维持候选，待细化总箱数与域证明路径。
+  ⑤ Route E **342/403**（剩 61）。SORRIED 49 / AXIOM 585 不变。下一条：续1515。
 - **2026-11-25（1 箱 Taylor 标定探针派出；w1aF 全表扫描 400/597；Route E 339/403，续1515）**：
   ① **已派 `wt1-taylor-probe-w1`**（fresh，Lean ≤1，派单回执已收）：1 个 pass 箱 `15868/LLRLR`（最薄，L2 = +1.033e−3）端到端 Taylor 证书——`WholeBoxJet w1F3` → `MTaylorInterval` → 新写 `taylor3_upper`（3 变量单侧二阶，Mathlib 一维 Taylor 沿线段 `g(t)=f(c+t·h)`）→ `∀x∈box, 0 < w1F3 x`；两条编码（证明项 jet / `ZPlan` 反射）选实测更省 olean 的一条。
   ② **探针的唯一目的 = 钉死 D4/D5 下界**（基线卡：HOL 0 B/pass、证明时重算；我方物化 ⇒ D4 `STRUCTURAL-DIFF`、下界 `UNRESOLVED`；D5 Lean 侧初筛 2.7–5.0×）。必测：olean 分项（定义 / value+first / 6 Hessian / 终端 / 证明项，至少 4 档前缀差分）、墙钟、峰值 RSS、`#print axioms` 恰标准三；产出 `PARITY_CARD_PROBE.md`（五类判词）。
