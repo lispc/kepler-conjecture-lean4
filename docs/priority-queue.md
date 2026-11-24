@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（用户裁定：HOL 原版性能目标入纪律；PARITY GATE + 预研 agent 双车道派出，续1512）**：
+  ① **用户裁定（2026-11-25）**：「最近老是做出一个比 HOL 更差的方案，还要无脑推进……始终按照 HOL 原版作为性能目标，不对齐需要明确的原因解释。另外，这个方向上，你设计下有没什么专门的调研预研 agent 可以发。」⇒ 纪律即刻生效，覆盖所有方法/架构/证书单位选型与在飞车道的下一轮迭代（已落库标准三件不追溯否定）。
+  ② **纪律三件落库（本笔 docs commit）**：`AGENTS.md` 新增 **§7.3**——默认目标 = 原版同对象；六维（义务数/证书单位/源码字节/产物字节/计算成本/信任类别）；**PARITY CARD 先行，无卡不派 Lean 车道**；带宽 ≤1.2× = PARITY、1.2–2× = WITHIN-BAND（须写「为何消不掉 + 消除计划」）、>2× = OVER-BAND（只能用户明批，编排者不得自批）；STRUCTURAL-DIFF 只豁免该维且必须给**可实现下界**（目标 ≤1.2× 下界）；预算/平台/时间不是理由；单调不恶化、转差即停。新章程 `docs/hol-parity-gate.md`（六维定义、五类判词、卡片模板、T1–T4 流程、SD-1 LCF/DTT 登记）。`docs/pitfall-register.md` 新增 **PR-61**（性能目标漂移：方案先行、对齐后补）。
+  ③ **预研 agent 设计并落档**：`.zcode/agents/hol-parity-analyst.md`——角色 = HOL 性能对标预研/审计，**零 Lean、只读 `reference/`、只写快照**；三类任务 `BASELINE`/`CARD`/`AUDIT`；判词只用五类；每数字带 `file:line` 或可复跑命令；采样必须标 `SAMPLE(n)`；无同对象禁止拿邻近对象凑。（注：本会话 agent 类型表在会话启动时加载，新类型下次会话可直接 `subagent_type: hol-parity-analyst`；本次以 general-purpose 承载同一定义文件。）
+  ④ **已派两条零 Lean 车道（派单回执已收）**：`holparity-baseline-w1`——复核 597 pass + 588 glue 计数、HOL 证书单位与 `m_taylor_interval`/`m_taylor_bounds` 粒度、六维基线、Taylor 计划 PARITY CARD 草稿（我方未知标 UNRESOLVED + 需什么测量）；`holparity-audit-w1`——续1500–1512 复盘审计（olean 瘦身/checker/50 GB/自适应细分/Taylor 计划/edges）、在飞 Taylor 初筛、ZTG M4/M5 对标与 `NO-COUNTERPART` 判定、行动表。
+  ⑤ **Taylor 车已收通知**：`wt1-taylor-model-w1` 的 `TAYLOR_MODEL_SPEC.md` 必须新增 **§PARITY**（对照 `reference/flyspeck/formal_ineqs/taylor/` 619/610 逐维），草稿须与 `holparity-baseline-w1` 权威基线对表，冲突以基线为准；`OVER-BAND` 只能标「需用户明批」。原 5 pass 判据不变。
+  ⑥ Route E **333/403**（剩 70 片，单 lean，ETA 约 10:20）。SORRIED 49 / AXIOM 585 不变。下一条：续1511。
 - **2026-11-25（用户裁决：拒 50 GB checker 方案，转 Taylor-model 证书——HOL 对照与差距定案，续1511）**：
   ① **用户裁决（2026-11-25）**：「不接受 50 G 磁盘方案。接下来你好好做 taylor model 证书吧。」⇒ **停止 checker 体积路线**（`wt1-containment-z-w1` 已 kill；`ZPlan`/`D11Plan` 落库件保留，`ZPlan` 的 ℤ 定点/栈机可复用为证书算术核验）。
   ② **HOL 原版对照（`reference/flyspeck/formal_ineqs/taylor/` 考古）**：wt1 = **619 Taylor pass + 610 glue**（9 外层叶），每 pass 一盒；证书 `m_taylor_interval`（中心值 + 一阶偏导 + 二阶导界 + 误差），误差式 `Σ w_i·|∂_i f(y)| + dd_bound/2`；`taylor/` 机制源码 1.4 MB、`formal_ineqs` 2.9 MB。**HOL Light 是 LCF 风格，定理是内存值、证明是脚本，不落 proof object**——所以原版磁盘≈源码。
