@@ -329,6 +329,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（taylor-leaf 请槽核查 → P-A 双 lean 违纪纠正，曲线流A保住，续1478）**：
+  ① **核查（编排者亲查进程树）**：全机 3 lean = P-A 车道**超占 2 个**（BoxTreeWt2AS3 + BoxTreeSqrt8S1 重编并行，双 shell 双 memlim 均在 `nlikit-pa` 名下，cap 被自行 20→26GB）+ 曲线流A S53 + 修复车道未起编。
+  ② **裁决：不停第二路曲线**（taylor-leaf 按预批请槽，但正解是纠正超占非停曲线）——P-A 双开违反「每车道 ≤1 lean」硬纪律：在跑两个放完不杀，此后严格串行；cap 定 20GB 不许再动；起编前自查 lean 总数 ≤2。taylor-leaf 获通知：P-A 多余编译放完即有槽（自查 `pgrep -x lean` ≤2 起编，pressure<2 前置）。
+  ③ 修复车道（`wt1c2-opendomain-fix-w1`）岛搭建中未起编；总 RSS 23.3/24GB 贴帽是 P-A 双开主因。SORRIED 49 / AXIOM 585 不变。下一条：续1477。
 - **2026-11-24（用户批「按你建议修吧」：DEF-FIX `wt1c2-opendomain` 执行——停曲线流B让槽，派修复车道，续1477）**：
   ① **槽位操作（预批协议首用）**：停曲线流B（`run_dual.sh 0` PID 26621 子树 4 进程；停时在跑 SMP_L15865_1_2_S46 片作废，resume 时重跑）；流A（`run_dual.sh 1`，S47）+ P-A 不动；lean 3→2。曲线 resume 时机 = 修复车道收线或 taylor-leaf 让槽。
   ② **派 `wt1c2-opendomain-fix-w1`**：工单 = 章程 §3 全部（additive 正性变体 + `Wt1C2Data.box` 降三正性 + 两消费证明改线 + 显式有理开盒 U + 12 条件 nlinarith + subset）+ **范围勘定**：交付到「`Wt1C2Data U` inhabited + subset 成立」＝不可居住性的构造性反证；`jet`/payload 对表归 `wt1-taylor-leaf-w1`（章程 §4 已加勘定注记）。验收双检 + 冻结不变式（LeafContract 常量/Wt1Tower* 零改动，违者回退）+ 止损（12 条件任一 2 轮卡死交底座 = 该条件在域面外不延拓的数学信号，转 SF 改选内叶）。
