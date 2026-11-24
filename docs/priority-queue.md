@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（sh_* 桥收线并亲验：60/60 零差异 + 120 条 rfl；生产车终段续作，续1508）**：
+  ① **`wt1-bridge-align-w1` 收线验收**：`rhs_of(slot) := wtspec.render_real(NAMED[slot][0], leafcore.real_of_slot)` 与落库 60 条 `sh_*` RHS **60/60 逐字节零差异**（`out/sh_rhs_diff.tsv` 0 DIFF，未做逐条补丁；**上游「gA 族 12 条差异」ERRATA——实为零差异，12 条是比较基准错位**）。`BridgeProbe.lean` **120 条 `example` 全 `rfl`**（60 RHS + 60 深展开 + `d11_bridge_probe`），编排者亲编 **RC=0 / 8.48 s / 5.46 GB / 0 error / 0 sorryAx**，`d11_bridge_probe` 恰标准三；负控（改一个 `+`→`-`）恰好 1 条 error 落在 `aAD`。
+  ② **真卡点与修法（ERRATA 上游）**：不是 RHS 对不齐，而是 `render_real(t, leaf)` 遇字符串叶子**只展开一层**（`d11Render` 306 字符 vs `simp` 不动点 54,068 字符）。修法 = 叶子分支按「原子 vs 非原子」划分（原子 = `K1/K2` + 六个 matan 保护槽；**其余命名槽全展开，含 `neg1/pos/pq1..4/neg2/sumSEDD` 四个硬编码中间层**）。`out/d11Render.lean`（56 KB，54,068 字符 / ~12,368 节点 / 19 个叶子词表）独立亲编 RC=0 / 5.55 s，可直接替换 `D11Bridge` 的两块。
+  ③ 顺手清理 **孤儿锁 `/tmp/lean_slot3.d`**（PR-37 取证：空目录、mtime 2026-11-24 12:42、无持锁进程）→ `rmdir` 完成。
+  ④ **生产车终段已续作**：两行替换闭合终端（`hbridge`→`d11_bridge`；`runPR_head` 用同源 `d11Render` 后 `rfl`）→ 生产版 `emit_leaf`（checker 证书，pq1≡0/h0cut/负支跨零）→ 6 类代表叶亲编（判据 ≤2 MB/箱、恰标准三）→ 全表 dry-run 统计 + 3 车道墙钟 →（可选）槽 `Nat` 打包。完成后即开全量批量。
+  ⑤ Route E ~310/403。SORRIED 49 / AXIOM 585 不变。下一条：续1507。
 - **2026-11-25（checker 生产化三件进展：比较引理 1.06 KB/条、终端仅剩桥同源 1 条 rfl，续1507）**：
   ① **任务 1 比较引理（形态已验证 + 字节实测）**：通用 `grid_le_rat/grid_ge_rat`（`a*b ≤ n*d → a/d ≤ n/b`，分母正）+ 每端点 `cmp_<slot>_lo`（`rw; push_cast; exact grid_le_rat … (by decide)`）。实测单条 **≈1.06 KB** ⇒ **116 条 ≈122 KB/箱**——比原估 30–60 KB **高 2×**（成本在陈述的 ℚ 大字面量 + 双端字面量），记档；1,416,536 → 1,433,040 B（+16,504，8 条样例）。
   ② **任务 4 槽打包（设计+量化，未实现）**：114 端点 × 2.6 KB ≈296 KB/箱；128 bit/端点偏置打包成单个 `Nat` + `unpackEnd/unpackSlot`（内核 `%`/`/` 已实测可算）⇒ **−294 KB/箱，1.35→1.06 MB**；非关键路径（不做也达标）。
