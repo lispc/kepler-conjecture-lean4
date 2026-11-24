@@ -289,4 +289,7 @@ shasum -a 256 -c SHA256SUMS
 - 内置 PPID=1 孤儿自杀（AGENTS §4）。日志 `${MEMLIM_LOG:-/tmp/memlim_<TAG>.log}`。
 - **v2 关键语义**：只杀 cmd 子树，绝不碰调用者进程组（v1 按进程组杀误伤父 shell，部署前废弃）。
 - 实测（2026-11-23）：正常通过 / 3 GB hog @2 GB cap 杀（rc=137，父 shell 存活；hog 的子树 RSS 读数 6 GB——bytearray 页计口径偏大，护栏判定偏保守，可接受）/ 包装 `lake env lean` 链 / `--version` 零耗。
-- **车道义务**：所有 lean 编译一律包 memlim（编排者按件定 cap：W4 全尺寸 12 GB / ZTG M3 15 GB / wt1-close 8 GB）；`BUDGET_EXHAUSTED(memcap)` 是资源护栏事件，不是数学判词（§7.2）。
+- **车道义务**：所有 lean 编译一律包 memlim（编排者按件定 cap：W4 全尺寸 12 GB / ZTG M3 15 GB / wt1-close 12 GB〔续1453 errata 前为 8 GB〕）；`BUDGET_EXHAUSTED(memcap)` 是资源护栏事件，不是数学判词（§7.2）。
+- **ERRATA（2026-11-23，wt1-close 车道实测、编排者收账）**：ps 子树 RSS 轮询口径**虚高 ~1.6×**（读 11 GB vs `/usr/bin/time` 真实 peak 6.83 GB，同一进程）——判定偏保守方向（早杀不漏杀），但会误杀本可完成的编译；关键长编译建议并行挂 `/usr/bin/time -l` 记真实 peak，双口径入报告；cap 定值按虚高口径换算（真实峰 × ~1.6 留余量）。
+- **口径定标（2026-11-24，续1454）**：wt1-close 第二轮定标 real 6.5 GB → ps 读 ≥12 GB（**虚高 ~1.85×**，与 1.6× 同向）；wt1-close 帽据此 12→16 GB（ps 项，最保守 1.6× 换算真实 ≈10 GB）。**`ps -o footprint` 口径实测否决**（3 GB bytearray hog 的 footprint 读 ~55 MB，与 rss 3.16 GB 差 57×，不跟踪物理分配）——memlim 保持 ps 口径不变；替代口径不再排查。容量规划换算：real ≈ ps 读数 ÷ 1.6（取最保守）。
+- **v2.1（2026-11-24，续1456）**：日志默认 `/tmp/memlim_<TAG>.log` → **`~/c17_backup/logs/memlim_<TAG>.log`（持久）**。教训：04:20 内核 panic 后 /tmp 全清，事故取证（哪些 guard 开过火）不可重建。另两条配套制度（账本续1456）：无人值守时段**同时只许一条车道持 lean**；checkpoint 原则 = 重跑成本 > 5 分钟工作量的进度必须落快照（/tmp 工作区在重启后即不存在）。

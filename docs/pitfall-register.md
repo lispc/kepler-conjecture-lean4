@@ -301,6 +301,27 @@ compile5–8 空日志 = 各自 20 min lock timeout）：锁脚本一律非 exec
 让 trap 在脚本退出时触发；发现无主锁先取证（`pgrep lean` 为空、无日志增长、
 无等待外的存活脚本）再 `rmdir`，有效 PID 持锁绝不动。
 
+**PR-54 生成器必须强制确定性：`PYTHONHASHSEED=0` + 按内容登记弃位置索引**
+（2026-11-24 `ztg-joint6-trio-w1` M3 两轮失败实证，续1460/1465）：Python 集合
+迭代序随进程哈希随机化漂移 → 轨道规范代表逐运行不同 → 先生成的 THM 模块与
+后生成的 Corners 的原子编号指派**错位**（t20/t112/t155/t140 两批文件指向不同
+原子），Lean 侧表现为 linarith 原子配对失败。对策：① 一切生成器跑前
+`PYTHONHASHSEED=0`（env 固定，写进车道工单与脚本头）；② 跨文件共享的编号/
+指派一律按**内容名**（EQNAME 按原子登记），弃 eq_index 位置索引；③ 生成链
+跨运行复用时先 diff 两次生成的输出一致性。
+
+**PR-55 同源镜像必须与 Lean 对表验证，Python 自检全过 ≠ Lean 行为一致**
+（2026-11-24 双车道同日实证，续1464/1465）：① wt1-close：Python 镜像 sanity
+三点逐位一致，但 Lean kit 的 `matanBr` l3 臂嵌套符号错（`dSub(dSub(X,it),…)`
+应为 `dAdd(dSub(X,it),…)`）→ 垃圾臂 +3.75e6 激活后 margin 塌 ±10⁵、C 代掉落
+34.8%（缺陷 #7）——镜像同款嵌套错（同源）却未被 sanity 抓到；② ztg：镜像
+覆盖率自检 144/144 全过（goal/hyp 原子多重集相等），Lean 实际 simp 后 trace 级
+不匹配 ⇒ 镜像对 simp 行为建模有偏差。对策：① 镜像与 Lean 的对表必须含
+**逐 slot 常数 diff**（对发射产物，非对镜像自身）；② 「自检过」只证明镜像
+内部自洽，关键口径（simp 轨迹/表达式嵌套）要抽查 Lean 实际输出（`#eval`/
+错误 trace）反推；③ 同源双实现的 bug 会**同形复制**——修正一方后另一方必须
+同步 diff。
+
 ## D. shell 与基础设施
 
 **PR-9 LEAN_PATH 解析 = 首个含 `Kepler/` 顶层目录的 entry 独占**（Lean 4.32
@@ -312,6 +333,25 @@ compile5–8 空日志 = 各自 20 min lock timeout）：锁脚本一律非 exec
 本机 `~/.kimi-code/bin/rg`（v15）默认遵守 .gitignore（.lake/*.olean 自动跳过）；
 兼容 grep 时必须 `-I` + `--exclude-dir={.lake,.git,reference,_distfiles}`。
 变体：`rg -rn` 的 `-r` 是 replace 旗标（mangle 输出仍 RC=0）——`-n` 必须独立写。
+
+**PR-56 memlim（ps 轮询杀）口径虚高 ~1.6–1.85×：cap 按 ps 项定值换算，footprint
+不可用**（2026-11-24 wt1-close 双轮定标实证，续1453/1454）：同一进程
+`ps` 子树 RSS 读 11 GB 时 `/usr/bin/time` 真实 peak 6.83 GB（1.61×）、读 ≥12 GB
+时真实 6.5 GB（1.85×）——早杀不漏杀（保守向），但会误杀本可完成的编译；
+`ps -o footprint` 实测差 57×（3 GB hog 读 ~55 MB），**否决**。对策：① cap 定值
+按 ps 口径：真实峰 × ~1.6 留余量；② 关键长编译并行挂 `/usr/bin/time -l` 双
+口径入报告；③ memlim v2.1 日志默认 `~/c17_backup/logs/`（持久——/tmp 会在
+重启后消失，见 PR-57）；④ 联合预算：多车道并发时 Σps帽 ≤ 28 GB（≈ real ≤17 GB）。
+
+**PR-57 /tmp 工作区重启即失：checkpoint 原则 + 快照验证必须文件级**
+（2026-11-24 内核 panic 04:20 事故链，续1456/1457）：watchdog panic 重启后
+/tmp 全清——车道工作区、lean 槽信号量、memlim 日志全部蒸发；事故取证不可
+重建。三条对策：① **checkpoint 原则：重跑成本 > 5 分钟工作量的进度必须落
+快照**（wt1 曲线每 20 片、farm 每 20 叶/30 分钟、且做成代码如 farm 的
+sync_snapshot()）；② **快照验证必须文件级（数量 + 字节 + SHA/mtime）**——
+「目录名在场」不是验证，编排者本日三次「存在性冒充内容性」失误同根（105
+模块假阴性路径拼接 / 删目录看反 ls / farm 快照空目录误判已保护）；③ 长驻
+工具的状态与日志一律落 `~/c17_backup/`（durable），/tmp 只放可重生产物。
 
 ## E. 数学认知陷阱
 
