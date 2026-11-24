@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（DD 传输收线落库 `a5452380` + P-A 配额暂停恢复事件，续1495）**：
+  ① **`wt1-matanDD-neg-transport-w1` COMPLETE，`MatanDDNegTransport.lean` 落库 `a5452380`**（纯新增 595 行）：G3 负支/跨零 `matanDD` 端点相干传输。编排者亲验：patch 三相 PASS（1 hunk `@@ -0,0 +1,595 @@`、apply-check PASS、apply 后 595 行、sha `6b3b70bf…` 与快照源逐字节一致）；**亲编 RC=0 / 5.23 s / 5.82 GB，22/22 恰标准三、sorryAx 0、error/warning 0**；禁造边扫描干净。
+  ② **路线偏离（实测依据，接受）**：`matan''' t = −∫₀¹6u⁶/(1+tu²)⁴du < 0` 对**一切 t > −1** 成立（110 点严格递减 + 109 点 DDD<0 实证）⇒ 走**单调路线**而非工单「优先」的 factor 端点版——factor 版对跨零叶（255）根本不可用（`inv` 需 `TI.hi<0`，两项在 0 附近对消发散），对负叶（204）宽 2.1×–1.1e4×。新解析件仅一件 `lkB_matan_le_rat_neg`（复用 `nb12w_artanh_le_sub7`+恒等式；跨零靠 `nb12w_matan_bracket3`）。产品：`AntitoneOn matanDD (Ioi (-1))` + `lkB_matanDD_slot_from_matan`（**负/跨零/正叶同一陈述**，唯一前置 `-1 < TI.lo`，同端点配对）+ `_from_matanD` + `lkB_matanDD_slot` + 0 端点劈开；保留 `lkB_matanDD_ops_neg_slot` 作独立回证。消费方探针 `ProbeSlotFull` RC=0、29/29 标准三（跨零槽 `[-1/10,1/10]` 真实实例化）；Python 自检 37 checks/0 fail，Lean `#eval` 端点 == Python 6/6 bit-exact。**G3/G4 负支缺口关闭**。
+  ③ **P-A（`nlikit-boxtree-impl-w1`）平台配额暂停（恢复事件，非任务失败）**：错误码 1310「每周/每月使用上限」，**重置 2026-11-30 08:45:05**。按 AGENTS §3/§7.2：不作失败/NO-GO 判词，**到期 resume 原 agent**；中途工作注记已留存（「hx 事实把 Real 与 DC 直接划等号——应先给 DC 恒等（decide），再桥接。修两端。」）。**同日风险**：`wt1-emission-p2-w1` 若撞同一配额同样按恢复事件处理；Route E 为本地 shell 不受影响。
+  ④ 在飞：emission-p2（若无配额中断）+ Route E。SORRIED 49 / AXIOM 585 不变。下一条：续1494。
 - **2026-11-24（发射续作四段全收线 + 成本模型定案 + 压缩版派单，续1494）**：
   ① **`wt1-emission-cont-w1` 收线验收**：四段全 RC=0/0 error——`_eq` **71/71 闭**（单条 `norm_num` 2–12 op）、`_mem` 全闭、`D11.hi<0` + `w_b0_box_lt`、**8 箱+3 轴 `by_cases` → `w_terminal`**：**74.95 s / 9.00 GB / 12,670 行 / 2.1 MB**。编排者亲验：apply patch（1 hunk `@@ -0,0 +1,1581 @@`、apply 后 1,581 行、sha `14039c19…`）→ 亲编 RC=0 / **11.81 s / 6.04 GB**，`w_b0_box_lt` 恰标准三、sorryAx 0、error 0；随后**还原不落库**（demo 盒非正式叶；`Leaf8T` 2.1 MB/8 叶同理不落），主仓零改动。
   ② **成本模型定案**：每箱边际 **8.84 s / 0.39 GB**（终端装配仅 1.5 s）；6,989 箱按现方案 ≈ **17.2 h 单 lean、源 1.9 GB** ⇒ 压缩版必由之路。
