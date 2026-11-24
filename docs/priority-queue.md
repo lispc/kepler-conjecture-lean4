@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（checker 桥接入完成，终端剩 K1/K2 原子化一行；换 fresh 生产收尾车，续1509）**：
+  ① **桥接入（前序车）**：`d11Render` + `d11_bridge` 原样拼入 `S_1x_prod2.lean`，两块无 error；`hbridge` 段变量已替换为 `d11_bridge y4 y5 y6 hA hB hC`（`hA/hB/hC` 待计划 `aA/aB/aC` + `decide`）；终端其余全链 typecheck。
+  ② **唯一卡点（已定位，1 行修法）**：`runPR_head` 的 `rfl` 不同源——桥的 `d11Render` 把 **`K1/K2` 当原子**，而 `leafPlan` 把它们当可计算槽展开（`2*mm1/π` 树）。修法：`gen_plan.py` 的 `PLAN_LEAVES` 加入 `K1`、`K2`，用桥车道的原子渲染串作其 `leafRenders`，重发后 `rfl` 即通。
+  ③ **换 fresh 车道（PR-27/33）**：前序 agent 连续短会话（3/9 工具调用）上下文饱和 → 派 **`wt1-emission-prod-w1`**（完整 checkpoint 工单）：K1/K2 原子化 → 生产版 `emit_leaf_prod.py`（116 比较循环 + `Forall₂(47)` + `hA/hB/hC` decide + pq1/h0cut/负支跨零）→ 6 类代表叶亲编（≤2 MB/箱判据）→ 全表 dry-run（总量/墙钟/分片）→ 批量驱动 `run_worker.sh w N`（3 worker 启动命令）。
+  ④ 预算不变：**≈1.5 MB/箱 ⇒ ≈47 GB**；打包后 ≈1.25 MB ⇒ **≈39 GB**。Route E 304/403（ETA 约 12:10）。SORRIED 49 / AXIOM 585 不变。下一条：续1508。
 - **2026-11-25（sh_* 桥收线并亲验：60/60 零差异 + 120 条 rfl；生产车终段续作，续1508）**：
   ① **`wt1-bridge-align-w1` 收线验收**：`rhs_of(slot) := wtspec.render_real(NAMED[slot][0], leafcore.real_of_slot)` 与落库 60 条 `sh_*` RHS **60/60 逐字节零差异**（`out/sh_rhs_diff.tsv` 0 DIFF，未做逐条补丁；**上游「gA 族 12 条差异」ERRATA——实为零差异，12 条是比较基准错位**）。`BridgeProbe.lean` **120 条 `example` 全 `rfl`**（60 RHS + 60 深展开 + `d11_bridge_probe`），编排者亲编 **RC=0 / 8.48 s / 5.46 GB / 0 error / 0 sorryAx**，`d11_bridge_probe` 恰标准三；负控（改一个 `+`→`-`）恰好 1 条 error 落在 `aAD`。
   ② **真卡点与修法（ERRATA 上游）**：不是 RHS 对不齐，而是 `render_real(t, leaf)` 遇字符串叶子**只展开一层**（`d11Render` 306 字符 vs `simp` 不动点 54,068 字符）。修法 = 叶子分支按「原子 vs 非原子」划分（原子 = `K1/K2` + 六个 matan 保护槽；**其余命名槽全展开，含 `neg1/pos/pq1..4/neg2/sumSEDD` 四个硬编码中间层**）。`out/d11Render.lean`（56 KB，54,068 字符 / ~12,368 节点 / 19 个叶子词表）独立亲编 RC=0 / 5.55 s，可直接替换 `D11Bridge` 的两块。
