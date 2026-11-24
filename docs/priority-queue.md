@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（用户批「按你建议修吧」：DEF-FIX `wt1c2-opendomain` 执行——停曲线流B让槽，派修复车道，续1477）**：
+  ① **槽位操作（预批协议首用）**：停曲线流B（`run_dual.sh 0` PID 26621 子树 4 进程；停时在跑 SMP_L15865_1_2_S46 片作废，resume 时重跑）；流A（`run_dual.sh 1`，S47）+ P-A 不动；lean 3→2。曲线 resume 时机 = 修复车道收线或 taylor-leaf 让槽。
+  ② **派 `wt1c2-opendomain-fix-w1`**：工单 = 章程 §3 全部（additive 正性变体 + `Wt1C2Data.box` 降三正性 + 两消费证明改线 + 显式有理开盒 U + 12 条件 nlinarith + subset）+ **范围勘定**：交付到「`Wt1C2Data U` inhabited + subset 成立」＝不可居住性的构造性反证；`jet`/payload 对表归 `wt1-taylor-leaf-w1`（章程 §4 已加勘定注记）。验收双检 + 冻结不变式（LeafContract 常量/Wt1Tower* 零改动，违者回退）+ 止损（12 条件任一 2 轮卡死交底座 = 该条件在域面外不延拓的数学信号，转 SF 改选内叶）。
+  ③ **taylor-leaf 车道预告**：Lean 侧 evidence 构造按修复后签名写（U 自由度变大），六界版适配弃用；Python 侧与两追加件不受影响。
+  ④ SORRIED 49 / AXIOM 585 不变。下一条：续1476。
 - **2026-11-24（wt1 底座缺陷 #9：冻结叶合同不可居住——DEF-FIX 章程立案待批，续1476）**：**`wt1-taylor-leaf-w1` 按工单止损条款上报「LeafContract 形态 vs 实际 Taylor 数据错配」，编排者对 `13dee7c8` 冻结源码亲验定案成立。**
   ① **缺陷内容**：`LeafContract.lean:11` 冻结 `selectedLo` 的 x0 下沿（4927/2000）与 x1 下沿（2）**恰坐在** `Wt1C2Data.box` 闭域边界上；`SelectedLeafEvidence` 要求 `IsOpen U` + 闭域条件 ∀x∈U + `selectedBox ⊆ U` ⇒ U 开必含域面外侧点 ⇒ 矛盾 ⇒ 类型全族空、两个 gated 定理只能空洞成立（证书义务按冻结形态不可满足）。编排者不可居住证明复核通过（面点∈selectedBox→∈U→球⊆U→域外点违反 box）。
   ② **承重分析（修复为何便宜）**：`Wt1C2Data.box` 六个数字界对两个消费者零承重——`w1aF_eq_w1FexOpen3` 证明只用三正性+cut；`w1aF_hasDerivAt_y5_box` 只是六界→`w1aF_hasDerivAt_y5`（Wt1TowerDeriv:1529，本就吃正性/非零 15 条）的转译包装，条件与 `Wt1C2Data` 的 area_ne/d4_ne/t_pos/g_pos 字段一一对应。数字界真正职责（payload 有效性）在 jet 字段。六界=便利驱动过度约束。

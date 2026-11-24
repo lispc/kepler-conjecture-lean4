@@ -57,6 +57,9 @@
 - **构造出第一个 inhabited `SelectedLeafEvidence`**（用 ①–③ 修复面 + 显式 U），
   gated 定理以**非空前提**给出 `w1F2 ≤ −101749/8000000`——这是修复成立的唯一内容级
   验收，空洞 `#print axioms` 不算数。
+  **范围勘定（2026-11-24 用户批后、派工时定）**：修复车道交付到「`Wt1C2Data U`
+  inhabited + subset 成立」＝不可居住性的构造性反证；`jet`/payload 对表（完整
+  `SelectedLeafEvidence`）是 `wt1-taylor-leaf-w1` 的既有任务，两车道零重叠。
 - 根面复验 589 同集。
 
 ## 5. 影响面与风险
