@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（负支 matanD 套件落库 `7d69b528` + 负支发射接线派单，续1499）**：
+  ① **`MatanDMonoNegKit.lean` 落库 `7d69b528`**（纯新增 514 行）：编排者亲验 patch 三相 PASS；**亲编 RC=0 / 4.98 s / 5.74 GB，22/22 定理恰标准三 + 2 个 def 无公理、sorryAx 0、error 0**。核心：**`StrictMonoOn matanD (Ioi (-1))` 做成全局**（新引理 `lkB_arctan_gt_matanDD_bound` → `lkB_matanDD_pos`；0 处连续性免费自 `matanD_hasDerivAt_zero`）⇒ 跨零槽无需分段；`lkB_matanD_pt`/`lkB_matanD_zero_mem`/`lkBMDneg(_mem)`、`lkB_matanD_slot(_neg/_from_matan/_zero_hi/_zero_lo)`、`lkB_mDD_slot`/`lkB_matanDD_slot_neg`/`_cross`、消费形状 **`lkB_mD_vf`/`lkB_mDD_vf`**（`LeafGenKit` 同参序镜像）。mDD 槽组装零新内容（复用已落库 `lkB_matanDD_slot_from_matan` 等）。Python 精确自检 **1004 checks / 0 fail**（9 真实负槽 + 3 跨零槽 + 压力槽 + (−1,2) 稠密单调网格 + 检查器自校验）。
+  ② **负支发射接线车道已派 `wt1-emission-neg-w1`**（离机追踪）：204 整段负叶 `neg1`（1 箱）+ 51 跨零叶 `cross8`（8 箱）权威箱表、逐箱精确 D11 自检（≥1e−3）、3 个 Lean 样本亲编 RC=0 + 恰标准三；生成器扩展把六个 matan 槽消费换成端点路线，绕开 `_ops_neg`。
+  ③ 当前发射拼图：正支权威表 30,502 箱（数据车在飞）+ 负支 612 箱（接车道在飞）= **31,114 箱**；两车到货 + 样本亲编过即按 3 车道开批量（~27–31 h）。
+  ④ Route E：246/403（剩 ~157 片，ETA 11-25 上午）。SORRIED 49 / AXIOM 585 不变。下一条：续1498。
 - **2026-11-25（细分研究收线：每叶自适应阶梯把发射从 47.5 h 降到 27–31 h，续1498）**：
   ① **`wt1-subdiv-study-w1` 收线验收**（零 Lean、主仓零改动、SHA 48/48 OK）：编排者独立复算两张主表——`fullscan_allx2.tsv` 6,734 正支叶 **6,734/6,734 闭合**（最薄 −1.281e−3、最坏子箱 71.3% 在 (y4↑,y5↓,y6↓)）；`adaptive_scan.tsv` **30,502 正支箱、0 开箱、最薄 −1.0018e−3**（`15867/LLLRLRRR`，y4y5x2）。
   ② **核心结论**：统一模式最便宜 = `(2,2,2)`（≤6 箱模式不闭合，`(4,2,1)` 余量 9.36e−4 不达标）；但**每叶自适应阶梯**（1x 96 / y4x2 633 / y4x4 2,677 / y4y5x2 1,611 / y4y6x2 437 / allx2 1,280）**省 43%**：30,502 正支箱 + 204 负支×1 + 408 跨零×8 = **31,114 箱**（2 薄叶升 `(3,2,2)` +8 箱后全表最薄余量 6.817e−3）。源 ~2.28 GB；**9.41 s/箱口径 81.3 h 单 lean / 27.1 h 三车道**（实测 10.9 s/箱口径 ~94 h / ~31 h）。
