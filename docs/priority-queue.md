@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（checker 可行性 GO：每箱 olean 16.6→1.35 MB，全量 ~42 GB；`ZPlan` 落库 `58248c16`，续1505）**：
+  ① **`wt1-checker-w1` 可行性判定 = GO**：反射式区间算术检查器把每箱 olean **16.6 MB → 1.35 MB（12.3×）**，31,114 箱外推 **≈42 GB**（基线 517 GB），远低于 120 GB 线且低于 60 GB 理想线；信任面不扩大（kernel `decide`，无新公理）。
+  ② **编排者亲验**：`ZPlan.lean` 亲编 RC=0 / 2.15 s / olean 1.27 MB；pruned 单箱样本亲编 **RC=0 / 6.99 s / 5.64 GB / olean 1,416,944 B**，`leafRun` = `[propext]`、`leafOut_d11_neg` 无公理、原子 mem 标准三、0 sorryAx。
+  ③ **三个决定性发现**：(i) **`by decide` 在 ℚ 上原理性 NO-GO**——`Rat.mul/add/inv/sub` 是 `@[irreducible]`（内核不展开），必须换 **ℤ 定点 `2^-96`**（全 transparent）；(ii) olean 存储行为：`List Op` 字面量 **1.3 KB/指令**，打包成**单个 `Nat`**（40 bit/指令）后 1394 条仅 ~5.5 KB；(iii) 现状 16 MB 的 **posZ/outer_q/D11 三腿可整体删除**（0.33 MB 证书替代），只留超越括线/原子 mem（0.8–1.0 MB）。
+  ④ **`Wt1Check/ZPlan.lean` 落库 `58248c16`**（纯新增 573 行，olean 1.27 MB）：`ZInt` 定点区间全 op `memR` soundness + 栈机 `run_sound`（整数程序 refine 实数程序）。
+  ⑤ **生产化车道已续作**（原 agent 回执）：116 条网格外圆整比较引理、终端 `Forall₂`+`run_sound` 装配、一次性 `sh_*` 渲染桥（唯一无实测缺口）、槽字面量 `Nat` 打包（可选 −240 KB/箱）、生产版 `emit_leaf`、6 类代表叶亲编、全表 dry-run。判据 **≤2 MB/箱且全量 ≤120 GB**。
+  ⑥ 批量预计：checker 形态 ~7 s/箱 + import ⇒ **~23 h 三车道**（待生产版实测确认）。Route E ~270/403。SORRIED 49 / AXIOM 585 不变。下一条：续1504。
 - **2026-11-25（架构问无答 → 按推荐 A 派「可行性」车道，批量继续暂停，续1504）**：
   ① 架构四选（A verified-checker / B 加盘 / C 扩信任基座 / D 合并箱）已上呈，**用户未作答**（AskUserQuestion 无回复）。编排者按推荐 **A** 执行，但**只派可行性闸**，不直接全量改造——判定不通过则回到 B/C/D 选项再请裁。
   ② **派 `wt1-checker-w1`**（追踪 agent）：设计紧凑 `Plan`（DAG/直线程序，op ∈ mul/add/sub/neg/inv/const/min/max + 槽索引）+ Lean 原型 `evalPlan` + **soundness 一次证明**（槽 `mem` 作假设）+ 一个真实叶箱的 `by decide` 证书端到端；实测改造后 **olean/箱、墙钟、峰值、`#print axioms`**，外推 31,114 箱总量；GO 判据 = **≤2 MB/箱且总量 ≤120 GB**（理想 ≤60 GB），NO 则写清哪段吃预算。
