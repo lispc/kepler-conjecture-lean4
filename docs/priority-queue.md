@@ -329,6 +329,18 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（probe 收线 + Taylor3 落库 `cda43267`；双实现差：Python 开 / Lean 闭；续1520）**：
+  ① **`wt1-taylor-probe-w1` 收线**：`taylor3_upper` / `taylor3_lower` 无条件真证，编排者亲编落库 **`cda43267`**（纯新增 292 行；RC=0 / 3.45 s / 2.70 GB / olean **453,352 B**；4 条 `#print axioms` 恰标准三）。条件终端 `w1F3_pos_of_cert`（假设 10 条区间事实 + C²）olean **893,576 B**，标准三；`selSlack_pos` 滑余 **+1.0334e−3**；1 个 matan 槽 `UnaryBox` 108,816 B。
+  ② **D4 部分**：证书本体 **0.440 MB/箱**（T4−K），缺“9 个导数区间”档 ⇒ 下界仍 `UNRESOLVED`；6 槽构件 6×0.109 = 0.653 MB 只是构件估计，装配树未测。**D5**：5.77 s/箱（含 95 模块 import）⇒ 2.31× HOL 每 pass（2.493 s），**边际未分离 ⇒ `UNRESOLVED`**，不判 OVER-BAND。内容实测 **1,055 B / 32 有理**（63.4 bit），6 位有效数字够 ⇒ 312 B 紧下界可达。
+  ③ **gC ablation + 负控限制**：probe 箱（gC.hi=3.32）gC tight ⇒ +1.758e−3 闭；direct ⇒ −2.549e−3 开；6 箱表 direct 滑余随 `gC.hi` 单调劣化。但 `15866/LLLRRLR`（gC [0.48,1.43]）**三种括线全闭**，不能作负控 ⇒ 结论限定「大 gC.hi + 薄箱 ⇒ 开」，不写「gC>1 ⇒ 必开」；全局证据仍是 205/205 相关性（必要不充分，204 个通过行也 gC≥1）。
+  ④ **双实现差（新卡点）**：Python `jetlib` 对 `15866/LLLRRLR` L2 = **−1.02e−3**，probe Lean 三种括线**全闭** ⇒ 必有一方中间区间更松。已令 Taylor 车**先对表** Python `matan_k(gC,0..3)` 与 Lean `lk_matan_direct/wplus`，找松的通道；若是代理松，**对齐代理**再重扫（205 失败可能是代理伪影）；**代理失败不得驱动 Lean 设计改动**。已写入 `docs/hol-parity-gate.md` §8 推论（PR-55）。
+  ⑤ **形状勘正（probe）**：证书值必须用 `MTaylorInterval` 的**中心点值**；`WholeBoxJet` 整盒值区间不闭（L2withbox = −5.630e−3）；`taylor3_upper` 用 Lagrange（lost-½ 变体不闭）。已令写入 SPEC。
+  ⑥ Route E **346/403**（剩 57）。SORRIED 49 / AXIOM 585 不变。下一条：续1519。
+- **2026-11-25（全量相关性补记：205/205 失败行 gC≥1，但必要不充分；204 个通过行也 gC≥1，续1519）**：
+  ① **全 205 个失败行**（不只 173 个诊断箱）：`gC < 1` = **0**、跨 1 = **9**、`gC > 1` = **196** ⇒ 失败集合 100% 落在 `gC ≥ 1`。
+  ② **通过 351 行**：`gC < 1` = 147、跨 1 = 93、`gC > 1` = 111 ⇒ `gC ≥ 1` 是**必要不充分**（204 个通过行也 gC≥1）。
+  ③ **对修复的含义**：wplus 是必要第一步，但不承诺 205→0；修后按 `gC>1` / 跨 1 / `gC<1` 三栏重扫；残余才 HOL `find_max w` 中心二分；若出现 `gC<1` 的失败，单列为新原因。
+  ④ 先验收 `15866/LLLRRLR`（`bg.h` sup ≤0.4、L2 翻正），再全表。Route E **346/403**（剩 57）。SORRIED 49 / AXIOM 585 不变。下一条：续1518。
 - **2026-11-25（ERRATA：1e4 是 D11 的 Hessian；真根因 = gC 的 matan 括号；173/173 失败箱 gC≥1，续1518）**：
   ① **通道误读纠正**：`analyse_box` 的 `hess_box = bd.h` 是 **D11（w1F2）** 的 Hessian，不是 w1aF 的 `bg.h`；`15866/LLLRRLR` 的 w1aF 箱 Hessian sup 是 **2.21**（真值 0.26，8.5×）、`15868/LLRLR` 是 0.47（3×），**不是 1e4**。1e4 是 D11/四阶导（已知 NO-GO）。`supersedes 续1517 ②`。
   ② **全表（677 行 / 597 箱）**：L2>0 **472**、失败 **205**（最小 −5.57e−3，中位 +1.75e−3）；`diagnose_summary.json` 的 **173 个失败箱**：`gC > 1` **163**、跨 1 **10**、`gC < 1` **0**；`box_bad_dom`/`true_bad_dom`/`true_bad_pos` 全空 ⇒ **失败 100% 与 gC 的 matan 括号相关**，与域/正性/箱宽无关。
