@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（发射车道 P1d 成本锚 + fresh 会话交接，续1492）**：
+  ① **b0 成本锚（P2 首个输入）**：LeafB0 322 行（字面量层 + 60 条 _eq）**RC=0 / 21.3 s / 5.87 GB**，其中 `_eq` 24/60 已闭、**36 条 unsolved 全在含 `QInterval.inv` 分母的槽**（`t*/g*/W*/SE*/DIH*`，`norm_num` 留未决目标）——修法已定：两段链（先 `den = 字面量` ≤6 op、再 `Dlt * den.inv = 字面量` ≤6 op）。
+  ② **外推（粗）**：eq 层 ~17 s/箱纯 tactic；单箱估 20–35 s；6,989 箱单 lean ≈ **39–68 h** ⇒ 压缩版必须做（通用组引理 + 每箱仅 ~20 条接口字面量 eq）。
+  ③ **换 fresh 会话（PR-27/33）**：原车道连续两次 4–5 次工具调用的短会话（上下文饱和），按「接管 3 轮未收即停手换会话」处置——派 **`wt1-emission-cont-w1`** 接手（checkpoint 齐全：gen_leaf.py 157 行 + LeafB0 322 行 + 全部实测入快照），四段任务书 + 压缩版设计义务。原车道不再 resume。
+  ④ 在飞：emission-cont + DD 传输 + edges + Route E + P-A。SORRIED 49 / AXIOM 585 不变。下一条：续1491。
 - **2026-11-24（LeafShapes 落库 + lean_eval 两公式错勘误 + DD 传输缺口小车道派出，续1491）**：
   ① **`LeafShapes.lean` 落库 `d2e3c0c6`**（发射车道 P1b）：60 条通用 shape 引理（槽定义→QInterval mem 链消费的 ℝ 形状一次性重写），**编排者亲跑 60/60 恰标准三**、RC=0/3.8 s/5.74 GB；patch 三相检查（`@@` 头/apply-check/apply 后 wc-l）PASS——PATCH_BAD 制度首次正向执行。
   ② **lean_eval.json 两公式错（ERRATA 候选，PR-55 战果）**：发射车道按 `Wt1TowerDeriv` 源文本逐字对表发现参考求值器 `leaf_eval.py` 两处错——`t'`/`t''` 槽误用面积导数（`aAD/aADD` 代替 `w1DltD/DltDD`，点值差 2.2×）；`W''` 分子公式错（符号反，+0.16175 vs 模板 −1.01684）。⇒ `lean_eval.json` 的 tAD/tADD/WADD/WBDD/WCDD 及下游 D11 不可用；**数据正本 `d11_engine.py` 无此错，6,989 叶数据面（leaves_exact.json）不受影响**；`scripts/wtspec.py`（135 槽 op 树，镜像 Lean 解析结合）= 发射唯一事实源。
