@@ -329,6 +329,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（用户问「wt1 能否快点」→ 批双流并行：~23.4h→~11.7h，续1469）**：**曲线现状实测（12:12）：11 片完成全 PASS（false=0）、单片 ~210s（15863 叶略慢于 15862）、单流串行 → 全程 ~23.4h。瓶颈判定 = 单流串行单核（~276ms/条深折叠 decide），CPU 12 核仅 load 3.2；内存单片实测 5.61–5.74GB × 11 片零漂移。**
+  ① **编排者裁决：双 worker 并行（奇偶拆片）**——2 × 5.7GB ≈ 11.4GB real + ZTG Corners 偶发编译 6.6GB = 最坏 ~18GB < 24GB，全部实测非外推；**「每车道 ≤1 lean」在本曲线批次内修订为「≤2 lean」测得例外**（仅限本双流，不扩第三流——三流 17GB + ZTG 叠加贴近 panic 危险区，边际收益不值）。纪律不变：每路 memlim 16GB + time -l、full_summary.tsv 单一出处、合计 20 片快照、早退闸照旧。**预期 ~11.7h，今晚 ~24:00 出全部结果**；防竞争劣化条款：单片涨超 300s 报编排者重估。
+  ② 同批确认：11/11 片 PASS0 是 v6 修复生效的又一旁证（15863 叶 S01–S08 在 C 代曾掉 175 盒，v6 下前 7 片全过）。SORRIED 49 / AXIOM 585 不变。下一条：续1468。
 - **2026-11-24（nlikit-reduce-survey-w1 交付验收 COMPLETE——S6 调研收官，NliKit 三输入齐二，续1468）**：**派单后 10 分钟交付 6 文件（SHA 抽验 3/3 OK），编排者验收后正式收线。两关键锚编排者实查复核 ✓（`ztg_main_pos_of_slice_corners`@ZTGJointKit:546、`nb11_corner_walk`@NliBanks11:132——编排者首查错路径 Text/，车道引用正确）。**
   ① **核心结论：「四债四种写法」实为抽象程度递增的 1.5 种**——sqrt8/nb11_corner_walk（两角点退化特例）/g4w_step（全通用）/ztg_main_pos_of_slice_corners（按 (i3..i6) 参数化的通用形态）已收敛到同一抽象：逐坐标候选集归约步 + 候选积角点电池。**判定分布**：总装层/步产生器/对称框架/分母消费步 = REUSE 直抽；w2a_cell/s8_cell = ADAPTER-大（只抽 slot 界三件套，margin 公式逐债不同）；S4 槽对称引理与 QITNPEA floor 证书本体 = MISSING。无一处 ADAPTER 写成 REUSE。
   ② **解锁判定**：原语③（共享下界面）唯一「零新 Lean 义务」解锁 = QITNPEA floor 三债（Assembly:1610/1616/1628，消费分母步 READY、余量精确 1/20000）——但 −3 全押 γ4≥23/2000 全盒证书（UNRESOLVED，七法皆部分树）。
