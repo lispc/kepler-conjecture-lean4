@@ -329,6 +329,14 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（ERRATA：1e4 是 D11 的 Hessian；真根因 = gC 的 matan 括号；173/173 失败箱 gC≥1，续1518）**：
+  ① **通道误读纠正**：`analyse_box` 的 `hess_box = bd.h` 是 **D11（w1F2）** 的 Hessian，不是 w1aF 的 `bg.h`；`15866/LLLRRLR` 的 w1aF 箱 Hessian sup 是 **2.21**（真值 0.26，8.5×）、`15868/LLRLR` 是 0.47（3×），**不是 1e4**。1e4 是 D11/四阶导（已知 NO-GO）。`supersedes 续1517 ②`。
+  ② **全表（677 行 / 597 箱）**：L2>0 **472**、失败 **205**（最小 −5.57e−3，中位 +1.75e−3）；`diagnose_summary.json` 的 **173 个失败箱**：`gC > 1` **163**、跨 1 **10**、`gC < 1` **0**；`box_bad_dom`/`true_bad_dom`/`true_bad_pos` 全空 ⇒ **失败 100% 与 gC 的 matan 括号相关**，与域/正性/箱宽无关。
+  ③ **probe ablation（决定性）**：`lk_matan_direct` 在 `t>1` 退化（gC [1.53,3.32] 时 ~[−3.1,1.1]）；`lk_matan_wplus` 宽 ~1e−8。同箱其余不变：gC tight ⇒ L2 **+1.758e−3 闭合**；gC direct ⇒ **−2.549e−3 开**。
+  ④ **判词修正**：不是细分问题、不是整式符号求导问题、不是 71 槽 DAG 问题；是 **matan 括号选择**（`t>1` 用 wplus/half-angle，`t≤1` 用 direct/series）。Taylor 公式与箱宽无罪。
+  ⑤ **改派**：Taylor 车按 `gC≥1` 切 wplus，先验收 `15866/LLLRRLR`（`bg.h` sup ≤0.4、L2 翻正），再全表重扫并把残余按 `gC>1`/`gC≤1` 分栏；probe 车按条件终端 + gC/wplus + 9 导数 tier（部分证书）继续。**禁 uniform n³ / 整式 sympy**；`build_box_sound` 的 `tA>0` 门保持非致命。
+  ⑥ **方法论**：`docs/hol-parity-gate.md` §8 的反面教材已改为本次真实教训——通道分解必须先核对字段语义（`hess_box` 属 D11 还是 w1aF），再做 ablation；probe 车的同箱 ablation 是正确范式。
+  ⑦ Route E **346/403**（剩 57）。SORRIED 49 / AXIOM 585 不变。下一条：续1517。
 - **2026-11-25（根因定位：箱 Hessian 区间 1e4 vs 真值 0.26；不是细分、不是 Taylor 公式；改整式符号求导，续1517）**：
   ① **失败箱 `15866/LLLRRLR` 的通道分解（编排者亲算）**：真值 point jet（中心/两角）`w1aF = 0.0049–0.0068`，Hessian 六项 `[-0.256, +0.049]` 且箱内几乎不变；我们的**箱 Hessian 区间** h00 `[-9620,+13591]`、h11 `[-7121,+10150]`、h22 `[-14177,+9930]`——放大约 **5×10⁴**；而 value 区间仅 1e−6（紧）。⇒ 失败在**导数/二阶区间求值**，不在箱宽、不在 Taylor 误差式。
   ② **机制**：`jetlib` 复用 D11 的 **71 槽 DAG** 做 forward AD；`matanDD` 等大项（~1e6）在槽级炸开，真函数中的符号相消在 DAG 里不可见。HOL 走的是 `taylor/m_taylor.hl:769-782` 的**整式符号求导**（`gen_partial_poly` / `gen_second_bounded_poly_thm0`）+ `eval_m_taylor` 区间求值 ⇒ 相消保留。这就是“原版走通、我们失败”的根因。
