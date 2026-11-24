@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（LeafKit RC=0 组件级进展 + G3 负支套件专职车道发出，续1486）**：
+  ① **`wt1-leaf-chain-w1` 阶段报告**：LeafKit.lean **RC=0 / 12 件全恰标准三**（wplus/u/direct 三形式 matan 点括线 + matanD 区间 ops + matanDD 端点相干 + antitone 运输），9.55 s / 5.87 GB、582 行，快照已 sync（两处签名注意：`lk_matanD_ops` 多 `horder` 假设、`lk_matan_wplus` 需 `1 ≤ ql`）。phase 2 已按 hP1 直证形态执行；当前关键路径 = LeafD11 生成器（8 子盒全链）。
+  ② **派 `wt1-matan-negkit-w1`（G3 专职，前车道建议+配方）**：Mathlib 无 atanh 级数引理（已探）——新文件 `MatanNegKit.lean` 纯新增：artanh 部分和 N=5 括线（HasDerivAt 经 `artanh_eq_half_log`+log 链式；下界单调法/上界 M 字面量）→ 组装 matan 负支区间引理（**端点方向 StrictAntiOn 别接反**；跨零拆段）；独立成件不 import 未落库 LeafKit；数值自检 Python 全精确比方向与包含性。槽协议照旧。
+  ③ G2 = LeafKit（本条①）+ G3（本条②）+ G4 = LeafKit 的 matanD/DD（负支缺口由②评估补）——括线三件套收拢中。
+  ④ SORRIED 49 / AXIOM 585 不变。下一条：续1485。
 - **2026-11-24（数据车收线验收——597/597 全闭合 + 债陈述定位 + 冻结合同第二缺陷，Route B 落点改判 hP1，续1485）**：**`wt1-phaseb-data-w1` 交付验收（SHA 645/645、三张主表行数对上：597+136+10、编排者读 WIRING_SPEC 关键段）；预算 1.7 CPU·h 零 Lean。**
   ① **A 主产出**：597 终端全量 D11 **597/597 闭合、6,989 认证叶零失败**；9 外层叶树逐字节复现（597/588/0 cell_false）；**m4=0 区（7 叶/480 终端/5,890 叶）全量首次**；D11.hi p50 −1.26e-3 / p95 −6.3e-5 / 最薄 −1.53e-6。分支需求：6,734 叶全正（正支够）、**255 跨零 / 204 整段负（需 matan 负支 atanh 套件——库里没有，新缺口 G3）**。
   ② **B**：136 掉落盒 136/136 一击直闭（每盒 1 叶，全 Δ>0）。
