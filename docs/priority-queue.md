@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（checker 生产化：sh_* 桥 ring NO-GO/rfl 卡渲染差异，双车道并行，续1506）**：
+  ① **任务 3（sh_* 桥）实测**：机械部分可行——`simp only [54 条 sh_*]`（剔除 6 条裸 t/g，带 `hA/hB/hC` 的 6 条显式传参）**4 s 完整展平** `w1F2` 到原子级；但 **`ring` 收口 NO-GO**（~800 节点/10 原子/含 `⁻¹`，`maxHeartbeats 4M` 下 239 s 超时）；**`rfl` 卡 24/60 条** `sh_*` 的 RHS 与 `render_real` 不同（`tAD/tADD/tBD/tBDD/tCD/tCDD` + `gA/gAD/gADD/gB/gBD/gBDD/gC/gCD/gCDD` 族；根因 = `numA/numB/numC` 型「名义渲染 = 0」子槽：落库生成器展开、`render_real` 代入 0）。换 `leafcore.real_of_slot` 后 382→306 节点，`gA` 族剩 **12 条**差异。**修法 = 纯 Python 对齐（同一条叶子渲染函数），无需再碰 Lean 证明**。
+  ② **判据不受影响**：1.35 MB/箱 + 比较引理/终端 ≈**1.45 MB ⇒ ≈45 GB**；做槽 `Nat` 打包（−295 KB/箱）⇒ **1.06 MB/箱 ≈33–36 GB**——两档全部达标（≤2 MB/箱、≤120 GB、理想 ≤60 GB）。
+  ③ **双车道并行**：(i) **`wt1-bridge-align-w1`**（纯 Python + 一个 Lean 探针）——`render_real` 与 60 条 `sh_*` RHS 逐字节对齐（目标 60/60 零差异，含 `numA/B/C` 展开形），`BridgeProbe.lean` 全部 `rfl` 收口亲编验证；(ii) **checker 生产车续作**——116 条网格圆整比较引理、槽字面量 `Nat` 打包（1.35→1.06 MB）、终端装配骨架（`Forall₂`+`run_sound`+`take`+`headNeg`，桥未就绪期用**段变量** `hbridge` 作假设，留一行替换点）。两车互不阻塞，桥一到即接发射器与全表 dry-run。
+  ④ Route E ~275/403。SORRIED 49 / AXIOM 585 不变。下一条：续1505。
 - **2026-11-25（checker 可行性 GO：每箱 olean 16.6→1.35 MB，全量 ~42 GB；`ZPlan` 落库 `58248c16`，续1505）**：
   ① **`wt1-checker-w1` 可行性判定 = GO**：反射式区间算术检查器把每箱 olean **16.6 MB → 1.35 MB（12.3×）**，31,114 箱外推 **≈42 GB**（基线 517 GB），远低于 120 GB 线且低于 60 GB 理想线；信任面不扩大（kernel `decide`，无新公理）。
   ② **编排者亲验**：`ZPlan.lean` 亲编 RC=0 / 2.15 s / olean 1.27 MB；pruned 单箱样本亲编 **RC=0 / 6.99 s / 5.64 GB / olean 1,416,944 B**，`leafRun` = `[propext]`、`leafOut_d11_neg` 无公理、原子 mem 标准三、0 sorryAx。
