@@ -379,6 +379,21 @@ LEAN_PATH**——不带 `-o` 的裸编译过的是源码自检，下游仍对池
 自检三相；编排者落库三件套把 ③ 列为必做。对照：同日 LeafChain/LeafShapes patch
 三相全过——同批次两种 patch 质量并存，属生成器/手写差异而非环境问题。
 
+**PR-60 wt1 叶发射五则：物化集合对齐 / mem 括号 / Dlt 桥 / rw 侧目标 / 除法类型标注**
+（2026-11-24 `wt1-emission-cont-w1` 实证，DELIVERY §3/§7；前两条已造成一次真实误诊）：
+① **物化叶集合必须 = `gen_shapes.real_of_slot` 的叶集合**（`NAMED` 中实数字符串 ≠ `'0'`
+的全部 ∪ boot 字面量 ∪ matan 渲染名）。少一个 ⇒ Lean `autoImplicit` 把它当隐式变量，
+报错形如「unsolved goals + 上下文里 `w_b0_sI : QInterval`」——**极易误诊成数学/精度或
+`QInterval.inv` 分母问题**（`wt1-full-emission-w1` 的 P1d 就是这么误诊的，已 ERRATA；
+正确修法一次物化 71 槽、单条 `norm_num` 2–12 op 全闭，无需任何两段链）。
+② `QInterval.mem` 的实数侧必须加括号：`.mem ({real})`；否则 `w1DltD y4 y5 y6` 被解析成
+三次应用。③ `Dlt` 槽的桥只能是 **ℝ 等式**（`(Dlt.lo:ℝ) = w1Dlt hi hi hi`），
+不能桥成 `QInterval.mk`（字段是 ℚ，`w1Dlt` 是 ℝ）。④ **无条件 `rw [h]` 会为 `h` 里
+未出现的显式 binder 造 `⊢ ℝ` 侧目标**（`rw [w_b0_x4_real]`/`rw [sh_lf4]`）；形状引理
+显式给 y4 y5 y6，无用的 `_real` 桥直接不发（`div` vs `mul⁻¹` 是 defeq，`exact` 直过）。
+⑤ 直编时 `![(x:ℚ)/(y:ℚ) : ℝ]` 的 `: ℝ` 会挂到除法上（`Real.instDivInvMonoid`，
+noncomputable ⇒ `def` 报错）——写 `((x:ℚ)/(y:ℚ)) : ℝ` 或 `(w.lo : ℚ) : ℝ`。
+
 **PR-19 `Coplanar` 两个读法不许混用**（stepB W3b）：Mathlib `Coplanar ℝ`
 （秩 ≤2）与 `Kepler.Geom.Coplanar`（存在形 `∃ a b c, … ∧ u = a•v+b•w+c•x`）
 不是同一谓词，互转需桥接件；同文件内统一一种，跨读法显式加桥。

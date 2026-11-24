@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（发射续作四段全收线 + 成本模型定案 + 压缩版派单，续1494）**：
+  ① **`wt1-emission-cont-w1` 收线验收**：四段全 RC=0/0 error——`_eq` **71/71 闭**（单条 `norm_num` 2–12 op）、`_mem` 全闭、`D11.hi<0` + `w_b0_box_lt`、**8 箱+3 轴 `by_cases` → `w_terminal`**：**74.95 s / 9.00 GB / 12,670 行 / 2.1 MB**。编排者亲验：apply patch（1 hunk `@@ -0,0 +1,1581 @@`、apply 后 1,581 行、sha `14039c19…`）→ 亲编 RC=0 / **11.81 s / 6.04 GB**，`w_b0_box_lt` 恰标准三、sorryAx 0、error 0；随后**还原不落库**（demo 盒非正式叶；`Leaf8T` 2.1 MB/8 叶同理不落），主仓零改动。
+  ② **成本模型定案**：每箱边际 **8.84 s / 0.39 GB**（终端装配仅 1.5 s）；6,989 箱按现方案 ≈ **17.2 h 单 lean、源 1.9 GB** ⇒ 压缩版必由之路。
+  ③ **压缩切分（DELIVERY §6）**：通用库 ~71 条 `g_<slot>_mem` + 12 端点 + 6/6/6 vf + 终端模板；每箱只剩 152 def + 71 `_eq` + 23 `pos` + ~150 两行应用 ≈ **300–400 行**（1/4）。**端点必须 2^80–96 向外舍入**（D11 最薄 `hi=−0.0064401`、余量 6.4e-3、损失 ~1e-10 安全）⇒ 40–60 KB/箱、总 300–420 MB、500 箱/片 ×14 片；3 车道 ~3.9 h 墙钟。
+  ④ **ERRATA（前车道 P1d 误诊）**：36 条 unsolved **不是** `QInterval.inv` 分母问题（无需两段链）——13 条是 `sI/h0I/…` boot 字面量无 def（autoImplicit 隐式变量）、23 条同源（`KpB/KppA/…`、D11 的 `neg1/pos/neg2` 未物化）；`tA/tAD/tADD` 等本就闭合。正解 = 叶集合与 `gen_shapes.real_of_slot` 对齐后物化 71 槽一次全闭。五条经验已入坑册 **PR-60**。
+  ⑤ **派 `wt1-emission-p2-w1`**（fresh Lean 车道，追踪 agent 已启动）：P2a 通用库 `LeafGenKit.lean`（71 mem + 12 端点 + 18 vf + 终端模板，标准三零 sorry）→ P2b 2^96 向外舍入层（精确有理自检 100% 包含、D11 余量核对）→ P2c 正式叶表 `leaves_exact.json` 接 12–16 代表叶端到端 → P2d 500 箱/片分批方案；**批量等编排者批**。
+  ⑥ 在飞：emission-p2 + DD 传输 + P-A + Route E（207/403，ETA 11-25 中午）。SORRIED 49 / AXIOM 585 不变。下一条：续1493。
 - **2026-11-24（`wt1-edges-cert-w1` 收线 PARTIAL：G6 括线 kit 落库 `000f29c3`，续1493）**：
   ① **`Wt1Edges.lean` 落库 `000f29c3`**（纯新增 605 行）：**17 定理编排者亲编 RC=0 / 7.49 s / 5.97 GB，编译输出内 `#print axioms` 17/17 恰 `[propext, Classical.choice, Quot.sound]` 零 sorryAx**——13/15 阶交错 arctan 部分和（`wt1e_atan_le_p13`/`wt1e_atan_ge_p15`/`wt1e_p15_mono`，对一切 s≥0 无小参数限制）、大正参数双端 matan 括线（`ub_big`/`lb_big`，覆盖 D4 槽 t≈4.1–8.3）、负参数上界 `ub_neg`（至 −0.36，artanh 尾）、nb12w 小参数重导出三件、`arctan(√2)∈[0.95531638,0.95531671]` 经 tangent-addition 六件。patch 三相检查 PASS（1 hunk `@@ -0,0 +1,605 @@`、apply-check PASS、apply 后 605 行、sha `dfba44ad…` 与快照源副本逐字节一致）；禁造边扫描干净。
   ② **数值面全绿（车道 `out/selfcheck.json`）**：数据车 8 项交叉核对全过（E00/E01/E11 min_lo≤真值、widest_hi≥真值-max、E00 全局最小在扭点 63/25）；括线 soundness ~600 点 0 失败；三边 **51 分件余量全正**——E00 37 件最薄 +1.10e-5 @ [2.518,2.519]、E01 7 件 +5.21e-3、E11 7 件 +1.45e-2。
