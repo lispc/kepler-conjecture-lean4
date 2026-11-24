@@ -329,6 +329,7 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（用户批「发」：派 `wt1-edges-cert-w1`——G6 三边证书 + ASSEMBLY_SPEC 蓝图，续1487）**：G6 是缺口清单中最后一块「不依赖叶模板」的独立 Lean 件；E00 全塔最紧（真余量 5.11e-5 @ y4≈2.5197）需锐括。车道任务：①三边（E00/E01/E11+镜像）转真 Lean 定理（复用 `cell3-wt1-edges-w1` 前案 CANDIDATE 手法 + 数据车 `edges_cert.tsv`）RC=0 恰标准三；②ASSEMBLY_SPEC.md = `bank_QZECFICwt1_from_tower` 记录逐字段陈述 + 叶→glue→9根→hP1→3边装配次序蓝图（全量发射车道的接线输入）；③Python 全精确自检。SORRIED 49 / AXIOM 585 不变。下一条：续1486。
 - **2026-11-24（LeafKit RC=0 组件级进展 + G3 负支套件专职车道发出，续1486）**：
   ① **`wt1-leaf-chain-w1` 阶段报告**：LeafKit.lean **RC=0 / 12 件全恰标准三**（wplus/u/direct 三形式 matan 点括线 + matanD 区间 ops + matanDD 端点相干 + antitone 运输），9.55 s / 5.87 GB、582 行，快照已 sync（两处签名注意：`lk_matanD_ops` 多 `horder` 假设、`lk_matan_wplus` 需 `1 ≤ ql`）。phase 2 已按 hP1 直证形态执行；当前关键路径 = LeafD11 生成器（8 子盒全链）。
   ② **派 `wt1-matan-negkit-w1`（G3 专职，前车道建议+配方）**：Mathlib 无 atanh 级数引理（已探）——新文件 `MatanNegKit.lean` 纯新增：artanh 部分和 N=5 括线（HasDerivAt 经 `artanh_eq_half_log`+log 链式；下界单调法/上界 M 字面量）→ 组装 matan 负支区间引理（**端点方向 StrictAntiOn 别接反**；跨零拆段）；独立成件不 import 未落库 LeafKit；数值自检 Python 全精确比方向与包含性。槽协议照旧。
