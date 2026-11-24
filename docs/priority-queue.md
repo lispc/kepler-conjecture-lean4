@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（P-A 落库 `e4b22e60` + 正式叶 8× 路径 Lean 级验证通过 + 发射成本定案，续1497）**：
+  ① **`nlikit-boxtree-impl-w1`（P-A）收线，27 文件 / 6,865 行落库 `e4b22e60`**（纯新增 `lean/Kepler/NliKit/`）：`BoxTree.lean` 168 行（`DC`/`LeafRow`/`rowBox`/`Cover`/`cover_sound`，`n/m/Aux/P` 全参数化、`hsound` 开放）+ wt2A 重放 62 叶/573 片（导出 `wt2a_hcore_cover`、`bankQZECFICwt2A_cover`）+ sqrt8 重放 30 叶/467 片（`s8_half_cover`、`s8_bank_cover`）+ R3 单 cell decide 探针 + R5 切点重叠。**编排者亲验：27/27 模块 RC=0/0 error（最重 `Wt2AS1` 35.6 s），亲跑公理探针 12/12 恰标准三、sorryAx 0**（含两条 bank cover、hsound/cover、R5、R3 sound）；禁造边扫描干净。R4 负对照（删叶/删实例）确证树不变量真实承重。
+  ② **正式叶 8× 路径 Lean 级验证通过（决定性）**：用 `gen_leaf2.py --limit 1 --subdiv 2 --bits 96` 对**最薄认证叶** `15868/LLRLR/LLRL`（认证 D11 −1.529e−6）生成 8 子箱 8,701 行，**亲编 RC=0 / 87.11 s / 7.96 GB / 16/16 恰标准三 / 0 sorryAx**（证据存 `wt1-emission-p2-w1/orch_verify/`）。⇒ 正支 8× 发射机制在真实叶上成立（此前 `LeafPick4S2` 3.5 MB 仅生成未编译）。
+  ③ **全量扫描定案（零 Lean 细分研究）**：6,734 正支叶在 `(2,2,2)` 下 **6,734/6,734 全闭**，最薄 8× 余量 **−1.281e−3**（`15866/LLLRRLR`）；1× 仅 105 叶可闭（混合策略只省 735 箱 ≈2 h，可白拿）。负支 255 = 204 全负叶（端点点括线+单调性 **204/204 1× 闭合**，余量 1.08e−2…4.70e−2）+ 51 跨零叶（8× **51/51 闭合**，7.18e−3…3.05e−2）；`MatanNegKit` 槽级 mD/mDD 在负区间病态（0/204），**缺的是 `MonotoneOn matanD (Ioi (-1))`**（matanDD 减已由 `MatanDDNegTransport` 落库）。
+  ④ **发射成本**：推荐 54,484 箱（正支 6,734×8 − 105×7 + 负支 204×1 + 跨零 51×8），源 ≈4 GB；按实测 8 箱 87.11 s（含 import 摊派 ≈10.9 s/箱）外推 **≈155–165 h 单 lean / 50–53 h 三车道**（≈2.2 天）。细分形状无更便宜解（≤6 箱模式不闭合；`(4,2,1)` 余量 9.36e−4 不达标）；能改变量级的是「更紧 DIHCDD 求值」开发路线（1–3 天开发、收益 ~8×、成功不确定）。
+  ⑤ 下一步（待用户裁）：数据层重生成（54,484 箱、h0cut 修正、负支端点形）+ `MonotoneOn matanD` 小件 → 三车道批量（~2.2 天）或二车道（~3.3 天，留一槽给 ZTG/edges）。
+  ⑥ SORRIED 49 / AXIOM 585 不变。下一条：续1496。
 - **2026-11-25（P2 压缩发射收线：LeafGenKit 落库 `08974b61` + 正式叶 D11 卡点 + 细分研究派单，续1496）**：
   ① **`wt1-emission-p2-w1` 收线，`LeafGenKit.lean` 落库 `08974b61`**（纯新增 783 行）：71 条 `g_<slot>_mem` + 71 条 `gtree_<slot>` + 8 个括线函数 def + `g_m/g_mD/g_mDD_vf` + 终端 `g_terminal3` + 4 条正性/端点组合子。编排者亲验 patch 三相 PASS（1 hunk、783 行、sha 一致）；**亲编 RC=0 / 4.68 s / 5.78 GB，78/78 恰标准三、sorryAx 0、error 0**。
   ② **舍入层达标（P2b）**：`round_out` 精确 `Fraction`（2⁻ᵇ 网格 floor/ceil），60,000 有理 × 5 位宽 = **0 包含失败、excess 恰 ≤1 ulp**（96 bit 时 1.26e−29）；`_eq` 等式层整体删除，只剩 3 个 outward `neg1q/posq/neg2q` 经单侧 `≤` + `g_hi_add_sub` + linarith。
