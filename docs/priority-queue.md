@@ -329,6 +329,7 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（用户批：派 `ztg-m45-spec-w1`——ZTG M4/M5 工单与证书规格设计，续1489）**：零 Lean 设计车道，任务 = ①三条 ZTG sorry 精确陈述+消费链+M3 接口盘点（义务形状「单多项式分子/正分母 Δ」源码级确认）；②**M45_WORKORDER.md**（逐条证书义务、括线层限定〔W4 Bernstein NO-GO/Gate-0 CertTM NO-GO 不得用〕、**y5 硬约束内置=slice 级**、发射范式参考 wt1 Probe1/LeafKit、批次预算锚 M3 实测 815 定理）；③**CERT_DATA_SPEC.md**（现有预认证数据与 M4/M5 所需之差、S5 dyadic DC 兼容面、**GIGO 防线**=M3 双根因教训的逐项对表协议）；④**GAP_LIST.md**（M4/M5/M6 缺口+风险表）。产出即 ZTG 主工 Lean 车道的派单依据。Route E 单工人进度 184 行（~29 片自单工人重启）。SORRIED 49 / AXIOM 585 不变。下一条：续1488。
 - **2026-11-24（LeafKit 落库 `fc1625d7` + 全量发射主工车道发出——wt1 关闸最后一脚开工，续1488）**：
   ① **LeafKit 落库**（leaf-chain 交付，编排者三件套亲验：SHA 24/24、patch 纯新增、RC=0、**12 件恰标准三零 sorryAx**）：matan 点括线三形式（direct/w+/u）+ 值 antitone hull + matanDD 端点相干 + matanD 纯区间 ops；582 行、9.55 s / 5.87 GB。
   ② **leaf-chain 结构性实测（配方全写入 DELIVERY §3/§4）**：**2³=8 子盒是硬要求**（单盒 D11.hi=+0.021 → 8 盒 −0.0120）；**63 条单调引理只需 1 条**（仅 Dlt 需角点配对，D11=[−0.09749,−0.01199]）；本叶六 matan 槽全 direct 形式；三种发射模式（字面量等式/norm_num cast 桥/nlinarith 单调）已探针验证 RC=0。**叶定理本体未交（预算，止损诚实）**——配方与节点数据全在 `out/lean_eval.json`。
