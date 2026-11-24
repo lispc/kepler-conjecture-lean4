@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（用户批「都发」：数据车 + glue 原型双发，Route E ETA 结算，leaf-chain 恢复续作，续1483）**：
+  ① **派 `wt1-phaseb-data-w1`（零 Lean）**：597 终端全量 D11 证书（**m4=0 区首次全量**）+ 136 掉落盒证书 + 冻结叶六 payload 数据（LEAF_NOT_READY 数据侧）+ **wt1 债陈述侦察与接线 spec**（Route B 关闸最后一环）+ 生成器接口规格。
+  ② **派 `wt1-phaseb-glue-w1`（零 Lean 为主）**：覆盖算术引理族 + 决策树发射器 `gen_glue.py` + **玩具自检闭环**（小合成树验证发射器，与 w1F2 数学解耦）+ 叶定理签名约定对接 spec；槽空做最小编译验证。
+  ③ **Route E ETA 结算（单工人实测口径）**：403 总片 − 155 distinct 有效（8 片 redo 已重测）= **剩 ~314 片**；单片墙钟均值 292s/中位 248s/最长 662s；**单工人 ETA ≈ 22–26 h（11-25 傍晚~夜间）**，让槽给 Route B 编译则顺延。
+  ④ **leaf-chain 恢复事件**：`wt1-leaf-chain-w1` 平台中止（回执半句「写最终版 constructor…」），实况核查 = LeafKit 624 行 RC=1 无 olean、快照空（checkpoint 纪律未执行）——按 §3 恢复原 agent 续作：先 sync 快照再续 constructor→RC=0，phase 2 按 post-fix 签名，签名约定 `∀ x∈leafBox, w1F2 … ≤ c ∧ c < 0` 供 glue/data 车道消费。
+  ⑤ 槽格局：Route E 单工人 1 + P-A 1 + leaf-chain（编译间歇）+ 两个零 Lean 车道。SORRIED 49 / AXIOM 585 不变。下一条：续1482。
 - **2026-11-24（用户令：Route E 降级「永不双 lean」——双流改单工人，槽位让给 Route B，续1482）**：
   ① **用户裁定（原话）**：「Route e 优先级很低了。以后它都不要两个lean，太浪费了」——Route E（发射路线）降为低优先级背景数据线，永久最多 1 lean；2 个腾出的槽全部给 wt1 Route B（精确证书路线）。
   ② **执行**：流B 停（`TaskStop` + memlim orphan 自清）；发现旧流A 带奇偶过滤（单流跑会冻住全部偶数片）→ 改造成 **`run_single.sh`**（全 parity 单工人、同 skip/redo/checkpoint 逻辑、orphan 检查保留）**并同步快照 `scripts/`**（redo74 丢失教训：驱动脚本必须与状态文件一起落快照）；旧流A 驱动停、单工人起（PID 16561，guard go lean=2/13.1GB，起编 redo74 首片 SMP_L15862_1_2_S00）。lean 格局 = Route E 1 + P-A 1 = 2，空 1 槽给 Route B 车道。
