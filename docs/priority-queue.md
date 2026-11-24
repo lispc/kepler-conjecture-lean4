@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（生产收尾：证明链全通，体积闸差最后 36 条容纳；`D11Plan` 落库 `16f1dadc`，续1510）**：
+  ① **`wt1-emission-prod-w1` 收线验收**：K1/K2 原子化（交接报告唯一修法）→ `runPR_eq` **1399 指令一次 `rfl`**；`d11_bridge`（`simp only [54 sh_*]; rfl`）+ 11 条 `sh_<slot>_full` 全标准三；`d11Render` 与桥车道 **54,068 字符逐字节同源**。新 kit `Wt1Check/D11Plan.lean` 落库 **`16f1dadc`**（519 行；编排者亲编 RC=0 / 9.96 s / olean 0.91 MB / 13 条恰标准三 / 0 sorry）。
+  ② **生产 emitter 关键设计（防御性）**：`pq1` **必须保持 plan 叶子**——若让 plan 计算 `pq1`，`DIHCDD` 跨零使 D11 上界变正（实测 24,583/31,114 箱失败）；转录源区间由 plan 自身两级 prefix run 给出（打破 matan-mem↔源区间循环）；括线统一分支无关 `lkB_*` 链（正/负/跨零同形）。
+  ③ **6 类代表叶全绿**（RC=0/0 error/0 sorry/恰标准三）：1x 9 s/4.67 MB、y4x4 20 s/4.18、allx2 39 s/4.09、cross8 41 s/4.61、neg1 9 s/6.05、kink 39 s/3.82（MB/箱）。**体积闸未过**：3.82–6.05 MB/箱 ⇒ **149 GB**（≤2 MB/≤120 GB 双闸均不过）。
+  ④ **主因量化**：18 条槽 `memR` 的 **36 次 ℚ 端点容纳 `norm_num` = 2.77 MB/箱**（换 `sorry` 对照 4.90→2.13 MB）；基座（定义+3 decide+比较+点括线+`_vf`+终端）= 2.13 MB；粗化 R（1e10→1e6）只降 10% ⇒ **结构性 Rat/ℝ 归一化代价**。修法：36 条改**纯整数交叉乘不等式 + `by decide`** ⇒ 预期 **1.5–2.0 MB/箱 ⇒ 47–62 GB**，双闸同过。
+  ⑤ **已派 `wt1-containment-z-w1`**（fresh）：一次性 `Contain.lean` kit + 发射器 36 条替换 + 6 类重编（≤2 MB/箱）+ 全表 dry-run。全表发射实测 20.5 叶/s ≈ 5.7 min（幂等可续，上轮跑到 3,650 收线）；源 **71 KB/箱 / 1,090 行/箱**。
+  ⑥ Route E ~325/403。SORRIED 49 / AXIOM 585 不变。下一条：续1509。
 - **2026-11-25（checker 桥接入完成，终端剩 K1/K2 原子化一行；换 fresh 生产收尾车，续1509）**：
   ① **桥接入（前序车）**：`d11Render` + `d11_bridge` 原样拼入 `S_1x_prod2.lean`，两块无 error；`hbridge` 段变量已替换为 `d11_bridge y4 y5 y6 hA hB hC`（`hA/hB/hC` 待计划 `aA/aB/aC` + `decide`）；终端其余全链 typecheck。
   ② **唯一卡点（已定位，1 行修法）**：`runPR_head` 的 `rfl` 不同源——桥的 `d11Render` 把 **`K1/K2` 当原子**，而 `leafPlan` 把它们当可计算槽展开（`2*mm1/π` 树）。修法：`gen_plan.py` 的 `PLAN_LEAVES` 加入 `K1`、`K2`，用桥车道的原子渲染串作其 `leafRenders`，重发后 `rfl` 即通。
