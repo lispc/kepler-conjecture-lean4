@@ -329,6 +329,14 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（数据车收线验收——597/597 全闭合 + 债陈述定位 + 冻结合同第二缺陷，Route B 落点改判 hP1，续1485）**：**`wt1-phaseb-data-w1` 交付验收（SHA 645/645、三张主表行数对上：597+136+10、编排者读 WIRING_SPEC 关键段）；预算 1.7 CPU·h 零 Lean。**
+  ① **A 主产出**：597 终端全量 D11 **597/597 闭合、6,989 认证叶零失败**；9 外层叶树逐字节复现（597/588/0 cell_false）；**m4=0 区（7 叶/480 终端/5,890 叶）全量首次**；D11.hi p50 −1.26e-3 / p95 −6.3e-5 / 最薄 −1.53e-6。分支需求：6,734 叶全正（正支够）、**255 跨零 / 204 整段负（需 matan 负支 atanh 套件——库里没有，新缺口 G3）**。
+  ② **B**：136 掉落盒 136/136 一击直闭（每盒 1 叶，全 Δ>0）。
+  ③ **C = 冻结合同第二缺陷（缺陷 #10）**：六 payload **4/10 不 sound**（value 漏 1.5e-5、first[0] 漏 5.2e-4、first[1]/[2] 漏 1.7e-4/2.1e-4——盒上真值出冻结区间）；双独立证据（mpmath + base-200 x-DAG 角点一致 1e-13）；D11 槽 OK。⇒ `SelectedLeafEvidence` 的 value_eq/first_eq 不可诚实满足，冻结门成死重（与已修的开集缺陷独立）。**SF 待议**：payload 数据已算好可重冻结，非 Route B 关键路径。
+  ④ **D 接线定位（Route B 关闸图齐了）**：债 = **`Assembly.lean:427-431 nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry`** → nliCell3Bank → nliPackNonlinearNonOx3q1h → TheNonlinearInequalities → 主定理；**落点 = `bank_QZECFICwt1_from_tower` 的 hP1（纯函数不等式 `∀ y∈box, 2≤y5,y6≤2*hminus → w1F2 ≤ 0`）+ 3 条边**。缺口 G1–G8 列清：G1 叶定理 6,989 条（数据齐、Probe1 范式，估 12–20 h 编译）｜G2 matan 正支套件（零件在库需组装）｜**G3 matan 负支 atanh 套件（必须新写）**｜G4 matanD/DD 区间引理（正/负/跨零三支）｜G5 glue 588+9 根阶梯+bank 盒⊆9 根之并（需有理-无理 sqrt 单调小引理）｜G6 三条 1D 边证书（数据齐，E00 余量仅 5.1e-5 全塔最紧）｜G7 h0cut kink 分盒 80 终端｜G8 冻结合同弃用。**全部数据已就位（data/ 12 张表）。**
+  ⑤ **PR-55 复核战果**：独立重转公式抓出两个 prior 引擎未暴露 bug（`lfun` 系数差因子 2、`sol0` 漏 −π）+ d4_A/B/C「角点」改精确 min/max（凹二次轴旧形态不 sound）；修后 selftest 四路独立 0 violations。
+  ⑥ **leaf-chain phase 2 改判（编排者已通知）**：**砍 c2data/partial2 桥/jet 装配**——叶定理直接陈述 `w1F2 ≤ D11hi < 0` 用 slot 区间链直证（hP1 形态不需要 C² 合同）；LeafKit（matan 括线）= G2 材料；G3（atanh 负支）由其评估并入或另派。
+  ⑦ Route B 拼图：覆盖层 ✅ `bb5a3702` ｜ 数据 ✅ 本条 ｜ 叶模板 🔄 leaf-chain ｜ 括线套件 G2–G4 🔄 ｜ 发射+接线 = 全量发射车道（待模板）。SORRIED 49 / AXIOM 585 不变。下一条：续1484。
 - **2026-11-24（glue 车道收线 + Glue.lean 落库 `bb5a3702`——Route B 覆盖层就位，续1484）**：**`wt1-phaseb-glue-w1` 交付验收（SHA 53/53、patch 纯新增 184 行 apply-check PASS、编排者三件套亲验 RC=0/12 定理恰标准三）后 Glue.lean 落库。**
   ① **内核引理族**：`box_glue` = 任意实数割点 m 的通用粘合（`∀x∈Box lo (update hi j m), P x → ∀x∈Box (update lo j m) hi, P x → ∀x∈Box lo hi, P x`）——中点二分/原版分数割（0.2239/0.3327…）/m4 横切 6.3504 三类规则共用一条。12 定理全标准三。
   ② **工单勘误（机器证据优先）**：编排者工单 §A 的引理方向写反（`x j ≤ mid` 对应的是**下半**盒 `Box lo (update hi j mid)`，非上半）——车道按正确方向实现并记录；此为 §7「侦察结论与工单冲突以机器证据为准」又一实例。
