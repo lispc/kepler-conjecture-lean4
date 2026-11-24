@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（HOL 基线车收线：每 pass 0 数值、证明时重算；六维卡 STRUCTURAL-DIFF，1 箱标定探针为放行前置，续1514）**：
+  ① **`holparity-baseline-w1` 收线**：两路官方日志复核 HOL = **619 pass + 610 glue**（`azure/results/output/trig/out/out.txt:168-386`、`azure/results/urban/out/1/15850/2/15899/stdout:1134-1376`；9 条定理 hash 在 `text_formalization/general/theorem_nonlinear_digest.hl:23240-23248`）；`out.txt:134-151` 有 3 个库加载自检块（20/27/1），是 grep 陷阱（与审计的 873/860 对账一致）。HOL 9 cell = **1,543.027 s + 加载 591.974 s**。我方 597/588 出处 `wt1-gap-attrib-w1/logs/w1_base_x.log:10`，是**原版终端检验树的叶/内节点**，hP1 只是同盒换谓词。
+  ② **结构性事实（新登记 SD-2）**：HOL 每个 pass **只存 `Result_pass(int,bool)` + `pp`**（`verifier/certificate.hl:18-36`），f/∇f/∂²f 在证明时重算（`taylor/m_taylor.hl:769-782`）并在形式验证阶段**再算一遍**（`verifier/m_verifier.hl:1495-1510`）；`m_taylor_arith*.hl` 是机制不是数据（0 个 ≥20 位数字串）；数据只有 `azure/ineqs.txt`（33.4 MB/23,237 行），wt1 9 行 5,613 B。⇒ `docs/hol-parity-gate.md` §7 新增 **SD-2**（证书单位：0 数值/重算 vs 物化 34 有理/箱）。
+  ③ **判定**：`STRUCTURAL-DIFF`（D2/D4）；D1 `PARITY`（0.964×）、D3 `PARITY`（现有资产 0.21×）、D6 `PARITY`、D5 生成侧 `PARITY`（0.074–0.101×）/ Lean 侧 `UNRESOLVED`（初筛 2.7–5.0×）。**卡片不放行 Lean 车道**：D4 下界 `UNRESOLVED`（Taylor 形态 1 箱 olean 未测）、D5 Lean 侧未测；旧 `≤3 MB/箱` 已被 SPEC 自行撤回。
+  ④ **基线对 SPEC 的勘误**：D1 WITHIN→`PARITY`；D2 `PARITY`→`STRUCTURAL-DIFF`；D3 `UNRESOLVED`→`PARITY`（0.21×）；D4 的 640 KB「下界」→ **flat 链共享基座前缀差分，不是 Taylor 下界**；D5 HOL 时间 `UNRESOLVED`→1,543.027 s + 591.974 s；内容 26 vs 34 字段留 `UNRESOLVED`（差 8 个簿记字段，可能偏低 1.74×）。
+  ⑤ **下一步**：等 Taylor 全 597 箱 w1aF 扫描（已到 275/597，≈0.86 s/箱）；若全闭，派 **1 箱 Taylor 证书标定探针**（`taylor3_upper` kit + w1aF 单箱 + `decide` 终端；实测 olean 分项 / 墙钟 / RSS / `#print axioms`），先钉死 D4/D5 下界，再谈全量。换对象到 `w1aF` 后 D1 需按基线 Q5 重核计数口径（597/588 是原版终端树、换谓词后的证书条数要另算）。
+  ⑥ Route E **338/403**（剩 65）。SORRIED 49 / AXIOM 585 不变。下一条：续1513。
 - **2026-11-25（HOL 基线审计收线 + Taylor 车道关键转向：D11 Taylor NO-GO、HOL 原对象 w1aF 5/5 闭合，续1513）**：
   ① **`holparity-audit-w1` 收线（两轮）**：7 个 wt1 车道快照中 6 个对 `flyspeck/m_taylor` 引用数 = 0（唯一 gap-attrib 6 处，619/610 即其量）⇒ PR-61 的「方案先行」是系统性而非个案。checker 的 GO（1.35 MB/箱 / 42 GB）来自**剪枝样本**，生产实测 4.0–6.35 MB/箱 ≈149 GB（打穿 3.0–4.7×）；26× 差距分解（网格 17.9× × 括线 1.49×）早在 `pq:553` ②，细分研究只优化末端 4.53× 且未引用。
   ② **HOL 数字编排者复算**：`QZECFIC wt1` 9 cell `^Time` 和 = **1,543.027 s**，pass/glue = **619/610**（逐块 111/110+…+59/58）；`out.txt` 13 case（`Verifying cases: 1 -- 13`，`:161`）pass/glue = **873/860**（wt1 619/610 + wt2 A 254/250）；13 case 之前另有 3 块 48/45（`:134-150`）⇒ 全文件 16 块 = 921/905。**ERRATA：我上一条给审计的「13 case 全量 921/905」错，正确 873/860；921/905 不进任何判词**。`taylor/` 7 文件 = **1,420,817 B**、F4 三实例 **136 行（去换行 204,420 B）** 复核一致。

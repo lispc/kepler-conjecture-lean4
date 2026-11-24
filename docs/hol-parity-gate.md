@@ -82,6 +82,7 @@
 | # | 维 | 差异 | 下界怎么给 |
 |---|---|---|---|
 | SD-1 | D4 产物字节 | HOL Light 是 LCF：定理是内存值、证明是脚本，不落 proof object；Lean 4 每个声明都落 olean | 按「证书内容的可编码位数 + Lean 最小样例 olean」估下界；目标 ≤1.2× 下界（不是 ≤1.2× HOL） |
+| SD-2 | D2 证书单位 | HOL 每 pass 只存 `Result_pass(int,bool)` + `pp`（`verifier/certificate.hl:18-36`）；f/∇f/∂²f 在证明时重算（`taylor/m_taylor.hl:769-782`）并在形式验证阶段再算一遍（`verifier/m_verifier.hl:1495-1510`），磁盘 0 数值；Lean 必须物化证书数值或让内核重算，两者都落 proof term | 内容下界按「我方字段表逐项列 × 位数」给（当前 34 有理/箱 与 26 有理/箱 两口径差 8 个簿记字段，UNRESOLVED）；用 1 箱标定探针实测 olean；目标 ≤1.2× 下界 |
 
 > 新 SD 条目必须有 `file:line` 证据，由 T1 基线登记进卡片；结构性差异不是免死金牌——
 > 它只替换比较对象（原版 → 可实现下界），不取消比较。
