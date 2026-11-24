@@ -329,6 +329,14 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（P2 压缩发射收线：LeafGenKit 落库 `08974b61` + 正式叶 D11 卡点 + 细分研究派单，续1496）**：
+  ① **`wt1-emission-p2-w1` 收线，`LeafGenKit.lean` 落库 `08974b61`**（纯新增 783 行）：71 条 `g_<slot>_mem` + 71 条 `gtree_<slot>` + 8 个括线函数 def + `g_m/g_mD/g_mDD_vf` + 终端 `g_terminal3` + 4 条正性/端点组合子。编排者亲验 patch 三相 PASS（1 hunk、783 行、sha 一致）；**亲编 RC=0 / 4.68 s / 5.78 GB，78/78 恰标准三、sorryAx 0、error 0**。
+  ② **舍入层达标（P2b）**：`round_out` 精确 `Fraction`（2⁻ᵇ 网格 floor/ceil），60,000 有理 × 5 位宽 = **0 包含失败、excess 恰 ≤1 ulp**（96 bit 时 1.26e−29）；`_eq` 等式层整体删除，只剩 3 个 outward `neg1q/posq/neg2q` 经单侧 `≤` + `g_hi_add_sub` + linarith。
+  ③ **ERRATA（数据层必须修）**：参考 `build_box` 假设 `h0cut ≡ 1`，**对 kink 以上不是外包**；sound-and-tight 规则 = `{1}`（kink 下）/ `{0}`（kink 上，`lfun` 在 kink 为 0 ⇒ `pq1≡0`）/ `[0,1]`（跨 kink）⇒ **6,043/6,989 叶变精确 0**。P2c 已按修正规则运行。
+  ④ **压缩机制端到端通过（demo8j）**：8 箱 **RC=0 / 0 error / 16/16 标准三 / 0 sorryAx / 79.70 s / 8.70 GB**；每箱 **9.41 s / 0.365 GB / 1,088 行 / 73.2 KB**（Phase 1：8.84 s / 0.39 GB / 1,581 行 / 262 KB ⇒ **源 −72%、墙钟 +6%**）。
+  ⑤ **正式叶新卡点（实测，非本车道引入）**：继承 `wtspec`/`QInterval` 链比认证引擎松 ~10×——正式叶 1× 时 `D11.hi = +0.029…+0.057`，认证值 −1.5e−6…−6.4e−5；定位 = **`DIHCDD` 区间宽 9.44（`[−5.745,+3.693]`，真值 1e−2）** 的乘积链依赖损失。每轴二分一次（`--subdiv 2`，8 子箱）全部闭合（9 叶样本 `D11.hi ∈ [−0.0162,−0.0038]`），但 **55,912 箱 / 4.1 GB / 146 h 单 lean / 49 h 三车道**。判词 **NO-GO 限定「当前表示（逐槽 QInterval 组合）/当前引擎/当前细分策略」**——非原命题、非压缩本身（压缩达标）。
+  ⑥ **派 `wt1-subdiv-study-w1`（零 Lean，追踪 agent 已启动）**：16+ 叶分层样本（含负支/kink/最薄/最厚）上测细分模式矩阵——单轴 s=2、双轴 s=2、全轴 s=2、主导轴 s=3/4——找**最便宜可行模式**（全样本闭合 + 余量 ≥1e−3），给 6,989 叶箱数/成本外推；同时量化 h0cut 修正影响、标出 255 负支叶的 MatanNegKit 槽接入缺口。目标：把 146 h 压下来再谈批量。
+  ⑦ 在飞：subdiv-study + P-A（已恢复）+ Route E（~S110/403）。SORRIED 49 / AXIOM 585 不变。下一条：续1495。
 - **2026-11-24（DD 传输收线落库 `a5452380` + P-A 配额暂停恢复事件，续1495）**：
   ① **`wt1-matanDD-neg-transport-w1` COMPLETE，`MatanDDNegTransport.lean` 落库 `a5452380`**（纯新增 595 行）：G3 负支/跨零 `matanDD` 端点相干传输。编排者亲验：patch 三相 PASS（1 hunk `@@ -0,0 +1,595 @@`、apply-check PASS、apply 后 595 行、sha `6b3b70bf…` 与快照源逐字节一致）；**亲编 RC=0 / 5.23 s / 5.82 GB，22/22 恰标准三、sorryAx 0、error/warning 0**；禁造边扫描干净。
   ② **路线偏离（实测依据，接受）**：`matan''' t = −∫₀¹6u⁶/(1+tu²)⁴du < 0` 对**一切 t > −1** 成立（110 点严格递减 + 109 点 DDD<0 实证）⇒ 走**单调路线**而非工单「优先」的 factor 端点版——factor 版对跨零叶（255）根本不可用（`inv` 需 `TI.hi<0`，两项在 0 附近对消发散），对负叶（204）宽 2.1×–1.1e4×。新解析件仅一件 `lkB_matan_le_rat_neg`（复用 `nb12w_artanh_le_sub7`+恒等式；跨零靠 `nb12w_matan_bracket3`）。产品：`AntitoneOn matanDD (Ioi (-1))` + `lkB_matanDD_slot_from_matan`（**负/跨零/正叶同一陈述**，唯一前置 `-1 < TI.lo`，同端点配对）+ `_from_matanD` + `lkB_matanDD_slot` + 0 端点劈开；保留 `lkB_matanDD_ops_neg_slot` 作独立回证。消费方探针 `ProbeSlotFull` RC=0、29/29 标准三（跨零槽 `[-1/10,1/10]` 真实实例化）；Python 自检 37 checks/0 fail，Lean `#eval` 端点 == Python 6/6 bit-exact。**G3/G4 负支缺口关闭**。
