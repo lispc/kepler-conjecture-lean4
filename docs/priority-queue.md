@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（LeafShapes 落库 + lean_eval 两公式错勘误 + DD 传输缺口小车道派出，续1491）**：
+  ① **`LeafShapes.lean` 落库 `d2e3c0c6`**（发射车道 P1b）：60 条通用 shape 引理（槽定义→QInterval mem 链消费的 ℝ 形状一次性重写），**编排者亲跑 60/60 恰标准三**、RC=0/3.8 s/5.74 GB；patch 三相检查（`@@` 头/apply-check/apply 后 wc-l）PASS——PATCH_BAD 制度首次正向执行。
+  ② **lean_eval.json 两公式错（ERRATA 候选，PR-55 战果）**：发射车道按 `Wt1TowerDeriv` 源文本逐字对表发现参考求值器 `leaf_eval.py` 两处错——`t'`/`t''` 槽误用面积导数（`aAD/aADD` 代替 `w1DltD/DltDD`，点值差 2.2×）；`W''` 分子公式错（符号反，+0.16175 vs 模板 −1.01684）。⇒ `lean_eval.json` 的 tAD/tADD/WADD/WBDD/WCDD 及下游 D11 不可用；**数据正本 `d11_engine.py` 无此错，6,989 叶数据面（leaves_exact.json）不受影响**；`scripts/wtspec.py`（135 槽 op 树，镜像 Lean 解析结合）= 发射唯一事实源。
+  ③ **修正后链机器证据**：8 均匀子盒 D11.hi ∈ **[−0.009857, −0.006441]** 全 <0；**退化盒点测试**（直接对 w1F2 公式）链区间 [−0.051778, −0.050129] 包含直接值 −0.051097 ✓（soundness 交叉验证）。
+  ④ **派 `wt1-matanDD-neg-transport-w1`**（小 Lean 车道）：负支 matanDD 端点相干/区间传输（G3 最后缺口，204+255 叶 DD 槽需要）；优先沿用 negkit 因子-区间路线，健全性优先。
+  ⑤ 发射车道已恢复续 Phase 1（gen_leaf.py → b0 → 8 箱装配 → 模板终端）。SORRIED 49 / AXIOM 585 不变。下一条：续1490。
 - **2026-11-24（negkit 落库 + PATCH_BAD 事故 + LeafChain 落库 + ZTG spec 验收——四事一账，续1490）**：
   ① **`wt1-matan-negkit-w1` 收线验收 + `MatanNegKit.lean` 落库 `1aae10ca`**：G3 全六项（lkB5 部分和/N=5 HasDerivAt artanh/两界/`lkB_matan_neg_pt` 点括线/跨零拆段/负支 DD ops）；**22 定理编排者亲验恰标准三零 sorryAx**；自检 0 失败（S1 恒等式 9/9、S2/S3 两界 18/18、S4 点括线 9/9、S5 slot 反向 3/3）。工作域：N=5 于 u=√(−t)≲0.2（宽度 1.2e-14…1.1e-7），更负需升 N（整文件重生成，PR-32）。未含：负支 matanDD StrictAnti/端点相干 slot 运输（需三阶导定号，若 G1 需要另派）。
   ② **PATCH_BAD 事故（坑册级，`4a0b5e46` 同型复发）**：negkit 的 `patch.diff` **缺 `@@ -0,0 +1,675 @@` hunk 头**（`index 0000000..0000001` 也是残的）——`git apply --check` PASS、apply 静默产出**0 字节空文件**，空文件编译 RC=0 造成假通过（我抓 #print axioms 时发现文件为空）。修复 = 以快照 33,207 字节源副本直落 + 亲编亲验。**制度**：车道交付 patch 必须同时核 `@@` 头存在 + 目标文件字节数；编排者落库前三件套必含 `wc -l` 非零检查。已通报发射车道自查。
