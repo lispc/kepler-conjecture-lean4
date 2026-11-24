@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（用户裁决：拒 50 GB checker 方案，转 Taylor-model 证书——HOL 对照与差距定案，续1511）**：
+  ① **用户裁决（2026-11-25）**：「不接受 50 G 磁盘方案。接下来你好好做 taylor model 证书吧。」⇒ **停止 checker 体积路线**（`wt1-containment-z-w1` 已 kill；`ZPlan`/`D11Plan` 落库件保留，`ZPlan` 的 ℤ 定点/栈机可复用为证书算术核验）。
+  ② **HOL 原版对照（`reference/flyspeck/formal_ineqs/taylor/` 考古）**：wt1 = **619 Taylor pass + 610 glue**（9 外层叶），每 pass 一盒；证书 `m_taylor_interval`（中心值 + 一阶偏导 + 二阶导界 + 误差），误差式 `Σ w_i·|∂_i f(y)| + dd_bound/2`；`taylor/` 机制源码 1.4 MB、`formal_ineqs` 2.9 MB。**HOL Light 是 LCF 风格，定理是内存值、证明是脚本，不落 proof object**——所以原版磁盘≈源码。
+  ③ **我们的差距拆解**：引擎已对齐（复刻 597 pass + 588 glue，−3.6%）；放大来自 (i) 认证层用扁平区间求值 ⇒ 每 pass 拆 11.7 叶（6,989/597）；(ii) 发射层逐槽区间链比 float/Taylor 模型松 ~10×（`DIHCDD` 宽 9.44 vs 真值 1e−2）⇒ 每叶再 4.5 子箱；(iii) Lean 存 proof term vs HOL 不存。合计 31,114 箱 ≈52×、16.6 MB/箱 ⇒ 517 GB；checker 只治 (iii)（→149 GB，仍不可接受）。
+  ④ **正路 = 把 Taylor 模型证书形式化进 Lean**：`w1F2` 只依赖 (y4,y5,y6) ⇒ 3 变量，走「线段一元 Taylor」`g(t)=f(c+t·h)`、`g(1)=g(0)+g'(0)+½g''(ξ)`；每 pass 证书 = 中心点值区间 + 3 个梯度点区间 + 6 个 Hessian 箱区间 + 误差检查；71 槽 mem 只需 **597×**（非 6,989×）。预期 **597 箱（或细分后 1–3k）× ≤3 MB/箱 ⇒ ≤5 GB**，墙钟同步大降。
+  ⑤ **已派 `wt1-taylor-model-w1`**（fresh）：①`TAYLOR_MODEL_SPEC.md`（通用 3 变量单侧上界定理陈述/证明骨架 + 证书格式 + 健全性来源 + 成本）；②Python 5 个代表 pass 箱判据（**GO = 5/5 Taylor 上界 <0 且余量 ≥1e−4**，否则给细分增量）；③（5/5 闭才做）Lean 1 箱端到端（RC=0、恰标准三、olean ≤3 MB）；④全量外推（N 箱 × MB/箱、三车道墙钟、与 HOL 1,229 义务对照）。
+  ⑥ Route E ~330/403。SORRIED 49 / AXIOM 585 不变。下一条：续1510。
 - **2026-11-25（生产收尾：证明链全通，体积闸差最后 36 条容纳；`D11Plan` 落库 `16f1dadc`，续1510）**：
   ① **`wt1-emission-prod-w1` 收线验收**：K1/K2 原子化（交接报告唯一修法）→ `runPR_eq` **1399 指令一次 `rfl`**；`d11_bridge`（`simp only [54 sh_*]; rfl`）+ 11 条 `sh_<slot>_full` 全标准三；`d11Render` 与桥车道 **54,068 字符逐字节同源**。新 kit `Wt1Check/D11Plan.lean` 落库 **`16f1dadc`**（519 行；编排者亲编 RC=0 / 9.96 s / olean 0.91 MB / 13 条恰标准三 / 0 sorry）。
   ② **生产 emitter 关键设计（防御性）**：`pq1` **必须保持 plan 叶子**——若让 plan 计算 `pq1`，`DIHCDD` 跨零使 D11 上界变正（实测 24,583/31,114 箱失败）；转录源区间由 plan 自身两级 prefix run 给出（打破 matan-mem↔源区间循环）；括线统一分支无关 `lkB_*` 链（正/负/跨零同形）。
