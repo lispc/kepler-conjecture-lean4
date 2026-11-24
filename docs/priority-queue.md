@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（`wt1-edges-cert-w1` 收线 PARTIAL：G6 括线 kit 落库 `000f29c3`，续1493）**：
+  ① **`Wt1Edges.lean` 落库 `000f29c3`**（纯新增 605 行）：**17 定理编排者亲编 RC=0 / 7.49 s / 5.97 GB，编译输出内 `#print axioms` 17/17 恰 `[propext, Classical.choice, Quot.sound]` 零 sorryAx**——13/15 阶交错 arctan 部分和（`wt1e_atan_le_p13`/`wt1e_atan_ge_p15`/`wt1e_p15_mono`，对一切 s≥0 无小参数限制）、大正参数双端 matan 括线（`ub_big`/`lb_big`，覆盖 D4 槽 t≈4.1–8.3）、负参数上界 `ub_neg`（至 −0.36，artanh 尾）、nb12w 小参数重导出三件、`arctan(√2)∈[0.95531638,0.95531671]` 经 tangent-addition 六件。patch 三相检查 PASS（1 hunk `@@ -0,0 +1,605 @@`、apply-check PASS、apply 后 605 行、sha `dfba44ad…` 与快照源副本逐字节一致）；禁造边扫描干净。
+  ② **数值面全绿（车道 `out/selfcheck.json`）**：数据车 8 项交叉核对全过（E00/E01/E11 min_lo≤真值、widest_hi≥真值-max、E00 全局最小在扭点 63/25）；括线 soundness ~600 点 0 失败；三边 **51 分件余量全正**——E00 37 件最薄 +1.10e-5 @ [2.518,2.519]、E01 7 件 +5.21e-3、E11 7 件 +1.45e-2。
+  ③ **UNRESOLVED（如实）**：三条顶层边定理 `wt1e_E00/E01/E11` 本体未发射（= 51 分件 + 3 aux 的 Lean 生成与编译）；锐化 K1/K2（数值配方已验证）收尾 nlinarith 有 2 处残题，按止损删除（文件零 sorry），回退方案（nb20 字面量 + 近扭点件 2× 细化）已量化。后续发射车道输入齐备（DELIVERY §4 + ASSEMBLY_SPEC §5 + `scripts/gen_lean.py` aux 模板）；**该发射车道待槽位派发**。
+  ④ **Route E 单工人进度**：**207/403 片完成（剩 196），~228 s/片 @5.75 GB ⇒ ≈12.4 h，ETA 11-25 中午前后**；当前在跑 `SMP_L15865_1_2_S05`，guard 日志正常（lean=1、p=1）。
+  ⑤ 在飞：emission-cont + DD 传输 + P-A + Route E。SORRIED 49 / AXIOM 585 不变。下一条：续1492。
 - **2026-11-24（发射车道 P1d 成本锚 + fresh 会话交接，续1492）**：
   ① **b0 成本锚（P2 首个输入）**：LeafB0 322 行（字面量层 + 60 条 _eq）**RC=0 / 21.3 s / 5.87 GB**，其中 `_eq` 24/60 已闭、**36 条 unsolved 全在含 `QInterval.inv` 分母的槽**（`t*/g*/W*/SE*/DIH*`，`norm_num` 留未决目标）——修法已定：两段链（先 `den = 字面量` ≤6 op、再 `Dlt * den.inv = 字面量` ≤6 op）。
   ② **外推（粗）**：eq 层 ~17 s/箱纯 tactic；单箱估 20–35 s；6,989 箱单 lean ≈ **39–68 h** ⇒ 压缩版必须做（通用组引理 + 每箱仅 ~20 条接口字面量 eq）。
