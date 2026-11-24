@@ -108,15 +108,42 @@ theorem w1aF_eq_w1FexOpen3 (x : Fin 3 → ℝ)
   rw [if_pos hcut]
   ring
 
+/-- Positivity-only variant of `w1aF_eq_w1FexOpen3` (additive, DEF-FIX
+`wt1c2-opendomain`: the original six-bound version above is unchanged; the
+proof body is identical since it never used the upper bounds). -/
+theorem w1aF_eq_w1FexOpen3_of_pos (x : Fin 3 → ℝ)
+    (hpos : (0 : ℝ) ≤ x 0 ∧ 0 < x 1 ∧ 0 ≤ x 2)
+    (hcut : x 0 ≤ 2 * h0) : w1aF (x 0) (x 1) (x 2) = w1FexOpen3 x := by
+  obtain ⟨h4, h5, h6⟩ := hpos
+  unfold w1aF
+  rw [nb21_w1aG_explicit (x 0) (x 1) (x 2) h4 h5.le h6,
+    nb21_w1aD_explicit]
+  rw [w1_seA_unfold (x 0) (x 1) (x 2) h4 h5.le,
+    w1_seB_unfold (x 0) (x 1) (x 2) h4 h5.le h6,
+    w1_seC_unfold (x 0) (x 1) (x 2) h4 h5.le h6,
+    w1_dihA_unfold (x 0) (x 1) (x 2) h5.le,
+    w1_dihB_unfold (x 0) (x 1) (x 2) h6,
+    w1_dihC_unfold (x 0) (x 1) (x 2) h4]
+  unfold w1FexOpen3 h0cut
+  rw [if_pos hcut]
+  ring
+
 /-- The original function read as a function of three coordinates. -/
 noncomputable def w1F3 (x : Fin 3 → ℝ) : ℝ := w1aF (x 0) (x 1) (x 2)
 
 /-- An open neighborhood on which all side conditions of the explicit wt1 C²
-expression and the existing y5 derivative chain hold simultaneously. -/
+expression and the existing y5 derivative chain hold simultaneously.
+
+DEF-FIX `wt1c2-opendomain` (2026-11-24): the six numeric bounds of the old
+`box` field were load-bearing for no consumer (positivity/nonvanishing come
+from the `area_ne`/`d4_ne`/`t_pos`/`g_pos` fields independently), yet their
+closed-box shape made `SelectedLeafEvidence` uninhabitable (frozen
+`selectedLo` sits exactly on the box boundary; open `U` + closed condition
++ `selectedBox ⊆ U` is contradictory).  The field is now the genuine
+positivity open condition. -/
 structure Wt1C2Data (U : Set (Fin 3 → ℝ)) where
   isOpen : IsOpen U
-  box : ∀ x ∈ U, (2.4635 : ℝ) ≤ x 0 ∧ x 0 ≤ 2.6508 ∧
-    (2 : ℝ) ≤ x 1 ∧ x 1 ≤ 2.46352 ∧ (2 : ℝ) ≤ x 2 ∧ x 2 ≤ 2.46352
+  box : ∀ x ∈ U, (0 : ℝ) ≤ x 0 ∧ 0 < x 1 ∧ 0 ≤ x 2
   cut : ∀ x ∈ U, x 0 ≤ 2 * h0
   area_ne : ∀ x ∈ U, w1aA (x 0) (x 1) (x 2) ≠ 0 ∧
     w1aB (x 0) (x 1) (x 2) ≠ 0 ∧ w1aC (x 0) (x 1) (x 2) ≠ 0
@@ -138,10 +165,17 @@ theorem contDiffAt_w1F3_of_data {U : Set (Fin 3 → ℝ)} (data : Wt1C2Data U)
     hd.1 hd.2.1 hd.2.2 ht.1 ht.2.1 ht.2.2 hg.1 hg.2.1 hg.2.2
   refine hOpen.congr_of_eventuallyEq ?_
   filter_upwards [data.isOpen.mem_nhds hx] with y hy
-  exact w1aF_eq_w1FexOpen3 y (data.box y hy) (data.cut y hy)
+  exact w1aF_eq_w1FexOpen3_of_pos y (data.box y hy) (data.cut y hy)
 
 /-- Identify the `(y5,y5)` entry of the genuine three-dimensional Hessian with
-the existing `w1F2`, using both existing y5 derivative theorems. -/
+the existing `w1F2`, using both existing y5 derivative theorems.
+
+DEF-FIX `wt1c2-opendomain`: both `w1aF_hasDerivAt_y5_box` and
+`w1aF_hasDerivAt2_y5_box` (whose six-bound signatures are exactly the removed
+`box` shape) are replaced by the bare `w1aF_hasDerivAt_y5` /
+`w1aF_hasDerivAt2_y5` (Wt1TowerDeriv), with the 15 hypotheses read off the
+data fields: three coordinate positivities from `box`, nonvanishing from
+`area_ne`/`d4_ne`, and `0 < t/g ⇒ -1 < t/g`. -/
 theorem partial2_w1F3_eq_w1F2_of_data {U : Set (Fin 3 → ℝ)} (data : Wt1C2Data U)
     (x : Fin 3 → ℝ) (hx : x ∈ U) :
     partial2 1 1 w1F3 x = w1F2 (x 0) (x 1) (x 2) := by
@@ -155,13 +189,29 @@ theorem partial2_w1F3_eq_w1F2_of_data {U : Set (Fin 3 → ℝ)} (data : Wt1C2Dat
     have hC2 := contDiffAt_w1F3_of_data data (Function.update x 1 t) ht
     rw [partial1_eq_deriv_update (hC2.of_le (by norm_num)) 1]
     have hb := data.box (Function.update x 1 t) ht
-    have hd := w1aF_hasDerivAt_y5_box (x 0) t (x 2)
-      hb.1 hb.2.1 hb.2.2.1 hb.2.2.2.1 hb.2.2.2.2.1 hb.2.2.2.2.2
+    obtain ⟨ha1, ha2, ha3⟩ := data.area_ne (Function.update x 1 t) ht
+    obtain ⟨hd1, hd2, hd3⟩ := data.d4_ne (Function.update x 1 t) ht
+    obtain ⟨ht1, ht2, ht3⟩ := data.t_pos (Function.update x 1 t) ht
+    obtain ⟨hg1, hg2, hg3⟩ := data.g_pos (Function.update x 1 t) ht
+    have e0 : Function.update x 1 t (0 : Fin 3) = x 0 := rfl
+    have e1 : Function.update x 1 t 1 = t := rfl
+    have e2 : Function.update x 1 t 2 = x 2 := rfl
+    rw [e0, e1, e2] at hb ha1 ha2 ha3 hd1 hd2 hd3 ht1 ht2 ht3 hg1 hg2 hg3
+    have hd := w1aF_hasDerivAt_y5 (x 0) t (x 2) hb.1 hb.2.1 hb.2.2
+      ha1 ha2 ha3 hd1 hd2 hd3
+      (by linarith) (by linarith) (by linarith)
+      (by linarith) (by linarith) (by linarith)
     simpa [w1F3, Function.update_idem] using hd.deriv
   rw [he.deriv_eq]
   have hb := data.box x hx
-  exact (w1aF_hasDerivAt2_y5_box (x 0) (x 1) (x 2)
-    hb.1 hb.2.1 hb.2.2.1 hb.2.2.2.1 hb.2.2.2.2.1 hb.2.2.2.2.2).deriv
+  obtain ⟨ha1, ha2, ha3⟩ := data.area_ne x hx
+  obtain ⟨hd1, hd2, hd3⟩ := data.d4_ne x hx
+  obtain ⟨ht1, ht2, ht3⟩ := data.t_pos x hx
+  obtain ⟨hg1, hg2, hg3⟩ := data.g_pos x hx
+  exact (w1aF_hasDerivAt2_y5 (x 0) (x 1) (x 2) hb.1 hb.2.1 hb.2.2
+    ha1 ha2 ha3 hd1 hd2 hd3
+    (by linarith) (by linarith) (by linarith)
+    (by linarith) (by linarith) (by linarith)).deriv
 
 #print axioms contDiffAt_w1FexOpen3
 #print axioms w1aF_eq_w1FexOpen3
