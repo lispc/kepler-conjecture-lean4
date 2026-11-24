@@ -329,6 +329,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（正/负支数据两车收线 + 6 样本编排者亲编全绿 + 叶终端车道派出，续1500）**：
+  ① **`wt1-emission-data-w1`（正支）收线验收**：权威表 **30,502 箱 / 0 开箱 / 最薄 1.0017555e−3**（`15867/LLLRLRRR/LLRL` y4y5x2，与裁定一致）；逐箱精确 `D11.hi<0` + 与 `adaptive_scan.tsv` 逐叶 max **6,734/6,734 精确 Fraction 相等、0 mismatch**；分片 64×480 = 2,542 文件×12 箱；全库 31,114 箱 = 3.85 GB / 33.91 M 行 / **90.7 h 单 lean / 30.2 h 三车道**（10.33 s/箱 + 4.44 s/文件 import）。
+  ② **两处 ERRATA（机器证据）**：(i) `gen_leaf2 --table` 的 tag 不唯一（`l<case>_<lid>` 在 6,989 叶上撞 **588** 次，正支 574）⇒ 全量必须用 `l<case>_<path>_<lid>`（已验证 6,989/6,989 唯一）；(ii) **73.2 KB/箱、9.41 s/箱是 Phase-1 demo 数字**——正式叶实测 **109.8–123.8 KB/箱、10.33 s 边际 / 10.89 s 含 import**（源体积 +40%、墙钟 +10%）。
+  ③ **`wt1-emission-neg-w1`（负支接线）收线验收**：612 箱（204 `neg1` + 408 `cross8`）**612/612 `D11.hi<0` 且余量 ≥1e−3**（1.078e−2…4.70e−2）；编排者亲编 3 样本——neg1 ①13.68 s/5.72 GB、②13.46 s/5.70 GB、cross8 ③80.61 s/7.52 GB，**10/10 恰标准三、0 sorry/error**。**order-5 `lkB_matan_neg_pt` 足够**（研究车道 order-17 保守；最薄余量仅 1.085e−2→1.078e−2），不需要重发 `MatanNegKit`；612 箱全渲染 694,512 行 / 55.9 MB；整负支 ≈1.6 h 单车道。
+  ④ **正支 3 样本编排者亲编**：allx2 8 箱 78.16 s/7.46 GB（16 条标准三）、y4y5x2 4 箱 41.15 s/6.53 GB（8 条）、1x 1 箱 13.25 s/5.69 GB（2 条）——全部 RC=0/0 error/0 sorryAx。内存边际 ≈0.25 GB/箱 ⇒ 3 并发须 ≤8 箱/文件（12 箱 ≈8.7 GB ×3 会破 24 GB 总闸）。
+  ⑤ **批量方案定案**：按**叶粒度** 6,989 个文件（每叶含全部子箱证明 + `leaf_box_lt` 终端 by_cases），32.6 h 三车道；已派 **`wt1-leafterm-w1`** 写终端生成器并用 8 类代表叶（1x/y4x2/y4x4/y4y5x2/y4y6x2/allx2/cross8/neg1）亲编验证（含割点覆盖检查）。到货即开批量：先 2 worker（Route E 占 1 槽，合计 3 lean），Route E 收线后补第 3 worker。
+  ⑥ Route E：~250/403（剩 ~150 片，ETA 11-25 上午）。SORRIED 49 / AXIOM 585 不变。下一条：续1499。
 - **2026-11-25（负支 matanD 套件落库 `7d69b528` + 负支发射接线派单，续1499）**：
   ① **`MatanDMonoNegKit.lean` 落库 `7d69b528`**（纯新增 514 行）：编排者亲验 patch 三相 PASS；**亲编 RC=0 / 4.98 s / 5.74 GB，22/22 定理恰标准三 + 2 个 def 无公理、sorryAx 0、error 0**。核心：**`StrictMonoOn matanD (Ioi (-1))` 做成全局**（新引理 `lkB_arctan_gt_matanDD_bound` → `lkB_matanDD_pos`；0 处连续性免费自 `matanD_hasDerivAt_zero`）⇒ 跨零槽无需分段；`lkB_matanD_pt`/`lkB_matanD_zero_mem`/`lkBMDneg(_mem)`、`lkB_matanD_slot(_neg/_from_matan/_zero_hi/_zero_lo)`、`lkB_mDD_slot`/`lkB_matanDD_slot_neg`/`_cross`、消费形状 **`lkB_mD_vf`/`lkB_mDD_vf`**（`LeafGenKit` 同参序镜像）。mDD 槽组装零新内容（复用已落库 `lkB_matanDD_slot_from_matan` 等）。Python 精确自检 **1004 checks / 0 fail**（9 真实负槽 + 3 跨零槽 + 压力槽 + (−1,2) 稠密单调网格 + 检查器自校验）。
   ② **负支发射接线车道已派 `wt1-emission-neg-w1`**（离机追踪）：204 整段负叶 `neg1`（1 箱）+ 51 跨零叶 `cross8`（8 箱）权威箱表、逐箱精确 D11 自检（≥1e−3）、3 个 Lean 样本亲编 RC=0 + 恰标准三；生成器扩展把六个 matan 槽消费换成端点路线，绕开 `_ops_neg`。
