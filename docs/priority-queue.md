@@ -329,6 +329,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（checker 生产化三件进展：比较引理 1.06 KB/条、终端仅剩桥同源 1 条 rfl，续1507）**：
+  ① **任务 1 比较引理（形态已验证 + 字节实测）**：通用 `grid_le_rat/grid_ge_rat`（`a*b ≤ n*d → a/d ≤ n/b`，分母正）+ 每端点 `cmp_<slot>_lo`（`rw; push_cast; exact grid_le_rat … (by decide)`）。实测单条 **≈1.06 KB** ⇒ **116 条 ≈122 KB/箱**——比原估 30–60 KB **高 2×**（成本在陈述的 ℚ 大字面量 + 双端字面量），记档；1,416,536 → 1,433,040 B（+16,504，8 条样例）。
+  ② **任务 4 槽打包（设计+量化，未实现）**：114 端点 × 2.6 KB ≈296 KB/箱；128 bit/端点偏置打包成单个 `Nat` + `unpackEnd/unpackSlot`（内核 `%`/`/` 已实测可算）⇒ **−294 KB/箱，1.35→1.06 MB**；非关键路径（不做也达标）。
+  ③ **任务 2 终端装配**：`grid_le/ge_rat`、`forall₂_head`、`head?_take_succ`、`hslots : Forall₂ memR …`、`hbridge`（**段变量假设，非公理**）、完整链 `runPTop_spec → run_sound → Forall₂ 头 → memR → headNeg ⇒ w1F2<0` 全部 typecheck；**唯一卡点** `runPR_head : (runPR …).bind head? = some d11Render := rfl`——与桥同源（栈顶计划自算树 vs `render_real`）。**桥一到两行替换**：`hbridge` → `d11_bridge y4 y5 y6 hA hB hC`（`hA/hB/hC` 由计划 `aA/aB/aC` + `decide`）；`runPR_head` 的 `rfl` → 桥车道同源发射后直接过。
+  ④ **预算**：pruned 1.4165 MB + 比较 0.122 + 终端 0.005 ⇒ **1.54 MB/箱**；打包后 **1.25 MB/箱** ⇒ 31,114 箱 **≈48 GB（打包 ≈39 GB）**——双判据（≤2 MB/箱、≤120 GB）达标。
+  ⑤ 待 `wt1-bridge-align-w1` 交付后：接发射器 → 6 类代表叶亲编 → 全表 dry-run → 批量。Route E ~305/403。SORRIED 49 / AXIOM 585 不变。下一条：续1506。
 - **2026-11-25（checker 生产化：sh_* 桥 ring NO-GO/rfl 卡渲染差异，双车道并行，续1506）**：
   ① **任务 3（sh_* 桥）实测**：机械部分可行——`simp only [54 条 sh_*]`（剔除 6 条裸 t/g，带 `hA/hB/hC` 的 6 条显式传参）**4 s 完整展平** `w1F2` 到原子级；但 **`ring` 收口 NO-GO**（~800 节点/10 原子/含 `⁻¹`，`maxHeartbeats 4M` 下 239 s 超时）；**`rfl` 卡 24/60 条** `sh_*` 的 RHS 与 `render_real` 不同（`tAD/tADD/tBD/tBDD/tCD/tCDD` + `gA/gAD/gADD/gB/gBD/gBDD/gC/gCD/gCDD` 族；根因 = `numA/numB/numC` 型「名义渲染 = 0」子槽：落库生成器展开、`render_real` 代入 0）。换 `leafcore.real_of_slot` 后 382→306 节点，`gA` 族剩 **12 条**差异。**修法 = 纯 Python 对齐（同一条叶子渲染函数），无需再碰 Lean 证明**。
   ② **判据不受影响**：1.35 MB/箱 + 比较引理/终端 ≈**1.45 MB ⇒ ≈45 GB**；做槽 `Nat` 打包（−295 KB/箱）⇒ **1.06 MB/箱 ≈33–36 GB**——两档全部达标（≤2 MB/箱、≤120 GB、理想 ≤60 GB）。
