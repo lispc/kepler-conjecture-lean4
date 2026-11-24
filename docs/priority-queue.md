@@ -329,6 +329,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-24（LeafKit 落库 `fc1625d7` + 全量发射主工车道发出——wt1 关闸最后一脚开工，续1488）**：
+  ① **LeafKit 落库**（leaf-chain 交付，编排者三件套亲验：SHA 24/24、patch 纯新增、RC=0、**12 件恰标准三零 sorryAx**）：matan 点括线三形式（direct/w+/u）+ 值 antitone hull + matanDD 端点相干 + matanD 纯区间 ops；582 行、9.55 s / 5.87 GB。
+  ② **leaf-chain 结构性实测（配方全写入 DELIVERY §3/§4）**：**2³=8 子盒是硬要求**（单盒 D11.hi=+0.021 → 8 盒 −0.0120）；**63 条单调引理只需 1 条**（仅 Dlt 需角点配对，D11=[−0.09749,−0.01199]）；本叶六 matan 槽全 direct 形式；三种发射模式（字面量等式/norm_num cast 桥/nlinarith 单调）已探针验证 RC=0。**叶定理本体未交（预算，止损诚实）**——配方与节点数据全在 `out/lean_eval.json`。
+  ③ **派 `wt1-full-emission-w1`（Route B 主工/最后一脚，四阶段门控）**：P1 生成器+模板终端 15874/LLLLRLRLR（量准一终端成本报编排者）；P2 正向 6,734 叶批量（批次大小由 P1 实测定，每批 checkpoint）；P3 负支 459 叶（等 negkit 落库接入）；P4 glue 重发射 + 按 ASSEMBLY_SPEC 装配（不碰主仓 Assembly.lean，接线 diff 编排者落库）。铁律：数据即真理（leaves_exact.json 不重推）、PR-55 对表、分批预算先报。
+  ④ 在飞全景：发射主工（P1）+ negkit（G3）+ edges（G6+SPEC）+ Route E 单工人 + P-A。SORRIED 49 / AXIOM 585 不变。下一条：续1487。
 - **2026-11-24（用户批「发」：派 `wt1-edges-cert-w1`——G6 三边证书 + ASSEMBLY_SPEC 蓝图，续1487）**：G6 是缺口清单中最后一块「不依赖叶模板」的独立 Lean 件；E00 全塔最紧（真余量 5.11e-5 @ y4≈2.5197）需锐括。车道任务：①三边（E00/E01/E11+镜像）转真 Lean 定理（复用 `cell3-wt1-edges-w1` 前案 CANDIDATE 手法 + 数据车 `edges_cert.tsv`）RC=0 恰标准三；②ASSEMBLY_SPEC.md = `bank_QZECFICwt1_from_tower` 记录逐字段陈述 + 叶→glue→9根→hP1→3边装配次序蓝图（全量发射车道的接线输入）；③Python 全精确自检。SORRIED 49 / AXIOM 585 不变。下一条：续1486。
 - **2026-11-24（LeafKit RC=0 组件级进展 + G3 负支套件专职车道发出，续1486）**：
   ① **`wt1-leaf-chain-w1` 阶段报告**：LeafKit.lean **RC=0 / 12 件全恰标准三**（wplus/u/direct 三形式 matan 点括线 + matanD 区间 ops + matanDD 端点相干 + antitone 运输），9.55 s / 5.87 GB、582 行，快照已 sync（两处签名注意：`lk_matanD_ops` 多 `horder` 假设、`lk_matan_wplus` 需 `1 ≤ ql`）。phase 2 已按 hP1 直证形态执行；当前关键路径 = LeafD11 生成器（8 子盒全链）。
