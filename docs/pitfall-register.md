@@ -369,6 +369,16 @@ LEAN_PATH**——不带 `-o` 的裸编译过的是源码自检，下游仍对池
 编译，error-recovery 会插 `sorryAx` 造出「假污染」读数（先查池 olean mtime
 是否 ≥ 本轮源 commit）。
 
+**PR-59 patch.diff 完整性必须三相检查：`@@` 头存在 + `apply --check` + apply 后 `wc -l` 非零**
+（2026-11-24 两次同型事故：`4a0b5e46` Wide 段缺 `@@ -0,0 +1,1735 @@`、
+`wt1-matan-negkit-w1` 整份 patch 缺 `@@ -0,0 +1,675 @@` 且 `index` 行为残值
+`0000000..0000001`）：`git apply` 对残损 diff **静默成功并产出 0 字节空文件**——
+空文件编译 RC=0，形成**假通过**（negkit 靠 `#print axioms` 发现文件为空才抓住）。
+三项检查缺一不可：① `grep -c '^@@' patch.diff` ≥ hunk 数；② `git apply --check`；
+③ apply 后 `wc -l <target>` 非零且与 patch `^+` 行数大致相符。车道交付 patch 时
+自检三相；编排者落库三件套把 ③ 列为必做。对照：同日 LeafChain/LeafShapes patch
+三相全过——同批次两种 patch 质量并存，属生成器/手写差异而非环境问题。
+
 **PR-19 `Coplanar` 两个读法不许混用**（stepB W3b）：Mathlib `Coplanar ℝ`
 （秩 ≤2）与 `Kepler.Geom.Coplanar`（存在形 `∃ a b c, … ∧ u = a•v+b•w+c•x`）
 不是同一谓词，互转需桥接件；同文件内统一一种，跨读法显式加桥。
