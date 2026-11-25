@@ -329,6 +329,17 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（D5 拦截：QInterval 两遍树 29 min/箱 = 700× HOL，判死；纠正回 DC jet；续1549）**：
+  ① 单箱第 1 轮用的 `Pilot2Boxes`（QInterval `W1aFJet` + `roundJet` 两遍树）实测 **1728 s ≈ 29 min/箱**、6.06 GB、0 olean——
+  这不是生成器 bug 的成本，是**形态**的成本：221 × 29 min ≈ **107 h ≈ 700×** HOL（2.5 s/pass）。
+  §7.3 带宽：**OVER-BAND**，不可作发射形态。
+  ② **纠正**：不在 `Pilot2Boxes` 上继续修 bug；主线用已落库 **DC jet**（`c85af7a7`）——每箱树直接是 DC ops，
+  终端 `dcT2_pos` 直接吃 `V := pJet.value`、`G := bJet.part`（都是 DC），不需要有理字面量/QInterval 链。
+  目标箱 `15873/RRLLRL zero`（六槽同支路，模型 slack +1.142e−2）。
+  ③ 验收线：DC 箱文件 **≤2 min/箱**（DCJet 389 行 6 s 的 20× 以内）；超了报数，不在 29 min 量级上继续。
+  ④ **教训（记档）**：`Pilot2Boxes` 的 36 个 error 是生成器 bug，但**修好也不救 D5**——先量成本再修 bug；
+  这是 PR-61（性能目标漂移）的同类。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1548。
 - **2026-11-25（单箱第 1 轮止损：36 个生成器 bug；~30 min/箱成本实测；续1548）**：
   ① **patch 范围**：`W1aFJet.lean` **需要**（M3 箱文件要 `w1Box3/w1F3Z/W1Leaf/roundJet/matanBoxOf` +
   取整链 `J…R`/`JTopR` `:639–870`）；`Pilot15869.lean` **不需要**（15869 专用，M3 用 15873/RRLLRL 取代）
