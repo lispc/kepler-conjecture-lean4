@@ -33,6 +33,9 @@
   [`handoff-2026-11-14.md`](handoff-2026-11-14.md)（OCBICBY 移交）。
 - [`nli-campaign.md`](nli-campaign.md) — nli* 非线性债路线图/结论（分诊、已闭件、
   负结果、下一步；实时数字仍以 pq 为准）。
+- [`wt1-campaign.md`](wt1-campaign.md) — **wt1 战役档案**（`nliCell3QZECFICwt1`
+  已关闭：四层形态、R0–R12 历程、成本与 PARITY（原 18.28× → L1 5.1×）、
+  11 条勘误、给未来战役的 10 条经验与复用清单；2026-11-26）。
 - [`../strategy/nli-next-phase-20261123b.md`](../strategy/nli-next-phase-20261123b.md) —
   **NLI 下一阶段：共享机件层 + 分层收口**（2026-11-23 下午版，以此为准：
   原版 5 类机件考古、`NliKit` 三包 P-A/P-B/P-C、M1–M4、短期 S1–S10）。

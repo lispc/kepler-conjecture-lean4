@@ -50,7 +50,12 @@
 > 落库版规划：[`../strategy/nli-strategy-20261123.md`](../strategy/nli-strategy-20261123.md)
 > （2026-11-23，含 5 个车道方向与混世界约束）。
 
-- **主线**：根面恢复 → wt1（唯一近闭件）→ ZTG joint-6 trio → ZTG 余债/解耦 4 → qitnpea 共享 floor；fat1/ox3q1h 先零 Lean 预认证。
+- **主线（2026-11-26 更新）**：根面恢复 → ~~wt1~~ **wt1 已闭**（`nliCell3QZECFICwt1`
+  = 标准三，`4bcbd7ad`；战役档案 [`wt1-campaign.md`](wt1-campaign.md)）→
+  **QITNPEA 第一波**（角点电池，`nliRestQITNPEA1_1_2`+`1_2_0`+`1_1_1`）→
+  QITNPEA 角点电池全族 / `nliCell3QZECFICwt0` route R → ZTG joint-6 trio →
+  ZTG 余债/解耦 4；fat1/ox3q1h 先零 Lean 预认证。
+  **优先级依据**见 §8 第 9 条（2026-11-26 两债侦察）。
 - **分档读法**：T1 近闭 1；T2 可走共享 kit 15；T3 农场 27 + T3-mixed 1 + T4 阻塞 2 + T5 LP 3（含 hLP）共 33 条，不纳入 1–2 周数学承诺。
 - **不用**：certtm/TM 宽盒量产（Gate-0 已 NO-GO；窄盒 Rule P 有 XLLIPLS 先例）；precompile 只加速 585 native shard 重建/复验，不作用于 NLI 的 kernel decide。
 - **合取债纪律**：ox3q1h / TerminalV11 / LpIneqs / Kcblrqc 只报已闭分量，不把部分分支写成 −1。
@@ -937,8 +942,10 @@
   只能作低优先机械件，**B0 母定理不得按原凹性方案发车**。
 3. **FHB floor 已收线为 UNRESOLVED**：三轴一阶导全盒为正有高精度数值反例；
    已验收的只有“凹性 + 端点 ⇒ m3/m4/m5”归约，H1/H2 均未证（§1.14）。不得续走旧单调路线。
-4. **cell3 wt 已收线为 UNRESOLVED**：wt2A 核归约与消费探针标准三，核本身和 wt1 未证；
-   wt2A 的 y5 全盒严格增有高精度数值反例（§1.15）。8–12 cell 只是数值方案，不自动续发。
+4. **cell3 wt 状态（2026-11-26 更新）**：**wt1 已闭**（`nliCell3QZECFICwt1` 标准三，
+   `4bcbd7ad`；见 [`wt1-campaign.md`](wt1-campaign.md)）；**wt2A 核本身仍未证**
+   （y5 全盒严格增有高精度反例，§1.15）；wt0 是下一个大件，走 route R（§8 第 9 条）。
+   wt2A 的 8–12 cell 数值方案不自动续发。
 5. **当前授权在飞 2 条（另一编排会话的 cell3/Bernstein）**。
    `fat1-g-positivity-w1` 已超时记暂缓、可重启，WIP 与失败证据见 §1.26，不自动 resume；
    `lp-packed-single-leaf-w2` 的 b2 经独立两轮验收为单叶 bounded GO（§6.3），不车队化。
@@ -952,6 +959,24 @@
 8. **不再重复**：rad2 望远镜、CertTM2/Gate-0、IXPOTPA 旧 0.59 CPU·h、
    超越函数“整盒有理界 + 单分数组合”、FHBa/v2a 的 96 角点表、FHB floor 三轴一阶单调、
    cell3 wt2A 的 y5 全盒单调。
+9. **2026-11-26 两债侦察结论与优先级**（快照 `qitnpea-scout-w1/`、`cell3-wt0-scout-w1/`；
+   数字权威在 `priority-queue.md` §8 续1567/续1568）：
+   - **QITNPEA**：17 条中 4 已闭 ⇒ **13 条 `:= sorry`**；**纯代数关不掉任何一条**。
+     两条机器：(a) 仿射共享下界 `min_y(γ4+λ·dihY)=A+λB`（argmin 恒角点 (2.52,2⁵)）覆盖
+     4 条 + `BIXPCGW9455898160`，但绑定余量 7.97e−5、dihY 系数 λ-线性 ⇒ 朴素细分不可行；
+     (b) **角点电池**：γ4 逐轴严格凹（`∂²γ4/∂yᵢ² ≤ −0.116`）+ `y=2.52` 凸折点（斜率跳 +0.174）
+     ⇒ 逐轴最小值 ∈ {lo, 2.52, hi} ⇒ 有限有理点检查；11/13 是 γ4-基，**两个 γ3 债例外**
+     （盒内 `1/√Δ` 奇点）。**建议第一波** `1_1_2`（机器 ~90% 在库，min γ4 = 0.08134 > 0.0114）+
+     `1_2_0` + `1_1_1`，一车道 −3；`5400790175a` 可走 `FhbEtaCurve` 的 η-guard。
+     **PARITY CARD 已发**（`holparity-qitnpea-corner-w1`，卡回再发 Lean）。
+   - **wt0**：等价关系精确确认 **wt0 = `W1aFJet.w1F3O` − `fNeg2`**（`gamma3fXDivSqrtdelta 1 1 1`
+     的 `1` 是 `m4/m5/m6`；`mk456` 把 1–3 槽钉成 `two6=2`，`nb18_indep`）。**T2/DC 发射形态
+     409 叶**（8 HOL prep cell 细化；D1 = 0.79× PARITY）但 **D5 = 10.36–16.89× ⇒ OVER-BAND**
+     （D1 被盒梯度通道放大 51×）⇒ **T2 不是 wt0 的路线**。正确路线 = 2026-11-19 旧侦察的
+     **route R「单调核 + 有理角点证书 + 单墙」**（全局极小 +1.78278351164e−4 恰在有理角点
+     (2.01,2,2)；墙 min = 极小 15.4×；footprint ~2k–21k 行，单车道 1–3 周；R4→R2→R1→R3→R5）。
+   - **排序**：**QITNPEA 第一波（3 条，角点电池）> wt0 route R（1 条，1–3 周）>
+     wt0 T2 兜底（over-band）**；LP/Ox3q1h/MainNonlinear、FHB、ZTG 超越子集、Kcblrqc 不进本窗口。
 
 ---
 
@@ -1147,7 +1172,21 @@
 - **止损**：余量 1.104e-3 若被区间舍入吃掉 ⇒ 先重测再续，不硬凑。
 - **判词指针**：§1.6 / §1.11 / DEBTS 行 42。
 
-**`nliCell3QZECFICwt1` —— cell3 二号（状态：通用二阶底座与wt1 C²桥已落库 `13dee7c8`；首盒577叶与第二盒2192叶外候选、E00/E01/E11一维外候选均已验收（pq续1420/1421）；SelectedLeafEvidence未构造，真实叶/Lean总装未闭，SORRIED −0）**
+**`nliCell3QZECFICwt1` —— cell3 二号（状态：**已关闭**（2026-11-26，`4bcbd7ad`；
+SORRIED 49→48）。最终形态 = D1=221 箱 DC 证书（`W1DC_*` ×221）+ 10 个组装模块
+（`W1DCAssembly<case>` ×9 + final）+ `Assembly.lean` 接线 `nliCell3QZECFICwt1 :=
+W1DCAssemblyFinal.wt1_bank`；`#print axioms` = 标准三。**完整历程/得失/经验见战役档案
+[`wt1-campaign.md`](wt1-campaign.md)**；PARITY 判 OVER-BAND（原形态 18.28×），
+L1 形态 5.1×（用户明批 B），实测细节见该档案 §4。）**
+
+> **收线摘要（2026-11-26）**：① 覆盖 = 9 根箱 → 597 树叶 → 173 合并 → **221 证书箱**
+> （`allCerts_length = 221`，与 `refine_t2.json` 双向 0 差）；② 证书 = 每箱 152/154 节点
+> DC 树（box+point 两遍 + part 通道 + T2 终端），8 条 axioms 标准三；③ 组装 = 9 个
+> `case_pos` + `wt1_hcore`/`wt1_bank`，11 条 axioms 标准三；④ 根面 `the_kepler_conjecture_e2e`
+> 名字集不变（589 = 585 native + 标准三 + sorryAx，剩余 48 条债）——**单条债关闭改的是
+> 债务计数，不是根面公理名字集**。⑤ 主要教训（详见档案 §7）：PARITY CARD 先行、发射成本
+> 先量后量产、预飞 gate/replica 同源、证书精度必须与 cover 口径一致、内核归约四纪律、
+> 共享事实源、同机多车道纪律（PR-65）。
 
 - **2026-11-24/25 结论汇总（编排者；数字权威在 pq §8 续1523–续1534，本节只做索引与口径钉定）**：
   1. **`h0cutI` 是代码 bug，不是数学**：`wtspec.boot_lits` 硬写 `h0cutI = 1`，而 wt1 的 y4 跨 `2h0 = 2.52` ⇒ 215 条伪失败，且部分"通过"行其实是**高估**（不 sound）。修法 `jetlib.h0cut_iv`（折点 `63/25`：`yhi ≤ 63/25 → {1}`、`ylo ≥ 63/25 → {0}`、否则 `[0,1]`）。修正后 677 行只剩 15 行 faithful 失败（续1523）。
