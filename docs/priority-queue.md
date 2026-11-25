@@ -329,6 +329,18 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（`DCMatan` 落库 `f7a99211`：755 行/30 条标准三；M2 在飞；续1545）**：
+  ① **DCMatan 落库** `f7a99211`：755 行（`dSqrt` + 四支紧臂 + `matanD`），**30 条打印全标准三**；
+  我亲编 RC=0 / **11 s** / 5.81 GB / olean **1,808,144 B** / 0 error / 0 sorryAx；模块 build RC=0（8746 jobs）。
+  ② **ERRATA（续1542②）**：续1542 写"我亲编 10 s/5.81 GB/olean 1,808,144 B/30 条"时，755 行版我**还没亲编**
+  （当时亲编的是 M1 的 715 行版：10 s / olean 1,760,280 B / 28 条；755 行数字来自 agent）。现已亲编 755 行版，
+  数字与 agent 报的一致（11 s / 1,808,144 B / 30 条），结论不变，只把"亲编"时点记正。
+  ③ M2 车道（fresh agent）在飞：`DCTaylor2.lean`（12:35）、`DCJet.lean`（12:58）、`DCProbe2.lean`（13:12）都在动；
+  2 lean（M2 + Route E），pressure 1。
+  ④ **裁决：不再发新 Lean 车道**。M2 的 T2 终端与 DCJet 在同一车道推进，拆开会造成接口漂移；
+  3 个 Lean 槽已用 2 个，第 3 个留给 M2 编译峰值。唯一可并行的是 221 箱 branch-table 的 Python 预计算，
+  但 M3 agent 自己一小时能算，不值得再开 agent。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1544。
 - **2026-11-25（`Wt1Glue` 落库 `01b7dfd4`：四层覆盖 597+173+221，`root_cover` 无条件；续1544）**：
   ① **我亲编验收**：`Wt1Glue.lean` **17,983 行 / 2,390 定理**，RC=0 / **30.84 s** / **7.66 GB** / olean **15,443,168 B** / 0 error / 0 sorryAx；
   **25 条打印全标准三**；模块 build `lake build Kepler.Text.TaylorSecond.Wt1Glue` RC=0（8726 jobs）。commit `01b7dfd4`。
