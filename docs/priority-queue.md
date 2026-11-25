@@ -329,6 +329,17 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（粗臂 level-0 判定：93/173，失败遍布 9 case；refine 叶数缺；续1535）**：
+  ① **`DCKit.lean` 218 行**亲编 **RC=0 / 2.3 s / 2.89 GB / olean 484,880 B / errors=0**；**10 条** axioms ⊆ 标准三（新增 `shiftRight_cast_le_nat`）。
+  `dnorm_mem` 仍未闭，卡点已定位到项级：`>>>` 在 `Int` 上走 `ℤ` 实例，内部是 `.shiftRight (↑d).toNat`，与目标里的 `.shiftRight d` 只差 `Int.toNat (↑d) = d`；已给三条修法（`simp only [Int.toNat_natCast]` / lemma 改 `.shiftRight` 同形 / `rw [show ... from by simp]`）。
+  ② **粗臂 level-0（173 箱，不细分）**：`fc_c − lin_box > 0` **93/173**；**80 失败遍布 9 个 case**
+  （15874 21 · 15869 13 · 15873 12 · 15868 8 · 15867 7 · 15870 6 · 15871 5 · 15872 5 · 15866 3）。
+  样例：`15874/LLRLR one` fc 3.22e−3→1.39e−3、lin 3.29e−3；`15873/RRLR zero` fc 1.42e−2、lin 3.54e−2（后者是**箱太大**，不是臂）。
+  **口径警告**：这一轮 `lin` 用的是**紧** mD（真粗臂更大）⇒ **93 是上界**；level-0 把两类成因混在一起（箱太大 vs `fc_c < δ_v`）。
+  ③ **缺失的数**：粗臂判据下的 **refine 叶数**（决定紧支覆盖范围）。第一次全量 refine（34 箱 × ≤400 次 `verdict`）超 20 min 被 leaf-budget 守卫杀掉；
+  已派 bounded + memo 规格（缓存每箱六个 coarse bracket、≤5 层、≤2000 叶、60 s/箱、超限记 `capped`；实在超预算只跑 15874/15873/15869 报趋势）。
+  ④ **判读**：失败遍布全库 ⇒「粗臂永远盖不满」是**臂**的问题（与 Route E 堆到 15,927 箱仍有洞一致），不是箱数问题；
+  但紧支的实际覆盖范围要等 ③，`dSqrt` + wplus 的范围以此为准。SORRIED 49 / AXIOM 585 不变。下一条：续1534。
 - **2026-11-25（`fc.lo` 判定：粗臂不够但只需 14 叶紧支；D1=183=0.296×；真实最小余量 2.75e−4；续1534）**：
   ① **`DCKit.lean` 218 行**，编排者亲编 **RC=0 / 2.34 s / 2.89 GB / olean 484,880 B / errors=0**；9 条 axioms ⊆ 标准三。
   `DC.mem_mk`（`Iff.rfl`）落库；`dnorm_mem` 的卡点是**项不匹配**（`Int.shiftRight lo ↑drop` vs `lo.shiftRight drop`，中间夹 `(↑drop).toNat`），
