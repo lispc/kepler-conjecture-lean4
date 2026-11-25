@@ -329,6 +329,15 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（`Wt1Glue` 落库 `01b7dfd4`：四层覆盖 597+173+221，`root_cover` 无条件；续1544）**：
+  ① **我亲编验收**：`Wt1Glue.lean` **17,983 行 / 2,390 定理**，RC=0 / **30.84 s** / **7.66 GB** / olean **15,443,168 B** / 0 error / 0 sorryAx；
+  **25 条打印全标准三**；模块 build `lake build Kepler.Text.TaylorSecond.Wt1Glue` RC=0（8726 jobs）。commit `01b7dfd4`。
+  ② **计数（数据精确、全 PASS）**：597 叶（9 棵 1185 节点 = 597 + 588）、173 合并箱、**221 证书箱**
+  （36 细分箱 → 84 叶，最宽轴中点、maxdepth 4）；`allCerts_length : allCerts.length = 221`（rfl）。
+  ③ **`root_cover` 无条件**：直接用落库 `HminusTight18.two_hminus_bounds_tight18`；16 位版差 **229 胞**（2.3e−16 / 1.11e−16 薄片）已实测确认，箱未改。
+  ④ 兄弟重叠恒 **1e−18**（y 空间，唯一数值比较，不算 √）；merge 映射按"存在包含"：517 叶 1 箱、46 叶 2 箱、30 叶 3 箱、3 叶 4 箱、1 叶（15873/RRLR）7 箱。
+  ⑤ 覆盖层完成 = M3 组装的前置条件已就绪；剩 M2（DC jet + T2 终端 + 单箱）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1543。
 - **2026-11-25（M2 交接：原 agent 上下文耗尽，fresh agent 接同一 lane；续1543）**：
   ① 原 M2 agent 在 patch 重生成后**上下文耗尽**（只做了机械项，三件代码未开工；它自己如实报，未留半成品）。
   磁盘状态已验证：`DCMatan.lean` 755 行 / **30 条标准三** / RC=0；patch **3 文件 2449 行**，HEAD `02b6412b` 上 **PATCH_OK**；`DCKit` 已落库。
