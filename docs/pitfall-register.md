@@ -151,6 +151,18 @@ RC=1、不写 olean；但 Lean 的错误恢复**仍把该名声明进环境**，
 （精确左移 + 外向 floor/ceil，`dRescale_mem`）把两端先归一到 `A.k` 再取 hull；
 生成器发射 hull 时必须显式 rescale，不许假设 scale 相同。出处：`DCMatanMono.lean` §1。
 
+**PR-65 同机多车道：清 orphan 只许按自己的 `--root` 精确匹配，禁按 comm/RSS 猜**
+（2026-11-26 `wt1-bulk-c-w1` 实事故）：三车道并行量产时，bulk-c 用
+`ps -eo pid,ppid,etime,rss,comm | awk '$5=="lean"'` 找"自己的 orphan"，把 bulk-a 的
+在飞编译（`--root /tmp/wt1-bulk-a-w1/lean`）误杀：受害者 rc=−15、RSS 只剩 668 MB
+（lake shim，lean 未长起来）、日志仅 "/usr/bin/time: command terminated abnormally"、
+无 error/sorryAx —— 这是"外部 SIGTERM"的标准签名，**不是**证明失败。
+规则：① 优先不 kill，靠 PPID=1 自杀检查 + 自然结束；② 确需清理时
+`ps -o pid,ppid,command` 核对**完整命令行**里的 `--root <本车道>`；
+③ 看到 rc<0 ∧ error=0 ∧ olean 缺失 → 归因外部信号、原文件重编（不计真失败）；
+④ 平台 ~60 min 整组杀后台命令是**恢复事件**（无 orphan），分段 ≤55 min + 按
+`summary.tsv` 跳过已完成箱续跑，不许用外部 killer 给自己的 lean 限时。
+
 ## B. 陈述与审计纪律
 
 **PR-7 grep 命中 ≠ 声明**：同名符号可能只在注释/排期注记里（2026-11-09 实测
