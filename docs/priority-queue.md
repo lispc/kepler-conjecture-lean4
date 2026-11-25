@@ -329,6 +329,24 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（pilot-2：分层 496/682/684 + 兄弟对合并 677→167 ⇒ D1=174=0.281× HOL；B3 已修；续1530）**：
+  ① **分层**（Python 精确有理、每节点 1e−9 外向舍入、箱端点精确）：**T1**（箱值 lo>0）**496/684 = 72.5%**；
+  **T2**（`fc − Σw·sup_box|∂|` > 0）**682/684 = 99.7%**；**T3**（全二阶）**684/684 = 100%**。
+  T3 分布 min **+4.422e−5** / p10 9.525e−4 / p50 4.208e−3 / p90 1.199e−2 / max 1.545e−2；薄箱 4 个（15869 两件、15874 两件）。
+  有 2 箱「过 T3 不过 T2」——T2 的箱梯度 sup 比中心梯度+Hessian 修正松，正常，走 T3。
+  refine 重放与记录直方图逐一相同（RRLR#0→6 叶 `[1,2,3,4,5,5]`、#1→3 叶 `[1,2,2]`）⇒ 677+7=684 复核成立。
+  ② **合并（只兄弟对，禁任意生长）**：replay 校验 **union_err=0 全 9 case**（父 = 两子并）⇒ glue 就是 `[a,m]∪[m,b]=[a,b]` 归纳；
+  **677 → 167**；RRLR 保留 2 失败件换 9 refine 叶 ⇒ **D1 = 167−2+9 = 174 = 0.281× HOL(619)**。
+  **判：有利偏差**（不是违规）——结构性理由：核内精确有理 + 证书级 matan 括线 vs HOL 十进制 `pp` 重算，同一批箱我们需要的细分更少；
+  每个合并箱自带自己的 T3 证书，结论强度不变。卡片 D1 记 `0.281×（有利）`。合并箱取两子 **hull（min/max 外壳）**，不需记录父箱，`cut_drift` 66–224/case 不影响覆盖。
+  ③ **D5 允许线（M=174）**：PARITY（≤1851 s）**10.64 s/箱**、WITHIN-BAND（≤3086 s）**17.74 s/箱**（M=684 时 2.71/4.51）。
+  ④ **两个改范围的车道发现**：**`Dlt` 角点规则是强制项**——用多项式值时有 **308/677** 个 part 的 matan 槽包络逃出 `(−1,∞)` ⇒ 光滑性不可证；
+  角点规则 **0 逃逸**、T3 还更好（+4.422e−5 vs +4.365e−5）、antitone 6000 probes 0 违例。**54/677** 个 part（全 `y4 ≥ 2.586`）有槽 `lo ≤ 0`
+  ⇒ 走已落库负支 kit（`lkB_matan_neg_pt`/`lkB_matanD_pt`/`lkB_matanDD_slot_cross`；编排者亲核在库：`MatanNegKit.lean` + `MatanDMonoNegKit.lean`）。
+  ⑤ **Lean 亲验**：`W1aFJet.lean` 1371 行 **RC=0 / 8.28 s / 5.86 GB / olean 2,403,648 B / errors=0**；25 条 `#print axioms` **全标准三**、`sorryAx`=0。
+  **B3 已修**：新增 `w1F3Z_pos_of_slack2`（Jc 点 jet + Jb 箱 jet）与 `w1F3Z_pos_of_value`（T1 终端），原引理陈述未动；另加 `rndOut`/`roundJet` 与 84 节点舍入孪生链。
+  ⑥ **下一相**：合并后 174 箱的 T1/T2/T3 分布（合并使箱变大 ⇒ T1 比例必降，决定总成本）→ 端到端发射 + glue + 批 1/4/8 边际 → D4/D5 回填。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1529。
 - **2026-11-25（单箱发射 pilot 收线：机制通、箱未闭；B1/B2/B3 + D4/D5 双 OVER-BAND ⇒ 改设计重发；续1529）**：
   ① **编排者亲验**（不许转述）：`W1aFJet.lean`（通用 1035 行）RC=0 / **8.58 s** / 5.84 GB / olean **2,055,304 B**；
   `Pilot15869.lean`（每箱叶半 308 行）RC=0 / **36.86 s** / 5.96 GB / olean **6,678,296 B**；两文件 errors=0、sorryAx=0、
@@ -351,6 +369,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   ④T3 薄箱 `15869/LLLLLLLLLLLLL` 端到端闭合 + 批大小 1/4/8 边际实测。**接受线：外推 ≤2× HOL；做不到如实报，编排者交用户裁**。
   ⑥ **Route E**：唯一片 **300/403**（298 绿）；**S108/S109 rc=143**——非 memlim（SIGKILL=137）/非 guard（无 kill 路径）所杀，
   `0.48 s user / 670 MB / 189–193 s` 外部 SIGTERM，待本轮过后重跑；剩 ~103 片全 L15870，ETA 不变（~7.1–7.6 h）。
+  ⑦ **ERRATA（引用勘误，纠⑤/派单卡片）**：HOL taylor 机制正确路径是 `reference/flyspeck/formal_ineqs/taylor/m_taylor.hl`
+  （**不是** `text_formalization/taylor/`）；`pp` 重算入口 `let eval_m_taylor pp0` 在 **:741**（`eval_lin_approx` :558、`eval_second_bounded` :666），
+  最终 slack 算术 `eval_m_taylor_bounds0 mode n pp` 在 **:1179**（`float_mul_hi`/`add_ineq_hi pp`）；原引 :769-782 实为 `eval_m_taylor_poly0`（偏 28 行）。
+  wt1 本体引用 `text_formalization/nonlinear/ineq.hl:1425` 不变。已亲读原文核过。
   SORRIED 49 / AXIOM 585 不变。下一条：续1528。
 - **2026-11-25（ERRATA Route E 计数：294/403 唯一片，剩 109，ETA ~7–7.6 h；续1528）**：
   ① **口径纠正**：此前报的 346/349/352/357/403 是 `full_summary.tsv` 的**行数**，含 redo74 的 74 条重跑（+7 条其它重复）⇒ **行数 ≠ 片数**。
