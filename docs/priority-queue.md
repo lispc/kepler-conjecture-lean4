@@ -329,6 +329,19 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（值括号精度墙的执行方案 + 派车 `wt1-matan-precision-w1`，续1524）**：
+  ① **三档方案**（按成本从低到高）：T1 仅改分支（`matan_pt` 直支缩到 r≤1/4、1/4<r<1 走镜面恒等式 + 已有 `wplus`、
+   1≤r≤4 走 `wplus`（现阈值 q=1.3 应改 q≤2）、r>4 走 u）——只用已证引理，值误差 ~3e−5；
+  T2 = T1 + 5 项级数（a9/b11，误差 s¹¹/11）⇒ 值误差 ~1e−6（推荐，已派）；T3 更多项 + 更远 argument reduction（不必要）。
+  **细分不在选项内**：点值括号宽不随箱缩小（续1523 ④）。
+  ② **派车**：`wt1-matan-precision-w1`（general-purpose，零主仓改动）——新建 `LeafKitPrec.lean`：
+  `lk_atan_le_a9` / `lk_atan_ge_b11`（导数 `s¹⁰/(1+s²)`、`−s¹²/(1+s²)` 模板抄 `nb12_arctan_le_sub5`）、
+  `lk_matan_direct9`、`lk_matan_mirror`（用已存在 `lk_arctan_inv`）、`lk_matan_u9`；全部标准三。
+  工单 `/tmp/wt1-matan-precision-w1/WORKORDER.md`（含 PARITY CARD delta：D1/D2 1.00×，D3 +≈350 行，
+  D4 沿用 SD 下界，D5 ≤1.1×，D6 标准三 ⇒ **PARITY**）。
+  ③ **验收**：编排者亲编 + 6 条 `#print axioms`；随后 emitter 切换 `matan_pt` 分区并重发 677 箱，目标 15→≈2
+  （只剩 `15873/RRLR` 宽箱，交 HOL `find_max w` 细分）。15869/15874 薄箱预期零细分闭合（同箱 3.25e−4）。
+  ④ Route E **357/403**（剩 46）。SORRIED 49 / AXIOM 585 不变。下一条：续1523。
 - **2026-11-25（ERRATA 重大：`h0cutI` 硬编码 bug ⇒ 215 失败是假的；修正后 15/677；残余 = 值括号精度墙，续1523）**：
   ① **bug**：`wtspec.boot_lits` 把 `h0cutI` 硬编码 `{1}`（发射车道 `h0cut ≡ 1` 假设），`jetlib.slot_jets` 的 w1aF 装配直接继承。wt1 的 y4 ∈ [2.4635, 2.6508] **跨 2h₀=2.52**：y4>2.52 的箱 `h0cut=0`，旧代码保留虚项 `K2·lf4·T1`（±5e−3，阈值 50×）。修复 = `jetlib.h0cut_iv(ylo,yhi)`。
   ② **复算铁证**：`15871/RLLRLLR` 中心——旧车道 w1aF **−2.679e−3**；手抄 Lean 公式（含 `rotate4`）+ 独立 float **+2.3279e−3**；修复后车道括线 **[2.3183e−3, 2.3724e−3]** 含真值。旧“通过”行同样不可信：虚项为正的箱值被高估（unsound）。
