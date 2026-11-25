@@ -329,6 +329,40 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（`HminusTight` 落库 `ee90f65e`：16 位 hminus 双侧界，标准三；续1539）**：
+  ① 车道 `wt1-hminus-tight-w1` 交付 **216 行**，4 声明：`hminus_bounds_tight` / `two_hminus_bounds_tight` + 两条 marchal 端点不等式；
+  **7 条 axioms 全标准三**，零 sorry/axiom/admit/native_decide。
+  ② **我亲编验收**：RC=0 / **16.78 s** / **5.82 GB** / olean **3,101,544 B** / 0 error / 0 sorryAx；
+  模块 build `lake build Kepler.Text.TaylorSecond.HminusTight` RC=0（8724 jobs，无 error）。banned-token 扫描干净。一笔 commit `ee90f65e`。
+  ③ 关键实测：**16 位 `nlinarith` 一次过**（差值 = 常数 `c₀` + `t·R(t)`，`c₀` 承载 1e−13 余量，`R` 在区间上正、余量 0.30）；
+  **8 位 √2 括线实测不足**（新端点 `hkey` = −9.05e−10 / −5.98e−10），16 位才转正（+1.03e−13 / +5.97e−15）。`[1.26,1.3)` 分支复用 `NliBanks17.nb17_marchal_gt_lmfun`。
+  ④ 与 HOL 对齐：`hminus.hl:209` 的区间是 `[1.2317544220903043901, 1.2317544220903047]`（19/16 位），
+  我们 `[1.2317544220900045, 1.2317544220903218]` **宽 1024×**，同机制降精度；PARITY 方向正确。
+  ⑤ glue 车道已可 `import Kepler.Text.TaylorSecond.HminusTight` 直接用 `two_hminus_bounds_tight`（不再当假设参数）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1538。
+- **2026-11-25（D1 定数：T2 refine 221 = 0.357× HOL；36 箱细分 84 叶；续1538）**：
+  ① 我自己的 bounded+memo refine（`scripts/refine_t2.py`，判据 = 发射终端同款 `T2 = fc − lin_b`，紧括号、1e−9 布局）：
+  **level-0 137/173**，**36 箱细分 → 84 叶**（28 箱 2 叶、6 箱 3 叶、2 箱 5 叶），**D1 = 221**，0 capped，墙钟 16.3 s。
+  ② 口径：137 vs 续1531 的 T2 139/173 差 2 箱，是 1e−9 布局/合并取整的微小差异；以本次 **221** 为准（更保守）。
+  旧数 **173/183/207 全部作废**：173 是无细分下界、183 是"4 薄箱"旧估、207 是旧 T2-only 估算。
+  ③ D5 外推：221 × 4.0 s/箱（probe T2-only）= **884 s = 0.57×** HOL(1543 s)；三通道 6.4 s/箱 = 1414 s = 0.92×，仍 ≤1.2×。
+  ④ 数据落 `data/refine_t2.json`（每叶 ylo/yhi/T2，110 KB），供 M3 发射直接用。
+  ⑤ SORRIED 49 / AXIOM 585 不变。下一条：续1537。
+- **2026-11-25（M0 收线：DCKit 8/8；发现根箱铺满的 hminus 紧界缺口；三车道齐发；续1537）**：
+  ① **M0 完成，我亲编验收**：`DCKit.lean` **508 行**，RC=0 / 5 s / 2.92 GB / olean **856,168 B** / errors=0 / sorryAx=0；
+  **19 条打印**（18 个声明）全 ⊆ 标准三（`shiftLeft_eq_mul` 仅 `[propext]`）。八原语 `dInt/dNeg/dnorm/dAdd/dSub/dMul/dInv/dDiv` 齐。
+  patch 3 文件 2202 行，HEAD `ddd8b1fd` 上 `git apply --check` = **PATCH_OK**。agent 记档两坑：`set` 对 `HShiftLeft ℤ ℕ` 不重写（用 `generalize`）；
+  `(M:ℝ) = 2^S` 需 `Int.shiftLeft_natCast_right` 过桥。
+  ② **新发现（根箱铺满的紧界缺口，证明层不是数学层）**：模型 9 根箱的 15873/15874 用 `y4lo = 2.463508844180009`、`y5hi/y6hi = 2.4635088441806436`；
+  库只证 `nb17_two_hminus_bounds : 2.4635 ≤ 2*hminus ≤ 2.46352`。**从松界推不出** `2.463508844180009 ≤ 2*hminus` 与 `2*hminus ≤ 2.4635088441806436`
+  ⇒ 根铺满无法形式化。我 60 dps 复核真值 `hminus = 1.23175442209030439…`，模型区间 `[1.2317544220900045, 1.2317544220903218]` 确实包含它（余量 3.0e−13 / 1.7e−13），
+  所以这是**界不够紧**，不是箱错。⇒ 已派 `wt1-hminus-tight-w1`（模板 = `NliBanks7:20` 下界 + `NliBanks17:160` 上界；√2 括线必须 16 位；`hkey` 四次型照搬）。
+  ③ **三车道齐发**（+Route E = 3 lean 上限）：
+  `wt1-emission-pilot-w1` **M1**（`dSqrt` + 四支紧臂 direct9/mirror/wplus/u9 + 宽度表；DCKit 冻结，新文件 `DCMatan.lean`）；
+  `wt1-glue-w1`（新：纯几何覆盖，597 叶 + 173 合并箱 + 9 根铺满；紧界当假设参数；x/y 分裂的重叠事实，不许算 √m）；
+  `wt1-hminus-tight-w1`（新：16 位 hminus 双侧界）。
+  ④ **仍缺的数**：80 个 level-0 失败箱的 **refine 叶数**（决定 D1 = 173 还是更多）；我下一步自己跑 bounded+memo Python（不占 Lean 槽）。
+  ⑤ Route E **400/403**（11:07 checkpoint），剩 3 片；完成 ≠ wt1 关闭（无语义桥，15,927 箱 = 25.7× 兜底）。SORRIED 49 / AXIOM 585 不变。下一条：续1536。
 - **2026-11-25（DCKit 5/8 原语（dnorm/dAdd/dSub 一次过）；决策：取消粗/紧分区、全程紧臂；续1536）**：
   ① **`DCKit.lean` 314 行**，编排者亲编 **RC=0 / 2.61 s / 2.90 GB / olean 658,776 B / errors=0 / sorryAx=0**；**14 条** axioms 全 ⊆ 标准三。
   **5/8 原语已证**：`dInt_mem` · `dNeg_mem` · **`dnorm_mem`** · **`dAdd_mem`** · **`dSub_mem`**；余 `dMul_mem` / `dInv_mem` / `dDiv_mem`。
