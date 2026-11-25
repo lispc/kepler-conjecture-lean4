@@ -329,6 +329,20 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（bl 探针判词：根因是 `Nat.sqrt` 内核不归约；`DCSqrtLit` 落库 `33f5054f`；续1554）**：
+  ① **判词**：全树门控 **≤10 s 可行**，不需要 V1/V2。真树 153 节点 value 通道最深门控 `dLoBig Top` = **2.09 s**（sqrt 臂换字面量）/
+  **2.46 s**（`dMatan9`）；`BMtA_gates` 原文 **0.52 s**；6 条 `Mt` 门控一起 1.29 s。唯一 >1 s = 6 条 `Mg`（sqrt）门控：
+  一起 **70.8 s 且全失败**；单条 `maxRecDepth 2e6` 11 s 报错、`2e7` SIGABRT/栈溢出（15 s / 7.7 GB）⇒ 递归深度只受 `maxRecDepth`/栈限制。
+  ② **V0/V1/V2 实测**：`dInv` 链 N=1/2/4/8 → 0.07/0.06/0.07/**0.10 s**；`dMul` 链 → 0.07/0.07/0.08/**0.11 s**
+  （**无指数爆炸**，推翻我的 log2 假设）；V1 10 节点 0.26 s；V2 显式 bl 0.10 s 但**无收益**。
+  ③ **修复落库 `33f5054f`**：`DCSqrtLit.lean` **88 行**，`nat_sqrt_eq_of_sq`（标准三）+ `dSqrt_val`（仅 propext）+
+  真实节点 `dSqrt (dInv C4)`（k=203、460-bit 尾数，**0.12 s**）；我亲编 RC=0 / 3.47 s / 5.71 GB / olean **106,024 B** / 0 error / 0 sorryAx；
+  模块 build RC=0（8755 jobs）。用法：每个 `dSqrt` 槽发字面量 + 两条 `Nat` 平方夹逼 `decide`，下游用等式；`dMatanMir` 不改落库定义（`rfl`）。
+  ④ **ERRATA（续1553②c / M6）**：M6 引用的 `BMtA_gates` >600 s **不可复现**（当前仓 0.52 s），其 `dcfull7/dcvarC2/dcvarH` 日志全 0 字节；
+  可复现慢点只有 sqrt 门控，代价由 `maxRecDepth` 标定。归因从"cost appears only when the proposition is true"改为
+  "**`Nat.sqrt` 的良基递归不可 kernel 归约**"。
+  ⑤ **未测边界**：part 通道 / point 遍修复后未单独实测；§7 的 ~6–8 s/箱是分量算术。下一轮已发：全树 sqrt 字面量化 → 单箱端到端（fresh agent）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1553。
 - **2026-11-25（DC 全树 kernel 求值爆炸；`W1DCTermPilot` 603 行 6 条标准三；派 bl 探针；续1553）**：
   ① **`W1DCTermPilot.lean` 603 行**，我亲编 RC=0 / **6.87 s** / 5.93 GB / olean **1,130,936 B** / 0 error；**6 条标准三**
   （`val_facts` 仅 `[propext, Quot.sound]`）。验证了 box+point 两遍、`c/w/hc/hconv/hw`、ℤ-scaled slack + zpow 桥、`dcT2_pos`。
