@@ -329,6 +329,20 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DCKit 5/8 原语（dnorm/dAdd/dSub 一次过）；决策：取消粗/紧分区、全程紧臂；续1536）**：
+  ① **`DCKit.lean` 314 行**，编排者亲编 **RC=0 / 2.61 s / 2.90 GB / olean 658,776 B / errors=0 / sorryAx=0**；**14 条** axioms 全 ⊆ 标准三。
+  **5/8 原语已证**：`dInt_mem` · `dNeg_mem` · **`dnorm_mem`** · **`dAdd_mem`** · **`dSub_mem`**；余 `dMul_mem` / `dInv_mem` / `dDiv_mem`。
+  ② **两条结构性坑（记档）**：ⓐ 本树 `Int.shiftRight : ℤ → ℕ → ℤ` 是 **Nat 位移**，而 `>>>` 是**带符号**位移——**不是同一个函数**；
+  桥是 `Int.shiftRight_natCast_right`（我此前判成 `Int.toNat (↑d)` 浅了一层，ERRATA 记在此）。ⓑ `dAdd`/`dMul` 产出的是 `dnorm` **应用**而非 `DC.mk` 字面量
+  ⇒ `rw [dAdd, DC.mem_mk]` 不成立，必须 `rw [dAdd]; apply dnorm_mem; rw [DC.mem_mk]`。
+  ③ **决策：取消粗臂/紧臂分区，全程用紧臂**。理由：紧臂是必须实现的（薄区逃不掉），分区只省 ~2 s/箱，却要额外背两套证书 + 一条边界证明 + refine 叶数；
+  而 **173 箱的 T2/T3 本来就是用紧括号算的** ⇒ 全程紧臂使发射判词与模型**逐箱一致**，不需要任何区域划分。
+  `refine_coarse.py` **停掉**（两次超时白烧预算，编排者认账）。
+  ④ **M1 重定义**：`dSqrt` + 四支紧臂 DC 版，逐支对应已落库实数级引理（`lk_matan_direct9` r≤0.1019 / `lk_matan_mirror` / `lk_matan_wplus` / `lk_matan_u9` t>4）；
+  粗臂（l1/Padé/l3/u2/u3/u4）保留在 `max`/`min` 里作**免费收紧**，但证书不依赖它们。`dSqrt` 规格：定义体只用 `Int.shiftLeft`/`Int.shiftRight`（Nat 位移）+ `Nat.sqrt`，
+  `K = ⌈(k+200)/2⌉`、`isqrt(lo <<< (2K−k))` / `isqrt(hi <<< (2K−k)) + 1`，外向；`dSqrt_mem` 只需 `Nat.sqrt` 两侧界。
+  ⑤ 下一相：`dMul_mem` → `dInv_mem` → `dDiv_mem` → `dSqrt` + 四支紧臂 → `matanD`（紧）→ DC jet（value+first）→ 173 箱（+薄箱叶）发射 → glue（588+9）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1535。
 - **2026-11-25（粗臂 level-0 判定：93/173，失败遍布 9 case；refine 叶数缺；续1535）**：
   ① **`DCKit.lean` 218 行**亲编 **RC=0 / 2.3 s / 2.89 GB / olean 484,880 B / errors=0**；**10 条** axioms ⊆ 标准三（新增 `shiftRight_cast_le_nat`）。
   `dnorm_mem` 仍未闭，卡点已定位到项级：`>>>` 在 `Int` 上走 `ℤ` 实例，内部是 `.shiftRight (↑d).toNat`，与目标里的 `.shiftRight d` 只差 `Int.toNat (↑d) = d`；已给三条修法（`simp only [Int.toNat_natCast]` / lemma 改 `.shiftRight` 同形 / `rw [show ... from by simp]`）。
