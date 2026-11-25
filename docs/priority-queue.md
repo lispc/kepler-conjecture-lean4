@@ -329,6 +329,26 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（wt1 值函数 PARITY CARD 判 OVER-BAND：D5 18.28× HOL；不等用户明批不发同形态量产；L1 探针已发；续1564）**：
+  ① **卡片**（`holparity-wt1-value-w1`，零 Lean；对象 = 值函数形式 221 箱 + 10 组装，基线 `98e1380a`）：
+  **D1 619+610=1,229 HOL vs 221 箱 + 11 glue = 0.357× / 0.018× ⇒ PARITY**；
+  **D5 HOL 1,543.027 s（9 cell）+ 载入 591.974 s = 2,135.001 s vs 我方 39,028.27 s（38,967.33 编译 +
+  60.94 组装）⇒ 18.28× ⇒ OVER-BAND**；D6 标准三 vs HOL 0 new_axiom ⇒ PARITY；
+  D2/D4 为 LCF-vs-DTT STRUCTURAL-DIFF（HOL 每 pass 磁盘 0 B vs 我方 6.43 MB/箱、合计 1.426 GB），
+  且 **D4 超自身可实现下界 14.6–82.9×**（同 221 箱的桥接证明 27,766 B/箱、终端骨架 44,184 B；
+  下界带 77.5 KB–440 KB/箱）；D3 mechanism 0.40× PARITY、literal 88.4×（生成数据计入）。
+  ② **关键订正（车道用原版证据推翻我的前提）**：HOL 的 `1,543.027 s` **不是 prep，是 total**
+  （`FormalVerifier.tex` 的 `total_time` = prep+informal+formal；`azure/.../trig/out/out.txt:160-186`
+  逐段可见 Informal/Formal verification 都在里面）⇒ 18.28× 是**总量对总量**的有效比较，
+  不许用"vs prep"的读法洗白。HOL verifier 的分项/RSS 仍 UNRESOLVED（azure 日志未打印）。
+  ③ **D5 不是结构性差距**：逐箱归因实测 = tactic 执行 98.4 s / 129.9 s（75.7%），类型检查仅 5.78 s（4.4%）；
+  `rewriteSeq` 60.8 s/140 处、`show` 14.3 s/18 处；整树 153 节点 kernal 判定探针 2.09–2.46 s、
+  sqrt 修复 0.12 s/节点 ⇒ **L1 杠杆（字面量 + 整树一次内核判定）预估 1.4–2.8 ks = 0.66–1.33× HOL**。
+  ④ **裁定**：`OVER-BAND`，**本卡不放行下一轮同形态量产，除非用户明批**；已落库的 wt1 标准三件
+  不追溯否定。信任面无问题（C 车道 10 行 `axioms_ok=no` 是 `olean ≥6 MiB` 阈值假阴性，已复算 8/8 标准三）。
+  ⑤ **我的处置（用户未答结构化询问，按最保守口径）**：不批任何同形态量产；**只发 L1 测量探针**
+  （单箱，目标 ≤1.2× = 9.7 s/箱，即 1.2×2,135/221），探针回来再请用户裁决是否重发射。
+  SORRIED 48 / AXIOM 585 不变。下一条：续1563。
 - **2026-11-26（wt1 债关闭：SORRIED 49→48；`nliCell3QZECFICwt1` 真证；续1563）**：
   ① **接线**：`Assembly.lean` 加 `import Kepler.Text.TaylorSecond.W1DCAssemblyFinal`，把
   `theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry` 换成
