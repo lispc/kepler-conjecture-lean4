@@ -121,6 +121,16 @@ RC=1、不写 olean；但 Lean 的错误恢复**仍把该名声明进环境**，
 推论：任何文件的文件尾自审计在 error≠0 时全部作废；发射器顶层模板与
 量产模板必须同构（本例量产 2,427 条全空格形 ✓、顶层 1 条逗号形 ✗）。
 
+**PR-62 `whnf` 把含 `dInv` 的 DC 项展开到 `Int.log2`，符号实参下 260–313 s**
+（2026-11-25 wt1-emission-pilot-w1）：`DC` 区间算子的 `dInv` 走 `Int.log2`
+（良基递归）；项里带符号实参时，`exact`/`rfl` 的 `whnf` 会一路展开，
+单条 `exact dMul_mem (dMatanD_mem …) …` 实测 **290 s**（总编译 313 s），
+孤立一个 `rfl` 投影等式 **260 s**（4 例探针 >10 min）。对策：把"头在
+`dMul … dInv` 之下"的 AD 槽定义成 `@[irreducible] def`（`sqrtSlot`/`matanSlot`）
++ 等式引理，证明走 `change`→`rw [slot_eq]`→`exact`；**编译 313 s → 5 s**。
+内核仍可计算**闭合**输入（只挡 elaborator 透明性），不影响 `decide`/`norm_num`
+收尾。出处：`DCJet.lean` 的 profiler（`logs/dcjet_prof`）。
+
 ## B. 陈述与审计纪律
 
 **PR-7 grep 命中 ≠ 声明**：同名符号可能只在注释/排期注记里（2026-11-09 实测

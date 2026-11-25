@@ -329,6 +329,21 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（M2 2/3：`DCTaylor2` + `DCJet` 落库；单箱卡点=点值装配；续1547）**：
+  ① **T2 终端落库 `3cd3927e`**：`DCTaylor2.lean` **241 行**、4 声明；我亲编 RC=0 / 6 s / 5.74 GB / olean **399,128 B**，
+  4 条打印全标准三；模块 build RC=0（8749 jobs）。**关键修正**：`hg` 必须是**箱宽梯度界** `∀ x ∈ D, |∂_i f x| ≤ g i`，
+  不是中心梯度——MVT 落未知内点；这与 `coverage.py` 的 T2 定义一致 ⇒ **221 的判据正确**。Mathlib `ContDiffAt` 指数类型是 `WithTop ℕ∞`。
+  ② **DCJet 落库 `c85af7a7`**：`DCJet.lean` **389 行**、17 条标准三；我亲编 RC=0 / 6 s / 5.73 GB / olean **344,688 B**；
+  模块 build RC=0（8754 jobs）。`structure DCJet {value, part : Fin 3 → DC}` + `JetMem`；10 op `_mem`；
+  mirror 内层 `dMatanTight`（`dMatanWp (dInv A)` 若 `1/r < 4`，否则 `dMatanU9`），内层事实 `matan (1/r)`。
+  **PR-62 入册**：`whnf` 把含 `dInv` 的 DC 项展开到 `Int.log2`（符号实参 260–313 s）；
+  `@[irreducible]` 槽 + `change→rw→exact` 降到 5 s。
+  ③ **单箱端到端未交付**（结构性阻塞，无半成品）：677 个 level-0 part 重测，675 个 T2>0；最佳一致箱
+  **`15873/RRLLRL zero` T2 = +1.14e−2**（3 个镜面槽）。卡点 = **中心点值装配**：`Pilot15869.lean` 只有 `boxJet`、无点 jet；
+  `gen_pilot2.py` 对目标箱 abort（gA 槽跨 d9/mir，`matan_box` 要求两端同支路，`matanBoxOf` 本身支持逐端）。
+  DC 全树需 ~160 条生成引理（点+箱两遍）。
+  ④ 已发下一轮：生成器逐端选臂 + DC point/box 两遍树 + 终端接线（目标箱 `15873/RRLLRL zero`）；先交 point 树中间状态。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1546。
 - **2026-11-25（Route E 真·状态校正：349/403 distinct 全绿，剩 54 片 L15870；续1546）**：
   ① **ERRATA（此前"400/403"）**：那个数是 `logs/full/full_summary.tsv` 的**行数**（含 redo 重跑），不是 distinct shard 数。
   **真·distinct 已编译 349/403**；20 个历史失败（1 L15864 + 17 L15865 + 2 L15870）**已全部 re-run 转绿**
