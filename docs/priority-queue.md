@@ -329,6 +329,17 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DC-only 树 pilot 通过：4.6 s vs QInterval 1728 s，~375×；续1550）**：
+  ① **我亲编** `Pilot15873.lean` **137 行**：RC=0 / 5 s / 5.72 GB / olean **211,608 B** / 0 error / 0 sorryAx；
+  **3 条标准三**（`constDC_mem` / `SI_mem` / `JDlt_mem`）；只 import 已落库 `DCJet`。
+  ② **成本对比**：同一子树 DC 路径 **4.6 s**（含 ~2 s import；链 ~2.5 s）vs QInterval 同构 **1728 s** ⇒ **~375×**
+  （按纯链算 ~700×）。⇒ DC 箱文件 **≤2 min** 有充足余量。
+  ③ **三个生成器发现（入 M5-STATUS）**：ⓐ `by decide` 算具体 DC 值/门控需 `maxRecDepth ≈ 10^6`（默认递归深度报错；求值本身快）；
+  ⓑ `dc_widths.py` 与 DCKit 的精确 `k` 不逐位一致（`dnorm`/移位语义），membership 一致 ⇒ **不要焊预计算 DC 字面量**，发射 ops 让 Lean 算；
+  ⓒ `coord/const/mul/…` 被 `Kepler.Text.TaylorSecond` 同名遮蔽 ⇒ 生成代码必须全限定 `DCJetKit.*`。
+  ④ 下一轮：`gen_dc_tree.py` 全 ~65 节点 ×2 遍（point value 链 + box JetMem 链）→ `dcT2_pos` + slack；
+  验收 ≤2 min/箱、标准三、报 `decide` 墙钟。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1549。
 - **2026-11-25（D5 拦截：QInterval 两遍树 29 min/箱 = 700× HOL，判死；纠正回 DC jet；续1549）**：
   ① 单箱第 1 轮用的 `Pilot2Boxes`（QInterval `W1aFJet` + `roundJet` 两遍树）实测 **1728 s ≈ 29 min/箱**、6.06 GB、0 olean——
   这不是生成器 bug 的成本，是**形态**的成本：221 × 29 min ≈ **107 h ≈ 700×** HOL（2.5 s/pass）。
