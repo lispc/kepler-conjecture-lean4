@@ -329,6 +329,21 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（单箱第 1 轮止损：36 个生成器 bug；~30 min/箱成本实测；续1548）**：
+  ① **patch 范围**：`W1aFJet.lean` **需要**（M3 箱文件要 `w1Box3/w1F3Z/W1Leaf/roundJet/matanBoxOf` +
+  取整链 `J…R`/`JTopR` `:639–870`）；`Pilot15869.lean` **不需要**（15869 专用，M3 用 15873/RRLLRL 取代）
+  ⇒ patch = **1 文件 1377 行**，PATCH_OK。
+  ② **目标箱复核**：677 个 level-0 part 重跑，675 个 T2>0；`15873/RRLLRL zero` 六个 matan 槽**全部同支路**（3 mirror），
+  T2 = **+1.142e−2** ⇒ 逐端选臂对本箱**不需要**（只对 15873/RRLR 需要，其 gA 跨 d9|mir）。
+  ③ **产出但未过**：`Pilot2Boxes.lean`（820 行，box+point 两遍树，`bJet`/`pJet`）+ `DCT2Box.lean`（193 行终端草稿；
+  模型数：点值 ∈ [0.012722752, 0.012722912]，箱梯度 0.02996/0.02559/0.02464，DC slack = **+1.14203e−2**）。
+  ④ **实测成本**：箱文件 820 行 / **1728 s ≈ 29 min** / 6.06 GB / 0 olean / **36 errors**（全是生成器 bug）：
+     ⓐ 逆盒正性证明写在**未取整**表达式上（目标 `0 < (J4a2AR boxL).value.lo` 是 `rndOut` 之值）；
+     ⓑ matan-jet 名字拼错（发射 `JMTtAR`/`JMGtCR`，真名 `JMtAR…`/`JMgAR…`，`W1aFJet.lean:774–789`）。
+     约 24/48 个生成定义受影响。
+  ⑤ 下一轮：两处修（~15 行）→ 重生成 → 编箱（~30 min）→ 编终端（~2–5 min）→ `#print axioms`。
+  资源：3 个 lean 槽正好卡上限，起前查 `pgrep -x lean`。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1547。
 - **2026-11-25（M2 2/3：`DCTaylor2` + `DCJet` 落库；单箱卡点=点值装配；续1547）**：
   ① **T2 终端落库 `3cd3927e`**：`DCTaylor2.lean` **241 行**、4 声明；我亲编 RC=0 / 6 s / 5.74 GB / olean **399,128 B**，
   4 条打印全标准三；模块 build RC=0（8749 jobs）。**关键修正**：`hg` 必须是**箱宽梯度界** `∀ x ∈ D, |∂_i f x| ≤ g i`，
