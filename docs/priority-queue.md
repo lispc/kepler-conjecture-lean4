@@ -329,6 +329,16 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DC 树模板全验证；生成器草稿 NameError 止损；fresh agent 接；续1551）**：
+  ① `Pilot15873.lean` 扩到 **151 行**，我亲编 RC=0 / 5 s / 5.72 GB / olean **218,464 B** / 0 error / **5 条标准三**
+  （新增 `JPI_mem` π 用 `DCKit.PIbr`+`PIbr_mem`、`JINVPI_mem` 门控 `by decide`）。**每一类 op 的发射模板都有编译通过的样板**：
+  coord/整数常数/有理常数（`constDC (dDiv (dInt a) (dInt b))`，不预计算字面量）/√2/π/mul/add/sub/inv（门控 `decide` + `maxRecDepth 1e6`）。
+  ② **全 ~86 节点 ×2 遍的生成器没做出来**：草稿 `gen_dc_tree.py` 构造节点表时 `NameError`，剩余预算不足以把 172 条发射推成编译通过；
+  按"不带病落库"停手，未塞半成品进 patch/主仓。草稿与状态入快照 `gen_dc_tree-draft.py`、`M5-STATUS.md`（round 3b）。
+  ③ **交接已定死**：节点表显式写全（A/B/C 各 9 个中间节点，禁名字拼接）；box/point 两遍；matan 六槽四支模板 + `matanMir` 内层
+  `dMatanTight`；终端 `V := PTop.value`、`G := JTop.part`、slack ℚ `decide` + `exact_mod_cast`/`push_cast`（唯一未编验证点）。
+  ④ **fresh agent 已接**（§7.1-16）；成本外推 86 节点 ×2 ≈ 30–40 s，≤2 min/箱。patch 是否保留 `W1aFJet` 由 DC 树 import 面决定。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1550。
 - **2026-11-25（DC-only 树 pilot 通过：4.6 s vs QInterval 1728 s，~375×；续1550）**：
   ① **我亲编** `Pilot15873.lean` **137 行**：RC=0 / 5 s / 5.72 GB / olean **211,608 B** / 0 error / 0 sorryAx；
   **3 条标准三**（`constDC_mem` / `SI_mem` / `JDlt_mem`）；只 import 已落库 `DCJet`。
