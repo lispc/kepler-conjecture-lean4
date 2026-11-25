@@ -143,6 +143,14 @@ RC=1、不写 olean；但 Lean 的错误恢复**仍把该名声明进环境**，
 `slackZ` → 点树 → 撞上 `dSqrt` 永久卡死；改 `V`/`G` 为**字面量 def**，用桥接引理
 （`V_mem`/`G*_eq`/`G_mem`）接回树槽，slack 1.4 s 收敛。出处：`m7/M7-STATUS.md` §3。
 
+**PR-64 `DC` 端点括号跨 dyadic scale 直接取 hull 不 sound，必须先 `dRescale`**
+（2026-11-25 `wt1-dcmatan-mono-w1` 实测）：区间算子的输出与实参箱常落在**不同 k**
+（实测 `dMatanDNeg` k=199、`dMatanD` k=201、箱 k=200）；把 `⟨k1, lo, hi⟩` 的端点与
+`⟨k2, ·⟩` 的端点混进同一个 `⟨A.k, ·, ·⟩` 会**静默错证书**（自测 hull 得
+`[-0.644, -0.515]`，真范围 `[-1.289, -0.258]`）。对策：`DCMatanMono.dRescale k B`
+（精确左移 + 外向 floor/ceil，`dRescale_mem`）把两端先归一到 `A.k` 再取 hull；
+生成器发射 hull 时必须显式 rescale，不许假设 scale 相同。出处：`DCMatanMono.lean` §1。
+
 ## B. 陈述与审计纪律
 
 **PR-7 grep 命中 ≠ 声明**：同名符号可能只在注释/排期注记里（2026-11-09 实测

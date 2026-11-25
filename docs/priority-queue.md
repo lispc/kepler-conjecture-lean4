@@ -329,6 +329,26 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DCMatanMono 落库 `bc7e7498`：K1–K4 端点 hull kit；dRescale 修跨 dyadic scale；续1559）**：
+  ① **`DCMatanMono.lean` 635 行**，我亲编 RC=0 / **4.21 s / 5.66 GB / olean 484,520 B** / 0 error / 0 sorryAx；
+  **20 条 `#print axioms` 全标准三**（5 条自测 `decide`/`rfl` 为零公理）；模块 build **8,760 jobs PASS**。
+  内容：K1 `ptLo/ptHi` + `dMatanMono`/`_mem`（落库 `nb12w_matan_strictAntiOn`，不要求 `dLoBig`，另有 gate 形）；
+  K2 `dc_mem_of_rat`/`dc_mem_of_qinterval` + §2 发射模板（`ql/qh = isqrt`、**1 格 padding**，无 padding 会产生
+  `lo = hi+1` 空字面量——实测）；K3 `matan_deriv_eq_neg` + `dMatanDNeg`/`_mem`（`A.hi < 0` 时 `-2r` 为正分母，
+  再 `dNeg`）；K4 `dMatanDHull`/`_mem` + `Pos/Neg/Cross` 三臂（单调性全用落库 `lkB_matanD_strictMonoOn`
+  `MatanDMonoNegKit:208`，**无新单调证明、无 Taylor 级数、无 0 点连续性**）。
+  ② **该车道的机器发现（推翻我工单里的 naive 写法）**：端点括号与实参箱在**不同 dyadic scale**
+  （实测 `dMatanDNeg` k=199、`dMatanD` k=201、箱 k=200）；`⟨A.k, Mhi.lo, Mlo.hi⟩` 跨 scale **不 sound**
+  （自测 hull 得 `[-0.644,-0.515]`，真范围 `[-1.289,-0.258]`）。修法：新增 `dRescale`（精确左移 + 外向
+  floor/ceil，`dRescale_mem`），两端先归一到 `A.k` 再取 hull。**已入册 PR-64。**
+  ③ **自测（真实 D1 数据）**：`W1DC_15866_RRR_zero_0#0` box-pass `GC`（最小 `lo` 槽）：端点导数字面量
+  `decide` 内核过；rescaled hull `[-1.288626794, -0.257730941]` 含 101 点精确有理扫描；值 hull
+  `[0.930509790, 1.429994256] ∋ matan 0 = 1`；导数 hull ∋ `-1/3`。跨零普查 48 槽（8 箱 × 6）：
+  **无纯负、无 pole，min `aLo = -0.687741973`**，与 v3 预飞一致。
+  ④ K3 的边界注记：`A.hi ≤ 0 + r≠0` 形式不可行（`hi = 0` 时 `B.lo = 0`）；D1 无此槽，无需处理。
+  ⑤ 下一轮：**M9 发射车道在飞**（gen_m9 = K1–K4 替换 matan 通道 + v4 预飞 221 + 6 样本，含 2 个跨零箱
+  与全局 T2 最小箱）；v4 全过 → 3 车道 221 量产。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1558。
 - **2026-11-25（v2/v3 预飞判词：端点单调 hull 可达 221/221，cover 不用重切；续1558）**：
   ① **纯 Python 预测（221 箱两遍，精确 DC 语义）**：v1（已落库整箱臂）21 PASS →
   **v2（值 = 端点 hull，梯度保持 `dMatanD` 区间公式）213 PASS（去掉旧 `dLoBig` 域门后 217）** →
