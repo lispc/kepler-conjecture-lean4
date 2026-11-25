@@ -103,9 +103,9 @@ Phase-level status (qualitative — **live numbers live in one place only**):
 | 1 | Theorem statement | ✅ statement fixed |
 | 2 | Tame plane graph enumeration | ✅ 19,715 graphs + completeness proved; 585 shard axioms = declared trust base (data three-way reconciled SAME with the original) |
 | 3 | Linear programming | ✅ 43,078 terminal LP certificates checked; LP checkers kernel-proved; fill debt = `lpArchiveCertificatesDebt` (in cone) |
-| 4 | Nonlinear inequalities | 🟡 **48 `nli*` cone sorries (the main front)**: TSKAJXY full-box assembly **landed** (6,612 leaves + 202 assembly modules; `nliTskXLLIPLS` proved standard-three, SORRIED 52→51), math5 five-debt lane (item 1 corner closed, item 2 suspended), CertTM2 engine route closed by measured Gate-0 NO-GO; sqrt/atan-tier heavy farm replay deferred (the original used a farm too) |
+| 4 | Nonlinear inequalities | 🟡 **47 `nli*` cone sorries (the main front)**: wt1 full-box DC certificate **closed** (`nliCell3QZECFICwt1`, 2026-11-26; 221 boxes + 10 assembly modules, all standard-three); TSKAJXY full-box assembly **landed** (6,612 leaves + 202 assembly modules; `nliTskXLLIPLS` proved standard-three, SORRIED 52→51), math5 five-debt lane (item 1 corner closed, item 2 suspended), CertTM2 engine route closed by measured Gate-0 NO-GO; sqrt/atan-tier heavy farm replay deferred (the original used a farm too) |
 | 5 | Text proof porting | ✅ **zero cone sorries in Text** (baseline AQ, 2026-11-18); 5 out-of-cone file-level sorries (TameLp 1 + LA23 4) kept honestly, not deleted |
-| 6 | Integration & delivery | 🟡 e2e stands, assembly chain proved; root face 589; SORRIED 49 = 48 `nli*` + 1 hLP (all Assembly); trust-base manifest `--check` green |
+| 6 | Integration & delivery | 🟡 e2e stands, assembly chain proved; root face 589; SORRIED 48 = 47 `nli*` + 1 hLP (all Assembly; wt1 full-box DC certificate closed 2026-11-26); trust-base manifest `--check` green |
 
 **Where to read the numbers.** There is exactly one live ledger:
 [`docs/priority-queue.md`](docs/priority-queue.md) — in-flight lanes, queue,

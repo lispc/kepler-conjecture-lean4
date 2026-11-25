@@ -16,14 +16,14 @@
 > 全文日志已移至 [`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)。
 > 本文件只保留当前基线、真实在飞、可执行队列、待裁决和最近日志。
 
-**当前实测 = 基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证）；wt2A 小模块验收后仓面 SORRIED 49（`1ec06b28`，2026-11-20；根面复跑池后）**：
+**当前实测（2026-11-26）：wt1 全量证书闭合后仓面 SORRIED 48（`4bcbd7ad`）。历史：基线 AQ @`e4c384e6`（2026-11-18，`nliTskXLLIPLS` 真证）时为 51；wt2A 小模块验收后 49（`1ec06b28`，2026-11-20；根面复跑池后）**：
 
-- cone `K_REACH 2,108,657`（基线实测；P0/P1/P2 置换的锥缩记账随池复跑仪器，见 §8 续1310/1312）/ **SORRIED 49** / **`K_AXIOM 585`**；
+- cone `K_REACH 2,108,657`（基线实测；P0/P1/P2 置换的锥缩记账随池复跑仪器，见 §8 续1310/1312）/ **SORRIED 49→48**（2026-11-26 wt1 关闭）/ **`K_AXIOM 585`**；
   MODULES 12,140 / UNIVERSE 2,140,793 / COVERAGE 98.4989%；
-  口径 II 39,125 / 51 / 585 / 49,868（仪器口径池后复跑）。
-- **SORRIED 49（wt2A 小模块验收落库 `1ec06b28`，2026-11-20 实测仓面计数；根面复跑池后）
-  = Assembly 49（48 `nli*` + 1 hLP）+ Text 0**。
-  48 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + **2 `nliCell3*`**（sqrt8 已闭；wt2A 已闭）+ 4 直挂
+  口径 II 39,125 / 51 / 585 / 49,868（仪器口径池后复跑；**49,868 = 仪器口径，未随 wt1 关闭重跑**，见续1563）。
+- **SORRIED 48（2026-11-26：`nliCell3QZECFICwt1` 真证，49→48；`1ec06b28` 时为 49）
+  = Assembly 48（47 `nli*` + 1 hLP）+ Text 0**。
+  47 `nli*` = 38 `nliRest*` + 4 `nliTsk*` + **1 `nliCell3*`**（sqrt8 / wt2A / **wt1** 已闭）+ 4 直挂
   （`nliKcblrqcIneqDef` / `nliLpIneqs` / `nliMainNonlinearTerminalV11` / `nliOx3q1h`）。
 - 根面 **589 = 585 native + 标准三 + `sorryAx`**；基座 585 未动。wt2A 已闭只减 sorry 源（50→49）。**2026-11-23 池归零后编排者亲跑复现 589 同集（585/585 在册、UNEXPECTED 仅 `sorryAx`；续1425）。**
 - **运行态事故（2026-11-19，`lp-packed-single-leaf-w2`）**：主仓
@@ -329,6 +329,25 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（wt1 债关闭：SORRIED 49→48；`nliCell3QZECFICwt1` 真证；续1563）**：
+  ① **接线**：`Assembly.lean` 加 `import Kepler.Text.TaylorSecond.W1DCAssemblyFinal`，把
+  `theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry` 换成
+  `:= W1DCAssemblyFinal.wt1_bank`（= `bank_QZECFICwt1_of_core wt1_hcore`）。落库 `4bcbd7ad`。
+  ② **岛协议（我亲跑）**：`lean -o /tmp/asm_island/Kepler/Assembly.olean Kepler/Assembly.lean`
+  → **RC=0 / 39.54 s / 10.03 GB / 0 error**，olean **12,764,936 B**（基线 12,765,584 B 备份在
+  `/tmp/asm_island/Assembly.olean.baseline`），已回灌 `.lake`。
+  ③ **验收（我亲跑）**：`#print axioms Kepler.Assembly.nliCell3QZECFICwt1` =
+  **`[propext, Classical.choice, Quot.sound]`**（接线前 `[sorryAx]`）；
+  `lake env lean Kepler/Final.lean` → `the_kepler_conjecture_e2e` 仍 **589 个名字 =
+  标准三 + `sorryAx` + 585 native**（名字集不变：剩余 48 条债仍带 `sorryAx`），0 error。
+  ④ **债务**：SORRIED **49→48**（47 `nli*` + 1 hLP）；`Assembly.lean` 内 `:= sorry` 55→54、
+  `theorem nli* := sorry` 53→52。口径 II 的 49,868 **未随本次重跑**（仪器口径，标 stale）。
+  ⑤ **本轮 wt1 全链资产**（均标准三）：kit 12 件（DCKit/DCMatan/DCTaylor2/DCJet/DCSqrtLit/
+  DltCornerWide/M8Kit/DCMatanMono/MatanC1/W1aFJet/W1DCBridge/Wt1Glue）+ 221 个 `W1DC_*` 箱模块
+  （每箱 8 条 axioms，olean 5.94–7.61 MB，`by decide` 门 59,604）+ 10 个 `W1DCAssembly*`
+  （9 case + final，11 条 axioms）。box 覆算：221 箱 / 353 叶，`allCerts` 与 manifest 逐字符相同。
+  ⑥ 下一轮：剩余 **48 条债 = 47 `nli*` + 1 hLP**（Text 0）；根面 `sorryAx` 要等全部清完才消失。
+  SORRIED 48 / AXIOM 585。下一条：续1562。
 - **2026-11-26（D1=221 全量证书落库：221/221 数学绿；`7a133a3d`+`a16aacb2`+`4ba8b603`；续1562）**：
   ① **三车道量产全部收线**：A = idx 0–73（74 箱，全 zero）、B = 74–147（74 箱）、C = 148–220
   （73 箱，**含全部 65 个 one-mode**）；**221/221 数学判据全绿**（RC=0 ∧ `error:`=0 ∧ 无 `sorryAx` ∧
