@@ -329,6 +329,21 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DC/decide probe 实测 PARITY 0.54–0.72×；决定转 DC 路线；T2-only 体制 D1=207；续1532）**：
+  ① **编排者亲验 probe**（自己重编，不转述）：`Empty.lean`（只 import）**3.64 s** vs `TV.lean`（**113 op** Taylor 形状值通道 fold + 一条 `decide`）**5.77 s**
+  ⇒ **+2.13 s/次 decide**，RC=0、olean **173,872 B**（D4 极小）。per-op 斜率：`dAdd/dMul` **~3 ms**、`dDiv` **~17 ms**、`matanBr` **0.27–0.39 s**；
+  加两/五个导数块只 +0.28/+0.36 s（贵 op 在 `def` 里共享）。
+  ② **外推 173 箱**：三通道 ~6.4 s/箱 ⇒ **1107 s vs 1543 s = 0.72×**；**T2-only** ~4.0 s/箱 ⇒ **828 s = 0.54×**；即使 per-op ×2 仍 ≤1.4× ⇒ **PARITY**。
+  ③ **caveat（必须定价）**：kit 的 `matanBr` 只是**值**括号；Taylor 还需要 `matanD`/`matanDD` 的 DC 括号，**fold 与桥都不存在**。
+  ④ **soundness 层范围**：`Wt1LeafKit.lean` **0 条 theorem**（39 个 def）。需 ~30 条 = 7 原语（`dInt/dAdd/dNeg/dSub/dMul/dDiv` + `dNorm` 语义）
+  + 11 槽 fold + **3 硬骨头**（`dnorm_mem`：`log2` 位长 + `Int.shiftRight` floor/ceil + `drop` 钳位；`dInv_mem`：`Int.ediv` floor/ceil + 尺度；
+  `matanBr_mem`：5 支 + `if` 选择 + `dClamp0`）+ matanD/matanDD 新数据与 fold。
+  ⑤ **T3→T2 折叠**：24 箱（mask `--3`）既不过 T1 也不过 T2；按 `find_max w` 细分到 T2 = **58 叶（净 +34）⇒ D1 = 173−24+58 = 207 = 0.334× HOL(619)**。
+  **判：走 T2-only 体制**（value+first，整条砍掉二阶通道与 `matanDD`）——风险最大的一块直接消失，D1 仍 0.334×。
+  ⑥ **决定：转 DC/decide 路线**。理由：它是唯一实测 ≤1× HOL 的形态（0.54–0.72×），而 `QInterval`+tactics 的三种形态实测 289 s / 36 s / 4.1× 全部超带宽。
+  附加价值：**DC soundness 层是共享资产**——建成后 Route E 的 403 片（15,927 箱）也能接上语义桥（那是 **25.7× D1 的兜底**，超带宽、只能用户明批，**不作主线**）。
+  ⑦ **下一相 `wt1-dc-soundness-w1` 里程碑**：M0 原语 + `dnorm_mem` + `dInv_mem`；M1 `matanBr_mem`；M2 11 槽 fold + `w1aF` 桥 + **一个 Route E 箱语义闭合**（标准三）；
+  M3 `matanD` + DC jet（value+first）+ 207 箱发射 + glue。SORRIED 49 / AXIOM 585 不变。下一条：续1531。
 - **2026-11-25（合并后分层 173 箱；per-node 链形态实测 289 s/箱 ⇒ OVER-BAND 废弃；转 DC/decide probe；续1531）**：
   ① **合并后分层（173 箱，Python 精确、每节点 1e−9 外向舍入）**：**T1 80/173 = 46.0%**（合并前 72.5%）、
   **T2 139/173 = 79.9%**（前 99.7%）、**T3 173/173 = 100%**；masks `123` 69 / `-23` 70 / `--3` 24 / `1-3` 11（T1-only 0）。
