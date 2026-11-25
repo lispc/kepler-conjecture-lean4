@@ -329,6 +329,25 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（M9 v4 预飞 221/221 PASS；6/6 样本绿；`MatanC1` 落库 `f60a76f7`；续1560）**：
+  ① **`gen_m9.py`**（1,886 行，M8 派生）：matan 通道换成 K1–K4（值 = 端点括号 + `dMatanMono`（含 `dRescale`）；
+  梯度 = 端点导数 `dMatanD`/`dMatanDNeg` + `dMatanDHullPos/Neg/Cross`，A 跨 0 禁用区间公式）；旧 matan 域门删除；
+  其余逐字继承（fCN2 实数体、one 树、wide 角点、dSqrt 字面量、一 op 一 `rfl`、KZ slack、桥 rfl、7 条 print）。
+  ② **v4 预飞 221/221 PASS**（3.7 s，59,604 门）：min slack **+1.054843e−5**（全局 T2 最小箱
+  `15869_LLLLLLL_zero_0`）；p10 3.199e−4 / 中位 3.5356e−3 / max 1.4351e−2；8 个跨零箱 48 槽全 `cross` 臂；
+  `slack−T2` min −1.262e−4、中位 +5.748e−4（6 箱低于 T2 但**符号全正**）。与 v3 预测差 ≤4e−6。
+  ③ **6/6 样本全绿**（146.9–162.2 s / 5.94–5.99 GB / olean 6.55–7.82 MB / 0 error / 0 sorryAx / 7 条标准三）：
+  2 个跨零箱（含 min `aLo`）、全局 min-T2 箱、底边箱、one、zero refined。**M8 在 min-T2 箱上编不过**
+  （`val_facts` 的 `decide` 直接证否 `slackZ ≤ 0`，1 error + `sorryAx`，92.2 s）；同箱 M9 0 error 标准三。
+  ④ **kit 缺口（车道发现）**：`matan` 在 `(-1,∞)` 上的 `C¹` 未落库（`Matan.lean` 只有 `t>0`），M9 负端点
+  需要它 ⇒ 每箱重复证 5 条（~110 行，墙钟 M8 92 s → M9 150 s，**1.63×**）。已落库
+  **`MatanC1.lean` `f60a76f7`**（156 行，5 条全标准三；我亲编 RC=0 / 3.93 s / 5.60 GB / olean 295,336 B；
+  模块 build 8,756 jobs PASS；内容 = `continuousAt_matanD_zero`（可去奇点 −1/3）/`_of_ne`/
+  `continuousOn_matanD`/`contDiffOn_matan_gt`/`contDiffAt_matan_gt`，从绿样本逐字提取）。
+  ⑤ 机制注记：`DCKit.DC` 无 `DecidableEq` ⇒ 整 `DC` 等式不能 `decide`（`vh/gh` 用 `unfold;rfl`）；
+  `M8Kit.dMatanTightW` 在 `.M8Kit` 命名空间；`dMatanWp_mem`/`dMatanU9_mem` 真实 arity 4/2。
+  ⑥ 下一轮：gen_m9 改引 `MatanC1` + 重计时（在飞）→ **3 车道 221 量产**（按 idx 切 74/74/73；
+  实测基线 146.9–162.2 s/箱，落 MatanC1 后预期显著下降）。SORRIED 49 / AXIOM 585 不变。下一条：续1559。
 - **2026-11-25（DCMatanMono 落库 `bc7e7498`：K1–K4 端点 hull kit；dRescale 修跨 dyadic scale；续1559）**：
   ① **`DCMatanMono.lean` 635 行**，我亲编 RC=0 / **4.21 s / 5.66 GB / olean 484,520 B** / 0 error / 0 sorryAx；
   **20 条 `#print axioms` 全标准三**（5 条自测 `decide`/`rfl` 为零公理）；模块 build **8,760 jobs PASS**。
