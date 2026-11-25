@@ -329,6 +329,29 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DC 全树 kernel 求值爆炸；`W1DCTermPilot` 603 行 6 条标准三；派 bl 探针；续1553）**：
+  ① **`W1DCTermPilot.lean` 603 行**，我亲编 RC=0 / **6.87 s** / 5.93 GB / olean **1,130,936 B** / 0 error；**6 条标准三**
+  （`val_facts` 仅 `[propext, Quot.sound]`）。验证了 box+point 两遍、`c/w/hc/hconv/hw`、ℤ-scaled slack + zpow 桥、`dcT2_pos`。
+  ② **三个实测发现**：ⓐ **ℚ `decide` 死了**——`Rat.blt` 内核不归约（`example : (0:ℚ) < 1/3 := by decide` 失败）；
+  改用 **ℤ-scaled `slackZ`**（`2^KZ` 缩放）+ `decide`，再 `push_cast`/`zpow` 搬到 ℝ。
+  ⓑ **`Dlt` corner rule 在 DC 树也必须**：naive DC 区间跨零（`TA` ∈ [−0.25,0.55]@k=192；Python 副本 [−15.4,33.75]）⇒ 六个 matan 门控全 false；
+  用已落库 `nb21_delta_mono_y4/y5/y6` + k=1200 精确角值 + `DltCorner` 夹回 2^-200 网格，corner 块单独编译 RC=0/6.3 s。
+  ⓒ **BLOCKER**：全树一个槽门控 `BMtA_gates := by decide` **>600 s 不收敛**（`@[irreducible]` 也一样，是 kernel 求值）；
+  box pass 单独 >600 s；小 pilot 7 s。⇒ M5 的 0.067 s/node 外推在 `dInv` 入链后失效，**"门控靠 kernel decide" 不满足 ≤2 min/箱**。
+  ③ **判词**：模板/性能阻塞，不是数学失败；单箱未过，221 未启动。已派 **bl 探针 lane**：V0 复现爆炸（dInv/dMul 链 N=1,2,4,8）、
+  V1 字面量操作数、V2 显式 bl 层（`dnormBl`/`dInvBl`），判据 = 8 节点链 ≤1 s ⇒ 全树门控 ≤~10 s、每箱 ≤2 min。
+  V2 需 bit-exact replica（已有 Python 副本 k 有一位差）。
+  ④ **ERRATA**：续1552 我在给用户的报告里先说"已落账"，实际当时**未写入**；本条一并补写（Route E 403/403 见下条）。
+  §3 反方向的记录事故（报告先于账本），记此。
+  ⑤ `W1aFJet` 不再需要（DC 树只 import 已落库模块）；但 glue 到已落库 `w1F3` 仍需 §5 恒等式 `w1F3 = w1F3Z`（glue 项）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1552。
+- **2026-11-25（Route E 收线：403/403 distinct 全绿；仍是 25.7× 兜底、不关 wt1；续1552）**：
+  ① **`SINGLE DONE`**：本轮编译 322 片；`full_summary.tsv` 覆盖 **403/403 distinct shard**，**0 剩余、0 失败**
+  （按每文件最后一行 RC）；末段 L15870 S84–S99 全绿，~4.2 min/片。
+  ② 数值兜底线完成（9 case 15,927 箱的整数事实全部落地）。**≠ wt1 关闭**：403 片只证整数事实，kit 无 soundness 定理、
+  无 `matan` 语义桥；15,927 箱 = **25.7×** HOL 的 D1，OVER-BAND，只能作兜底且需用户明批。
+  ③ 驱动退出，lean 槽全释放（0 lean，pressure 1）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1551。
 - **2026-11-25（DC 树模板全验证；生成器草稿 NameError 止损；fresh agent 接；续1551）**：
   ① `Pilot15873.lean` 扩到 **151 行**，我亲编 RC=0 / 5 s / 5.72 GB / olean **218,464 B** / 0 error / **5 条标准三**
   （新增 `JPI_mem` π 用 `DCKit.PIbr`+`PIbr_mem`、`JINVPI_mem` 门控 `by decide`）。**每一类 op 的发射模板都有编译通过的样板**：
