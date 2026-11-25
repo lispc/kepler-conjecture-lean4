@@ -959,24 +959,33 @@
 8. **不再重复**：rad2 望远镜、CertTM2/Gate-0、IXPOTPA 旧 0.59 CPU·h、
    超越函数“整盒有理界 + 单分数组合”、FHBa/v2a 的 96 角点表、FHB floor 三轴一阶单调、
    cell3 wt2A 的 y5 全盒单调。
-9. **2026-11-26 两债侦察结论与优先级**（快照 `qitnpea-scout-w1/`、`cell3-wt0-scout-w1/`；
-   数字权威在 `priority-queue.md` §8 续1567/续1568）：
+9. **2026-11-26 两债侦察结论与优先级**（快照 `qitnpea-scout-w1/`、`cell3-wt0-scout-w1/`、
+   `holparity-qitnpea-corner-w1/`；数字权威在 `priority-queue.md` §8 续1567/续1568/续1569）：
    - **QITNPEA**：17 条中 4 已闭 ⇒ **13 条 `:= sorry`**；**纯代数关不掉任何一条**。
      两条机器：(a) 仿射共享下界 `min_y(γ4+λ·dihY)=A+λB`（argmin 恒角点 (2.52,2⁵)）覆盖
      4 条 + `BIXPCGW9455898160`，但绑定余量 7.97e−5、dihY 系数 λ-线性 ⇒ 朴素细分不可行；
      (b) **角点电池**：γ4 逐轴严格凹（`∂²γ4/∂yᵢ² ≤ −0.116`）+ `y=2.52` 凸折点（斜率跳 +0.174）
      ⇒ 逐轴最小值 ∈ {lo, 2.52, hi} ⇒ 有限有理点检查；11/13 是 γ4-基，**两个 γ3 债例外**
-     （盒内 `1/√Δ` 奇点）。**建议第一波** `1_1_2`（机器 ~90% 在库，min γ4 = 0.08134 > 0.0114）+
-     `1_2_0` + `1_1_1`，一车道 −3；`5400790175a` 可走 `FhbEtaCurve` 的 η-guard。
-     **PARITY CARD 已发**（`holparity-qitnpea-corner-w1`，卡回再发 Lean）。
+     （盒内 `1/√Δ` 奇点）。
+     **PARITY CARD 判 OVER-BAND（2026-11-26，`holparity-qitnpea-corner-w1`）⇒ 本轮不放行**：
+     D1 = 470 义务（456 角点值 + 11 片轴引理 + 3 接线）vs HOL 波1 37 case = **12.7×**；
+     D3 48 KB vs 25,460 B = **2.7×**；D5 5–20 s vs 15,490 s（4.30 CPU·h）= **0.0003–0.0013×**
+     （计算便宜 ~250×）；D6 PARITY；D2/D4 结构性。**四条硬发现**：① 角点必须核验 **456 个**
+     （三条债整盒角点极小都 >0.0057，`rad2>2` 支对整盒极小**不能剪**）；② **库内仍无 γ4 凹性
+     资产**（`g4w_concave_1..6` 是 `private`、对象是 **deltaX** 不是 γ4；归约骨架
+     `NliBanks9.boxInf_le_of_piecewise_concave` 已在库，缺 11 片 `ConcaveOn`）；③ 侦察 ERRATA：
+     `1_2_0` 的 `w=1` 不是 2、`g4w_concave_*` 归属错；④ **唯一进带路径 = 单表 + 一次反射**
+     （D1→0.46×、D3→1.9×），依赖库内**不存在**的「可计算 dyadic atan 点包络」⇒ 先做**最小样品**
+     （1 片凹性 + 2 角点）验证。第一波仍以 `1_1_2`+`1_2_0`+`1_1_1` 为对象，但**卡更新前不发 Lean**。
    - **wt0**：等价关系精确确认 **wt0 = `W1aFJet.w1F3O` − `fNeg2`**（`gamma3fXDivSqrtdelta 1 1 1`
      的 `1` 是 `m4/m5/m6`；`mk456` 把 1–3 槽钉成 `two6=2`，`nb18_indep`）。**T2/DC 发射形态
      409 叶**（8 HOL prep cell 细化；D1 = 0.79× PARITY）但 **D5 = 10.36–16.89× ⇒ OVER-BAND**
      （D1 被盒梯度通道放大 51×）⇒ **T2 不是 wt0 的路线**。正确路线 = 2026-11-19 旧侦察的
      **route R「单调核 + 有理角点证书 + 单墙」**（全局极小 +1.78278351164e−4 恰在有理角点
      (2.01,2,2)；墙 min = 极小 15.4×；footprint ~2k–21k 行，单车道 1–3 周；R4→R2→R1→R3→R5）。
-   - **排序**：**QITNPEA 第一波（3 条，角点电池）> wt0 route R（1 条，1–3 周）>
-     wt0 T2 兜底（over-band）**；LP/Ox3q1h/MainNonlinear、FHB、ZTG 超越子集、Kcblrqc 不进本窗口。
+   - **排序（2026-11-26 卡片后）**：**QITNPEA 单表最小样品（解锁 11 条）> QITNPEA 第一波
+     （样品绿后）≈ wt0 route R（1 条，1–3 周）> wt0 T2 兜底（over-band）**；
+     LP/Ox3q1h/MainNonlinear、FHB、ZTG 超越子集、Kcblrqc 不进本窗口。
 
 ---
 
