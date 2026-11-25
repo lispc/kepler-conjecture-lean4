@@ -329,6 +329,38 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（单箱端到端全树 DC 证书过；`W1DC15873` 落库 `d806ff72`；续1555）**：
+  ① **`W1DC15873.lean` 6,139 行 / 1,550 定理 / 476 def**：箱 `15873/RRLLRL zero` 全 152 节点
+  DC 树（box+point 两遍 + part 通道 + T2 终端），12 个 `dSqrt` 全走 `DCSqrtLit.dSqrt_val`
+  （`Nat.sqrt` 零接触内核）。车道自测 RC=0 / **91.31 s** / 6.25 GB / olean 5,415,896 B / 0 error / 0 sorryAx。
+  ② **我亲编**（`lake env lean`）：RC=0 / **27.2 s real（215 s user，多线程）** / 6.94 GB；
+  6 条 `#print axioms` 全标准三（`val_facts` 仅 `[propext, Quot.sound]`）；模块 build
+  **8,756 jobs PASS**，olean **5,417,480 B**。落库 `d806ff72`（2 新文件 / 6,742 行；纯新增，
+  主仓 tracked 零改动）。
+  ③ **箱对表（独立复算）**：`I4/I5/I6` 与 `load_terms()` 的 `15873/RRLLRL` 端点按 K=200
+  floor/ceil **逐位一致**。**但该箱是 597 树叶，不在 D1=221 证书箱集**（对 `refine_t2.json`
+  的 221 叶端点做 K=200 比对：0 命中）⇒ 221 轮的生成器取数必须改成 `refine_t2.json` 叶坐标，
+  不能再用 `load_terms()`。**另：`Wt1Glue.allCerts` 的 221 个 Box3 与 `refine_t2.json` 的
+  221 叶按精确有理数比对 0 差（双向）**，组装可逐箱对表。
+  ④ **221 箱的两个结构性缺口（编排者查出的，M7 模板未覆盖）**：
+  (a) **mode 分裂 156 zero / 65 one**（`parts_of` 在 y4=2.52=2·h0 切）：zero 树 = M7 模板
+  （POS=K2·(LF5·DIHA+LF6·DIHB)）；**one 树要加 LF4·DIHC 项**（POS 三项），桥接式也不同
+  （`w1aF = fTop₁` 不需 hcut 消 pq1，需 h0cut=1，即 y4 ≤ 2·h0）。
+  (b) **45 箱 `y4lo < 2.46352` 且 `l4 < 2·hminus`**（最小 l4 = 2.46350884418000923
+  < 2·hminus = 2.46350884418060878）：落库 `nb21_delta_mono_y4` 要求两端 ≥ 2·hminus，
+  角点规则在这 45 箱**不可证**。修法：其因子 `-2(x4+x4')+4x5+4x6-x5x6 ≤ 16-2·(6.06+6.06) < 0`
+  只需 `y4 ≥ 2.4618`（2.4618² = 6.06045924 ≥ 6.06）⇒ 新引理
+  **`DltCornerWide.delta_mono_y4_wide` 落库 `96ddb1d0`**（亲编 RC=0 / 4.91 s / 5.58 GB /
+  olean 446,384 B / 标准三；模块 build 8,739 jobs PASS）。221 轮角点证明一律改用它。
+  ⑤ **成本**（车道单线程）：value 通道 26 s；+3 条 part 通道 76 s（part ≈50 s）；全量 **91 s**；
+  221 箱串行 ≈5.6 h，3 车道 ≈1.9 h。主成本是逐节点字面量链（~85 ms/节点·遍，内核 `dnorm`
+  的 `log2`），不是 `decide`（终端 slack ≈1.4 s，12 gates ≲3 s/个）。
+  ⑥ **M7 机制教训**已入册 PR-63（复合 `rfl` 爆炸 / `JetMem` 匿名构造子 / `decide` 不许展开树）。
+  ⑦ **未闭 glue**：`fTop = w1F3Z`（W1aFJet §5 `w1F3_eq_w1F3Z`，**W1aFJet 仍未落库**，
+  车道内 1,371 行；one 模式还需 `w1aF = fTop₁` 版）与 221 箱的 `allCerts ↔ D` 对表、终端组装。
+  下一轮（已发 M8a/M8b 两车道）：M8a = Python 预飞 221 箱（分支一致性 / slack / 46 箱 corner /
+  one 树模板）+ 6 箱样本编译；M8b = W1aFJet 落库 + 桥接探针。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1554。
 - **2026-11-25（bl 探针判词：根因是 `Nat.sqrt` 内核不归约；`DCSqrtLit` 落库 `33f5054f`；续1554）**：
   ① **判词**：全树门控 **≤10 s 可行**，不需要 V1/V2。真树 153 节点 value 通道最深门控 `dLoBig Top` = **2.09 s**（sqrt 臂换字面量）/
   **2.46 s**（`dMatan9`）；`BMtA_gates` 原文 **0.52 s**；6 条 `Mt` 门控一起 1.29 s。唯一 >1 s = 6 条 `Mg`（sqrt）门控：

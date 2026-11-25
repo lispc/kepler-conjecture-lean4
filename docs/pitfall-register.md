@@ -131,6 +131,18 @@ RC=1、不写 olean；但 Lean 的错误恢复**仍把该名声明进环境**，
 内核仍可计算**闭合**输入（只挡 elaborator 透明性），不影响 `decide`/`norm_num`
 收尾。出处：`DCJet.lean` 的 profiler（`logs/dcjet_prof`）。
 
+**PR-63 DC 树的 kernel 归约三则（2026-11-25 wt1-emission-pilot-w1 / M7，全部实测）**：
+① **复合项 `rfl` 会 `maxRecDepth` 爆炸**：`rfl` 证
+`dSub (dDiv (dMul HALF PIbr) ⟨S⟩) (dDiv ⟨T⟩ ⟨A⟩) = ⟨lit⟩`，在 `maxRecDepth 2e6`
+下栈溢出，**而每个子项与每步单独求值全绿** ⇒ 规则：**一 op 一引理、平面字面量
+操作数、`rw` 拼装**；任何复合 `DC` 项都不许交给 `rfl`/`decide`（`dMatanMir`/
+`dMatanD` 各拆 6 步）。
+② **`⟨f1, f2, f3⟩` 造 `JetMem` 可 >60 s**（匿名构造子字段类型要展开 def，撞上
+`DC` 结构字面量）：同证明改 `refine ⟨…, ?_, ?_⟩` + `simpa [JDlt] using …` 瞬时。
+③ **`decide` 不许展开树**：slack 定义里写 `V := Pt.JTop.value` 时 `decide` 归约
+`slackZ` → 点树 → 撞上 `dSqrt` 永久卡死；改 `V`/`G` 为**字面量 def**，用桥接引理
+（`V_mem`/`G*_eq`/`G_mem`）接回树槽，slack 1.4 s 收敛。出处：`m7/M7-STATUS.md` §3。
+
 ## B. 陈述与审计纪律
 
 **PR-7 grep 命中 ≠ 声明**：同名符号可能只在注释/排期注记里（2026-11-09 实测
