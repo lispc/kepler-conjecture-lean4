@@ -38,6 +38,7 @@ import Kepler.Text.PackingAuto22
 import Kepler.Text.PackingAuto22PackIneqA  -- nliPackIneqDefA 接线（packIneqAWAZLDCD）
 import Kepler.Text.NliSqrt8  -- nliCell3QZECFICwt0sqrt8 真证（cell3-sqrt8-build-w1）
 import Kepler.Text.NliQitnpea  -- nliRestQITNPEA4003532128a 纯代数真证（qitnpea-w1）
+import Kepler.Text.TaylorSecond.W1DCAssemblyFinal  -- nliCell3QZECFICwt1 真证（wt1 D1=221 DC 证书组装，2026-11-26）
 import Kepler.Text.PackingAuto25
 import Kepler.NliBanks
 import Kepler.NliBanks2
@@ -426,9 +427,12 @@ theorem nliCell3QZECFICwt0sqrt8 : bank_QZECFICwt0sqrt8 :=
 
 /-- 1a 4/7：HOL ineq entry `QZECFIC wt1`（ineq.hl:1425；PA21
 `bank_QZECFICwt1`，盒 [√2,√2]³×[2hmin,2hplus]×[2,2hmin]²，`h0cut y4`
-参数化双支）。资产状态：deferred-compute。
--- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
-theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry
+参数化双支）。资产状态：**已证**（2026-11-26）：D1=221 箱全量 DC 证书
+（`W1DC_*` 221 模块，每箱 8 条 axioms 标准三）+ 端点单调组装
+`W1DCAssemblyFinal.wt1_bank = bank_QZECFICwt1_of_core wt1_hcore`
+（9 个 `W1DCAssembly<case>.case_pos` 经 `Wt1Glue.cover_all_flat` 覆盖）。 -/
+theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 :=
+  Kepler.Text.TaylorSecond.W1DCAssemblyFinal.wt1_bank
 
 -- 1a 5/7：HOL ineq entry `QZECFIC wt2 A`（ineq.hl:1443；PA21
 -- `bank_QZECFICwt2A`，盒 [√2,√2]³×[2hmin,√8]²×[2,2hmin]，`h0cut y4/y5`
