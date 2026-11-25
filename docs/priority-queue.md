@@ -329,6 +329,29 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（W1aFJet+W1DCBridge 落库 `5b00df85`；无条件桥为假的机器证据；续1556）**：
+  ① **`W1aFJet.lean` 1,419 行**（+48：`fPos1`/`w1F3O`/`w1F3_eq_w1F3O`/`w1F3_eq_ite`）：我亲编 RC=0 /
+  **5.77 s / 5.72 GB / olean 2,430,864 B**，**25 条 `#print axioms` 全标准三**。
+  **`W1DCBridge.lean` 366 行**（`fTop_eq_w1F3Z` + 精确 pq1 分解 + `w1F3_eq_fTop_of_ge` +
+  `w1F3_pos_of_ge` + `w1F3_eq_fTop_ite` + 反例三条）：亲编 RC=0 / 3.92 s / 5.60 GB /
+  olean 348,000 B，21 条 print 标准三。模块 build **8,765 jobs PASS**；两文件纯新增。
+  ② **桥接 A 的 rfl 唯一障碍 = `fCN2`**：M7 发射 `fun x => ((-2:ℤ):ℝ)`，W1aFJet 是
+  `fun _ => (-2:ℝ)`；`Int.cast` 负数字面量不可 rfl（正数 `2/4/8` 可以），其余 24 槽全 rfl。
+  最小修法（已插单 M8a）：fCN2 发射改 `(-2 : ℝ)`，则每箱 `fTop = w1F3Z` 直接 `rfl`；
+  不改也可用 `dc_fCN2`(norm_num) + 24 条逐级等式，实测 ≤0.1 s、箱无关。
+  ③ **发现（车道机器证据）：M7 箱跨 kink，无条件桥 `∀x∈D, w1aF = fTop` 为假**。
+  `I4.lo = 2·h0 − 0.52·2^-200`（63/25 非二进有理，floor 掉 0.52 格）、`I4.hi = 2·h0 + 6.2e-13`
+  ⇒ 箱内含 `x0 < 2·h0` 的点（`exists_D_lt_2h0` 已证），那里 `h0cut=1`、pq1 项存活。
+  交付正确形式：**精确分解** `w1F3 x = fTop x + fK2 x*(fLf4 x*h0cut(x0)*fDihC x)`
+  （无 cut 假设）+ `w1F3_eq_fTop_of_ge`（`2h0 ≤ x0`）+ `w1F3_pos_of_ge`（组装用）+
+  `w1F3_eq_fTop_ite`（mode-split）。若将来需要定量桥：pq1 项 ≤ 8e-62 vs `dcSlack` 1.04e-3，
+  余量 1.5e59。
+  ④ **ERRATA（我的 M8b 工单）**：工单要求证 `∀x∈D, w1F3 = fTop`，该陈述对 pilot 箱**是假的**；
+  车道没有绕行，而是机器证伪 + 给出正确分解。教训：桥接目标必须按箱的 mode 条件陈述。
+  ⑤ **对 221 组装的结论**：221 箱在 63/25 处精确切开（156 zero 的 y4lo ≥ 63/25、65 one 的
+  y4hi ≤ 63/25，双向 0 例外）⇒ 逐箱桥在**证书箱**上做（zero 用证书箱的 x0 ≥ 2h0、
+  one 用 x0 ≤ 2h0），不在模块的 D（floor/ceil 外扩）上做。M7 pilot 箱不在 221 集内。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1555。
 - **2026-11-25（单箱端到端全树 DC 证书过；`W1DC15873` 落库 `d806ff72`；续1555）**：
   ① **`W1DC15873.lean` 6,139 行 / 1,550 定理 / 476 def**：箱 `15873/RRLLRL zero` 全 152 节点
   DC 树（box+point 两遍 + part 通道 + T2 终端），12 个 `dSqrt` 全走 `DCSqrtLit.dSqrt_val`
