@@ -329,6 +329,21 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（M1 收线：DCMatan 715 行/28 条标准三；根箱端点再紧 1e−16 ⇒ 18 位第二轮；续1540）**：
+  ① **M1 我亲编验收**：`DCMatan.lean` **715 行**，RC=0 / **10 s** / 5.80 GB / olean **1,760,280 B** / errors=0 / sorryAx=0；
+  **28 条打印全 ⊆ 标准三**；`DCKit.lean` sha 未变（冻结有效）。内容：`dSqrt`（`K=(k+201)/2`，只 Nat 位移 + `Nat.sqrt`，负下端 clamp）+
+  四支（direct9/wplus/u9/mirror）+ 门控 `_sound`（假设全是门控位，无域条件假设）。715 行四件套**接受不拆**。
+  ② **宽度表实测**：direct9 r=0.1019 → **9.988e−7**（恰好）；wplus r=4 → **3.266e−5**；u9 r=4 → **2.219e−5**；
+  mirror 内层粗臂 r=0.9 → **5.37e−2**（不可接受）。解析律 direct9=r⁵/11、wplus=w⁷/(7s)、u9=s⁻¹³/11。
+  **裁决**：镜面内层必须用紧臂（wplus/u9 at `1/r`），不用粗臂；模型生产版 `wtspec.matan_pt`（`wt1-bridge-align-w1/scripts/wtspec.py:372-383`，3 项/5+7 项）
+  比 DC 臂**宽得多** ⇒ 221 的 refine 是**保守**的，DC 发射只会更好。
+  ③ **glue 精确复核发现端点缺口**：根箱 `min y4lo = 246350884418000923/10^17`、`max y5hi = 2463508844180643489/10^18`
+  （= 2.46350884418000923 / 2.463508844180643489），比 `HminusTight` 的 16 位端点各紧 **2.3e−16 / 1.11e−16** ⇒ 根铺满在 16 位界下差 229 个未覆盖胞（全在 1e−16 薄片）。
+  真值 2hminus = 2.46350884418060878… 在更紧区间内（余量 6.0e−13 / 3.5e−14）。**裁决**：否决改箱（DEF-FIX 不值）；
+  glue 按 **(B)** 把 18 位界当假设交付；**hminus 第二轮**（纯增量 `HminusTight18.lean`，不改已落库 16 位定理）证
+  `1.231754422090004615 ≤ hminus ≤ 1.2317544220903217445`，落库后 glue 一行替换。
+  ④ **M2 已发**：`matanD` + DC jet（value+first）+ 单箱端到端（`decide`，标准三）；M3 = 221 箱发射 + glue。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1539。
 - **2026-11-25（`HminusTight` 落库 `ee90f65e`：16 位 hminus 双侧界，标准三；续1539）**：
   ① 车道 `wt1-hminus-tight-w1` 交付 **216 行**，4 声明：`hminus_bounds_tight` / `two_hminus_bounds_tight` + 两条 marchal 端点不等式；
   **7 条 axioms 全标准三**，零 sorry/axiom/admit/native_decide。
