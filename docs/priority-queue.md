@@ -329,6 +329,15 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（`HminusTight18` 落库 `e8163547`：根箱真实端点 18 位界，标准三；续1541）**：
+  ① 车道第二轮**纯增量**：`HminusTight18.lean` **205 行**，5 声明（`hminus_bounds_tight18` / `two_hminus_bounds_tight18` + 3 条 marchal 端点）；
+  `HminusTight.lean` 字节未改。**5 条 axioms 全标准三**，零 sorry/axiom/admit/native_decide。
+  ② **我亲编验收**：RC=0 / **15.46 s** / **5.86 GB** / olean **3,101,928 B** / 0 error / 0 sorryAx；
+  模块 build `lake build Kepler.Text.TaylorSecond.HminusTight18` RC=0（8725 jobs）。commit `e8163547`。
+  ③ 关键：**16 位 √2 括线复用即可**（`hkey` = **+1.0291e−13** / **+5.9466e−15**，与预估一致）；`c₀ + t·R(t)` 结构不变，`nlinarith` 一次过；
+  端点字面量与根箱有理数逐位相等（`246350884418000923/10^17`、`2463508844180643489/10^18` 及其半值）。
+  ④ glue 车道的 `root_cover` 已可把假设参数换成 `two_hminus_bounds_tight18`（一行），根铺满变成**无条件**。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1540。
 - **2026-11-25（M1 收线：DCMatan 715 行/28 条标准三；根箱端点再紧 1e−16 ⇒ 18 位第二轮；续1540）**：
   ① **M1 我亲编验收**：`DCMatan.lean` **715 行**，RC=0 / **10 s** / 5.80 GB / olean **1,760,280 B** / errors=0 / sorryAx=0；
   **28 条打印全 ⊆ 标准三**；`DCKit.lean` sha 未变（冻结有效）。内容：`dSqrt`（`K=(k+201)/2`，只 Nat 位移 + `Nat.sqrt`，负下端 clamp）+
