@@ -329,6 +329,30 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（M8a 预飞：221 箱只有 21 可证书化；两个 kit 结构缺口；模板/桥 6/6 绿；续1557）**：
+  ① **gen_m8 完成**（9.6 ms/箱，zero 152 / one 154 节点；one 树形状经桥 `rfl` 反向验证）；
+  角点改 wide 引理；**模板级修两处**：落库 `dMatanTight` 的 wp 选择缺 `1/r>1` 条件（178 箱命中，
+  本地 `dMatanTightW` 两层测试 + u9 兜底）、`Mg*` 臂从写死 mir 改为逐箱按可证带表选（两遍可不同臂）。
+  ② **预飞 221/221（34,617 个 `by decide` 门全部从发射文本锚定，0 miss）：21 PASS / 200 FAIL**。
+  (a) **196 箱 T2 slack ≤ 0**（中位 −1.32e-2 vs manifest T2 中位 +2.1e-3；逐轴 G 比值 PASS 箱 1.1–2.7×、
+  失败箱最大 248×）：根因 = M7 的 matan 值括号是**整箱区间求值**，D1 cover 的 T2 按 layout9
+  **端点括号 + matan 单调**设计；DC kit 无端点构造子。
+  (b) **8 箱 matan 实参不可证正**：Dlt 角点括号跨零（真 Dlt 在对称角附近**确实为负**：
+  `Dlt(2.4635³) = m²(6−m) < 0`，Dlt=0 曲面在区域内）⇒ 四个正实参臂全部域外；layout9 走
+  jetlib 的 `(-1,∞)` 幂级数。**这是结构性缺口，细化 cover 消不掉**。
+  ③ **6/6 样本编译全绿**：92–94 s / 6.28 GB / olean 5.75–5.82 MB / 0 error / 0 sorryAx；
+  7 条 `#print axioms`（含桥）全标准三（`val_facts` 子集）。**桥 `fTop_eq_w1F3Z/O` 6/6 `rfl` 一次过**
+  （fCN2 改实数体后的预期结果）。现机同 harness 复测落库 M7 文件也是 **92 s**（`d806ff72` 的 27.2 s
+  是多线程口径）⇒ 模板无回归；`W1aFJet` import + 桥 <1 s。
+  ④ **ERRATA（车道自纠）**：预飞中间态曾报 17 PASS —— `compute()` 用落库 `dMatanTight`、发射用
+  `dMatanTightW`，replica 与发射不同步且 wp 分支域外；同步后 17→0。**gate 通过 ≠ 可编译，两者都必须跑。**
+  ⑤ **清单修正**：221 条原只有 214 个唯一 id（`15873/RRLR/one/zero` 重复 9 条），已改为
+  `..._<idx>__b<k>`，现 **221 个唯一 id**；`W1DC_15873_RRR_zero_0` 的 y4 宽度≈0 仍失败 ⇒ 不是盒子宽度问题。
+  ⑥ **决定：暂不量产**。关键路径 = 补 kit：**端点括号 + matan 单调**的值臂（layout9 `PB` 语义；
+  `nb12w_matan_strictAntiOn` 已落库）+ **(-1,∞) 级数臂**（MatanNegKit 的 `lkB_matan_neg_pt`/
+  `lkB_matan_transport` 已在 QInterval 级落库，DC 侧需字面量提升）。v2 预飞（纯 Python 预测
+  mono 臂能救回多少箱）已在飞；量完再发 kit 车道。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1556。
 - **2026-11-25（W1aFJet+W1DCBridge 落库 `5b00df85`；无条件桥为假的机器证据；续1556）**：
   ① **`W1aFJet.lean` 1,419 行**（+48：`fPos1`/`w1F3O`/`w1F3_eq_w1F3O`/`w1F3_eq_ite`）：我亲编 RC=0 /
   **5.77 s / 5.72 GB / olean 2,430,864 B**，**25 条 `#print axioms` 全标准三**。
