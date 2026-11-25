@@ -329,6 +329,16 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（DCKit 落库 `02b6412b`；M2 半程：`matanD` 落地；续1542）**：
+  ① **DCKit 落库** `02b6412b`：508 行 / 8 原语 / 19 条打印全标准三；我亲编 RC=0 / 5 s / 2.92 GB / olean **856,168 B**；
+  模块 build RC=0（3004 jobs）；banned-token 扫描只命中 docstring 一行（`No axiom / sorry …`），代码零。
+  ② **M2 半程**：`DCMatan.lean` **755 行**，新增 §7 `matan_deriv_eq`（用已落库 `matan_hasDerivAt` + `matanD_of_ne`，零新分析）+
+  `dMatanD` + `_mem`（门控 `dLoBig A`、`dLoBig (1+A)`、`dLoBig (2A)`）。我亲编：RC=0 / 10 s / 5.81 GB / olean **1,808,144 B** / **30 条标准三**。
+  ③ **导数宽度表**：r=1e−4 → 2.3e−13；0.01 → 9.1e−11；**0.1 → 4.55e−6**；1 → 1.1e−13；**4 → 4.08e−6**。小 r 放大可控。
+  ④ **未做（下一轮）**：DC jet（value+first）+ T2 终端 + 单箱端到端。T2 草稿因 `calc`/`hG` 形状不编译，agent 已**删除**（不带病落库）；
+  下一轮照抄 `Taylor3.lean:60–150` 脚手架 + MVT。
+  ⑤ DCKit 落库后 lane patch 需对 `02b6412b` 重生成（DCKit 不再入 patch）。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1541。
 - **2026-11-25（`HminusTight18` 落库 `e8163547`：根箱真实端点 18 位界，标准三；续1541）**：
   ① 车道第二轮**纯增量**：`HminusTight18.lean` **205 行**，5 声明（`hminus_bounds_tight18` / `two_hminus_bounds_tight18` + 3 条 marchal 端点）；
   `HminusTight.lean` 字节未改。**5 条 axioms 全标准三**，零 sorry/axiom/admit/native_decide。
