@@ -329,6 +329,29 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（D1=221 全量证书落库：221/221 数学绿；`7a133a3d`+`a16aacb2`+`4ba8b603`；续1562）**：
+  ① **三车道量产全部收线**：A = idx 0–73（74 箱，全 zero）、B = 74–147（74 箱）、C = 148–220
+  （73 箱，**含全部 65 个 one-mode**）；**221/221 数学判据全绿**（RC=0 ∧ `error:`=0 ∧ 无 `sorryAx` ∧
+  每箱 8 条 `#print axioms` 全 ⊆ `{propext, Classical.choice, Quot.sound}`，`val_facts`=`[propext, Quot.sound]`）。
+  墙钟 162.8–189.1 s/箱（三车道并行，比单车道 149 s 上浮 ~23%）、RSS 5.92–5.96 GB、olean 5.94–7.61 MB、
+  `by decide` 门合计 59,604；三车道 `gen_m9.py` sha256 逐位相同（`05e5f9bd…f8f4`）。
+  ② **落库三笔**：`7a133a3d`（A 74 模块 526,696 行）+ `a16aacb2`（B 74）+ `4ba8b603`（C 73），共
+  **221 个 `W1DC_<id>.lean`**；三份 patch 均 `git apply --check` PASS，olean 已回灌
+  `.lake/build/lib/lean/Kepler/Text/TaylorSecond/`（221 个）。**我逐车道抽查亲编**：A idx0
+  `W1DC_15866_LRR_zero_0`、B `W1DC_15868_RRLR_zero_0`、C `W1DC_15873_RRLR_one_1`（one-mode 低体量箱）
+  ——三箱 8 条 axioms 全标准三、RC=0。
+  ③ **事故与处置**：bulk-c 清 orphan 误杀 bulk-a 的在飞箱 `W1DC_15866_RRL_zero_0`（外部 SIGTERM，
+  rc=−15/日志仅 lake shim/无 error）→ `--retry` 同文件重编 170.65 s PASS，summary 标
+  `rerun-after-external-sigterm`；B/C 各吃一次平台 ~60 min 组杀（无 orphan）→ 分段 ≤55 min + summary
+  续跑。规则已入册 **PR-65**。
+  ④ **ERRATA（我的判读）**：我据日志换行断言 C 的 8 行 `FAIL` 是"换行解析假阴性"——**错误**。车道用
+  三重复算驳回：其解析器本就 `re.S` 跨行、`failures.tsv` 只有 `OLEAN_SMALL`、独立括号配对复算
+  73/73 零差异。真实原因是**我设的 olean 6 MB 阈值过拟合**（4 箱 80–100 门、olean 5.94–5.99 MB；
+  `pearson(gates, olean)=0.79`）。判据 5 已改为 **olean ≥ 5.5 MB ⇒ 73/73**，4 箱体量仅记录在案。
+  ⑤ 下一轮：**组装车道在飞**（`gen_assembly.py` 草稿 + 9 个 case 模块 + `W1DCAssemblyFinal`，
+  目标 `wt1_hcore` + `wt1_bank : bank_QZECFICwt1`）；过后由编排者做 `Assembly.lean:431`
+  `nliCell3QZECFICwt1` 的接线 + 岛协议根面审计。
+  SORRIED 49 / AXIOM 585 不变（wt1 债的关闭在接线后记账）。下一条：续1561。
 - **2026-11-26（gen_m9 改引 MatanC1：算术逐位不变、省 0.7–2.3 s/箱；3 车道量产已发；续1561）**：
   ① gen_m9.py 改依赖 `MatanC1`（`open MatanC1`），**删 §2b 五条 C¹ 引理**：1886→1871 行、每箱 −109 行
   （idx 90: 7206→7097；idx 22: 6747→6638）、`#print axioms` 13→8、olean −0.22 MB、门数不变（59,604）。
