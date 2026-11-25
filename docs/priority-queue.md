@@ -329,6 +329,15 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-25（M2 交接：原 agent 上下文耗尽，fresh agent 接同一 lane；续1543）**：
+  ① 原 M2 agent 在 patch 重生成后**上下文耗尽**（只做了机械项，三件代码未开工；它自己如实报，未留半成品）。
+  磁盘状态已验证：`DCMatan.lean` 755 行 / **30 条标准三** / RC=0；patch **3 文件 2449 行**，HEAD `02b6412b` 上 **PATCH_OK**；`DCKit` 已落库。
+  ② 按 §7.1-16（长上下文退化 → 交接包换 fresh session）已发**新 agent** 接同一 lane，工单指向
+  `~/c17_backup/lane_snapshots/wt1-emission-pilot-w1/M2-STATUS.md`（含上次失败点：`DCMatan.lean:735/756` 的 `calc` 形状与 `hG` 展开 + T2 配方）。
+  三件按序：**T2 终端**（照抄 `Taylor3.lean:60–150` + MVT，避开 `calc`/`differentiableAt` 坑）→ **DCJet**（value+first，镜面紧内层）→
+  **单箱端到端**（T2 余量舒服的 level-0 箱，报 `decide` 成本）。
+  ③ 交接不是失败：原 agent 的 `matanD` 与 patch 重生成都已验收；三件代码从零开工。
+  SORRIED 49 / AXIOM 585 不变。下一条：续1542。
 - **2026-11-25（DCKit 落库 `02b6412b`；M2 半程：`matanD` 落地；续1542）**：
   ① **DCKit 落库** `02b6412b`：508 行 / 8 原语 / 19 条打印全标准三；我亲编 RC=0 / 5 s / 2.92 GB / olean **856,168 B**；
   模块 build RC=0（3004 jobs）；banned-token 扫描只命中 docstring 一行（`No axiom / sorry …`），代码零。
