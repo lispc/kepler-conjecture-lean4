@@ -74,12 +74,12 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批「好，启动继续吧」；原 `agent-6` resume / `agent-i4223hjk`；≤1 Lean）** | 已重建 cell0 的 80/79 Python 候选树；本轮只做最小完整 Lean 覆盖件（通常 2 pass + 1 父 glue），逐件公理/成本验收后返回；不量产 80 叶、不走 route R、不接 Assembly |
-| `qitnpea-hol-replay-w1` | **OVER-BAND 收线整理（原 `agent-7` resume / `agent-5m43u52i`；不再起计算）** | 当前设计 D3≈25.1×、D2 与 HOL 二阶 Taylor DIFFERS，未获超带宽授权；只整理 PARTIAL 证据，不跑 stage-A/B 或网格；外部 14,676–19,234 叶不算内核覆盖；后续等用户裁决 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `qitnpea-hol-replay-w1` | **完成：PARTIAL + OVER-BAND（2026-11-26；编排者 SHA 35/35；无 patch；Lean 内核覆盖 0，SORRIED −0）** | HOL case 13031 = 309/308；bb_arb 19,234 叶 = D1 62.2×，仅外部；D3 实际 637,554 B = 25.04×；D2 一阶 hull-TM vs HOL 二阶+CSE = DIFFERS；stage-B/decide/case 公理均未运行。等用户选择严格原版叶模型或明批超带宽路线 |
 | `tsk-certunit-m1-w1` | **完成：硬指标 (b) FAIL ⇒ `BUDGET_EXHAUSTED`（2026-11-26 22:26；route a 量产 NO-GO，非数学 NO-GO；ZCode `agent_86d1a721`）** | P0 28.13 s / P1(R=64) 28.17 s ⇒ R≈0；P2(N 半化) 20.73 s；P3(N=16) **15.49 s 地板**（每节点 6 维 `dfB` 包络算术，19,666 节点）；M1b 自证 checker 17.80/19.79 s、7.64 GiB、证书 0 Int、`probe_check`=[propext,Quot.sound]、`probe_pos`=标准三、与 Python 回放 322/322 bit 逐位同；6,612×15.3 s ≈ 28.1 h vs HOL 6.313 h = **4.5×**，仍 >2×。主仓零改动；快照含 SHA |
 | `lean436-fixer-w1` | **完成（2026-11-26 22:14；4/4 MECHANICAL 均已落库 `dc5410c5`/`9b973d29`；零 SF/零 DEF-FIX/零 UNRESOLVED；快照 112 文件 + SHA）** | 4 个 blocker 全部 proof-body/linter 级：Basic:87、DCKit:216、Taylor3:131、CertTM:1648；双版本 RC=0、公理同基线（CertTM 4.36 仅 23 个 `ex*` 上 `Quot.sound` 更小，0 新公理/0 sorryAx）；下游 4.36 实测 Arithmetic 2.09/Coordinate 1.63/Glue 1.67/Bounds 1.82/InvSqrt 1.87 s、`C1965189142aHullBase` 23.3 s/5.78 GB；13 次轮询无新 BLOCKED（census 22:14 OK 412/REUSED 100/BLOCKED 0） |
 | `planarity-split-w1` | **完成/落库 `3119ded7`（2026-11-26；Planarity 拆 6 private 声明；4.36 @5M RC=0）** | 原声明签名/陈述 7 行逐字节不变；4.36 @5M 43.69 s/3.32 GB（拆分前 6,582,885 hb > 5M）；4.32 34.23 s/3.29 GB；105 公开定理公理三路逐条同（标准三，无 sorryAx）；岛内根面 589 逐名同 baseline |
@@ -238,6 +238,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（QITNPEA HOL replay 最终验收：PARTIAL + OVER-BAND；续1599）**：
+  ① **验收**：`agent-5m43u52i` 交付 35 文件，编排者 `sha256sum -c` **35/35 PASS**；无 patch，主仓零改动、SORRIED −0。直接复核 urban `stdout:1890-1936`：case 13031 = **309 pass/308 glue/1003.303690 s**，入口 pp=6 与 eps=1e-10 见 `main_verifier.hl:18,34`。bb_arb 日志 RC=0、19,234 叶/38,467 节点；HullTreeD 编译 RC=0/4.62 s、maximum RSS 5.65 GB（peak footprint 831 MiB）、olean 270,704 B。
+  ② **真实边界**：19,234 叶只是外部搜索；leaf0 的 40,960 B 参数文件无换行结尾且末行截断，stage-B 从未发射，故 **0 条内核叶判定、0 覆盖树、0 case 级 `#print axioms`**。D5 仅能记投影 ≫2×，单叶 decide 成本 UNRESOLVED，不写成实测。判词仍为 PARTIAL + OVER-BAND，不判原命题或 HOL 路线 NO-GO；后续等用户裁决，不自动续派。
+  ③ **交付 ERRATA（不影响判词）**：当前快照 `wc -c` = 6,699 + 9,777 + 260,803 + 360,275 = **637,554 B**，D3 = **25.037×**，不是文档的 638,057 B/25.06×；case 13031 实际在 `azure/ineqs.txt:13030`（`:13031` 是 case 13032）。此处只登记勘误，保持已校验快照不 retro-fit。
 - **2026-11-26（TskXLLIPLS M1 收线：(b) FAIL、route a 量产 NO-GO；续1598）**：
   ① **M1a 归因（4.32 主口径，单盒 `kBox0`，5 变体）**：P0（R=4096/原 AST/`kParams0`）**28.13 s / 25.16 user / 9.37 GiB**；P1（R=64）28.17 s ⇒ **R 贡献≈0**（R 只喂 `evalPointTM`，本盒 60 个 `ite` guard 全走区间判定，点路径从未进入）；P2（ΣN 189,184→94,592）20.73 s；P3（N 固定 16，ΣN=2,288，landed checker）**15.49 s / 13.46 user / 7.35 GiB** ⇒ N 是唯一杠杆但饱和，**地板 ≈15.3 s** 来自每节点 6 维 `dfB` 包络算术（19,666 节点 × 6 `DInterval.mul`），与 N/R 无关。N=16 是该盒最小可过（lb≈+8.579e-4；N=8 已负）。
   ② **M1b 自证 checker（618 行，主仓零改动）**：核内精确 `⌊√n⌋` + mantissa/granularity/N 全核内重算，证书 **0 个 Int**；`probe_check` = `[propext, Quot.sound]`、`probe_pos`/两条 soundness = 标准三；与 Python 独立回放**逐位相同（322/322 bit）**。但 **wall 17.80/19.79 s、7.64 GiB**——自证化 +2.1~4.1 s user（~100–130 次核内 `nsqrt`）。
