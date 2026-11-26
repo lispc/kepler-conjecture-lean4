@@ -69,7 +69,7 @@ open Kepler.Geom Set Classical MeasureTheory
 /-- HOL `conic_cap`（flyspeck_multivariate.ml:4832）私拷；与 PA15:109
 `conicCap` / PA24:93 `conicCapP24` / PA23:65 `grutotiConicCap` 同体
 （PA2:258 `rconeGt v0 v1 a` 按定义展开）。 -/
-def ccvConicCap (v0 v1 : V3) (r a : ℝ) : Set V3 :=
+noncomputable def ccvConicCap (v0 v1 : V3) (r a : ℝ) : Set V3 :=
   Metric.closedBall v0 r ∩
     {x : V3 | (x - v0) ⬝ᵥ (v1 - v0) > dist x v0 * dist v1 v0 * a}
 
@@ -686,7 +686,7 @@ private theorem ccv_lintegral_core (r a C : ℝ) (hr : 0 < r) (ha : 0 < a) (ha1 
       (f := fun t =>
         if 0 < t then
           ENNReal.ofReal (C * min (r ^ 2 - t ^ 2) ((1 - a ^ 2) / a ^ 2 * t ^ 2)) else 0)
-      (μ := volume) (A := Set.Ioi (0:ℝ)) measurableSet_Ioi
+      (μ := volume) (show MeasurableSet (Set.Ioi (0:ℝ)) from measurableSet_Ioi)
     rw [← h]
     have hz2 : ∫⁻ x in (Set.Ioi (0:ℝ))ᶜ,
         (if 0 < x then
@@ -1041,11 +1041,14 @@ private theorem ccv_mem_capWedgeProj_iff {w w1 : V3} (e1 e2 e3 : V3)
 
 private theorem ccv_capWedgeProj_meas (r a θ : ℝ) (u : ℂ) :
     MeasurableSet (ccvWedgeProj r a θ u) := by
-  have h2 : MeasurableSet {p : ℝ × ℂ | 0 < ang (u⁻¹ * p.2) ∧ ang (u⁻¹ * p.2) < θ} :=
-    (measurableSet_lt measurable_const
-      (measurable_ang.comp (measurable_const.mul measurable_snd))).inter
-      (measurableSet_lt (measurable_ang.comp (measurable_const.mul measurable_snd))
-        measurable_const)
+  have h2 : MeasurableSet {p : ℝ × ℂ | 0 < ang (u⁻¹ * p.2) ∧ ang (u⁻¹ * p.2) < θ} := by
+    have hpos : MeasurableSet {p : ℝ × ℂ | 0 < ang (u⁻¹ * p.2)} :=
+      measurableSet_lt measurable_const
+        (measurable_ang.comp (measurable_const.mul measurable_snd))
+    have hlt : MeasurableSet {p : ℝ × ℂ | ang (u⁻¹ * p.2) < θ} :=
+      measurableSet_lt (measurable_ang.comp (measurable_const.mul measurable_snd))
+        measurable_const
+    exact hpos.inter hlt
   exact (ccv_capProj_meas r a).inter h2
 
 private theorem ccv_preimage_capWedgeProj (r a θ : ℝ) (u : ℂ) (t : ℝ) :
@@ -1365,12 +1368,16 @@ private theorem ccv_measSet_wedge (v0 v1 w1 w2 : V3) :
             rw [ccv_azim_sub_self v0 v1 w1 y]
             exact ha2
       rw [hset]
-      refine hcont.measurable
-        (((measurableSet_singleton (0:ℂ)).compl).inter ?_)
-      exact (measurableSet_lt measurable_const
-          (measurable_ang.comp (measurable_const.mul measurable_id))).inter
-        (measurableSet_lt (measurable_ang.comp (measurable_const.mul measurable_id))
-          measurable_const)
+      have hne : MeasurableSet {ζ : ℂ | ζ ≠ 0} :=
+        (measurableSet_singleton (0:ℂ)).compl
+      have hpos : MeasurableSet {ζ : ℂ | 0 < ang ((zOf e1 e2 (w1 - v0))⁻¹ * ζ)} :=
+        measurableSet_lt measurable_const
+          (measurable_ang.comp (measurable_const.mul measurable_id))
+      have hlt : MeasurableSet {ζ : ℂ |
+          ang ((zOf e1 e2 (w1 - v0))⁻¹ * ζ) < azim v0 v1 w1 w2} :=
+        measurableSet_lt (measurable_ang.comp (measurable_const.mul measurable_id))
+          measurable_const
+      exact hcont.measurable (hne.inter (hpos.inter hlt))
 
 /-- HOL `MEASURABLE_CONIC_CAP_WEDGE`（flyspeck_multivariate.ml:6365，
 GT-1 wedge 交付件之可测性）：锥帽楔交集 Borel，无退化前提。 -/
