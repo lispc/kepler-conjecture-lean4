@@ -107,7 +107,10 @@
   2026-11-26 增补：闭包 9,137 的族级成本普查（TskXLLIPLS ~55 h、W1DC L1 3.73 h、
   Shard/Hull/TopReplay/LocalAuto 等）、W1DC L1 成功、TskXLLIPLS M1 失败
   （15.3 s 地板、4.5× HOL、`BUDGET_EXHAUSTED`）、4.36 全量重放预算，以及
-  “为什么是 6,612 叶而不是几个”（HOL 7,763 单元对照）。
+  “为什么是 6,612 叶而不是几个”（HOL 7,763 单元对照）；
+  2026-11-27 Track A/B：N 杠杆 **4.41–4.46×**（N_min=16/32）、叶树 −11.8%、
+  精度 0%；**Design P（点 Taylor + 单元 Hessian 曲率表）2.62 s/叶、D5 1.63–1.84×
+  WITHIN-BAND**，一盒 Lean 原型待批；K/guard-straddle 风险见 §3.4/§5）。
 - [`fill-worker-playbook.md`](fill-worker-playbook.md) — 工人纪律、闸规则、雷区表。
 - [`lane-brief-template.md`](lane-brief-template.md) — 工单模板（§0 硬约束逐字复制）。
 - [`../lean/scripts/auto_gate.sh`](../lean/scripts/auto_gate.sh) — 五道机械闸；
