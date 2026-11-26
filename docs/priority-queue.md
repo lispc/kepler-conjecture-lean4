@@ -74,6 +74,7 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
+| `tsk-opt-m2b-w1` | **在飞（2026-11-27 用户明批「M2b：批」；ZCode `agent_136ccdb4`；≤1 Lean）** | 只换值链表示（Fixed-Grid Int 单格点、尾数 ≤310 bit、对齐 0），保留 `PtDual`/`CurvTab.Valid`/`checkPosPt_sound` 形状；kBox0 + worst-case T149 两叶 `decide`，目标 wall ≤3.4 s、RSS ≤10.5 GiB、标准三、lb>0；**不做 S1/S2/量产/4.36/C；结果回来只交 RESULTS，等用户确认后再任何下一步** |
 | `wt0-hol2-arith-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-10` / `agent-qz31d8mc`；≤1 Lean）** | 同一 `LLLLLLLL` 二阶 CSE 叶，只换 ℚ 算术侧条件为 norm_num/显式展开/字面量证明；kit hash、数值、盒、CSE 不动；先小探针再三轮内编译，不做 sibling/glue/Assembly |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
@@ -173,7 +174,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
-| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **等用户裁决**：只换值链表示（Int 单格点、尾数 ≤310 bit、对齐 0），不动 S1/S2；目标 wall ≤3.4 s。PASS 后再投 S1/S2 证明（~1,000–1,400 行）；FAIL 则 N=32 fallback；C 不做 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已批（2026-11-27 用户「M2b：批」）**：`tsk-opt-m2b-w1` 在飞——只换值链表示（Int 单格点、尾数 ≤310 bit、对齐 0），不动 S1/S2；目标 wall ≤3.4 s；**结果回来后等用户确认再进行任何下一步**；PASS 后再谈 S1/S2 证明，FAIL 则 N=32 fallback；C 不做 |
 | **CertShards 全量 4.36 重放（236–290 h）** | **A 已批（2026-11-27 用户「当然需要 precompileModules」）**：`lean436-precompile-w1` 先做 4.36 precompile pilot（1 非 R + 1 R）；pilot GO（≥10×）后才谈全量 575；B（按族抽样 + 585 逐名审计）保留为 fallback。批前不改验收契约、不启动全量重编 |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -250,6 +251,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（用户明批 M2b Fixed-Grid；`tsk-opt-m2b-w1` 发车；结果后等用户确认；续1623）**：
+  ① **用户裁决**：「M2b：批，结果回来之后，等我确认再进行任何下一步」。
+  ② **车道 `tsk-opt-m2b-w1`（ZCode `agent_136ccdb4`，≤1 Lean）**：只换值链表示（Fixed-Grid `Int` 单格点、尾数 ≤310 bit、对齐 0），保留 `PtDual`/`CurvTab.Valid`/`checkPosPt_sound` 形状，S1/S2 仍为 Prop 假设；kBox0 + worst-case T149 两叶 `decide`，目标 wall **≤3.4 s**、RSS ≤10.5 GiB、标准三、lb>0；**不做 S1/S2、不量产、不测 4.36、不做 C**。
+  ③ **边界**：结果回来只交 `RESULTS.md` + 快照，**不进入下一步**；等用户确认后再决定 S1/S2/量产/止损。主仓零改动；`patch.diff` 只加新文件。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（census 第三慢族：Graphs Top\*Shard 106 件 `decide +kernel` ≈50–60 h；抽 9 件；全量上修 287–525 h；续1622）**：
   ① **对象**：106 = `TopReplayHexShard` 55 + `TopReplayPentShard` 31 + `TopBoundsHexShard` 14 + `TopReplayQuadShard` 6；源码 0.8–0.9 KB、`gen_top_shards.py` 单模板，**内核 `decide +kernel`**（非 native_decide）。实测 `TopBoundsHexShardS000` **31 min 未结束** ⇒ 106 件 ≈ **50–60 h**。
   ② **裁决 (a)**：抽 **9 件**（TopReplayHex 3 / TopReplayPent 2 / TopReplayQuad 2 / TopBoundsHex 2），每件 60 min cap（超时 kill 记 `BUDGET_CAP`）；其余 97 件 `SAMPLED-OUT (Top*Shard, full at acceptance)`；任一失败 → 整个 106 回队列。
