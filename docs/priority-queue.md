@@ -72,13 +72,15 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| （当前无在飞车道） | 三条既有车道均已交付；后续动作等用户指令 | 不自动 resume、不新建 agent、不扩量产 |
+| `planarity-split-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_7283d025`；≤1 Lean）** | `Text.Planarity` 4.36 @5M：先应用 patch 11 的三处 proof-only 适配，再把 `azim_cone_of_combo`（:1811 起）拆 2–4 个 private lemma；既有声明签名/陈述逐字冻结；禁调 heartbeats；4.32/4.36 + 公理三路；3 轮卡死写 PAUSE_COST |
+| `packing-chain-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_c983bc09`；≤1 Lean）** | 18/19 双验落库候选 + `PackingAuto8:295` 的 `VSub (Set V3)` 显式标注 + `PackingAuto14` @4.36（6/7/8 新 olean 解锁后 11 处同模式）；proof-body only；缺上游 4.36 olean 即报第一个缺失名 |
+| `assembly-pattern-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3dc88ca4`；≤1 Lean）** | `Assembly.lean:3693/3707/3722` **先测后修**（fragment 探针 4.36）；4.32 全模块 + 公理对照；输出 23 文件/80 处同模式 inventory 供 census；不改陈述 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）** | `01–10`、`12–15`、`17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 仍 BLOCKED，`16/18/19` 待 SF，GoodList/Auto8 未决；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
+| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）；`16` 后补落库 `0caffebc`（SF-112）** | `01–10`、`12–17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 仍 BLOCKED（`planarity-split-w1` 在飞），`18/19` 在 `packing-chain-w1` 验证，GoodList/Auto8 未决；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
 | `wt0-r1-core-w1` | **完成：UNRESOLVED（2026-11-26；y4 目标 0 条；辅助 2/2 标准三；主仓未落库）** | `wt0_delta_bounds` 与 `wt0_small_matanD_bracket` 可复用；三 sol 槽聚合 dSE 紧包络未闭合，不是 wt0/route R 反证；不做 y5/y6/R3，SORRIED −0 |
 | `qitnpea-wave1-y6-w1` | **完成：BUDGET_EXHAUSTED（2026-11-26；16 GB memcap；SHA 80/80；主仓未落库）** | 14 个置换元组截零检查与运输 elaboration errors=0，但内核/olean 生成超 16 GB；`curvCheckClamp_decide`、C.2、ConcaveOn/consumer 未闭；D3=150,022 B（当前单片用户明批），SORRIED −0，不量产 |
 | `wt0-route-r-first-w1` | **完成/落库 `65d8039a`（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + 模块构建/最终公理复验 + push）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；已落 `NliWt0LogKit`/`NliWt0Corner` 供 R1 复用；未接 Assembly、SORRIED −0；全 route R 仍 UNRESOLVED |
@@ -231,6 +233,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Lean 4.36 Wave 0 落库 + Wave 1 三车道发车；续1591）**：
+  ① **SF-112 / patch 16 落库 `0caffebc`**：`PackingAuto2` 六处陈述 `mcellSet V X` → `X ∈ mcellSet V`（`QZYZMJC_concl`/`KIZHLTL3_concl`/`TSKAJXY_statement`/`GRUTOTI1_concl`/`REUHADY_concl`/`REUHADY_concl_version2`）+ 一处证明体 `setOf`（:2779）；分级 A，HOL `pack_concl.hl:185/210/224/294/306/325` 原文即应用形。闸 `GATE_MODE=STATEMENT-FIX SF_ITEM=112` → GATE-PASS；4.36 岛直编 RC=0/0 err/28.18 s/6.32 GB；`TSKAJXY_statement` 公理原/候选一致 `[propext, Classical.choice, Quot.sound]`，五 sorry 声明仍 `sorryAx`；解锁 71 个 import 下游（含 18/19）。存档 patch `docs/statement-fix-proposals-patches/112-…patch`。
+  ② **pin 与口径 `8de76453`**：新增 `docs/lean-4.36-pin.md`（toolchain commit `611c117b…` + mathlib `fc4f59e5…` + 8 包 rev + cache 9,117 + 切换检查单 + 未决 5 项）；`lakefile.toml` 的 Final 闭包注释 8,869 → **9,137**（实测 `scripts/check_acceptance_targets.py`；1,249 是模块 `Kepler` 闭包，口径无误，不是 ERRATA）。
+  ③ **Wave 1 三车道发车（异步，≤3 lean）**：`planarity-split-w1`（ZCode `agent_7283d025`，Planarity 拆 2–4 private lemma，5M 不调）、`packing-chain-w1`（`agent_c983bc09`，18/19 + Auto8 VSub + Auto14 同模式）、`assembly-pattern-w1`（`agent_3dc88ca4`，Assembly 三处先测后修 + 80 处 inventory）。全部复制式 / 主仓零改动 / 禁 lake build。
+  ④ **待用户拍**：GoodList `+Classical.choice` 是否当硬阻塞（根面不变；建议记录 + 一轮实例定位，不阻塞）。census（~1 天机器时间）等 Wave 1 收线后发。
 - **2026-11-26（Lean 4.36 兼容补丁 15 笔逐笔验收并落库；续1590）**：
   ① **逐笔 commit**：01 `577c3754`；07 `0b0e942f`；03 `d34abf8c`；04 `535a8d60`；02 `3c9e8b8c`；08 `07f2caa0`；05 `ba222bfc`；06 `f1ab403d`；09 `64721101`；10 `c01fff8d`；12 `8a7be704`；13 `682f5826`；14 `1aed8889`；15 `ba3aa0ce`；17 `ab382e5c`。每笔均先应用候选、4.32/4.36 单文件 RC=0、相关公开/私有 `#print axioms` 通过、根面公理列表与基线逐名一致后才独立 commit；逐笔证据见 `~/c17_backup/lane_snapshots/lean436-landing-w1/LANDED.tsv` 与 logs。
   ② **最终岛验收**：`Kepler/Assembly.lean` RC=0 / 106.60 s，`Kepler/Final.lean` RC=0 / 5.85 s；编排者亲跑根面 = **589 = 585 native + 标准三 + `sorryAx`**，与开工基线逐名相同。SORRIED 48 / AXIOM 585 不变，主工具链仍 **4.32.2**，未做 139、585 全量或版本切换。
