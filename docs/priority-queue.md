@@ -75,6 +75,8 @@
 | `planarity-split-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_7283d025`；≤1 Lean）** | `Text.Planarity` 4.36 @5M：先应用 patch 11 的三处 proof-only 适配，再把 `azim_cone_of_combo`（:1811 起）拆 2–4 个 private lemma；既有声明签名/陈述逐字冻结；禁调 heartbeats；4.32/4.36 + 公理三路；3 轮卡死写 PAUSE_COST |
 | `packing-chain-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_c983bc09`；≤1 Lean）** | 18/19 双验落库候选 + `PackingAuto8:295` 的 `VSub (Set V3)` 显式标注 + `PackingAuto14` @4.36（6/7/8 新 olean 解锁后 11 处同模式）；proof-body only；缺上游 4.36 olean 即报第一个缺失名 |
 | `assembly-pattern-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3dc88ca4`；≤1 Lean）** | `Assembly.lean:3693/3707/3722` **先测后修**（fragment 探针 4.36）；4.32 全模块 + 公理对照；输出 23 文件/80 处同模式 inventory 供 census；不改陈述 |
+| `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-6` / `agent-psiqcu0q`；≤1 Lean）** | 只做 HOL `(prep-QZECFIC wt0,0)` 原版 Taylor pass/glue 与 cell 覆盖；先真实单件再按原 80/79 推进；pp/分裂/终止参数不得自创；不走 route R、不扩其余 cell、不接 Assembly |
+| `qitnpea-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-7` / `agent-r0ek0a6b`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 一个有完整原版规格的 case 及 Taylor pass/glue；不走角点电池/11片/456点，不接 Assembly；原数据缺失记 UNRESOLVED |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -238,6 +240,7 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   ② **pin 与口径 `8de76453`**：新增 `docs/lean-4.36-pin.md`（toolchain commit `611c117b…` + mathlib `fc4f59e5…` + 8 包 rev + cache 9,117 + 切换检查单 + 未决 5 项）；`lakefile.toml` 的 Final 闭包注释 8,869 → **9,137**（实测 `scripts/check_acceptance_targets.py`；1,249 是模块 `Kepler` 闭包，口径无误，不是 ERRATA）。
   ③ **Wave 1 三车道发车（异步，≤3 lean）**：`planarity-split-w1`（ZCode `agent_7283d025`，Planarity 拆 2–4 private lemma，5M 不调）、`packing-chain-w1`（`agent_c983bc09`，18/19 + Auto8 VSub + Auto14 同模式）、`assembly-pattern-w1`（`agent_3dc88ca4`，Assembly 三处先测后修 + 80 处 inventory）。全部复制式 / 主仓零改动 / 禁 lake build。
   ④ **用户 2026-11-26 裁定（本项已拍）**：GoodList `+Classical.choice` 漂移 = **记录 + 一轮实例定位，不当切换硬阻塞**（根面 589 不变；漂移只影响「good_list 零公理」叙述）。探针设计（排在 Wave 1 之后，不超 3 lean）：先用最小文件 `import Kepler.Assembly.GoodListDefs` + `#print axioms goodListB` 在 4.32/4.36 对照——若 `def goodListB` 本身在 4.36 已含 `Classical.choice`，则漂移源在它自己的三处 `decide` 项（与 shard 证明无关），再用三个同形小 def 逐项二分；若 `goodListB` 干净，才回到 shard 层做 `trace.Meta.synthInstance`。census（~1 天机器时间）等 Wave 1 收线后发。
+  ⑤ **两 nli 改走 HOL 原版复刻首件（用户明批）**：`wt0-hol-replay-w1`（`agent-6` / `agent-psiqcu0q`）只做 `(prep-QZECFIC wt0,0)` 的真实 Taylor pass/glue 与原 80/79 cell 覆盖；`qitnpea-hol-replay-w1`（`agent-7` / `agent-r0ek0a6b`）只做 `QITNPEA1_1_2` 一个有完整原版规格的 case。两卡与 TASK 已先落各自快照；不走 route R、角点电池、11 片、456 点，不接 Assembly，pp/分裂/终止参数不自创。与既有 Wave 1 共享 ≤3 lean 护栏，编译排队，不扩量产。
 - **2026-11-26（Lean 4.36 兼容补丁 15 笔逐笔验收并落库；续1590）**：
   ① **逐笔 commit**：01 `577c3754`；07 `0b0e942f`；03 `d34abf8c`；04 `535a8d60`；02 `3c9e8b8c`；08 `07f2caa0`；05 `ba222bfc`；06 `f1ab403d`；09 `64721101`；10 `c01fff8d`；12 `8a7be704`；13 `682f5826`；14 `1aed8889`；15 `ba3aa0ce`；17 `ab382e5c`。每笔均先应用候选、4.32/4.36 单文件 RC=0、相关公开/私有 `#print axioms` 通过、根面公理列表与基线逐名一致后才独立 commit；逐笔证据见 `~/c17_backup/lane_snapshots/lean436-landing-w1/LANDED.tsv` 与 logs。
   ② **最终岛验收**：`Kepler/Assembly.lean` RC=0 / 106.60 s，`Kepler/Final.lean` RC=0 / 5.85 s；编排者亲跑根面 = **589 = 585 native + 标准三 + `sorryAx`**，与开工基线逐名相同。SORRIED 48 / AXIOM 585 不变，主工具链仍 **4.32.2**，未做 139、585 全量或版本切换。
@@ -427,21 +430,3 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   ⑤ 下一步：PARITY CARD 回填 L1 实测（分析车道）+ **QITNPEA 单表最小样品探针**
   （1 片凹性 + 2 角点 + 可计算 dyadic atan 包络，验证 456→3 表、D1 0.46×/D3 1.9×）。
   SORRIED 48 / AXIOM 585 不变（wt1 已关闭，形态替换不改债务）。下一条：续1569。
-- **2026-11-26（QITNPEA 角点电池 PARITY CARD：OVER-BAND（D1 12.7×/D3 2.7×），不放行；两处侦察 ERRATA；续1569）**：
-  ① **卡片判定**：D1 = 470 义务（456 角点值 + 11 片轴引理 + 3 接线）vs HOL 波1 37 case ⇒ **12.7×
-  OVER-BAND**；D3 波1 48 KB vs HOL 25,460 B ⇒ **2.7×**；D5 = 456–1,000 点 × 5.1 ms ≈ 5–20 s vs HOL
-  15,490 s（4.30 CPU·h）⇒ **0.0003–0.0013× PARITY**（计算便宜 ~250×）；D6 PARITY（HOL 有 1 条 digest 锁定的
-  deserialization 公理，我方标准三）；D2/D4 为 LCF-vs-DTT STRUCTURAL-DIFF。**本轮不放行。**
-  ② **四条硬发现**：(a) **角点必须核验 456 个**，不是 17——三条债的整盒角点极小都 >0.0057
-  （+3.4969e−2/+1.6282e−2/+1.6145e−2），`rad2>2` 支对整盒极小**不能剪角点**；六实例全族 840 点。
-  (b) **库内仍无 γ4 凹性资产**：`g4w_concave_1..6` 是 `private`、对象是 **deltaX 不是 γ4**（侦察卡写错）；
-  归约骨架 `NliBanks9.boxInf_le_of_piecewise_concave` 已在库（标准三），缺的只是 11 片 `ConcaveOn`。
-  (c) 侦察 ERRATA 两条：`1_2_0` 的 `w=1` 不是 2（要求 γ4 > 0.0057，其表里 0.04396 应减半）；
-  `g4w_concave_*` 归属错。(d) **唯一进带路径 = 单表 + 一次反射**（D1→0.46×、D3→1.9×），
-  但它依赖库内**不存在**的「可计算 dyadic atan 点包络」（现有只有 Prop 级 Leibniz S39 与 `CertG`
-  的 `.arctanK` 转移节点）⇒ 需先做**最小样品**（1 片凹性 + 2 角点的可计算包络）验证该设计。
-  ③ **UNRESOLVED**：波1 37 case 的 HOL 内部 pass/glue（数据集只对 `5400790175 a/b` 打印）；
-  dyadic atan 点包络；凹性有理上界能否 ≤−0.05（数值 11 片全 ≤−0.153，最弱 y6）；5.1 ms/decide 外推。
-  ④ **处置**：本轮**不发 QITNPEA Lean 车道**（over-band 未获用户明批）；待 L1 重发射收线后先发
-  **单表设计的最小样品探针**（1 凹性片 + 2 角点 + 可计算包络，目标把 456 压成 3 张表），
-  样品绿后更新卡片再请用户裁决。SORRIED 48 / AXIOM 585 不变。下一条：续1568。
