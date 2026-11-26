@@ -22,7 +22,7 @@
 | 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
-| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + W1DC 3.7 h + **CertShards 575 件 ≈35 h** + 地板 8.6 h + 其余重件 ~10 h ≈ **109 CPU·h 串行** | 2026-11-27 汇总（CertShards 实测回填） |
+| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 236–290 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **301–355 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 族 210–372 h） |
 
 ## 1. 三个基线数
 
@@ -83,10 +83,11 @@ Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h
 
 - TskXLLIPLS：6,412 叶 × 29 s ≈ **51.6 h 串行**；2 车道各 1 lean（2×10.3=20.6 GB）≈ 25.8 h 墙钟。
 - W1DC：231 模块 × ~60 s ≈ **3.7 h**。
-- import 地板：9,137 × 3.4 s ≈ **8.6 h**。
+- **CertShards：全量 575 件 ≈236–290 h**（非 R 215 件 ≈14.6 h；R 360 件 210–372 h；`HexR.K001` 2,216 s、`QuadR.K000` >62 min 未结束）；**远超单车道可接受范围**。
 - 其余重件 + 证书：`[EST]` ~10 h。
-- 合计 `[EST]` **~109 CPU·h 是下限**（CertShards R 变体未重算；若 R 族 360 件按 35 min 计
-  ≈210 h，全量可能 **250+ h**）；排槽前先等 census 分族重算，不得再用 109 h 做承诺。
+- 合计 **≈301–355 CPU·h 串行**（import 已含在每模块时间，不再另加）。**该数已使
+  “全量 4.36 重编 CertShards”不可行**；替代方案 A（4.36 `precompileModules` 重建，
+  4.32 实测 13.889×；若同效 → 17–25 h）或 B（按族抽样 + 585 逐名审计）待用户批。
 
 ## 2. 时间分层（重件）
 
@@ -348,12 +349,14 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   `TskXLLIPLS → PackIneqTskXLLIPLSClose → Assembly → Final` 在 census 中
   **`DEFERRED`（非 BLOCKED/OOM/失败）**；`0 BLOCKED` 只覆盖已编模块。
   全量 6,412 叶重放（≈51.6 h 串行 / 10.3 GB 每叶）属 acceptance，见 §1.1。
-- **CertShards 的抽样边界（2026-11-27）**：非 R Hex/Pent 已 9 件全绿；**R 变体 35–52+ min/件**
-  （HexR.K001 35 min、QuadR.K000 52+ min）⇒ 抽样降为 **R 族各 1 件**（HexR/QuadR/PentR/
-  PentR2/PentR3/HexR2，样本 ≥15–16），其余 `SAMPLED-OUT`；任一 R 件失败该 R 族整体回队列。
-  抽样件必须核 `#print axioms` 与 585 manifest 同形（实测 = 标准三 + 1 条同名 manifest ax，
-  无 `Lean.ofReduceBool`）。**全量 575 的 35 h 估计作废**；若重算 >100 h，acceptance 计划
-  改为「按族抽样 + 585 逐名公理审计」，不再承诺全量 4.36 重编。
+- **CertShards 的抽样边界（2026-11-27）**：非 R Hex/Pent 已 9 件全绿；**R 变体 35–62+ min/件**
+  （HexR.K001 2,216 s、QuadR.K000 >62 min 未结束）⇒ 抽样降为 **R 族各 1 件**
+  （HexR/QuadR/PentR/PentR2/PentR3/HexR2，样本 ≥15–16），其余 `SAMPLED-OUT`；
+  任一 R 件失败该 R 族整体回队列。抽样件必须核 `#print axioms` 与 585 manifest 同形
+  （实测 = 标准三 + 1 条同名 manifest ax，无 `Lean.ofReduceBool`）。
+  **全量 575 实测外推 236–290 h（非 R 14.6 h；R 210–372 h）⇒ `BUDGET_EXHAUSTED`**；
+  验收替代方案 A（4.36 precompile 重建，4.32 实测 13.889×）或 B（按族抽样 + 585 逐名审计）
+  待用户批，车道内不自批。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
   后者需逐模块验证 import 面。
 - `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；

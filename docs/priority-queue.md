@@ -168,6 +168,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒 Lean 原型** | **等用户裁决**（Track B 已 GO，2026-11-27）：只做 `PtDual`(1+6) + `checkPosPt` + `_sound`（~350 行，复用 M1 自证骨架）、单叶 `decide` 实测 wall（验收 ≤3.4 s）、21 分量二阶 AD 曲率表；优先选 worst-case 叶（guard-straddle + 高 K）。**不先做 N=32**（P 失败后的 fallback）；C（模块合并）不做 |
+| **CertShards 全量 4.36 重放（236–290 h）** | **等用户裁决**（2026-11-27 实测 >100 h 闸）：A) 4.36 重建 `precompileModules` native 闭包（4.32 三族 580/580 实测 **13.889×**；若同效 → **17–25 h**；R 族未测），需另发车道；B) 改为按族抽样重编 + **585 逐名公理审计**（`#print axioms` ↔ `trust-base.tsv`），不承诺全量重编。**批前不改验收契约、不启动全量重编** |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
 
@@ -243,6 +244,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（CertShards 全量 4.36 重放实测外推 236–290 h；acceptance 计划触发 >100 h 闸；续1615）**：
+  ① **实测（4.36 单 lean，census 车道亲测）**：非 R 族 Hex n=6 = 75.9 / 23.5 / 166.7 / 606 / 304 / 12.4 s（mean 198、median 119、max 606）；Pent n=4 = 771.9 / 259.5 / 29.1 / 11.9 s（mean 268、max 772）⇒ 非 R 215 件 ≈ **14.6 h**（8–36 h）。R 族 `HexR.K001` = **2,216 s（37 min）**；`QuadR.K000` **>62 min 未结束**；R 360 件按 2,216 s → **221.6 h**，按 3,720 s → **372 h**。**全量 575 件 ≈236–290 h（10–12 天单车道）**。
+  ② 按 §7.2 记 **`BUDGET_EXHAUSTED`**（限定当前引擎/当前预算；不判数学、不判原命题）。**验收契约「Final 闭包 4.36 全编 + 589」若要求全量 shard 重放则不可行**；替代方案必须用户批：**A)** 4.36 重建 `precompileModules` native 闭包（4.32 三族 580/580 实测 **13.889×**；若同效 → **17–25 h**；R 族是否受益未测）；**B)** 按族抽样重编 + **585 逐名公理审计**（`#print axioms` ↔ `trust-base.tsv`），不承诺全量重编。车道内不自批 A/B。
+  ③ census 继续 (b)：R 族各 1 件，`QuadR.K000` 90 min 上限（kill 记 `BUDGET_CAP`），随后恢复 Text / Graphs 非 shard / Assembly。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（CertShards R 变体成本修正：35–52+ min/件；抽样降为 R 族各 1 件；续1614）**：
   ① **9 件样本全绿**：RC=0 / 0 error / 0 sorryAx；`#print axioms` = 标准三 + 1 条同名 manifest ax，**无 `Lean.ofReduceBool`**，与 `docs/trust-base.tsv` 逐名对上。非 R Hex 5 件（K001 76 s / K002 23 / K008 606 / K042 / K076）+ Pent 4 件（K003/K004/K075/K145）。
   ② **R 变体成本爆炸（实测）**：`HexR.K001` **35 min**；`QuadR.K000` **52+ min 未结束**（100% CPU、低 RSS、纯求值）⇒ 先前「218 s 均值」只覆盖非 R Hex 形态；**R 族慢 10–20×**。
