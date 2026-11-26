@@ -290,7 +290,7 @@ theorem total_weight_lowerbound {g : Graph} {w : Face → Nat} (pl : inv g)
         show ListSum ((g.facesAt v).filter (fun f => triangle f = true)) (fun f => w f) =
           ListSum ((g.facesAt v).filter triangle) (fun f => w f)
         congr 1
-        exact hbool (g.facesAt v)
+        try exact hbool (g.facesAt v)
       have hT : F3.filter triangle =
           g.faces.filter (fun f => ∃ v ∈ V3, f ∈ g.facesAt v ∧ triangle f = true) := by
         rw [hF3char, List.filter_filter]
