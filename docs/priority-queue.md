@@ -72,6 +72,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `lean436-blockers-w1` | **在飞（2026-11-26 用户指令解决升级 blockers；`agent-3` / `agent-qeyxbrsn`；≤1 Lean）** | 从 `999aadb5` 起准备 4.32/4.36 同源码候选补丁：exLn_eval 离线证明、Conic/Geom 破类、CFW/NliBanks21/实际证书链、GoodList 公理漂移；交付 STATUS/MIGRATION/patches；不直接升级/改主仓，禁深度心跳当修复/全139/全库 |
 | `wt0-r1-core-w1` | **在飞（2026-11-26 用户再发 wt0 车道；`agent-0` / `agent-jh56tuws`；≤1 Lean）** | R1 y4 代表单调核：`MonotoneOn (fun y4 => pc3 y4 y5 y6) (Icc 2.01 2.30)`，y5/y6 同盒；新模块重建5–6位槽导数括号，private nb18_step0 只仿写；不做 y5/y6/R3/R5/Assembly，SORRIED −0 |
 | `qitnpea-wave1-y6-w1` | **在飞（2026-11-26 卡验收后续入；`agent-1` / `agent-m4s5djo4`；≤1 Lean）** | 两行回归 + D3 瘦身/程序化生表最小接口 + y6 单片曲率/ConcaveOn/真实消费探针；上端 2.4636，复用 ZTG/CFWGKMBZ/IExpr；全部新 Lean+生成器源 ≤50,928 B，超标记 PAUSE_COST；不做 11 片/456 点/Assembly，SORRIED −0 |
 
@@ -80,7 +81,7 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `wt0-route-r-first-w1` | **完成/落库 `65d8039a`（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + 模块构建/最终公理复验 + push）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；已落 `NliWt0LogKit`/`NliWt0Corner` 供 R1 复用；未接 Assembly、SORRIED −0；全 route R 仍 UNRESOLVED |
-| `lean436-trans-workaround-w1` | **完成（2026-11-26；Trans 五硬破已有信任保持绕法；整仓仍留 4.32.2）** | 离线中间值 + 小 decide + `taylorIter.eq_2`/rfl：完整 Trans 4.36 RC=0/22.27 s，4.32 RC=0/24.33 s；五证书双版本 `[propext]`、五 `_real` 标准三，API/陈述不变；SHA 157/157 + patch apply-check；patch 未应用。后续 exLn_eval/Conic/elaboration/585/Final 未决 |
+| `lean436-trans-workaround-w1` | **完成/主 patch 落库 `999aadb5`（2026-11-26；双版本与 Final 589 复验 + push）** | 离线中间值 + 小 decide + `taylorIter.eq_2`/rfl 已应用：4.32 模块构建 RC=0/20.51 s，4.36 直编 RC=0/35.57 s；五证书 `[propext]`、五 `_real` 标准三，API/陈述不变；Final 根面 589。后续由 `lean436-blockers-w1` 处理，主工具链仍 4.32.2 |
 | `repo-hygiene-review-w1` | **完成（2026-11-26；只读交付，编排者 SHA 5/5 + P0 现场 spot-check）** | **不建议大面积重构**；优先 README/PLAN/pq/campaign 文档纠偏与账本瘦身，再 NliBanks18→20 复用 `nb12_nonneg_of_deriv` 两文件 pilot；17 项 arctan 公共化另卡另 pilot；Assembly 三对私有桥随必要改动顺带；两 tracked `.pyc` 可独立清理；REPORT/CODE_REVIEW/DOCS_REVIEW/RECOMMENDATIONS 在快照，未执行建议 |
 | `qitnpea-wave1-prep-w1` | **完成（2026-11-26；wave1-slim-v2 当前 OVER-BAND，slim 条件目标 WITHIN-BAND；编排者 SHA 4/4 + HOL/字节/stdout/SAMPLE 复核 PASS）** | 交付六维卡、首件工单、EVIDENCE、11 项 ERRATA；456=144+96+216 首波合计，D5 37.24 min 首波投影；全表须程序化生表；y6 用 2.4636 外扩，复用二阶/CFWGKMBZ 域证书，局部凹性用 boxInf_le_of_slice_min；不支持直接量产 |
 | `wt0-route-r-prep-w1` | **完成（2026-11-26；routeR-v1 整卡 UNRESOLVED，仅放行 R4+R2；编排者 SHA 9/9 + 双 Python 复算 PASS）** | HOL 8 cell/520 pass/512 glue/1,959.218513 s 复核；R4 已有 NB12+Trans 可薄适配，R2 余量约 8.278e−6；交付六维卡、WORK_ORDER、EVIDENCE、ERRATA；不支持全 route R 量产 |
@@ -212,7 +213,7 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   （49 件分档 1/15/27/1/2/3；主线 wt1→ZTG trio；5 个方向；混世界 A/C 待裁）。
 - 2026-11-18 重组前全文：[`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)。
 - 更早队列/战术/J 战役表：[`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
-- 2026-11-26 瘦身迁出的 327 个旧日期条目见
+- 2026-11-26 瘦身迁出的 328 个旧日期条目见
   [`history/changelog-archive-3.md`](history/changelog-archive-3.md)；续990–1242 全文另见
   2026-11-18 重组前快照；续306–989 见
   [`history/changelog-archive-2.md`](history/changelog-archive-2.md)，续1–344 见
@@ -229,6 +230,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Trans 兼容 patch 应用并推送 `999aadb5`；升级 blockers 车道发车；续1588）**：
+  ① **应用与双版本验收**：候选 patch 已应用，源与 `Trans.offline.lean` 逐字节一致（+242/−5）。4.32 `lake build Kepler.Interval.Trans` RC=0/20.51 s；4.36 直编 RC=0/35.57 s、峰值 6.04 GB。五计算证书均恰 `[propext]`，五 `_real` 均标准三；`Kepler.Final` 重编并亲跑根面 **589 = 585 native + 标准三 + sorryAx**。commit/push `999aadb5`，主工具链仍 4.32.2。
+  ② **新 lane 回执**：`lean436-blockers-w1` = 原 `agent-3` resume / `agent-qeyxbrsn`；任务书已同批落快照。目标 = 同一份源在 4.32/4.36 通过的候选补丁，先 `exLn_eval` 原等式离线证明，再 Conic/Geom/Graphs/Packing 破类，随后 CFW 短链、NliBanks21/实际大证书、K009/GoodList 两形状公理漂移，并形成 MIGRATION。
+  ③ **边界**：本车道不直接升级/改主仓，候选 patch 验收后才落库；禁 native_decide/sorry/skipKernelTC/深度或心跳当修复、禁全139/全库，≤1 Lean。Trans 解决不等于整仓升级，剩余 API/elaboration/信任/根面逐项判。下一条：续1587。
 - **2026-11-26（Lean 4.36 升级绕法收线：完整生产 Trans 双版本通过；整仓仍留 4.32.2；续1587）**：
   ① **实质突破**：`lean436-trans-workaround-w1` 用**离线中间值 + 小 `decide` + `taylorIter.eq_2` + `rfl`** 消除五个 `maxRecDepth` 硬破；只改五个 pilot 证明体（+237 行），全部声明、陈述、模块路径、API 保持不变，不是隔离/删测试。完整 `Trans.offline.lean`：4.36 **RC=0 / 22.27 s**，4.32 **RC=0 / 24.33 s**；五计算证书双版本均恰 `[propext]`，五 `_real` 均标准三，生产抽样亦标准三。零 native_decide/新公理/skipKernelTC/提高深度。
   ② **验收与边界**：SHA **157/157**、`git apply --check` PASS；主 patch 未应用、未 commit。消费者静态复核表明五组 pilot 仓外无引用，但生产仍经 Final→Assembly→CQITNPEA→Trans，故绕法有生产意义。通用 norm_num/simp+decide 因公理漂移未采用；模块隔离只作备选。
@@ -471,15 +476,3 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   ⑥ **对"下一主攻"的影响**：QITNPEA 第一波（3 条，角点电池）**性价比高于 wt0**（1 条但要整条
   cover/发射管线）；wt0 仍是下一个大件（其零 Lean 模型侦察在飞：续1568 待记）。
   SORRIED 48 / AXIOM 585 不变。下一条：续1566。
-- **2026-11-26（用户明批 B：L1 形态重发射 221 箱；3 车道已发；续1566）**：
-  ① **用户裁决**（`B`，2026-11-26）：wt1 的 221 箱换成 L1 形态（整树 `rfl` + 删 957 条逐节点
-  `ev_/p_/op_`），预期 **D5 18.28×→5.1× HOL、olean 6.43→3.54 MB/箱**；这是 §7.3 下用户对
-  OVER-BAND 的**明批**，仍是 5.1×（不回 PARITY，但 3.3× 改善 + 产物 −44%）。
-  ② **发射链**：`gen_m9.py`（sha256 `05e5f9bd…` 原样）+ `mk_l1.py`（L1 探针交付的正则变换，
-  原样）→ 每箱 L1 模块；判据 = RC=0 ∧ error=0 ∧ sorryAx=0 ∧ 8 条 axioms 标准三 ∧
-  olean 2.9–4.0 MB ∧ 墙 ≤120 s（L1 实测 ~50 s）。
-  ③ **3 车道已发**（`wt1-l1bulk-{a,b,c}-w1`，74/74/73）；预期 221×49.6 s ≈3 h CPU / ~1 h 墙。
-  ④ **收线后编排者动作**：新文件替换已落库 221 模块（内容替换，接口 `D`/`Top_pos`/`fTop_eq_*` 不变）
-  → 重编 10 个组装模块 + `Assembly` 岛协议 + `Final` 根面审计（`nliCell3QZECFICwt1` 仍须标准三）
-  → 回填 PARITY CARD 的 D5/D4 实测（§7.3 单调不恶化）。
-  SORRIED 48 / AXIOM 585 不变。下一条：续1565。
