@@ -73,13 +73,13 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
-| `tsk-opt-b-w1` | **在飞（2026-11-27 Track A 完成后发车；ZCode `agent_a852a202`；零 Lean）** | 设计能把 TskXLLIPLS 每叶 15.0 s 地板砍到 ≤3.4 s（≥4.4×）的 checker/包络：two-tier 便宜预检、惰性/必要性跳过、更粗导数界、替代 Taylor 模型、checker 形状；交付 DESIGN/PARITY_CARD/EVIDENCE/UNRESOLVED；判定 GO/CONDITIONAL/NO-GO；输入 = A 的 `tb_decomp.csv`/`tb_nodes.csv`/`q1_leaves.csv`；不依赖 C；主仓零改动 |
 | `wt0-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶单叶；`agent-9` / `agent-u45hh3gd`；≤1 Lean）** | 固定 case 13067 重建叶 `LLLLLLLL`，同盒做二阶中心 Taylor+CSE Lean pass；直接 x 空间三变元 + `nb18_unfold`，禁 dcT2/换叶/细分/提高深度；不做 sibling、glue、全 cell 或 Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-opt-b-w1` | **完成：GO（2026-11-27，零 Lean；Design P 点 Taylor + 单元 Hessian 曲率表；快照 58 文件 + SHA；主仓零改动）** | 84.7k 原语/叶 → **2.62 s/叶（5.7×）**；地板解剖 467,867 原语/叶、31 µs/原语自洽；两级/惰性/粗界/均值形式全死（1.65× 或 0/12）；现 `err` 过证 300×，换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12）；D5 投影 11.6 h（1.84×）/ 叶树合并 10.3 h（1.63×），**WITHIN-BAND**；K=40–70 vs 容差 550 未严格实现；15% guard-straddle 叶需梯子；A 的 `ite_both=0` 为计数器假象（ERRATA） |
 | `qitnpea-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 21/21 + 两个 OCaml 探针复跑；无 patch；Lean 0，SORRIED −0）** | 原源码语义与 Python 复放核心完成；原版 CSE 通用探针确实会把无共享左脊改指 ref，delta 复放 25 refs 同形并污染 value；真实 azure 项形是否触发仍 UNRESOLVED。首个 pass 未重建，0 行 Lean；pa_j/camlp5 8 移植 RC=2，后续等用户裁决 |
 | `tsk-opt-a-w1` | **完成（2026-11-27，零 Lean；快照 REPORT 436 行 + 22 脚本 + CSV；主仓零改动）** | 位精确引擎逐位复现 kBox0 P3；成本模型订正 ΣN_visited=93·N；Q1 全族 N_min=16（6,609）/32（3），N 杠杆 51.1→27.8 CPU·h（4.41×/5.40× HOL），N=32 安全 28.1/34.4 h；Q2 精度 D5 0%；Q3 叶树 −11.8%，落地树已最优；Q4 HOL 2-piece 无捷径（y1=2.8195635，x=7.94994，ERRATA）；Q5 三杠杆 3.89×/4.77×，≤2× 需地板 ≤3.16 s ⇒ 只有 Track B |
 | `wt0-hol-replay-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-26；编排者 SHA 40/40；无 patch；Lean 0/80 + 0/79，SORRIED −0）** | 原 80/79 Python 候选树有效；一阶 dcT2 两叶各约 1.074 MB，D2 与 HOL 二阶 DIFFERS；leafA RC=134/16.93 GB，Bisect1–8 触发止损。最终生成源/生成器仍含禁用的 maxRecDepth 4M，只是失败证据，非合规候选；后续等用户裁决 |
@@ -167,6 +167,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | `ox3q1h` S2b 其余批（约 67 万行估计） | 未批；建议等 A–C 结果，不在本轮擅自量产 |
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
+| **TskXLLIPLS Design P 一盒 Lean 原型** | **等用户裁决**（Track B 已 GO，2026-11-27）：只做 `PtDual`(1+6) + `checkPosPt` + `_sound`（~350 行，复用 M1 自证骨架）、单叶 `decide` 实测 wall（验收 ≤3.4 s）、21 分量二阶 AD 曲率表；优先选 worst-case 叶（guard-straddle + 高 K）。**不先做 N=32**（P 失败后的 fallback）；C（模块合并）不做 |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
 
@@ -242,6 +243,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（Track B 完成：Design P GO，地板 15.0→2.62 s，D5 1.63–1.84× WITHIN-BAND；续1609）**：
+  ① **Design P（`tsk-opt-b-w1`，零 Lean）**：点 Taylor（`f(y)`、`∇f(y)` 精确 dyadic 前向 AD）+ **单元级 Hessian 曲率表**（= HOL `m_taylor_error` 结构），取代逐节点 W² 累加；[模型] **84.7k 原语/叶 → 2.62 s/叶（5.7×）**，超过 4.4× 目标。地板解剖 [实测 kBox0 N=16]：467,867 原语/叶，`ble` 55%、`mul` 123,926、`imul` 23,600（48.6% 零操作数）；31 µs/原语单参数自洽（15.0 s/467,867 与 `.trans` 边际两点）。
+  ② **候选判词**：两级自然区间 0/12 闭合（相消 27×）死；惰性/零跳过 1.65× 不够；粗导数界死（幅度相消 27×、shard 斜率 19× 膨胀）；均值形式紧度持平；**点 Taylor+曲率 5.7× 采纳**。两条新事实：现 `err` **过证 300×**（真二阶余项中位 2e-3·fB0 vs err 0.72·fB0），换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12 叶）；**ERRATA 对 A**：`ite_both=0` 是计数器假象（`STATS` 只在 `evalFill2D:844` 自增），活路径实测 **6/40 叶有未定 guard**。
+  ③ **D5 投影 [模型]**：2.62+0.31+3.4 import = 6.34 s/叶 ⇒ 6,612 叶 **11.6 CPU·h（1.84×）**；叶树合并 −11.8% ⇒ **10.3 h（1.63×）**；decide-only 4.8–5.4 h（0.76–0.86×）⇒ **WITHIN-BAND**。残项 = 3.4 s/叶 import（C 不做）；D1 0.88×、D2/D6 PARITY、D3 25× 现状（目标形态 ≤4 MB，未实施）、D4 STRUCTURAL-DIFF（最小 olean 未测）。
+  ④ **唯一真风险（UNRESOLVED §1）**：严格二阶 AD 的膨胀因子 K 未实现；实测幅度型 K=40–70 vs 容差 550（余量 8–13×），严格实现会更大；>550 则需按 u² 细分单元（成本不变、单元数 ×4）。另有 15% guard-straddle 叶需梯子（+15% 叶 vs 回落 15 s/叶），未比较。
+  ⑤ **建议（等用户批）**：发一盒 Lean 原型 `tsk-opt-m2-w1`（零到一盒）：`PtDual`(1+6)+`checkPosPt`+`_sound` ~350 行（复用 M1 `TskProbe0SelfCert` 的 `nsqrt`/`transOn`），worst-case 叶单叶 `decide` 实测 wall ≤3.4 s + 21 分量曲率表；**不先做 N=32**（作 P 失败 fallback）；C 不做。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（QITNPEA 严格二阶单叶最终验收：PARTIAL + STRUCTURAL-STOP；续1608）**：
   ① **验收**：`agent-xsjt70pe` 交付 21 文件，编排者 SHA **21/21 PASS**、无 patch、主仓零改动、SORRIED −0。另亲跑 `ocaml cse_probe.ml` 与 `ocaml cse_run2.ml` 均 RC=0：通用 `a+(g+g)` 探针确实变为 `ref0+(ref0+ref0)`；delta 复放产生 25 refs，`f0 = r3 + neg(r3*x6)`，与交付记录一致。
   ② **关键边界**：该现象证明原版 `find_and_replace_all` 算法在这些输入上存在级联改指，且本复放 value 通道被污染；**真实 azure 项形是否触发仍 UNRESOLVED**，不得判 HOL 原证或 QITNPEA 有错。首个 pass 盒未重建，DFS 左脊无 pass 且被输出上限截断；Lean 0 行、0 公理输出，CSE 成对消融未完成。
