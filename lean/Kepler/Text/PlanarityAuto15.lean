@@ -484,8 +484,7 @@ theorem KVQWYDL_lemma10 {x : V3} {V : Set V3} {E : Set (Set V3)}
   have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
     rw [hdsf]
     ext z
-    simp
-    tauto
+    simp <;> tauto
   rw [himg, hleads]
   exact KVQWYDL_lemma1 x V E f1.1 f2.1 f3.1 hfan he12 he23 he31 hsig hcard hfan80
 
@@ -601,8 +600,7 @@ theorem KVQWYDL_lemma30 {x : V3} {V : Set V3} {E : Set (Set V3)}
   have himg : (fun z : V3 × V3 => z.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
     rw [hdsf]
     ext z
-    simp
-    tauto
+    simp <;> tauto
   have haff_ds : affGt ({x} : Set V3) ({f1.1, f2.1, f3.1} : Set V3) =
       dartsetLeadsIntoFan x V E ds := by
     have h := KVQWYDL_lemma10 hfan hcard hfan80 hds hds3
@@ -706,8 +704,7 @@ theorem dartset_leads_into_fan_radial {x : V3} {V : Set V3} {E : Set (Set V3)}
   have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
     rw [hdsf]
     ext z
-    simp
-    tauto
+    simp <;> tauto
   have hleads : dartsetLeadsIntoFan x V E ds =
       affGt ({x} : Set V3) {f1.1, f2.1, f3.1} := by
     rw [← KVQWYDL_lemma10 hfan hcard hfan80 hds hds3, himg]
