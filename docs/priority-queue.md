@@ -72,6 +72,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-certunit-parity-w1` | **在飞（2026-11-26 用户明批 route a；hol-parity-analyst；零 Lean）** | TSKAJXY-XLLIPLS 证书单位对齐的 PARITY CARD（六维）+ 设计：HOL 2 段 `Iarg_facet` vs 我方 6,612 叶；给出 Lean 侧「粗分段 + verified checker」最小首件规格；只读原版/我方，写快照 `tsk-certunit-parity-w1/`；卡片不全不许开 Lean 车道 |
 | `lean436-fixer-w1` | **在飞（2026-11-26 用户明批「轮询+修」；ZCode `agent_dcedc2c8`；≤1 Lean）** | 每 10 min 轮询 `census.tsv` 的 BLOCKED，独立 repo 副本修 + 4.32/4.36/公理三路验证；只许 proof-body/显式标注/linter option；陈述或定义改动 → SF/DEF 候选停手；产出 `fixes/*.diff` + `RECIPES.md`；不落主仓 |
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批「好，启动继续吧」；原 `agent-6` resume / `agent-i4223hjk`；≤1 Lean）** | 已重建 cell0 的 80/79 Python 候选树；本轮只做最小完整 Lean 覆盖件（通常 2 pass + 1 父 glue），逐件公理/成本验收后返回；不量产 80 叶、不走 route R、不接 Assembly |
