@@ -73,7 +73,7 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
-| `wt0-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶单叶；`agent-9` / `agent-u45hh3gd`；≤1 Lean）** | 固定 case 13067 重建叶 `LLLLLLLL`，同盒做二阶中心 Taylor+CSE Lean pass；直接 x 空间三变元 + `nb18_unfold`，禁 dcT2/换叶/细分/提高深度；不做 sibling、glue、全 cell 或 Assembly |
+| `wt0-hol2-cse-leaf-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-9` resume / `agent-vcgwo770`；不再起计算）** | 二阶复放 pp=3 通过、通用 kit 有标准三输出；但单叶 leaf_compile1–8 仍 maxErrors=100/decide stuck，触发三轮止损。只整理资产与失败证据，Lean 单叶 0；后续等用户裁决 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -243,6 +243,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（wt0 严格二阶单叶触发结构性止损；续1610）**：
+  ① **有效进展**：二阶复放 pp=3 upper≈−0.004916 通过、pp=6 与存档一致；`kit_olean3.log` 显示通用二阶 kit 的 mem_VBq/mem_PBQ/hRat/hCst/hCoord/hAdd/hSub/hMul/hComp/pos_of_slack 标准三。CSE 叶源 264,788 B、nocse 467,656 B 已生成，但都只是未验证材料，不能等同单叶通过。
+  ② **止损**：已连续 `leaf_compile1–8`；最新 RC=1、maxErrors=100，仍有大量 decide stuck/linarith/application mismatch（4.88 real、5.68 GB maximum RSS）。依 §7，原 `agent-9` resume / `agent-vcgwo770` 只整理证据，不再编译、重发或提高深度。真实覆盖仍 Lean 单叶 0、候选树 0/80 + 0/79；工程阻塞限定当前发射/证明表示，不判 wt0 或 HOL 二阶路线 NO-GO。
 - **2026-11-27（Track B 完成：Design P GO，地板 15.0→2.62 s，D5 1.63–1.84× WITHIN-BAND；续1609）**：
   ① **Design P（`tsk-opt-b-w1`，零 Lean）**：点 Taylor（`f(y)`、`∇f(y)` 精确 dyadic 前向 AD）+ **单元级 Hessian 曲率表**（= HOL `m_taylor_error` 结构），取代逐节点 W² 累加；[模型] **84.7k 原语/叶 → 2.62 s/叶（5.7×）**，超过 4.4× 目标。地板解剖 [实测 kBox0 N=16]：467,867 原语/叶，`ble` 55%、`mul` 123,926、`imul` 23,600（48.6% 零操作数）；31 µs/原语单参数自洽（15.0 s/467,867 与 `.trans` 边际两点）。
   ② **候选判词**：两级自然区间 0/12 闭合（相消 27×）死；惰性/零跳过 1.65× 不够；粗导数界死（幅度相消 27×、shard 斜率 19× 膨胀）；均值形式紧度持平；**点 Taylor+曲率 5.7× 采纳**。两条新事实：现 `err` **过证 300×**（真二阶余项中位 2e-3·fB0 vs err 0.72·fB0），换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12 叶）；**ERRATA 对 A**：`ite_both=0` 是计数器假象（`STATS` 只在 `evalFill2D:844` 自增），活路径实测 **6/40 叶有未定 guard**。
