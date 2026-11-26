@@ -73,6 +73,7 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
+| `tsk-opt-a-w1` | **在飞（2026-11-26 用户裁决「先 A 后 B，C 不做」；ZCode `agent_b28f1038`；零 Lean）** | 用 `pipeline/interval/tmexact.py` 位精确引擎 + `orig_tree_probe.py`：Q1 最小 N 分布（≥40 叶分层）、Q2 精度余量、Q3 分裂启发式有界 B&B、Q4 2-piece cut/HOL 树对照、Q5 Pareto 与 Track B 输入；先复现 kBox0 P3（N=16, lb≈+8.579e-4）再外推；零 Lean / 主仓零改动；快照 `tsk-opt-a-w1`；FAIL/UNRESOLVED 不判数学 |
 | `wt0-hol-replay-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-6` resume / `agent-8li7yv9o`；不再起计算）** | 当前一阶 dcT2 超大生成表示已连续 Bisect1–8，触发三轮结构性止损；leafA RC=134 栈溢出、Bisect8 RC=1；Lean 0/80 pass、0/79 glue。只整理证据，后续等用户裁决，不接 Assembly |
 | `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
 
@@ -239,6 +240,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（用户裁决 TskXLLIPLS 优化「先 A 后 B，C 不做」；`tsk-opt-a-w1` 发车；续1603）**：
+  ① **用户裁决**：先 **Track A**（零 Lean 的叶树/N/精度 Pareto 研究），A 出数后再做 **Track B**（惰性包络设计 + 新 PARITY CARD）；**Track C 不做**（2 车道验收、29 叶/模块合并、精度 Lean pilot 等工程项暂停）。
+  ② **Track A 任务（ZCode `agent_b28f1038`，零 Lean）**：用 `pipeline/interval/tmexact.py` 位精确引擎 + `orig_tree_probe.py`，回答 Q1 最小 N 分布（≥40 叶分层，覆盖 Atan1PLeaf/FamA/T\*）、Q2 精度余量、Q3 分裂启发式有界 B&B、Q4 2-piece cut/HOL 树对照、Q5 Pareto 与 Track B 输入；先复现 kBox0 P3（N=16, lb≈+8.579e-4）再外推；主仓零改动，快照 `tsk-opt-a-w1`；单盒结论不得写成全族。
+  ③ **目标口径调整（依据续1598/§8）**：3.5 s（1.2×）改为 **stretch**，第一目标 **≤2×（5.86 s/叶 ≈10.8 CPU·h）**；若 A 证明叶树/精度单独收益 <1.3×，则 B 必须主攻 per-node 6 维包络惰性化。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-26（wt0 最小 Lean 件触发结构性止损；续1602）**：
   ① **机器证据**：当前无存活 wt0 Lean 进程。`leafA_compile.log` = Stack overflow、RC=134、37.51 real/346.53 user/16.93 GB maximum RSS；`bisect8.log` RC=1，仍有 maximum recursion depth 与 `end`/namespace 错误。已连续 Bisect1–8，依 §7「三轮结构性卡死即止损」，原 `agent-6` resume / `agent-8li7yv9o` 只整理交付，不再编译、调参或提高深度。
   ② **路线差与真实覆盖**：当前生成件改用一阶 `dcT2` + 盒上梯度，不是原 HOL 二阶中心 Taylor 终端，记 D2 DIFFERS；两叶各约 1.074 MB。原 80/79 Python 候选树仍有效，但 **Lean 0/80 pass、0/79 glue**，无通过叶、无 case 级 `#print axioms`、SORRIED −0。判词限定当前一阶超大生成表示，不判 wt0 或 HOL 路线 NO-GO；后续是否改做严格 HOL 二阶单叶由用户决定。
