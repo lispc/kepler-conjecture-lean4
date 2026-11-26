@@ -74,6 +74,7 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批「好，启动继续吧」；原 `agent-6` resume / `agent-i4223hjk`；≤1 Lean）** | 已重建 cell0 的 80/79 Python 候选树；本轮只做最小完整 Lean 覆盖件（通常 2 pass + 1 父 glue），逐件公理/成本验收后返回；不量产 80 叶、不走 route R、不接 Assembly |
+| `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -238,6 +239,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（QITNPEA 严格 HOL 二阶+CSE 单叶发车；续1600）**：
+  ① **用户明批与回执**：用户选择严格原版叶模型，新车道 `qitnpea-hol2-cse-leaf-w1`，全新 `agent-8` / `agent-o2zedfd1`；TASK 与六维卡已先落快照。只做 case 13031 一个 Lean 二阶 Taylor+CSE pass 与同盒 CSE 消融，完成一片即返回，不做第二片、glue、其余 case 或 Assembly。
+  ② **原版锚点**：非 poly 实际路径为 `m_verifier_main.hl:129-354` 的递归 `mk_funs`，不能拿根表达式直接 Hessian 或现成三变量 `taylor3_upper` 冒充；组合规则锚定 `m_taylor_arith2.hl:138,254,514,768,1198`，终端界见 `informal_taylor.hl:80-103,121-154` / `m_taylor.hl:1179-1229`，真实 CSE 选择与 `Int_ref` 顺序见 `eval_interval.hl:194-264`。叶盒若确定性重建必须标 `RECONSTRUCTED-LEAF`，不得从旧 19k 树挑叶冒充原 309 叶。
+  ③ **同口径 D3 基线**：case 13031 注册行实测 **1,344 B**（`ineqs.txt:13030`），8 case 行 11,772 B；七个直接二阶/CSE 文件合计 314,875 B（非完整传递闭包）。旧卡 25,464 B 属不同对象，不沿用。目标标准三/封闭 decide 单列，禁旧一阶 hull-TM、19k 量产、自设 rung/N/out/1e-9 精度或额外细分。
 - **2026-11-26（QITNPEA HOL replay 最终验收：PARTIAL + OVER-BAND；续1599）**：
   ① **验收**：`agent-5m43u52i` 交付 35 文件，编排者 `sha256sum -c` **35/35 PASS**；无 patch，主仓零改动、SORRIED −0。直接复核 urban `stdout:1890-1936`：case 13031 = **309 pass/308 glue/1003.303690 s**，入口 pp=6 与 eps=1e-10 见 `main_verifier.hl:18,34`。bb_arb 日志 RC=0、19,234 叶/38,467 节点；HullTreeD 编译 RC=0/4.62 s、maximum RSS 5.65 GB（peak footprint 831 MiB）、olean 270,704 B。
   ② **真实边界**：19,234 叶只是外部搜索；leaf0 的 40,960 B 参数文件无换行结尾且末行截断，stage-B 从未发射，故 **0 条内核叶判定、0 覆盖树、0 case 级 `#print axioms`**。D5 仅能记投影 ≫2×，单叶 decide 成本 UNRESOLVED，不写成实测。判词仍为 PARTIAL + OVER-BAND，不判原命题或 HOL 路线 NO-GO；后续等用户裁决，不自动续派。
