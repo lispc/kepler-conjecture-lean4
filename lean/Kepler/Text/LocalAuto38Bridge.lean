@@ -549,10 +549,14 @@ private theorem p38_upsX_pos_noncollinear {v1 v2 : V3}
       linarith
     have hinner : ‖inner ℝ v1 v2‖ = ‖v1‖ * ‖v2‖ := by
       rw [inner_eq_dot, Real.norm_eq_abs]; exact habs
-    rcases ((norm_inner_eq_norm_tfae ℝ v1 v2).out 0 2).mp hinner with h0 | ⟨c, hc⟩
-    · exact hv1 h0
-    · exact hnc (collinear3_iff_smul (v := (0:V3)) (w := v1) (w1 := v2) hv1 |>.mpr
-        ⟨c, by simpa using hc⟩)
+    -- `List.TFAE.out` 的索引约定在 4.32/4.36 互斥（0 基 vs 1 基），故绕开 TFAE，
+    -- 改用两版同陈述的 `norm_inner_eq_norm_iff` 直接收口。
+    have hncv2 : v2 ≠ 0 := fun h0 =>
+      hnc (collinear3_iff_smul (v := (0:V3)) (w := v1) (w1 := v2) hv1 |>.mpr
+        ⟨0, by simp [h0]⟩)
+    rcases (norm_inner_eq_norm_iff hv1 hncv2).mp hinner with ⟨c, -, hc⟩
+    exact hnc (collinear3_iff_smul (v := (0:V3)) (w := v1) (w1 := v2) hv1 |>.mpr
+      ⟨c, by simpa using hc⟩)
   rw [p38_upsX_gram (‖v1‖ * ‖v1‖) (‖v2‖ * ‖v2‖) (dist v1 v2 * dist v1 v2)
     (v1 ⬝ᵥ v2) (p38_cos_law v1 v2)]
   linarith
