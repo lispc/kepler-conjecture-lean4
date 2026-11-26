@@ -732,11 +732,17 @@ HOL 用未移植的 `hypermap_of_fan_rep`/`into_domain_power_efn_fan` 构造幂�
 private theorem hypermapOfFan_faceMap_eq_auto14 (hfan : FAN x V E) {d : V3 × V3}
     (hd : d ∈ dart1OfFan V E) :
     (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
-  unfold hypermapOfFan extendPerm
-  simp only [Equiv.ofBijective_apply]
-  unfold Kepler.Text.Fan.res
-  rw [if_pos (by
-    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+  have hs : ↑(hypermapOfFan x V E hfan).darts = dart1OfFan V E :=
+    (finite_dart1_fan hfan).coe_toFinset
+  have hset_f : Set.BijOn (fFanPair x V E) (dart1OfFan V E) (dart1OfFan V E) :=
+    ⟨fun d' hd' => fFanPair_mem_dart1 hfan hd',
+     fun a ha b hb heq => mono_fFanPair hfan ha hb heq,
+     fun y hy => sur_fFanPair hfan hy⟩
+  have hmem : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := by
+    rw [hs]; exact hd
+  show extendPerm (hypermapOfFan x V E hfan).darts (fFanPair x V E)
+      (bijOn_res hs hset_f) d = fFanPair x V E d
+  rw [apply_extendPerm_of_mem hmem]
 
 theorem condition_f1_fan_in_face_set {x : V3} {V : Set V3} {E : Set (Set V3)}
     {y y1 : V3 × V3} {ds : Set (V3 × V3)}
