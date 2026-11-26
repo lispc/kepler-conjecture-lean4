@@ -32,7 +32,7 @@ theorem sector_area {ρ θ : ℝ} (hρ : 0 ≤ ρ) (hθ0 : 0 ≤ θ) (hθπ : θ
     have h1 : MeasurableSet {z : ℂ | ‖z‖ < ρ} :=
       measurableSet_lt measurable_norm measurable_const
     have h2 : MeasurableSet {z : ℂ | 0 < z.arg} :=
-      measurableSet_Ioi.preimage Complex.measurable_arg
+      measurableSet_lt measurable_const Complex.measurable_arg
     have h3 : MeasurableSet {z : ℂ | z.arg < θ} :=
       measurableSet_Iio.preimage Complex.measurable_arg
     exact h1.inter (h2.inter h3)
