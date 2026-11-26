@@ -1186,7 +1186,7 @@ SORRIED 49→48）。最终形态 = D1=221 箱 DC 证书（`W1DC_*` ×221）+ 10
 （`W1DCAssembly<case>` ×9 + final）+ `Assembly.lean` 接线 `nliCell3QZECFICwt1 :=
 W1DCAssemblyFinal.wt1_bank`；`#print axioms` = 标准三。**完整历程/得失/经验见战役档案
 [`wt1-campaign.md`](wt1-campaign.md)**；PARITY 判 OVER-BAND（原形态 18.28×），
-L1 形态 5.1×（用户明批 B），实测细节见该档案 §4。）**
+L1 形态实测 6.30×（单车道投影 5.14×；用户明批 B），实测细节见该档案 §4。）**
 
 > **收线摘要（2026-11-26）**：① 覆盖 = 9 根箱 → 597 树叶 → 173 合并 → **221 证书箱**
 > （`allCerts_length = 221`，与 `refine_t2.json` 双向 0 差）；② 证书 = 每箱 152/154 节点
