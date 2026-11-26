@@ -73,7 +73,7 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
-| `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批「好，启动继续吧」；原 `agent-6` resume / `agent-i4223hjk`；≤1 Lean）** | 已重建 cell0 的 80/79 Python 候选树；本轮只做最小完整 Lean 覆盖件（通常 2 pass + 1 父 glue），逐件公理/成本验收后返回；不量产 80 叶、不走 route R、不接 Assembly |
+| `wt0-hol-replay-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-6` resume / `agent-8li7yv9o`；不再起计算）** | 当前一阶 dcT2 超大生成表示已连续 Bisect1–8，触发三轮结构性止损；leafA RC=134 栈溢出、Bisect8 RC=1；Lean 0/80 pass、0/79 glue。只整理证据，后续等用户裁决，不接 Assembly |
 | `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
@@ -239,6 +239,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（wt0 最小 Lean 件触发结构性止损；续1602）**：
+  ① **机器证据**：当前无存活 wt0 Lean 进程。`leafA_compile.log` = Stack overflow、RC=134、37.51 real/346.53 user/16.93 GB maximum RSS；`bisect8.log` RC=1，仍有 maximum recursion depth 与 `end`/namespace 错误。已连续 Bisect1–8，依 §7「三轮结构性卡死即止损」，原 `agent-6` resume / `agent-8li7yv9o` 只整理交付，不再编译、调参或提高深度。
+  ② **路线差与真实覆盖**：当前生成件改用一阶 `dcT2` + 盒上梯度，不是原 HOL 二阶中心 Taylor 终端，记 D2 DIFFERS；两叶各约 1.074 MB。原 80/79 Python 候选树仍有效，但 **Lean 0/80 pass、0/79 glue**，无通过叶、无 case 级 `#print axioms`、SORRIED −0。判词限定当前一阶超大生成表示，不判 wt0 或 HOL 路线 NO-GO；后续是否改做严格 HOL 二阶单叶由用户决定。
 - **2026-11-26（`docs/compile-speed.md` 转为活文档；增补族级成本/M1/L1/6,612 叶说明；续1601）**：
   ① **文档**：`docs/compile-speed.md` 从“2026-11-21 基线存档”改为**编译速度专题活文档**（最后更新 2026-11-26）。新增 §0 一分钟现状；§1.1 闭包 9,137 的族级成本普查（TskXLLIPLS ≈55 h、W1DC L1 3.73 h、Shard 671/最大 1,911.9 s、Hull 1.92 h、TopReplay 0.91 h、LocalAuto 1.55 h、CertShards p50 6.6 s、ZTG/PA/Pent/PentTop/CertD/CertP 锚点、import 地板 8.6 h、4.36 全量重放 ≈74 h 串行）；§3.3 实验台账（W1DC L1 成功、M1 失败、Planarity 拆分、`-j2`/import kit/precompile/负结果）；§8「为什么是 6,612 叶而不是几个」（HOL 7,763 单元、D1 0.852×、引擎差 10×、少叶需更强包络或新数学）。§4/§5 同步补「不要把叶当冗余」「M1 后续 / 模块合并 pilot / census 抽样边界」。
   ② **维护规则**：本页为编译速度数字的持续出处；pq 只记结论并链接；数字带日期/来源，实测与 `[EST]` 分开；构建/驱动改动仍需用户明批。
