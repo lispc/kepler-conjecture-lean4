@@ -17,6 +17,9 @@
   更早队列/战术/J 战役表在
   [`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
 - [`history/lanes-landed.md`](history/lanes-landed.md) — 已完成车道总表。
+- [`handoff-2026-11-26.md`](handoff-2026-11-26.md) — **2026-11-26 交接（换 agent 用）**
+  （wt1 已闭 + B 落库；A/L3 1 箱探针在飞；用户三线计划 wt1/wt0/QITNPEA 的入口/边界/
+  第一动作；census 修复与干净 checkout 先 `make gen-wt1`；PR-66）。
 - [`handoff-2026-11-20.md`](handoff-2026-11-20.md) — **2026-11-20 交接（换 agent 用）**
   （额度停车道令 [1310] 重置 11-23；W1 增量2 待闸 / 三探针批断点 + 孤儿进程 /
   池链 v5 链尾三件套 / 裁决存量 / 今日普查两勘误与 kit 裁决）。
