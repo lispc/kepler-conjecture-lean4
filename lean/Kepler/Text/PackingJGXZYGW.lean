@@ -362,7 +362,7 @@ private theorem jg_all_voronoi_subset_ball (v : Space3) (S : Set Space3) (p : Sp
   have h1 : dist p x ≤ dist p v + dist x v := by
     linarith [dist_triangle p v x, dist_comm v x]
   have h2 : dist x v < 2 := jg_voronoi_in_ball x v S hV hs hx
-  linarith [Metric.mem_ball.mp hv, h1, h2, dist_comm x p, dist_comm v p]
+  linarith [hv, h1, h2, dist_comm x p, dist_comm v p]
 
 /-- HOL `unions_voronoi_center_in_ball_subset_ball` (pack1.hl:385). -/
 private theorem jg_unions_voronoi_center_in_ball_subset_ball (S : Set Space3) (p : Space3)
