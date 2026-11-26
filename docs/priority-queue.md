@@ -239,6 +239,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（`docs/compile-speed.md` 转为活文档；增补族级成本/M1/L1/6,612 叶说明；续1601）**：
+  ① **文档**：`docs/compile-speed.md` 从“2026-11-21 基线存档”改为**编译速度专题活文档**（最后更新 2026-11-26）。新增 §0 一分钟现状；§1.1 闭包 9,137 的族级成本普查（TskXLLIPLS ≈55 h、W1DC L1 3.73 h、Shard 671/最大 1,911.9 s、Hull 1.92 h、TopReplay 0.91 h、LocalAuto 1.55 h、CertShards p50 6.6 s、ZTG/PA/Pent/PentTop/CertD/CertP 锚点、import 地板 8.6 h、4.36 全量重放 ≈74 h 串行）；§3.3 实验台账（W1DC L1 成功、M1 失败、Planarity 拆分、`-j2`/import kit/precompile/负结果）；§8「为什么是 6,612 叶而不是几个」（HOL 7,763 单元、D1 0.852×、引擎差 10×、少叶需更强包络或新数学）。§4/§5 同步补「不要把叶当冗余」「M1 后续 / 模块合并 pilot / census 抽样边界」。
+  ② **维护规则**：本页为编译速度数字的持续出处；pq 只记结论并链接；数字带日期/来源，实测与 `[EST]` 分开；构建/驱动改动仍需用户明批。
+  ③ 同步 `docs/README.md` 导航注。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-26（QITNPEA 严格 HOL 二阶+CSE 单叶发车；续1600）**：
   ① **用户明批与回执**：用户选择严格原版叶模型，新车道 `qitnpea-hol2-cse-leaf-w1`，全新 `agent-8` / `agent-o2zedfd1`；TASK 与六维卡已先落快照。只做 case 13031 一个 Lean 二阶 Taylor+CSE pass 与同盒 CSE 消融，完成一片即返回，不做第二片、glue、其余 case 或 Assembly。
   ② **原版锚点**：非 poly 实际路径为 `m_verifier_main.hl:129-354` 的递归 `mk_funs`，不能拿根表达式直接 Hessian 或现成三变量 `taylor3_upper` 冒充；组合规则锚定 `m_taylor_arith2.hl:138,254,514,768,1198`，终端界见 `informal_taylor.hl:80-103,121-154` / `m_taylor.hl:1179-1229`，真实 CSE 选择与 `Int_ref` 顺序见 `eval_interval.hl:194-264`。叶盒若确定性重建必须标 `RECONSTRUCTED-LEAF`，不得从旧 19k 树挑叶冒充原 309 叶。

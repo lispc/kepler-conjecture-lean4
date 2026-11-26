@@ -101,12 +101,13 @@
 - **[`tools.md`](tools.md)** — 工具总入口：当前 NLI/Text 源图、HOL 单根 instrument、
   受 guard 的单模块编译与复制式岛、`#print axioms`、precompile/dylib、trust manifest、
   检索/补丁/哈希工具，以及已停止 olean 恢复链的交接位置。
-- [`compile-speed.md`](compile-speed.md) — **编译速度基线/复测入口**（2026-11-21
-  `compile-speed-research-w1`：import 固定费、分层归因、`-j2`、import kit、按内存排槽；
-  2026-11-22/23 `precompile-shard-probe-w1` → `precompile-prod-quad-w1` →
-  `precompile-prod-all-w1`：生产化后 Quad/Pent/Hex **580/580** 全量跑通，总 **7.184 h**，
-  192 件基线聚合 **13.889×**；旧 Hex 730 h 估计作废；PentData/HexTop 近 25 GB 线，
-  未接入正式构建；含编排者勘误与 UNRESOLVED；完整 harness/PLAYBOOK 在同名快照）。
+- [`compile-speed.md`](compile-speed.md) — **编译速度活文档：现状、族级成本、优化与实验台账**
+  （2026-11-21 基线：import 固定费、分层归因、`-j2`、import kit、按内存排槽；
+  2026-11-22/23 `precompile` 三族 **580/580**、7.184 h、13.889×，未接入正式构建；
+  2026-11-26 增补：闭包 9,137 的族级成本普查（TskXLLIPLS ~55 h、W1DC L1 3.73 h、
+  Shard/Hull/TopReplay/LocalAuto 等）、W1DC L1 成功、TskXLLIPLS M1 失败
+  （15.3 s 地板、4.5× HOL、`BUDGET_EXHAUSTED`）、4.36 全量重放预算，以及
+  “为什么是 6,612 叶而不是几个”（HOL 7,763 单元对照）。
 - [`fill-worker-playbook.md`](fill-worker-playbook.md) — 工人纪律、闸规则、雷区表。
 - [`lane-brief-template.md`](lane-brief-template.md) — 工单模板（§0 硬约束逐字复制）。
 - [`../lean/scripts/auto_gate.sh`](../lean/scripts/auto_gate.sh) — 五道机械闸；

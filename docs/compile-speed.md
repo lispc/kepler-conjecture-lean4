@@ -1,13 +1,31 @@
-# 编译速度基线（2026-11-21，`compile-speed-research-w1`）
+# 编译速度（Compile Speed）— 现状、实测、优化与实验台账
 
-> 状态：调研已收线 **GO**；本文件是**存档与复测入口**，不是已应用的优化。
-> 任何代码/驱动改动（`-j2`、import kit、调度器）都尚未应用，需用户另批。
-> 证据：快照 `~/c17_backup/lane_snapshots/compile-speed-research-w1/`（169 件，
-> `MANIFEST.sha256` 全 OK，0 symlink）；`REPORT.md` / `PLAYBOOK.md` / `bench/` /
-> `data/` / `logs/`。主仓 tracked 零改动。本文件数字 = 编排者 2026-11-21 独立复跑，
-> 与快照 `REPORT.md` 的差异见 §1 勘误。
+> 状态：**活文档**（最后更新 2026-11-26）。编译速度专题的**持续维护页**；
+> 2026-11-21 的调研基线（§1–§7）保留原文，2026-11-26 起的普查/实验增量见
+> §1.1、§3.3、§8。pq 只记日期与结论并链接本页，不再另抄一套数字。
+> 规则：每个数字带**日期 + 来源**（commit 或快照路径）；实测与 `[EST]` 分开；
+> 任一新测量先入本页，再在 pq 记一行。
+> 任何构建/驱动改动（全局 `-j2`、import kit、precompile 接入、`lakefile` 改动）
+> 仍**需用户明批**——本页记录不等于已应用。
+> 证据：`~/c17_backup/lane_snapshots/compile-speed-research-w1/`（2026-11-21，169 件，
+> `MANIFEST.sha256` 全 OK，0 symlink；`REPORT.md` / `PLAYBOOK.md` / `bench/` /
+> `data/` / `logs/`）；2026-11-26 增补来源见各节。
+
+## 0. 一分钟现状（2026-11-26）
+
+| 项 | 当前值 | 来源 |
+|---|---|---|
+| 验收闭包 | **9,137 模块**（`Kepler.Final`） | `scripts/check_acceptance_targets.py`，2026-11-26 |
+| 全仓 Lean 文件 | 11,241（`Interval/Cases` 7,600、`LP` 1,150、`Graphs` 951、`Text` 1,097） | 2026-11-21 基线；TskXLLIPLS 已含 |
+| 4.36 census | **OK 412 / REUSED 100 / BLOCKED 0**（22:14，round 1） | `lean436-census-w1` |
+| 最大单族成本 | **TskXLLIPLS 6,819 模块 × 29 s ≈ 55 CPU·h** | parity card / census 实测 |
+| 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
+| 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
+| 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
+| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + W1DC 3.7 h + 地板 8.6 h + 其余重件 ~10 h ≈ **74 CPU·h 串行** | 2026-11-26 汇总 |
 
 ## 1. 三个基线数
+
 
 | 指标 | 值 | 口径 |
 |---|---|---|
@@ -24,6 +42,50 @@
 `Text.LocalFanPerimeterGeneric → LocalAuto7 → Mathlib` 两条链。真正 core-only 的只有
 `Graphs`（0/951，例 `Graphs.Graph` 只 import `Mathlib.Data.Set.Defs`）。
 **修正后固定费覆盖面更大（+18 个百分点），杠杆方向不变。**
+
+## 1.1 2026-11-26 族级成本普查（活数据）
+
+> 口径：`Kepler.Final` 闭包 9,137 模块。主数据源 =
+> `olean-recovery-2w-w1/measurements.csv`（1,042 次实测：wall 19,195 s /
+> user+sys 23,226 s / 单件最大 1,911.9 s）、`lean436-pilot-w1/final_census.txt`（4.36）、
+> `wt1-bulk-*`（L1 前，已作废）、`tsk-certunit-parity-w1/PARITY_CARD.md`、
+> `tsk-certunit-m1-w1/RESULTS.md`。`[EST]` = 外推，不是实测。
+
+| 族 | 模块数 | 源体积 | 单件实测 | 总量 | 机制 |
+|---|---:|---|---|---|---|
+| `Interval/Cases/TskXLLIPLS*` | 6,819 | 69.3 MB | 28.4–77.8 s（典型 29 s）/ 10.3 GB | **≈55 CPU·h 串行**（D5 78.19 CPU·h） | 内核 `decide` 深求值 |
+| `Text/TaylorSecond/W1DC_*` | 221 生成 + 13 tracked | 66.6 MB / 777,090 行 | **55–67 s CPU** / olean ~3.6 MB（L1） | **13,445.5 s CPU = 3.73 h** | 内核 `decide`/`rfl` DC 树 |
+| `Interval/Cases/*/Shard*` | 671 | 31 MB / 48,663 条 `by decide` | 最大 `C6096597438b/Shard1` **1,911.9 s / 10.9 GB** | `[EST]` 2–6 h | 内核 `decide` BBTree |
+| `Interval/Cases/*Hull*` | 18 | 1.16 MB | **318–1,176 s / 9.6–12.5 GB**（14 件实测） | **1.92 h** | 内核 `decide` |
+| `Graphs/TopReplay*` | 96 | 92 KB | p50 ≈18 s；最大 S013 **719.9 s / 22.17 GB** | **0.91 h**（87 件实测） | `decide +kernel` 重放 |
+| `Text/LocalAuto*` | 91 | 10 MB | `LocalAuto35` **1,093.1 s / 10.0 GB** | **1.55 CPU·h**（90 件） | norm_num/linarith + 解释器 |
+| `Graphs/CertShards/*` | 580 | 556 KB | p50 **6.6 s / 1.6 GB**；一件 1,477 s | ≈1.5 h | native_decide 分片（585 基座） |
+| `Text/ZTG*` | 26 | 9.9 MB | `ZTGJoint0000CornersP` **503.5 s / 21.25 GB** | `[EST]` 1–2 h | norm_num/linarith 重建 |
+| `Text/PackingAuto*` | 27 | 6.4 MB | `PackingAuto21` **483.5–519.1 s / 16.3–16.5 GB** | `[EST]` 0.5–1 h | 巨型项 simp/unfold |
+| `Graphs/GoodListShard*` | 199 | 149 KB | PentS00 **21–26.6 s / 8.2 GB**；TriS00 3.2–4.2 s | ≈0.5 h | `decide +kernel` shard-range |
+| `Graphs/ArchiveData`+`CertData` | 4 重件 | 26 MB | `Pent` **1,294.6 s / 20.57 GB**（4.36）；`PentTop` **973.2 s / 15.48 GB** | ≈0.65 h | 数据重建 + native shard |
+| `Interval/Cases/*/CertD|P` | 9 | — | CertD 62.8–92.3 s / 8.3–11.2 GB；`CertP` **380.4 s / 22.2 GB**；`BernsteinRoot1100` 348 s / 17.2 GB | ≈0.3 h | norm_num/linarith 内核证书 |
+| `NliBanksZTGIJCF4Dih` | 1 | 6,191 行 | **185.1 s / 11.35 GB** | 0.05 h | norm_num + 解释器 |
+| `LP`（含 `W6Data`） | 1,150 | 28 MB | 多数轻；`W6AlignRoots` 107 s（42,855 行） | `[EST]` 0.5–1 h | 数据 def + 内核 decide |
+
+**排序结论**：TskXLLIPLS 55 h ≫ **W1DC 3.7 h** > per-case Shard/Hull 4–8 h `[EST]` >
+Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h** 的 import 地板。
+
+**内存分级（决定并发槽位）**：
+
+| 档 | 单件峰值 | 族 |
+|---|---|---|
+| 16–22 GB，**只能 1 槽** | 22.17 / 22.2 / 21.25 / 20.57 / 17.2 / 16.33 / 15.48 | TopReplayS013、CertP、ZTGJointP、Pent、BernsteinRoot1100、PA21、PentTop |
+| 10–12.5 GB，2 槽 | 10.0–12.5 | Hull、CertD、LocalAuto35、TskXLLIPLS（10.3） |
+| ~6 GB，3 槽 | ~6 `[EST]` | W1DC（L1）、TopReplay 轻件 |
+
+**4.36 全量验收重放预算**（census 只抽样，不等于验收）：
+
+- TskXLLIPLS：6,412 叶 × 29 s ≈ **51.6 h 串行**；2 车道各 1 lean（2×10.3=20.6 GB）≈ 25.8 h 墙钟。
+- W1DC：231 模块 × ~60 s ≈ **3.7 h**。
+- import 地板：9,137 × 3.4 s ≈ **8.6 h**。
+- 其余重件 + 证书：`[EST]` ~10 h。
+- 合计 `[EST]` **~74 CPU·h 串行**；按内存分级排 1/2/3 槽，墙钟约 40–50 h。
 
 ## 2. 时间分层（重件）
 
@@ -222,8 +284,25 @@ dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s�
 C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decide +kernel` 也不是
 免费替代品（既有全基座内核重放已判不可行）。
 
+## 3.3 2026-11-26 增补实验台账
+
+| 实验 | 日期 / 来源 | 结果 | 判词 |
+|---|---|---|---|
+| **W1DC L1 形态替换** | `fe1ec17f`；`wt1-bulk-*` → L1 | 39,028 s → **13,445.5 s CPU（−65%）**；18.28× → **6.30× HOL**；55–67 s/箱、olean ~3.6 MB（−44%）、行数 −48%；221/221 八条公理标准三 | **成功 / 已落库**（用户明批 B） |
+| **TskXLLIPLS route a M1** | `tsk-certunit-m1-w1`，2026-11-26 | R 4096→64 **0 贡献**；N 半化 −7.4 s、N→16 −12.6 s；**地板 15.3 s**（19,666 节点 × 6 维 `dfB` 包络）；自证 checker 0 Int / 标准三，但 **17.8 s / 7.64 GiB** | **(b) FAIL ⇒ `BUDGET_EXHAUSTED`**；量产 6,612×15.3 s = 28.1 h = **4.5× HOL，NO-GO**；非数学 NO-GO |
+| **Planarity 拆分** | `3119ded7`，2026-11-26 | 4.36 在 5M heartbeats 下由超限 → **RC=0 / 43.69 s**；4.32 34.23 s | **成功 / 已落库** |
+| 每模块 `-j2` | 2026-11-21 基线 | 3 并发重件总 CPU −31%（999→688 s），wall +12%；单件 CertD CPU −55% | **建议采用（批量/CI）**；未全局应用 |
+| import kit（精确 import） | 2026-11-21 基线 | 3.63→0.99 s（−73%），RSS 5.62→1.41 GB（−75%）；toy 仅三 tactic | **仅试点**；全仓需逐模块验证 |
+| `precompileModules` + `--load-dynlib` | 2026-11-22/23 | 三族 **580/580 PASS / 7.184 h**；192 件基线 13.889×；`PentData` 峰值 24.52 GB 越线 | **功能 PASS，未接入正式构建**；需用户批 |
+| `native_decide` 提速 | 2026-11-21 基线 | fib30 0.60 s vs `decide` 0.17 s（3.5× 慢）+ 1 条公理 | **负结果，不做** |
+| 跳过 `-c` / `-i` | 2026-11-21 基线 | `-c` ≈ 0（1.23 vs 1.21 s）；`-i` +7% | **不做**（只省磁盘：C 16.6 GB + setup 25.4 GB） |
+| `-M` 当加速旋钮 | 2026-11-21 基线 | 低于峰值直接 `memory_exception` | **只当护栏** |
+| 无界 `lake build` / 高并发 | 2026-11-13 / 11-26 事故 | 默认 `-j12` 扇出；Assembly 事故 12 路 / 28.5 GB / swap 6.8 GB | **永久禁止**（AGENTS §4） |
+
 ## 4. 不要做
 
+- 把 6,612 个 TskXLLIPLS 叶当“冗余”随意合并/减少：叶数是 6 维 B&B 的输出，
+  HOL 自己 7,763 个证书单元；少叶需要更强包络或新数学（§8），不是改证书格式。
 - 无界 `lake build` / 全树构建（Lake 5.0 全核扇出；AGENTS §4 永久禁止）。
 - 用 `native_decide` 提速（更慢 + 新增公理）；新增 585 之外的任何 `native_decide`。
 - 静默引入 `@[implemented_by]` / `@[extern]`（信任面变更，且 codegen 不在 olean 路径）。
@@ -233,6 +312,15 @@ C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decid
 
 ## 5. 未闭合（UNRESOLVED）
 
+- **TskXLLIPLS M1 后续（2026-11-26）**：route a 的 (b) 已 FAIL（15.3 s 地板，4.5× HOL）。
+  唯一可能改 (b) 的方向 = per-node 6 维包络算术**惰性化**（新架构，需新 PARITY CARD +
+  用户明批）；核内开方换 Newton 只省 +2~4 s，不动 15.3 s 地板。当前未发车道。
+- **6,612 叶模块合并 pilot（150–200 模块）**：`[EST]` 省 ~6 h import 地板，内核工作不变；
+  未测，需评估单模块 RSS 与增量粒度。
+- **4.36 census 的抽样边界**：叶族 83/6,412（`HOMOGENEOUS-SAMPLED`）、T\* 3/199
+  （`TEMPLATE-SAMPLED`）、W1DC 231 全编；**census 不等于验收**，全量重放预算见 §1.1。
+- **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
+  后者需逐模块验证 import 面。
 - `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；
   580/580 审计）；**Hex 无同岛基线**，正式加速比 UNRESOLVED；**PentData/HexTop 峰值
   24.52/23.66 GB 近 25 GB 线**，量产/重跑需专用窗口；580 之外的 shard 未测；生产 bundle
@@ -273,3 +361,36 @@ nice -n 19 lean --profile -o /tmp/p.olean Kepler/Text/ZTGJoint0000CornersP.lean 
   `PackingAuto21` 483.51 s / 16.33 GB；`NliBanksZTGIJCF4Dih` 185.14 s / 11.35 GB。
 - 复算 `P_packineq`（6,890 Kepler 模块闭包）：冷 wall 7.98 s，CPU 4.96 s，RSS 6.53 GB
   （相对 Mathlib 3.42 CPU-s，加 1.54 CPU-s / 1.06 GB），与车道热态 4.78 s 的结论一致。
+
+## 8. 为什么是 6,612 个叶单元（而不是几个）
+
+> 结论：**叶数是 6 维 B&B 算法的输出，不是冗余；HOL 原版自己也有 7,763 个证书单元
+> （D1 = 0.852×），并没有用“几个叶”。** 真正的差距在验证引擎（内核 `decide` 29 s/单元
+> vs HOL native C++ 2.928 s/单元），不在叶的数量。
+
+1. **对象是 6 维局部不等式**：`0 < gamma4fgcy y1..y6 = volY − vol4f`，盒
+   `[2hplus,√8]×[2,2.01]²×[2hplus,2.8]×[2,2.01]²`。函数由 **143 个 `.trans` 级数、
+   79 个 `√`、165 个 `/`、60 个 `ite`、6,469 个 `×`** 组成（**19,666 个 AST 节点**）；
+   atan 来自 `dihXf` 的二面角、`solY` 的球面超额与 `π = 4·atan 1` 展开。
+2. **区间/Taylor 包络有依赖问题**：在大盒上直接算下界，变量相关会让包络变松、下界变负；
+   B&B 把盒不断细分，直到每个终端盒的 Taylor 下界 > 0。**6,612 叶 = 6,612 个终端盒**，
+   是算法输出，不是设计者主动拆这么多。
+3. **“少叶”不是免费的**：盒越大，固定 AST 的 6 维包络越松；要么下界变负（失败），
+   要么提高 Taylor 阶数/精度（更贵）。M1 实测：本盒 N=8 已负，N=16 最小可过；
+   **15.3 s 地板是 per-node 6 维 `dfB` 包络，不是 N、也不是证书大小**。要把叶数降一个
+   量级，等价于换更强的包络（Bernstein/affine）或换数学路线（单调/凸/降维），
+   不是改证书格式能解决的。
+4. **HOL 并没有更少**：`ineq.hl:304` 的 2 个子域定理共 **7,763 个证书单元**；我方 6,612
+   叶单元（0.852×）。HOL 也是“分区 + 区间/Taylor 验证器”，只是每单元 2.928 s（native
+   C++），我方 29 s（内核 `decide`）。差距 10× 在引擎，不在叶数。
+5. **HOL 的三件不能直接抄**：
+   - C++ 验证器 + 23,242 md5 白名单 + 1 条 `deserialization` 公理：AGENTS §2 禁止新增公理；
+   - LCF 不落 proof object：DTT 必须落，D4 1.7 GB 是结构性差异（不是浪费）；
+   - `pp/eps/max_depth/split` 是 HOL 自己的参数；2 段切点与分区树设计我们已对齐。
+6. **能不能“几个叶”**：只有换数学路线才可能——证明 `gamma4fgcy` 对每个变量单调/凸、
+   把 6 维降成边界/1 维、或用 Bernstein/affine 包络。HOL 没做这条；这是研究问题，
+   需先做零 Lean 的设计研究 + 新 PARITY CARD，不能靠改证书格式或调 N/R 解决。
+7. **6,612 个“模块”是工程粒度**：拆成 6,612 个模块是为了并行、增量编译与 24 GB 内存
+   隔离（单叶 10.3 GB）。把 ~29 叶并成一个模块可省 import 地板，`[EST]`
+   `6,612/29 × 28 × 3.4 s ≈ 6.0 h`，但内核工作不变，且单模块 RSS/增量粒度变差；
+   可做 pilot，不是数学问题。
