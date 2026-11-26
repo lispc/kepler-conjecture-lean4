@@ -72,7 +72,6 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `planarity-split-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_7283d025`；≤1 Lean）** | `Text.Planarity` 4.36 @5M：先应用 patch 11 的三处 proof-only 适配，再把 `azim_cone_of_combo`（:1811 起）拆 2–4 个 private lemma；既有声明签名/陈述逐字冻结；禁调 heartbeats；4.32/4.36 + 公理三路；3 轮卡死写 PAUSE_COST |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-6` / `agent-psiqcu0q`；≤1 Lean）** | 只做 HOL `(prep-QZECFIC wt0,0)` 原版 Taylor pass/glue 与 cell 覆盖；先真实单件再按原 80/79 推进；pp/分裂/终止参数不得自创；不走 route R、不扩其余 cell、不接 Assembly |
 | `qitnpea-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-7` / `agent-r0ek0a6b`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 一个有完整原版规格的 case 及 Taylor pass/glue；不走角点电池/11片/456点，不接 Assembly；原数据缺失记 UNRESOLVED |
 
@@ -80,9 +79,10 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `planarity-split-w1` | **完成/落库 `3119ded7`（2026-11-26；Planarity 拆 6 private 声明；4.36 @5M RC=0）** | 原声明签名/陈述 7 行逐字节不变；4.36 @5M 43.69 s/3.32 GB（拆分前 6,582,885 hb > 5M）；4.32 34.23 s/3.29 GB；105 公开定理公理三路逐条同（标准三，无 sorryAx）；岛内根面 589 逐名同 baseline |
 | `assembly-pattern-w1` | **完成/落库 `cd841d84`（2026-11-26；Assembly 三处；4.36 fragment RC=0）** | 先测后修：fragment 4.32 RC=0 / 4.36 RC=1（6 err）→ 修后 4.36 RC=0；4.32 全模块 98.97 s/9.34 GB；公理 baseline vs candidate `diff` 空（`assembly` = 标准三 + 585 native）；4.36 全模块缺 `NliBanks16` 等 38/43 import，证据止于 fragment；inventory 23 文件/80 处 |
 | `packing-chain-w1` | **完成/落库 `ffd65d0a`（2026-11-26；18/19 + Auto8 VSub；三文件 +5/−5）** | Auto8 根因 = 4.36 Mathlib `scoped [Pointwise]`，改 `Set.image2`；4.32 编排者亲跑 6/7/8 RC=0（22.10/20.50/4.59 s）；4.36 24.52/33.05/4.16 s；公理 12 声明 `diff` 空；Auto14 @4.36 BLOCKED（首个缺失 `PackingAuto12`），11 处未测 |
-| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）；`16` 后补落库 `0caffebc`（SF-112）** | `01–10`、`12–17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 仍 BLOCKED（`planarity-split-w1` 在飞），`18/19` 已随 `ffd65d0a` 落库，GoodList 漂移已定位（见 §8 续1592）；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
+| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）；`16` 后补落库 `0caffebc`（SF-112）；`11` 补落库 `3119ded7`** | `01–10`、`12–17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 已闭（拆分后 4.36 @5M），`18/19` 已随 `ffd65d0a` 落库，GoodList 漂移已定位（见 §8 续1592）；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
 | `wt0-r1-core-w1` | **完成：UNRESOLVED（2026-11-26；y4 目标 0 条；辅助 2/2 标准三；主仓未落库）** | `wt0_delta_bounds` 与 `wt0_small_matanD_bracket` 可复用；三 sol 槽聚合 dSE 紧包络未闭合，不是 wt0/route R 反证；不做 y5/y6/R3，SORRIED −0 |
 | `qitnpea-wave1-y6-w1` | **完成：BUDGET_EXHAUSTED（2026-11-26；16 GB memcap；SHA 80/80；主仓未落库）** | 14 个置换元组截零检查与运输 elaboration errors=0，但内核/olean 生成超 16 GB；`curvCheckClamp_decide`、C.2、ConcaveOn/consumer 未闭；D3=150,022 B（当前单片用户明批），SORRIED −0，不量产 |
 | `wt0-route-r-first-w1` | **完成/落库 `65d8039a`（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + 模块构建/最终公理复验 + push）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；已落 `NliWt0LogKit`/`NliWt0Corner` 供 R1 复用；未接 Assembly、SORRIED −0；全 route R 仍 UNRESOLVED |
@@ -235,6 +235,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Lean 4.36 Wave 1-A 落库 + 根面复验 + 编排者 lake build 事故自报；续1593）**：
+  ① **`planarity-split-w1` 完成/落库 `3119ded7`**：`Planarity.lean` 应用 patch 11 三处 proof-only 适配 + 把 `azim_cone_of_combo` 拆为 6 条新 private 声明（`sin_sub_combo1/2`、`azim_combo_frame`、`azim_combo_axis_false`、`azim_combo_off_align`、`azim_combo_off_bounds`）；原声明签名/陈述 7 行逐字节不变，删除体内未使用死代码。4.36 **@5M（未调高）RC=0/0 err/43.69 s/3.32 GB**（拆分前实测 6,582,885 hb > 5M）；4.32 RC=0/34.23 s/3.29 GB；105 条公开定理公理三路逐条相同（标准三，无 sorryAx）。DIFFERS（器级）：7 个新 private 常量、mangled 下标平移，全库无 `_private.Kepler.Text.Planarity.*` 引用。
+  ② **岛内根面复验（含 Wave 1 全部 landing）**：`PackingAuto2→6→7→8→Assembly→Final` 逐一 `lean -o` RC=0（Assembly 95.79 s/9.33 GB，Final 5.39 s）；`#print axioms the_kepler_conjecture_e2e` = **589 = 585 native + 标准三 + sorryAx**，与 `root-baseline.axes` **逐名相同**。主工具链仍 4.32.2。
+  ③ **编排者事故自报（AML-1）**：为刷新主仓 `.lake` 误跑 `lake build Kepler.Final`；主 `.lake` 自 11-23 未与今日 20 笔 landings 同步，Lake 拖出大闭包并 **12 路 lean 扇出 / 28.5 GB / swap 6.8 GB**（被 `planarity-split-w1` 观察并中止其非验收诊断）。编排者立即 `TaskStop`，**0 残留 lean / 0 孤儿**，压力回 1；随后改走**岛协议**（上述 6 模块 + Final，单进程 `-o`）。教训：本仓任何"刷新主 cache"的 `lake build <单模块>` 都可能拖出全树扇出——验收一律岛协议，主 `.lake` 保持只读直到正式切换。
+  ④ **升级 blocker 现状**：`11` 已闭；`16/18/19 / Auto8 / Assembly` 已落；剩余 = `PackingAuto14`（缺 `PackingAuto12` 等 4.36 olean）、`NliBanks21` 尾段（Auto9–21/PolyAuto*/Gamma4*/NliBanks3–21）、GoodList（已定位，文档化漂移）、4.36 全量 census + 585/Final 4.36 验收。Wave 2 census 等两条 nli replay 车道让出槽位后发。
 - **2026-11-26（Lean 4.36 Wave 1-B/C 落库 + GoodList 漂移定位；续1592）**：
   ① **`assembly-pattern-w1` 完成/落库 `cd841d84`**：`Assembly.lean` 三处 `have hif` 由 `unfold …; simp only [Equiv.ofBijective_apply]; rw [coe_toFinset]` 改为 `hs` + `hset_{e,n,f}` + `hmem` + `show extendPerm … (bijOn_res …) d = _` + `rw [apply_extendPerm_of_mem hmem, if_pos hd]`；陈述/签名零改动。**先测后修**：fragment 探针 4.32 RC=0 / 4.36 RC=1（6 err，`Equiv.ofBijective_apply` 不点燃）→ 修后 4.36 RC=0；4.32 全模块 RC=0/0 err/98.97 s/9.34 GB；编排者亲跑公理 baseline vs candidate `diff` 空（`assembly` = 标准三 + 585 native）。4.36 全模块仍缺 `Kepler.NliBanks16` 等 38/43 import，证据止于 fragment（UNRESOLVED 已限定）。inventory：23 文件 / 80 处，0 个模块已有 4.36 olean。
   ② **`packing-chain-w1` 完成/落库 `ffd65d0a`**：18/19 + Auto8 三文件（+5/−5，proof-body only）。Auto8 根因 = 4.36 Mathlib 把 Set 逐点运算收进 `scoped [Pointwise]`（两侧显式标注仍报同一 `VSub` 实例错，机器反证在快照 Evidence），改 `Set.image2 (fun p q : V3 => p -ᵥ q)`。4.32 编排者亲跑 6/7/8 RC=0（22.10/20.50/4.59 s）；4.36 车道 24.52/33.05/4.16 s；公理 12 声明（含 4 私有）`diff` 空。Auto14 @4.36 BLOCKED：首个缺失 `Kepler.Text.PackingAuto12`（10/11/12 未适配），11 处同模式点未测，不写“无需改动”。

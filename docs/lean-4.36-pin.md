@@ -55,9 +55,14 @@ Mathlib cache：9,117 文件预构建（`lake update` post-update hook 自动 `c
 
 ## 5. 已知未决（切换前必须闭环）
 
-- `Text.Planarity`：`azim_cone_of_combo` 在 4.36 @5M heartbeats 超时
-  （20M 诊断通过，253 s/245 s）；需拆分证明，不得以调 heartbeats 代替。
-- `PackingAuto8:295`：`VSub ?m (Set V3)` synthInstance 失败（未修）。
+- `Text.Planarity`：**已闭**（`3119ded7`，2026-11-26）——`azim_cone_of_combo`
+  拆为 6 条 private 声明，4.36 @ 原 5M RC=0（43.69 s），未调 heartbeats。
+- `PackingAuto6/7/8`：**已闭**（`ffd65d0a`）；Auto8 根因 = 4.36 Mathlib
+  `scoped [Pointwise]`，改 `Set.image2` 显式形。
+- `Assembly` 三处 `Equiv.ofBijective_apply`：**已闭**（`cd841d84`）；
+  4.36 全模块仍缺 `NliBanks16` 等 38/43 import，证据止于 fragment。
+- **`PackingAuto14` @4.36 仍 BLOCKED**：首个缺失 `Kepler.Text.PackingAuto12`
+  （其 import 的 10/11 也缺）；11 处同模式点未测，不写“无需改动”。
 - GoodList `+Classical.choice` 证明级漂移：**已定位**（2026-11-26 一轮探针）——
   `goodListB` 第三合取项（对称边 ∈）在 4.36 经 core 的
   `Init/Prelude.lean:1146`（`Decidable` 改为 structure）+ `Init/Core.lean:1141`
@@ -66,6 +71,7 @@ Mathlib cache：9,117 文件预构建（`lake update` post-update hook 自动 `c
   根面 589 不变，按用户 2026-11-26 裁定记为**文档化漂移**、不当硬阻塞。
   可选消除路径（探针已验证）：第三项改布尔扫描 `.all (… .contains …)`，
   4.36 下零公理；但改 `goodListB` 本体须走 DEF-FIX 通道，当前不做。
-- `Assembly.lean:3693/3707/3722`、`PackingAuto14` 等 `Equiv.ofBijective_apply`
-  同模式点（全树 80 处/23 文件，以 4.36 census 实测为准）。
-- 全量 4.36 census（Final 闭包）与 585 逐名公理复核尚未执行。
+- 全量 4.36 census（Final 闭包 9,137）与 585 逐名公理复核尚未执行。
+  主仓 `.lake` 自 2026-11-23 未与后续 landings 同步，**禁止用
+  `lake build <单模块>` 刷新**（会拖出全树 12 路扇出，2026-11-26 实测事故）；
+  验收一律岛协议 `lean -o`。
