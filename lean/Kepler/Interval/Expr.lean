@@ -693,7 +693,139 @@ theorem exLn_accept : checkPos exExprLn exBoxLn = true := by decide
 theorem exLn_eval : exExprLn.eval exBoxLn
     = some ⟨⟨48554863947538302270195294171722354843220497104995571038467602058838016, -240⟩,
             ⟨21880073182283483966811360749173919189533804515262497370194283916508339591914192910, -274⟩⟩ := by
-  decide
+  have hdivhaccLow0 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 0 + 1))
+      ⟨((2 * 0 + 1 : ℕ) : ℤ), 0⟩ ((2 * (0 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -16⟩ := by decide
+  have hdivhaccLow1 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 1 + 1))
+      ⟨((2 * 1 + 1 : ℕ) : ℤ), 0⟩ ((2 * (1 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -48⟩ := by decide
+  have hdivhaccLow2 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 2 + 1))
+      ⟨((2 * 2 + 1 : ℕ) : ℤ), 0⟩ ((2 * (2 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -80⟩ := by decide
+  have hdivhaccLow3 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 3 + 1))
+      ⟨((2 * 3 + 1 : ℕ) : ℤ), 0⟩ ((2 * (3 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -112⟩ := by decide
+  have hdivhaccLow4 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 4 + 1))
+      ⟨((2 * 4 + 1 : ℕ) : ℤ), 0⟩ ((2 * (4 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -144⟩ := by decide
+  have hdivhaccLow5 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 5 + 1))
+      ⟨((2 * 5 + 1 : ℕ) : ℤ), 0⟩ ((2 * (5 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -176⟩ := by decide
+  have hdivhaccLow6 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 6 + 1))
+      ⟨((2 * 6 + 1 : ℕ) : ℤ), 0⟩ ((2 * (6 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -208⟩ := by decide
+  have hdivhaccLow7 : Dyadic.divFloorQ ((⟨0, -16⟩ : Dyadic).npow (2 * 7 + 1))
+      ⟨((2 * 7 + 1 : ℕ) : ℤ), 0⟩ ((2 * (7 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -240⟩ := by decide
+  have haccLow : logAcc (⟨0, -16⟩ : Dyadic) (-16) 8 0 ⟨0, 0⟩ ⟨0, 0⟩
+      = some (⟨0, -240⟩, ⟨26959946673427741531515197488526605382048662297355296634326893985793, -240⟩) := by
+    calc
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 7 1 ⟨0, -16⟩ ⟨1, -16⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow0]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 6 2 ⟨0, -48⟩ ⟨4294967297, -48⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow1]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 5 3 ⟨0, -80⟩ ⟨18446744078004518913, -80⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow2]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 4 4 ⟨0, -112⟩ ⟨79228162532711081671548469249, -112⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow3]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 3 5 ⟨0, -144⟩ ⟨340282367000166625996085689103316680705, -144⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow4]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 2 6 ⟨0, -176⟩ ⟨1461501637671185285203851458712368708759249223681, -176⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow5]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 1 7 ⟨0, -208⟩ ⟨6277101736848182401506974708411517874814724153223283736577, -208⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow6]
+        rfl
+      _ = logAcc (⟨0, -16⟩ : Dyadic) (-16) 0 8 ⟨0, -240⟩ ⟨26959946673427741531515197488526605382048662297355296634326893985793, -240⟩ := by
+        rw [logAcc.eq_2, hdivhaccLow7]
+        rfl
+  have hdivhaccHigh0 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 0 + 1))
+      ⟨((2 * 0 + 1 : ℕ) : ℤ), 0⟩ ((2 * (0 : ℕ) + 1) * (-16) : ℤ) = some ⟨1, -16⟩ := by decide
+  have hdivhaccHigh1 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 1 + 1))
+      ⟨((2 * 1 + 1 : ℕ) : ℤ), 0⟩ ((2 * (1 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -48⟩ := by decide
+  have hdivhaccHigh2 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 2 + 1))
+      ⟨((2 * 2 + 1 : ℕ) : ℤ), 0⟩ ((2 * (2 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -80⟩ := by decide
+  have hdivhaccHigh3 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 3 + 1))
+      ⟨((2 * 3 + 1 : ℕ) : ℤ), 0⟩ ((2 * (3 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -112⟩ := by decide
+  have hdivhaccHigh4 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 4 + 1))
+      ⟨((2 * 4 + 1 : ℕ) : ℤ), 0⟩ ((2 * (4 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -144⟩ := by decide
+  have hdivhaccHigh5 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 5 + 1))
+      ⟨((2 * 5 + 1 : ℕ) : ℤ), 0⟩ ((2 * (5 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -176⟩ := by decide
+  have hdivhaccHigh6 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 6 + 1))
+      ⟨((2 * 6 + 1 : ℕ) : ℤ), 0⟩ ((2 * (6 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -208⟩ := by decide
+  have hdivhaccHigh7 : Dyadic.divFloorQ ((⟨1, -16⟩ : Dyadic).npow (2 * 7 + 1))
+      ⟨((2 * 7 + 1 : ℕ) : ℤ), 0⟩ ((2 * (7 : ℕ) + 1) * (-16) : ℤ) = some ⟨0, -240⟩ := by decide
+  have haccHigh : logAcc (⟨1, -16⟩ : Dyadic) (-16) 8 0 ⟨0, 0⟩ ⟨0, 0⟩
+      = some (⟨26959946667150639794667015087019630673637144422540572481103610249216, -240⟩, ⟨53919893340578381326182212575546236055685806719895869115430504235009, -240⟩) := by
+    calc
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 7 1 ⟨1, -16⟩ ⟨2, -16⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh0]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 6 2 ⟨4294967296, -48⟩ ⟨8589934593, -48⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh1]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 5 3 ⟨18446744073709551616, -80⟩ ⟨36893488151714070529, -80⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh2]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 4 4 ⟨79228162514264337593543950336, -112⟩ ⟨158456325046975419265092419585, -112⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh3]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 3 5 ⟨340282366920938463463374607431768211456, -144⟩ ⟨680564733921105089459460296535084892161, -144⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh4]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 2 6 ⟨1461501637330902918203684832716283019655932542976, -176⟩ ⟨2923003275002088203407536291428651728415181766657, -176⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh5]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 1 7 ⟨6277101735386680763835789423207666416102355444464034512896, -208⟩ ⟨12554203472234863165342764131619184290917079597687318249473, -208⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh6]
+        rfl
+      _ = logAcc (⟨1, -16⟩ : Dyadic) (-16) 0 8 ⟨26959946667150639794667015087019630673637144422540572481103610249216, -240⟩ ⟨53919893340578381326182212575546236055685806719895869115430504235009, -240⟩ := by
+        rw [logAcc.eq_2, hdivhaccHigh7]
+        rfl
+  have hchk : Dyadic.ble (⟨1, -16⟩ : Dyadic) ⟨3, -3⟩ = true := by decide
+  have hd2 : Dyadic.divFloorQ ((⟨2, -1⟩ : Dyadic).dsub ⟨1, 0⟩) ((⟨2, -1⟩ : Dyadic).add ⟨1, 0⟩) (-16)
+      = some ⟨0, -16⟩ := by decide
+  have hlog2 : logInterval (⟨2, -1⟩ : Dyadic) 8 (-16) = some ⟨⟨0, -240⟩, ⟨1852673428012738700164557692391128105560532597706638323010163717201225226125326, -274⟩⟩ := by
+    unfold logInterval
+    rw [hd2]
+    dsimp only
+    simp only [zero_add]
+    rw [hchk, haccLow, haccHigh]
+    rfl
+  have hd4 : Dyadic.divFloorQ ((⟨4, -2⟩ : Dyadic).dsub ⟨1, 0⟩) ((⟨4, -2⟩ : Dyadic).add ⟨1, 0⟩) (-16)
+      = some ⟨0, -16⟩ := by decide
+  have hlog4 : logInterval (⟨4, -2⟩ : Dyadic) 8 (-16) = some ⟨⟨0, -240⟩, ⟨1852673428012738700164557692391128105560532597706638323010163717201225226125326, -274⟩⟩ := by
+    unfold logInterval
+    rw [hd4]
+    dsimp only
+    simp only [zero_add]
+    rw [hchk, haccLow, haccHigh]
+    rfl
+  have hpos2 : (⟨2, 0⟩ : Dyadic).isPos = true := by decide
+  have hpos4 : (⟨4, 0⟩ : Dyadic).isPos = true := by decide
+  have hpoint2 : logPoint (⟨2, 0⟩ : Dyadic) 8 (-16) = some ⟨⟨1224655577355317812672749160327866723349967285393905504954131495570636800, -240⟩, ⟨21043591129633111771071483953471157743201782146037909935573242329635175143395295246, -274⟩⟩ := by
+    unfold logPoint
+    rw [hpos2]
+    change (match logInterval (⟨2, -1⟩ : Dyadic) 8 (-16) with
+      | some J => some (J.add (iscale log2D 1))
+      | none => none) = _
+    rw [hlog2]
+    rfl
+  have hpoint4 : logPoint (⟨4, 0⟩ : Dyadic) 8 (-16) = some ⟨⟨2449311154710635625345498320655733446699934570787811009908262991141273600, -240⟩, ⟨42085329585838210803442803349249924358298003759478113232823474495553149061564465166, -274⟩⟩ := by
+    unfold logPoint
+    rw [hpos4]
+    change (match logInterval (⟨4, -2⟩ : Dyadic) 8 (-16) with
+      | some J => some (J.add (iscale log2D 2))
+      | none => none) = _
+    rw [hlog4]
+    rfl
+  have hln : lnI (⟨⟨2, 0⟩, ⟨4, 0⟩⟩ : DInterval) 8 (-16)
+      = some ⟨⟨1224655577355317812672749160327866723349967285393905504954131495570636800, -240⟩, ⟨42085329585838210803442803349249924358298003759478113232823474495553149061564465166, -274⟩⟩ := by
+    unfold lnI
+    rw [hpos2, hpoint2, hpoint4]
+    rfl
+  simp only [exExprLn, exBoxLn, IExpr.eval, transOn]
+  rw [hln]
+  rfl
+
+set_option linter.constructorNameAsVariable false in
 
 /-- End-to-end: `2/3 < log x` for every real `x ∈ [2, 4]`. -/
 theorem exLn_end_to_end (x : ℝ) (hx1 : (2:ℝ) ≤ x) (hx2 : x ≤ 4) :
