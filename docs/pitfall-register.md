@@ -163,6 +163,16 @@ RC=1、不写 olean；但 Lean 的错误恢复**仍把该名声明进环境**，
 ④ 平台 ~60 min 整组杀后台命令是**恢复事件**（无 orphan），分段 ≤55 min + 按
 `summary.tsv` 跳过已完成箱续跑，不许用外部 killer 给自己的 lean 限时。
 
+**PR-66 bash `$PPID` 是启动快照，循环里的孤儿自检不会触发**
+（2026-11-26 `wt1-l1bulk-c-w1` 实测）：脚本用 `nohup … &` 启动后被 reparent 到 1，
+而 `[ "$PPID" = "1" ]` 读的是**解释器启动时**的 PPID（仍是旧父进程），所以段内
+178–190 箱在成为孤儿后继续跑完。**逐轮孤儿自检必须 `ps -o ppid= -p $$`**（或
+`/proc/$$/stat`），不能用 `$PPID`。配套两条：`python3 -I` 不把脚本目录加入
+`sys.path`（`gen_m9.py` 导入 `dcrep`/`node_table` 会 `ModuleNotFoundError`；修法 =
+`runpy` + 显式插入生成器目录，生成器本体不改）；`--root <lane>/lean` 不会劫持
+`Kepler.*` 的 import（PR-36/9 的担忧在本次 74×RC=0 下未出现，负探针仅
+`unknownIdentifier`）。
+
 ## B. 陈述与审计纪律
 
 **PR-7 grep 命中 ≠ 声明**：同名符号可能只在注释/排期注记里（2026-11-09 实测
