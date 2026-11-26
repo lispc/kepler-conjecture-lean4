@@ -74,7 +74,7 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `tsk-opt-b-w1` | **在飞（2026-11-27 Track A 完成后发车；ZCode `agent_a852a202`；零 Lean）** | 设计能把 TskXLLIPLS 每叶 15.0 s 地板砍到 ≤3.4 s（≥4.4×）的 checker/包络：two-tier 便宜预检、惰性/必要性跳过、更粗导数界、替代 Taylor 模型、checker 形状；交付 DESIGN/PARITY_CARD/EVIDENCE/UNRESOLVED；判定 GO/CONDITIONAL/NO-GO；输入 = A 的 `tb_decomp.csv`/`tb_nodes.csv`/`q1_leaves.csv`；不依赖 C；主仓零改动 |
-| `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
+| `qitnpea-hol2-cse-leaf-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-8` resume / `agent-xsjt70pe`；不再起计算）** | CSE/数值级联后又多轮修 HOL `pa_j.ml`，超过三轮结构性卡死且未进入 Lean；只整理探针与失败证据，首个 pass/Lean 覆盖未证不得预支；后续等用户裁决 |
 | `wt0-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶单叶；`agent-9` / `agent-u45hh3gd`；≤1 Lean）** | 固定 case 13067 重建叶 `LLLLLLLL`，同盒做二阶中心 Taylor+CSE Lean pass；直接 x 空间三变元 + `nb18_unfold`，禁 dcT2/换叶/细分/提高深度；不做 sibling、glue、全 cell 或 Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
@@ -242,6 +242,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（QITNPEA 严格二阶单叶触发结构性止损；续1607）**：
+  ① **机器现状**：平台时限时无存活本车道进程，快照只有 TASK/PARITY_CARD，`/tmp` logs/out 为空，未见 Lean 样例。车道先调 CSE 引用、数值级联/sqrt，再多轮修改 HOL `pa_j.ml` 兼容层，补丁两次误删/损坏后重同步；已超 §7 三轮结构性止损线。原 `agent-8` resume / `agent-xsjt70pe` 只整理证据，不再 Parser 改造、编译、DFS 或新工具链施工。
+  ② **边界**：可交付仅限有文件/输出支持的原版语义、Python/OCaml 数值与 CSE 探针；首个 HOL pass 盒若无完整证据也须 UNRESOLVED。不得把“Python/OCaml 逐位一致”外推成单叶成功或 Lean 覆盖；阻塞限定当前复放/工具链表示，不判 QITNPEA 或 HOL 二阶路线 NO-GO。后续等用户裁决。
 - **2026-11-27（Track A 完成：N/叶树/精度都动不了地板；Track B 发车；续1606）**：
   ① **Track A（`tsk-opt-a-w1`，零 Lean）完成**：位精确引擎在 kBox0 逐位复现 M1（N=16 lb `+8.57929462e-4`、N=8 `−7.491e-3`、节点/ΣN 同）；**成本模型订正**：kernel 只走 live `ite` 分支，`ΣN_visited = 93·N`（原 AST 121,344 项，非字面 189,184），`cost_leaf ≈ 15.0 s + 1.055e-4·ΣN_visited`，复现 P0/P2/P3 与 landed 29.16 s/叶。
   ② **Q1 全族 6,612 叶 [实测]**：`N_min = 16` 6,609 叶、`32` 3 叶（kBox2933/2078/1607）；N≤8 全族不可行；N 从 2048/128 降到 16/32 ⇒ ΣN −81×，**51.1 → 27.8 CPU·h** decide-only（+import 57.3 → 34.1 h）= **4.41× / 5.40× HOL**；全族安全统一 N=32 ⇒ 28.1 / 34.4 h（4.46× / 5.44×）。**Q2**：粒度 −80→−24（56 bit）40/40 样本仍正，但 D5 **0%**、D2 仅 −3.3% ⇒ 不是杠杆。**Q3**：叶树自底向上只合并 12.2% 节点，实测省 ≈674 叶（6,612 → ≈5,833，−11.8%）；独立 B&B 在 7/12/19/47 叶四档精确复现落地叶数 ⇒ 落地树已最优；更细分裂不划算（15 s/叶 vs ≤12.8 s 省）。**Q4**：HOL 只暴露 2 单元（y1 95.01% 切，y1=2.8195635、x=7.94994；文档 7.951434357936 为 x-space 假设，**ERRATA**），两半 lb −7.9e4/−3.2e11 ⇒ 2-piece 无捷径。**Q5**：三杠杆叠加最好 **3.89× / 4.77×**（24.6 h decide / 30.1 h +import）；≤2× 需地板 ≤3.16 s（−79%），≤1.2× 需 ≤0.41 s。
