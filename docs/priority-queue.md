@@ -75,6 +75,7 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
 | `wt0-hol2-arith-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-10` / `agent-qz31d8mc`；≤1 Lean）** | 同一 `LLLLLLLL` 二阶 CSE 叶，只换 ℚ 算术侧条件为 norm_num/显式展开/字面量证明；kit hash、数值、盒、CSE 不动；先小探针再三轮内编译，不做 sibling/glue/Assembly |
+| `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -249,6 +250,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（QITNPEA SAFE-CSE 首叶进入 Lean；续1621）**：
+  ① **用户明批与回执**：`qitnpea-hol2-lean-leaf-w1`，原 `agent-11` resume / `agent-bsemn8sn`，TASK/六维卡先落新快照。固定已独立验收的 case 13031 首叶（DFS node13/depth12/f1、pp=6、upper=-61279551481/8000000000000），不搜索、不换叶、不额外细分。
+  ② **施工边界**：复用 wt0 二阶 kit 的中心值/梯度/盒 Hessian/w-膨胀，泛化到六维 6 一阶 + 21 下三角二阶；SAFE-CSE 仅作共享表示，算术优先 norm_num/显式展开/字面量证明，避免 extern-Rat decide/rfl。原 f1 定义桥未证只能记显式机制件，不预支 case/bank 覆盖；完成一片或三轮止损即返回，不做第二片/glue/Assembly。
 - **2026-11-27（Design P 一盒原型收线：WALL-FAIL 8.61–8.82 s；根因 Fixed-Grid 未实现；其余硬指标全 PASS；续1620）**：
   ① **交付**：`PointTM.lean` **558 行 / 38–40 声明**，单文件 `lean -o` RC=0 / 0 error / 0 warning / 0 sorry；`patch.diff` 纯新增，对主仓 `d6fb5b74` `git apply --check` PASS；主仓 tracked 零改动。
   ② **硬指标**：`checkPosPt_sound` axioms = **标准三**；叶 `pt_check` = `[propext, Quot.sound]`；RSS **6.194 GiB**；K = **150.6–301.8**（sound 区间二阶 AD，40 叶样本；阈值 550）；lb>0 **34/34** 非 straddle（min +7.83e-3）；12/12 = 11 叶 PointTM 直接闭合 + 1 叶 straddle 回落现 TM。straddle 实测 6/40 = 15%，**分裂无效**（1 级 12/12、2 级 24/24 子盒仍 straddle）⇒ 回落现 TM 15.49 s/叶；全族摊销 **0.85×8.61+0.15×15.49 = 9.6 s/叶**。
