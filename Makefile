@@ -15,15 +15,19 @@
 # 常用目标：
 #   make build / check / reprove   —— 全树构建闸（打印指引并 exit 1，见上）
 #   make acceptance-check          —— 静态验收自检：lakefile 断言 + sorry census 对账
+#   make gen-wt1                   —— 生成 221 个 wt1 模块（幂等；干净 checkout 先跑这条）
+#   make check-wt1                 —— 只校验那 221 个文件的 sha256（零生成、零编译）
 #   make compute                   —— 重跑不受信任的生成器/求解器（Phase 2+ 填充）
 
-.PHONY: build check reprove compute cache acceptance-check \
+.PHONY: build check reprove compute cache acceptance-check gen-wt1 check-wt1 \
 	build-legacy-unsafe check-legacy-unsafe reprove-legacy-unsafe
 
 export PATH := $(HOME)/.elan/bin:$(PATH)
 
 # P0-2：遗留全树入口隔离（AGENTS §4）。多目标共用同一配方。
-build check reprove:
+# 先跑 gen-wt1：221 个 W1DC_*.lean 是生成物（tracked 数据 + 生成器在
+# lean/scripts/wt1emit/），干净 checkout 里不存在，任何编译前都必须先物化。
+build check reprove: gen-wt1
 	@echo "ERROR: 禁止全树构建（lake build / rm -rf .lake/build）—— AGENTS.md §4。"
 	@echo "  验收 root = Kepler.Final；验收走编排者岛协议（单文件 lean -o）+ #print axioms。"
 	@echo "  零编译静态自检：make acceptance-check；考古对照：* -legacy-unsafe（勿跑）。"
@@ -44,6 +48,15 @@ reprove-legacy-unsafe:
 acceptance-check:
 	python3 scripts/check_acceptance_targets.py
 	python3 scripts/sorry_census.py --check --no-tsv
+
+# wt1 生成物：数据 lean/scripts/wt1emit/boxes221.json + 生成器 → 221 个
+# Kepler/Text/TaylorSecond/W1DC_*.lean（git-ignored；见 lean/scripts/wt1emit/README.md）。
+# gen-wt1 幂等：文件已与 manifest.sha256 一致时不动（mtime 不变 ⇒ 不触发重编）。
+gen-wt1:
+	python3 -I lean/scripts/wt1emit/gen_all.py
+
+check-wt1:
+	python3 -I lean/scripts/check_wt1_generated.py
 
 cache:
 	cd lean && lake exe cache get

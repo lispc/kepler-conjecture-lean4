@@ -5,6 +5,11 @@ lake-manifest.json
 *.ilean
 *.trace
 
+# wt1 生成物（221 个）：tracked 数据 + 生成器在 lean/scripts/wt1emit/，
+# `make gen-wt1` 重建、`make check-wt1` 校验（sha256 记录在同目录 manifest.sha256）。
+# 同目录的 W1DC15873 / W1DCBridge / W1DCTermPilot / W1DCAssembly* 是 tracked 源码，不受影响。
+lean/Kepler/Text/TaylorSecond/W1DC_*.lean
+
 # 证书体量大，走外部存储 + 哈希登记（PLAN.md §5/§6）
 certificates/*
 !certificates/README.md
