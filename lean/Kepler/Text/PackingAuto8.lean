@@ -292,7 +292,7 @@ theorem AFF_DIM_LE_LENGTH (xl : List V3) (n : ℕ) (h : xl.length = n) :
           have hjk : (j : ℕ) ≠ k := fun hh => hj (Fin.eq_of_val_eq hh)
           simp [hjk]
         · simp
-    have hgens : (setOfList xl -ᵥ setOfList xl) ⊆
+    have hgens : Set.image2 (fun p q : V3 => p -ᵥ q) (setOfList xl) (setOfList xl) ⊆
         (LinearMap.range (sumDiffMap xl (n - 1)) : Set V3) := by
       rintro w ⟨p, hp, q, hq, rfl⟩
       show p - q ∈ LinearMap.range (sumDiffMap xl (n - 1))

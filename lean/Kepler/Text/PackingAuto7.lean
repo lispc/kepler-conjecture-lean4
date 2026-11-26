@@ -3272,7 +3272,7 @@ private theorem p7_affDim_bis2 {u v w : V3} (huv : u ≠ v) (huw : u ≠ w)
       ↑(AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v)) (LinearMap.ker (p7_dotR (v - u))) ⊓
         AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w)) (LinearMap.ker (p7_dotR (w - u)))) := by
     rw [← hK1, ← hK2, ← AffineSubspace.coe_inf]
-    rfl
+    try rfl
   have hdirEq : (AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v))
       (LinearMap.ker (p7_dotR (v - u))) ⊓
       AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w))

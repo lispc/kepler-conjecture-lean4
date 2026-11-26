@@ -1248,11 +1248,11 @@ theorem GLTVHUM_lemma1 (V : Set V3) (ul : List V3) (j : ℕ) (hP : Packing V)
   · intro hk
     have hkle : j ≤ k ∧ k ≤ 3 := Finset.mem_Icc.1 (Finset.mem_coe.1 hk)
     exact NUMSEG_SUBSET_INDUCT
-      (fun k : ℕ => k ∈ (Finset.Icc j 3 : Set ℕ) ∧
+      (setOf (fun k : ℕ => k ∈ (Finset.Icc j 3 : Set ℕ) ∧
         voronoiList V ul =
           ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (k - 1)} ∪
             voronoiList V vl) | vl ∈ {vl : List V3 |
-            barV V k vl ∧ truncateSimplex j vl = ul}})
+            barV V k vl ∧ truncateSimplex j vl = ul}}))
       j 3
       ⟨Finset.mem_coe.2 (Finset.mem_Icc.2 ⟨le_refl j, Nat.le_of_lt hj⟩), hbase⟩
       (fun k hk1 hk2 hmem =>
@@ -1792,7 +1792,7 @@ theorem AFFINE_INDEPENDENT_IMP_INDEPENDENT (S : Set V3) (hS : ¬affineDependent 
           simpa using h2))) =
       (fun y : (S \ {x} : Set V3) => ((y : V3) - x)) := by
     funext y
-    simp [Equiv.Set.image_apply]
+    rfl
   exact (linearIndependent_equiv'
     (Equiv.Set.image (fun z : V3 => z - x) (S \ {x})
       (fun z₁ z₂ h => by
