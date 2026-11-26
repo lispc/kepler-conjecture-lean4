@@ -59,7 +59,7 @@
 | `Interval/Cases/*Hull*` | 18 | 1.16 MB | **318–1,176 s / 9.6–12.5 GB**（14 件实测） | **1.92 h** | 内核 `decide` |
 | `Graphs/TopReplay*` | 96 | 92 KB | p50 ≈18 s；最大 S013 **719.9 s / 22.17 GB** | **0.91 h**（87 件实测） | `decide +kernel` 重放 |
 | `Text/LocalAuto*` | 91 | 10 MB | `LocalAuto35` **1,093.1 s / 10.0 GB** | **1.55 CPU·h**（90 件） | norm_num/linarith + 解释器 |
-| `Graphs/CertShards/*` | 580 | 556 KB | census 实测 4 件 **23.5–606 s（均值 218 s）**；旧 27 件样本 p50 6.6 s 不代表全族 | **575 剩余 ≈35 h（18–48 h）** | native_decide 分片（585 基座） |
+| `Graphs/CertShards/*` | 580 | 556 KB | census 实测：非 R Hex 23.5–606 s；**R 变体 35–52+ min/件**（HexR.K001 35 min、QuadR.K000 52+ min） | **全量 575 的 35 h 估计作废**，按 R 360 + 非 R 215 重算，可能 **>100 h** | native_decide 分片（585 基座） |
 | `Text/ZTG*` | 26 | 9.9 MB | `ZTGJoint0000CornersP` **503.5 s / 21.25 GB** | `[EST]` 1–2 h | norm_num/linarith 重建 |
 | `Text/PackingAuto*` | 27 | 6.4 MB | `PackingAuto21` **483.5–519.1 s / 16.3–16.5 GB** | `[EST]` 0.5–1 h | 巨型项 simp/unfold |
 | `Graphs/GoodListShard*` | 199 | 149 KB | PentS00 **21–26.6 s / 8.2 GB**；TriS00 3.2–4.2 s | ≈0.5 h | `decide +kernel` shard-range |
@@ -85,7 +85,8 @@ Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h
 - W1DC：231 模块 × ~60 s ≈ **3.7 h**。
 - import 地板：9,137 × 3.4 s ≈ **8.6 h**。
 - 其余重件 + 证书：`[EST]` ~10 h。
-- 合计 `[EST]` **~109 CPU·h 串行**（含 CertShards ≈35 h）；按内存分级排 1/2/3 槽，墙钟约 45–60 h。
+- 合计 `[EST]` **~109 CPU·h 是下限**（CertShards R 变体未重算；若 R 族 360 件按 35 min 计
+  ≈210 h，全量可能 **250+ h**）；排槽前先等 census 分族重算，不得再用 109 h 做承诺。
 
 ## 2. 时间分层（重件）
 
@@ -347,10 +348,12 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   `TskXLLIPLS → PackIneqTskXLLIPLSClose → Assembly → Final` 在 census 中
   **`DEFERRED`（非 BLOCKED/OOM/失败）**；`0 BLOCKED` 只覆盖已编模块。
   全量 6,412 叶重放（≈51.6 h 串行 / 10.3 GB 每叶）属 acceptance，见 §1.1。
-- **CertShards 的抽样边界（2026-11-27）**：575 件剩余实测均值 **218 s/件**（23–606，
-  全族 ≈35 h），按 9 子族分层抽 **24/575**（含已编 4 件），其余 551 `SAMPLED-OUT`；
-  任一抽样失败整族回队列；抽样件必须核 `#print axioms` 与 585 manifest 同形
-  （`native_decide` 的 `Lean.ofReduceBool`），不能只看 RC；全量 575 属 acceptance。
+- **CertShards 的抽样边界（2026-11-27）**：非 R Hex/Pent 已 9 件全绿；**R 变体 35–52+ min/件**
+  （HexR.K001 35 min、QuadR.K000 52+ min）⇒ 抽样降为 **R 族各 1 件**（HexR/QuadR/PentR/
+  PentR2/PentR3/HexR2，样本 ≥15–16），其余 `SAMPLED-OUT`；任一 R 件失败该 R 族整体回队列。
+  抽样件必须核 `#print axioms` 与 585 manifest 同形（实测 = 标准三 + 1 条同名 manifest ax，
+  无 `Lean.ofReduceBool`）。**全量 575 的 35 h 估计作废**；若重算 >100 h，acceptance 计划
+  改为「按族抽样 + 585 逐名公理审计」，不再承诺全量 4.36 重编。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
   后者需逐模块验证 import 面。
 - `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；

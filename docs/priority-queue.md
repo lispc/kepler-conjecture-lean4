@@ -243,6 +243,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（CertShards R 变体成本修正：35–52+ min/件；抽样降为 R 族各 1 件；续1614）**：
+  ① **9 件样本全绿**：RC=0 / 0 error / 0 sorryAx；`#print axioms` = 标准三 + 1 条同名 manifest ax，**无 `Lean.ofReduceBool`**，与 `docs/trust-base.tsv` 逐名对上。非 R Hex 5 件（K001 76 s / K002 23 / K008 606 / K042 / K076）+ Pent 4 件（K003/K004/K075/K145）。
+  ② **R 变体成本爆炸（实测）**：`HexR.K001` **35 min**；`QuadR.K000` **52+ min 未结束**（100% CPU、低 RSS、纯求值）⇒ 先前「218 s 均值」只覆盖非 R Hex 形态；**R 族慢 10–20×**。
+  ③ **裁决改为 (b)**：R 族各 1 件（HexR/QuadR/PentR/PentR2/PentR3/HexR2，若 Quad 同形则 +1），样本总数 ≥15–16，reason `CertShards R-FAMILY-SINGLE-SAMPLE`；**任一 R 件失败 → 该 R 族整体回队列**（不是全 575）；`QuadR.K000` 90 min 上限，超时 kill 记 `BUDGET_CAP`（非失败），换该族最小 id 快速件。
+  ④ **全量 575 ≈35 h 估计作废**：按 R 360 件（HexR 219 + QuadR 80 + PentR2 30 + PentR 16 + PentR3 10 + HexR2 5）与非 R 215 件（Pent 141 + Hex 62 + Quad 12）分族重算；**若 >100 h 立即报编排者**——acceptance 计划可能改为「按族抽样 + 585 逐名公理审计」，不再承诺全量 4.36 重编。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（CertShards 抽样裁决：24/575，全量 ≈35 h 留 acceptance；续1613）**：
   ① **实测成本**：census 已编 4 件 `Graphs.CertShards.Hex.K001` 75.9 s / K002 23.5 / K006 166.7 / K008 606.0；K009 为 REUSED。剩余 **575 件**（HexR 219 / Pent 141 / QuadR 80 / Hex 62 / PentR2 30 / PentR 16 / Quad 12 / PentR3 10 / HexR2 5），源码均 ~1 KB、合计 0.6 MB，成本全在 `native_decide`；均值 **218 s/件**（23–606），全编 ≈ **34.8 h**（18–48 h 区间）。
   ② **裁决 = 抽样，不全编**（与 TskXLLIPLS/W1DC 同口径）：样本 **≥24 件（含已编 4）**，9 子族每族 ≥2，小族取 min/max + 中间；其余 551 标 `SAMPLED-OUT`（reason `CertShards homogeneous sample 24/575 (trust base; full at acceptance)`）；**任一抽样件失败 → 整族 575 件回队列**；抽样件除 RC/error/sorry 外**必须记 `#print axioms` 与 585 manifest 对应**（`native_decide` 的 `Lean.ofReduceBool` 是否同形），不能只看 RC。
