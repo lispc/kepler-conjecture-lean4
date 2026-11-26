@@ -77,6 +77,12 @@
 > `value-L1-v1`）：13,445.6 s / 6.2977× / 802,836,336 B / 777,090 行；**唯一转差 = 峰值
 > RSS 均值 +2.2%**（5.948→6.077 GiB，整树 `part` 中间项更大），按 §7.3 记录上报。
 > **wt1 不再投入**：杠杆 ①（字面量操作数）反转 D2/D4，②（声明面瘦身）叠加后仍 2.1–2.9×。
+>
+> **A/L3 M1 探针（2026-11-26，`a-l3-m2-probe-w1`）= NO-GO**：全量 M1 **25.91 s = 2.68×**
+> HOL（box-only 14.94 s；同日 L1 对照 71.04 s）；决定性单元（一次 shape 表内核求值）
+> **3.07 s vs 落库 1.12 s**（2.74× 原始 / 1.92× 漂移校正）；M2 未启动。原因结构性：
+> 内核只归约 `List`/`Option`/`match`，`Array.get` 不归约；唯一出路是按节点特化 = L1 本身。
+> **wt1 停在 B；L3 不再投。**
 
 ## 5. 得（可复用资产）
 
@@ -124,6 +130,11 @@
 13. **「Final 重编」措辞错**：续1570 ② 实际重编的是 `W1DCAssemblyFinal`；`Kepler/Final.olean`
     停在 11-23。已闭环：岛协议重编 Final（6.17 s / 8.32 GB）+ 根面探针重跑，589 规范化逐名同
     （续1571 ④）。**账本里写 Final 必须区分 `W1DCAssemblyFinal` 与 `Kepler/Final`。**
+14. **L3 数据表 + 通用 checker 在本内核不成立**：M1 25.91 s = 2.68× HOL；一次 shape 表内核
+    求值 3.07 s vs 落库 1.12 s（2.74× / 漂移校正 1.92×）；M2 未启动；投影 33–43 s/箱 =
+    3.4–4.5×。原因不是预算而是结构（`Array.get` 不归约；动态索引查表每节点 ≤152 步）。
+    **不要再试索引式表机**；唯一出路是 per-node 特化（= L1）或未来内核 array primitive
+    （续1578）。判词范围仅限该求值器设计的值通道 M1。
 
 ## 7. 给未来 nli 战役的经验（按重要性）
 
@@ -179,6 +190,6 @@
   `wt1-m9-emission-w1/`（gen_m9 终版）、`wt1-l1-probe-w1/`（L1）、
   `wt1-bulk-{a,b,c}-w1/`（221 量产）、`wt1-assembly-w1/`（组装）、
   `holparity-wt1-value-w1/`（原形态 PARITY CARD）、`holparity-wt1-l1-backfill-w1/`（L1 卡）、
-  `parity-l3-b-prep-w1/`（L3 探针卡 + B 口径注记）、`wt1-b-archive-w1/`（B 数据/生成器/审计）、
-  `wt1-l1-close-w1/`（Final 重编 + 根面审计）。
+  `parity-l3-b-prep-w1/`（L3 探针卡 + B 口径注记）、`a-l3-m2-probe-w1/`（A/L3 M1 NO-GO）、
+  `wt1-b-archive-w1/`（B 数据/生成器/审计）、`wt1-l1-close-w1/`（Final 重编 + 根面审计）。
 - 章程：`docs/hol-parity-gate.md`、`AGENTS.md` §7.3；雷区：PR-62/63/64/65。
