@@ -71,8 +71,8 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `wt1-b-archive-w1` | **在飞（2026-11-26 用户指令「先做 b，b on wt1 也做」；派发回执同批入账）** | B on wt1：221 个 `W1DC_*.lean` 由 tracked source 改为「tracked 数据（`boxes221.json`）+ 生成器 + 构建期生成」，生成物与 HEAD `7855a963` 逐字节 **221/221**；`DELETE_MANIFEST` + 构建钩子 + 抽样链（6 箱 + 9 case + final + Assembly 岛 + 根面 589）；**不做全 221 重编**（字节相同、现有 oleans 有效）；≤1 Lean；不改主仓 |
-| `parity-l3-b-prep-w1` | **在飞（2026-11-26 用户指令「然后 a 探测一下」；零 Lean）** | L3 1 箱探针卡（`W1DC_15869`：数据表 + 一次 `eval_mem` + 每箱 `decide`；六维 + D5 go/no-go ≤1.5×）+ B 口径注记（D1–D6 不变、D3 tracked/generated 分开报）；产物在快照；零 Lean/零主仓 |
+| `wt1-b-archive-w1` | **完成/落库 `7b0ae9bd`（2026-11-26；我独立从 HEAD 树删空重发 221/221 逐字节同；`make acceptance-check` PASS）** | B on wt1：221 个 `W1DC_*.lean` 由 tracked source 改为「tracked 数据（`boxes221.json`）+ 生成器 + 构建期生成」，生成物与 HEAD 逐字节 **221/221**；`DELETE_MANIFEST` + 构建钩子 + 抽样链（6 箱 + 9 case + final + Assembly 岛 + 根面 589）；**不做全 221 重编**（字节相同、现有 oleans 有效）；≤1 Lean；不改主仓 |
+| `parity-l3-b-prep-w1` | **完成（2026-11-26，续1574；UNRESOLVED = D5 未测）** | L3 1 箱探针卡（`W1DC_15869`：数据表 + 一次 `eval_mem` + 每箱 `decide`；六维 + D5 go/no-go）+ B 口径注记（D1–D6 不变、D3 tracked/generated 分开报）；产物在快照；零 Lean/零主仓 |
 | `olean-recovery-2w-w1` | **完成（2026-11-23 13:53；missing 0/8,868、Final 闭包 8,869 全齐；编排者亲跑根面 589 同集；§8 续1425 + tools §7）** | 本轮新装 1,033 olean（1,029 编译 + 1 staged D1 件 + 3 审计 prebuilt）；7 failure 全解、0 deferred；6h05m / 169 件/h / 峰值 lean RSS 22.17 GB；平台 1h 强杀 13 次幂等续跑；主池 9,048 regular、0 symlink、主仓零改动。遗留：混世界 A/C 待裁（`SHARD_WORLD_BLOCKER.md`）、仓库缺陷 D1（`Reduction3ElementsOfListNtrans` 源路径≠import 名，staged 件已按 import 名入池并审计标准三，待 SF/ERRATA） |
 | `taylor-second-bounded-lean-w1` | **底座落库`13dee7c8` + LEAF_NOT_READY（§8 续1422；编排者全模块重编+主池17组公理审计）** | 10文件1176行：Diff2C/6 Hessian、WholeBoxJet add/sub/mul/comp、正支inv/sqrt/matan、QInterval/Base200及wt1全三维C²/D11桥，全部RC0/error0/恰标准三。LeafContract只证完整证据⇒负性，SelectedLeafEvidence未构造；G3为精确有理外包非pp全镜像。首次主构建因恢复竞态缺PackingAuto21失败，依赖就绪后全过。无577 WIP/减债 |
 | `cell3-wt1-edges-w1` | **E00/E01/E11 EXTERNAL_CANDIDATE_READY（§8 续1420；编排者从零重跑+双65SHA全OK）** | 三边6分支10终叶零未决，主/第二实现及独立覆盖全过；E00左减右增证全局最小在折点，下界4.514331609e−5>4.5e−5，E01下界0.003877895、E11下界0.014596426。修正Python dmatan小参数首项−1→−1/3并清空旧叶重跑；核查前两盒所有接受输入均严格正，不触该分支。仅一维外候选，非Lean/HOL证明，SORRIED−0 |
@@ -331,6 +331,28 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（B on wt1 落库 `7b0ae9bd`：221 生成模块移出 tracked；我独立 221/221 逐字节复现；验收自检修复并 PASS；续1575）**：
+  ① **落库**：221 个 `W1DC_*.lean` `git rm --cached`（65,404,398 B / 777,090 行；工作区保留、olean 不失效）；
+  新增 `lean/scripts/wt1emit/{boxes221.json, gen_m9.py, dcrep.py, node_table.py, mk_l1.py, gen_all.py,
+  manifest.sha256, README.md}` + `check_wt1_generated.py` + `Makefile` 的 `gen-wt1`/`check-wt1` +
+  `.gitignore`。干净 checkout 必须先 `make gen-wt1`。
+  ② **我独立复现（不是引用车道快照）**：从 `3dd1d16c` 的 `git archive` 树打 patch、**删空 221 个文件**、
+  `gen_all.py` 重发 → **221/221 与 HEAD 逐字节相同**（`diff` 0 行；65,404,398 B / 777,090 行），
+  生成 17.4 s；二跑 `up-to-date=221 written=0`。`mismatch=0`（生成器对 manifest 硬校验）。
+  ③ **闸**：`make check-wt1` OK；`make gen-wt1` 幂等（mtime 保留）；`git check-ignore` 221/221，
+  6 个负控（`W1DC15873`/`W1DCBridge`/`W1DCTermPilot`/`W1DCAssemblyFinal`/`W1aFJet`/`DCKit`）不误伤；
+  `make acceptance-check` **PASS**（修了 pre-existing census pin：wt1 闭合后 repo/cone 各 −1，
+  43422/499→**43421/498**；`nliCell3QZECFICwt1` 入 `EXEMPT_STALE_SORRIED`；`acceptance-check`
+  依赖 `gen-wt1`，覆盖干净 checkout）；根面 **589 = 585 native + 标准三 + sorryAx**，
+  与 L1 审计规范化逐名同（我亲跑，`/tmp/orch-b-verify/root_audit_after_b.log`）。
+  ④ **B 车道抽样链**：6 箱 × 8 条 axioms 全标准三；9 case + final 标准三（4.83–15.77 s）；
+  `Assembly` 岛 olean 12,764,936 B sha `a98361d8…` 与 `.lake` 现值同；0 error。
+  ⑤ **三本账（B 车道实测）**：① box-module tracked 65,404,398 → **242,908 B = 0.147×**；
+  ② wt1 tracked 总账 → **4,558,615 B = 2.754×**；③ 章程字面（tracked + 构建期生成）→
+  **69,963,013 B = 42.27×**（几乎不变）。**D1/D2/D4/D5/D6 不变；wt1 `OVER-BAND` 判词不动。**
+  B 是体积/可审计性净收益，不是 parity 修复。
+  ⑥ 未做全 221 重编（字节相同、现有 oleans 有效；全量 13,445.6 s CPU / 单车道 ≈3.7 h）。
+  下一条：续1574。
 - **2026-11-26（L3 探针卡 + B 口径注记收线：D5 判据钉死、D3 cover 地板 2.21×、B 三本账；UNRESOLVED D5；续1574）**：
   ① **卡落库**：`~/c17_backup/lane_snapshots/parity-l3-b-prep-w1/{PARITY_CARD_wt1_l3_probe.md,
   PARITY_NOTE_wt1_b_refactor.md, EVIDENCE.md, SHA256SUMS}`（`l3-probe-v1`；零 Lean；主仓零改动）。

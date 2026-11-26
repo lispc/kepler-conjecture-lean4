@@ -87,6 +87,9 @@
   `MatanC1`（`f60a76f7`）。
 - **发射链**：`gen_m9.py`（manifest 取数、zero/one 两树、wide 角点、sqrt 字面量、KZ slack、
   桥 rfl）+ `mk_l1.py`（整树 `rfl` 变换）+ `preflight221_v4.py`（门枚举 + 精确 replica）。
+- **B 生成链（`7b0ae9bd`）**：221 个 `W1DC_*.lean` 不再 tracked；tracked 数据
+  `boxes221.json` + 生成器在 `lean/scripts/wt1emit/`；`make gen-wt1`（幂等）/`make check-wt1`
+  （纯哈希）；干净 checkout 先 `gen-wt1`。生成物与落库 221/221 逐字节同（我独立删空重发复现）。
 - **组装链**：`gen_assembly.py`、9 个 case 模块 + final 的模板、`Assembly.lean` 接线样板。
 - **治理产物**：值函数 PARITY CARD、**L1 PARITY CARD**（`holparity-wt1-l1-backfill-w1/`，
   `value-L1-v1`）、L1 探针报告、PR-62/63/64/65；Final 重编与根面审计证据在
@@ -176,5 +179,6 @@
   `wt1-m9-emission-w1/`（gen_m9 终版）、`wt1-l1-probe-w1/`（L1）、
   `wt1-bulk-{a,b,c}-w1/`（221 量产）、`wt1-assembly-w1/`（组装）、
   `holparity-wt1-value-w1/`（原形态 PARITY CARD）、`holparity-wt1-l1-backfill-w1/`（L1 卡）、
-  `parity-l3-b-prep-w1/`（L3 探针卡 + B 口径注记）、`wt1-l1-close-w1/`（Final 重编 + 根面审计）。
+  `parity-l3-b-prep-w1/`（L3 探针卡 + B 口径注记）、`wt1-b-archive-w1/`（B 数据/生成器/审计）、
+  `wt1-l1-close-w1/`（Final 重编 + 根面审计）。
 - 章程：`docs/hol-parity-gate.md`、`AGENTS.md` §7.3；雷区：PR-62/63/64/65。
