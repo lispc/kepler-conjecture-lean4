@@ -72,14 +72,15 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-trans-workaround-w1` | **在飞（2026-11-26 用户指令调研升级绕法；`agent-3` / `agent-ik9hahnb`；≤1 Lean）** | 4.32.2→4.36.0：先核五个 Trans pilot 证书消费闭包/生产隔离，后备浅递归、证明型算术、离线数据+内核小检查；解决后小样本评估剩余 API/elaboration/公理漂移；已有 4.36，不改主仓/toolchain，禁 native_decide/深度当修复/全库重编 |
+| `wt0-r1-core-w1` | **在飞（2026-11-26 用户再发 wt0 车道；`agent-0` / `agent-jh56tuws`；≤1 Lean）** | R1 y4 代表单调核：`MonotoneOn (fun y4 => pc3 y4 y5 y6) (Icc 2.01 2.30)`，y5/y6 同盒；新模块重建5–6位槽导数括号，private nb18_step0 只仿写；不做 y5/y6/R3/R5/Assembly，SORRIED −0 |
 | `qitnpea-wave1-y6-w1` | **在飞（2026-11-26 卡验收后续入；`agent-1` / `agent-m4s5djo4`；≤1 Lean）** | 两行回归 + D3 瘦身/程序化生表最小接口 + y6 单片曲率/ConcaveOn/真实消费探针；上端 2.4636，复用 ZTG/CFWGKMBZ/IExpr；全部新 Lean+生成器源 ≤50,928 B，超标记 PAUSE_COST；不做 11 片/456 点/Assembly，SORRIED −0 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `wt0-route-r-first-w1` | **完成（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + patch/源独立复验 PASS）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；patch 留快照未落主仓、SORRIED −0；全 route R 仍 UNRESOLVED，不自动进 R1 |
+| `wt0-route-r-first-w1` | **完成/落库 `65d8039a`（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + 模块构建/最终公理复验 + push）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；已落 `NliWt0LogKit`/`NliWt0Corner` 供 R1 复用；未接 Assembly、SORRIED −0；全 route R 仍 UNRESOLVED |
+| `lean436-trans-workaround-w1` | **完成（2026-11-26；Trans 五硬破已有信任保持绕法；整仓仍留 4.32.2）** | 离线中间值 + 小 decide + `taylorIter.eq_2`/rfl：完整 Trans 4.36 RC=0/22.27 s，4.32 RC=0/24.33 s；五证书双版本 `[propext]`、五 `_real` 标准三，API/陈述不变；SHA 157/157 + patch apply-check；patch 未应用。后续 exLn_eval/Conic/elaboration/585/Final 未决 |
 | `repo-hygiene-review-w1` | **完成（2026-11-26；只读交付，编排者 SHA 5/5 + P0 现场 spot-check）** | **不建议大面积重构**；优先 README/PLAN/pq/campaign 文档纠偏与账本瘦身，再 NliBanks18→20 复用 `nb12_nonneg_of_deriv` 两文件 pilot；17 项 arctan 公共化另卡另 pilot；Assembly 三对私有桥随必要改动顺带；两 tracked `.pyc` 可独立清理；REPORT/CODE_REVIEW/DOCS_REVIEW/RECOMMENDATIONS 在快照，未执行建议 |
 | `qitnpea-wave1-prep-w1` | **完成（2026-11-26；wave1-slim-v2 当前 OVER-BAND，slim 条件目标 WITHIN-BAND；编排者 SHA 4/4 + HOL/字节/stdout/SAMPLE 复核 PASS）** | 交付六维卡、首件工单、EVIDENCE、11 项 ERRATA；456=144+96+216 首波合计，D5 37.24 min 首波投影；全表须程序化生表；y6 用 2.4636 外扩，复用二阶/CFWGKMBZ 域证书，局部凹性用 boxInf_le_of_slice_min；不支持直接量产 |
 | `wt0-route-r-prep-w1` | **完成（2026-11-26；routeR-v1 整卡 UNRESOLVED，仅放行 R4+R2；编排者 SHA 9/9 + 双 Python 复算 PASS）** | HOL 8 cell/520 pass/512 glue/1,959.218513 s 复核；R4 已有 NB12+Trans 可薄适配，R2 余量约 8.278e−6；交付六维卡、WORK_ORDER、EVIDENCE、ERRATA；不支持全 route R 量产 |
@@ -211,7 +212,7 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   （49 件分档 1/15/27/1/2/3；主线 wt1→ZTG trio；5 个方向；混世界 A/C 待裁）。
 - 2026-11-18 重组前全文：[`archive/priority-queue-2026-11-18-pre-nli-math.md`](archive/priority-queue-2026-11-18-pre-nli-math.md)。
 - 更早队列/战术/J 战役表：[`archive/priority-queue-legacy-2026-10.md`](archive/priority-queue-legacy-2026-10.md)。
-- 2026-11-26 瘦身迁出的 325 个旧日期条目见
+- 2026-11-26 瘦身迁出的 327 个旧日期条目见
   [`history/changelog-archive-3.md`](history/changelog-archive-3.md)；续990–1242 全文另见
   2026-11-18 重组前快照；续306–989 见
   [`history/changelog-archive-2.md`](history/changelog-archive-2.md)，续1–344 见
@@ -228,6 +229,14 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Lean 4.36 升级绕法收线：完整生产 Trans 双版本通过；整仓仍留 4.32.2；续1587）**：
+  ① **实质突破**：`lean436-trans-workaround-w1` 用**离线中间值 + 小 `decide` + `taylorIter.eq_2` + `rfl`** 消除五个 `maxRecDepth` 硬破；只改五个 pilot 证明体（+237 行），全部声明、陈述、模块路径、API 保持不变，不是隔离/删测试。完整 `Trans.offline.lean`：4.36 **RC=0 / 22.27 s**，4.32 **RC=0 / 24.33 s**；五计算证书双版本均恰 `[propext]`，五 `_real` 均标准三，生产抽样亦标准三。零 native_decide/新公理/skipKernelTC/提高深度。
+  ② **验收与边界**：SHA **157/157**、`git apply --check` PASS；主 patch 未应用、未 commit。消费者静态复核表明五组 pilot 仓外无引用，但生产仍经 Final→Assembly→CQITNPEA→Trans，故绕法有生产意义。通用 norm_num/simp+decide 因公理漂移未采用；模块隔离只作备选。
+  ③ **整仓判词**：仍暂留 **4.32.2**。`exLn_eval` 深递归尚无离线原等式修复（其演示隔离后的 CFW 短链双版本通过）；Conic `lintegral_add_compl` 隐参名 A→s、Geom elaboration 3–25×、GoodListShard 公理漂移、585/139/Final 根面均未解决或未重验。建议把 patch 作为独立升级准备候选，下一轮先处理 exLn/Conic/实际证书抽样，**不把 Trans 单点成功写成整仓可升级**。下一条：续1585。
+- **2026-11-26（wt0 R4/R2 落库推送 + R1 y4 代表单调核发车；续1586）**：
+  ① **R4/R2 落库**：`NliWt0LogKit` + `NliWt0Corner` 以 **`65d8039a`** commit/push。两个单模块构建均成功，源文件 warning/error=0；最终 `#print axioms Kepler.NliWt0Corner.wt0_corner_pos` 仍恰 `[propext, Classical.choice, Quot.sound]`。R4+R2 共35定理，SORRIED 48 / AXIOM 585 不变，不接 Assembly。
+  ② **R1 回执**：`wt0-r1-core-w1` = 原 `agent-0` resume / `agent-jh56tuws`；新卡 `routeR-R1-y4-v1` 与任务书已同批落快照。唯一目标为 `MonotoneOn (fun y4 => pc3 y4 y5 y6) (Icc 2.01 2.30)`（y5/y6 同盒），在新模块重建5–6位槽导数括号，private `nb18_step0` 只作模板。
+  ③ **边界**：只做 y4 代表件，不做 y5/y6、R3/R5、Assembly、T2/农场；约450行或三轮结构性卡死即交班，缩核/换表先更新卡。开工前 lean=0/pressure=1，≤1 Lean；全定理公理与D1/D3/D4/D5实测后交付，首件 SORRIED −0。下一条：续1587。
 - **2026-11-26（用户批准账本瘦身 + NliBanks18/20 公共引理复用试点；续1585）**：
   ① **账本瘦身**：pq 从 **2,738→543 行**（58.8 KB）；§1 由 69 行旧表改为当时 3 条真实在飞 + 4 条最近完成，§8 由 343 个日期条目保留最近 20。新增 `history/priority-queue-inflight-2026-11-26.md` 与 `history/changelog-archive-3.md`（323 条）；独立校验 **343=20+323，全部条目逐字同序、§1 原文保留**，并更新 `docs/README.md` 与 pq 的归档链接。
   ② **helper 试点**：删除 NliBanks18/20 两份私有 `*_nonneg_of_deriv` 副本，所有 5 个调用点改调 `Kepler.NliBanks12.nb12_nonneg_of_deriv`；零新增 import、公开陈述不变。单模块 `lake build Kepler.NliBanks18` / `Kepler.NliBanks20` 分别 PASS（97.73 s / 212.45 s），独立直编与 NliBanks27 消费编译（55.86 s）均 RC=0/error=0。
@@ -474,39 +483,3 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   → 重编 10 个组装模块 + `Assembly` 岛协议 + `Final` 根面审计（`nliCell3QZECFICwt1` 仍须标准三）
   → 回填 PARITY CARD 的 D5/D4 实测（§7.3 单调不恶化）。
   SORRIED 48 / AXIOM 585 不变。下一条：续1565。
-- **2026-11-26（L1 探针：整树内核判定可行，3.3× 提速（18.28→5.1×），仍 OVER-BAND；续1565）**：
-  ① **实测（单箱 `W1DC_15869_LLLLLLL_zero_0`，基线直编 164.35 s / olean 6,334,456 B）**：
-  分量 = 值通道整树 `rfl` **1.12 s**（152 节点，无 maxRecDepth）、part 通道 ×3 **4.16/4.20/4.30 s**、
-  单链 `JetMem` **1.11 s（Box）/2.33 s（Pt）**、终端 0.48 s、import floor 2.45–3.66 s；
-  **L1 变体（删 957 条逐节点 ev/p/op，4 条根事实整树 `rfl`）：49.64 s / olean 3.54 MB（−44%）/
-  3,499 行（原 7,097）/ RC=0 / 0 error / 0 sorryAx / 8 条 axioms 全标准三**；`JetMem` 单链中性（−0.33 s）。
-  ② **不能达 0.66–1.33×**：tactic 98.4→19.3–22 s（≈80% 砍掉），但内核/类型检查 5.8→17.0 s；
-  **非根发射面 36.9 s**（~1,200 条声明：477 def + 723 theorem，含 276 matan 块 / 279 `_mem` / 276 门）
-  才是剩余大头。221 箱投影 **10,897 s = HOL 5.1×**（现形态 18.28×，**加速 3.3×**）。
-  ③ **负结果**：值通道分块 `rfl`（k=2/4）6.86/7.05 s 比整树更慢；`JetMem` 单链无收益
-  （内联须逐子树标 `JetMem` 类型，tactic 块节点不能内联）。
-  ④ **剩余杠杆（未做）**：① 字面量操作数节点（根 13 s→~0.1 s，需改树定义）；② 声明面瘦身
-  （合并 `gg_*` 投影/门、砍无用通道，36.9→20–25 s 预估）。二者叠加 ≈2.3–2.6× HOL，**仍 >2×**；
-  ≤1.2× 在本证书单位下未看到可达路径（DTT 证明项/声明面是结构性下限）。
-  ⑤ **裁定状态**：wt1 维持已落库（18.28×）不变；L1 重发射（5.1×，221 箱 ≈3 h CPU / 1 h 墙）
-  与杠杆 ①② 均属 OVER-BAND 改进，**等用户明批**。SORRIED 48 / AXIOM 585 不变。下一条：续1564。
-- **2026-11-26（wt1 值函数 PARITY CARD 判 OVER-BAND：D5 18.28× HOL；不等用户明批不发同形态量产；L1 探针已发；续1564）**：
-  ① **卡片**（`holparity-wt1-value-w1`，零 Lean；对象 = 值函数形式 221 箱 + 10 组装，基线 `98e1380a`）：
-  **D1 619+610=1,229 HOL vs 221 箱 + 11 glue = 0.357× / 0.018× ⇒ PARITY**；
-  **D5 HOL 1,543.027 s（9 cell）+ 载入 591.974 s = 2,135.001 s vs 我方 39,028.27 s（38,967.33 编译 +
-  60.94 组装）⇒ 18.28× ⇒ OVER-BAND**；D6 标准三 vs HOL 0 new_axiom ⇒ PARITY；
-  D2/D4 为 LCF-vs-DTT STRUCTURAL-DIFF（HOL 每 pass 磁盘 0 B vs 我方 6.43 MB/箱、合计 1.426 GB），
-  且 **D4 超自身可实现下界 14.6–82.9×**（同 221 箱的桥接证明 27,766 B/箱、终端骨架 44,184 B；
-  下界带 77.5 KB–440 KB/箱）；D3 mechanism 0.40× PARITY、literal 88.4×（生成数据计入）。
-  ② **关键订正（车道用原版证据推翻我的前提）**：HOL 的 `1,543.027 s` **不是 prep，是 total**
-  （`FormalVerifier.tex` 的 `total_time` = prep+informal+formal；`azure/.../trig/out/out.txt:160-186`
-  逐段可见 Informal/Formal verification 都在里面）⇒ 18.28× 是**总量对总量**的有效比较，
-  不许用"vs prep"的读法洗白。HOL verifier 的分项/RSS 仍 UNRESOLVED（azure 日志未打印）。
-  ③ **D5 不是结构性差距**：逐箱归因实测 = tactic 执行 98.4 s / 129.9 s（75.7%），类型检查仅 5.78 s（4.4%）；
-  `rewriteSeq` 60.8 s/140 处、`show` 14.3 s/18 处；整树 153 节点 kernal 判定探针 2.09–2.46 s、
-  sqrt 修复 0.12 s/节点 ⇒ **L1 杠杆（字面量 + 整树一次内核判定）预估 1.4–2.8 ks = 0.66–1.33× HOL**。
-  ④ **裁定**：`OVER-BAND`，**本卡不放行下一轮同形态量产，除非用户明批**；已落库的 wt1 标准三件
-  不追溯否定。信任面无问题（C 车道 10 行 `axioms_ok=no` 是 `olean ≥6 MiB` 阈值假阴性，已复算 8/8 标准三）。
-  ⑤ **我的处置（用户未答结构化询问，按最保守口径）**：不批任何同形态量产；**只发 L1 测量探针**
-  （单箱，目标 ≤1.2× = 9.7 s/箱，即 1.2×2,135/221），探针回来再请用户裁决是否重发射。
-  SORRIED 48 / AXIOM 585 不变。下一条：续1563。
