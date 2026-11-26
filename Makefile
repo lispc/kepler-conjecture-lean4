@@ -45,7 +45,8 @@ reprove-legacy-unsafe:
 	$(MAKE) check-legacy-unsafe
 
 # P0-1/P0-3 静态验收自检：不触发任何编译与 lake。
-acceptance-check:
+# 依赖 gen-wt1：干净 checkout 里 221 个生成物不存在，census 的 token pin 需要它们。
+acceptance-check: gen-wt1
 	python3 scripts/check_acceptance_targets.py
 	python3 scripts/sorry_census.py --check --no-tsv
 

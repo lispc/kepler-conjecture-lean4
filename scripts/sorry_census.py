@@ -63,21 +63,26 @@ STUB_RE = re.compile(r":=[ \t]*sorry\s*\Z", re.S)
 FINAL_MODULE = "Kepler.Final"
 LP_DIR_PREFIX = "Kepler/Text/LP/"
 
-# ---- --check 基线 pin（口径 = 非 comment token；基线树 = 6b5aa7da，2026-11-23） ----
-# 三个 token pin 与 practices-w1 evidence/per_file_metrics.tsv 逐文件一致（实测，
-# 见车道 DELIVERY）；fs-walk 与 --tracked-only 在基线树上同值（untracked 文件的
-# 非 comment token 贡献为 0）。
-EXPECT_REPO_TOKEN = 43422   # practices 实测同数；Text/LP 骨架是主体
-EXPECT_CONE_TOKEN = 499     # Text 444 + Assembly.lean 54 + Statement.lean 1；32 文件
+# ---- --check 基线 pin（口径 = 非 comment token） ----
+# 三个 token pin 与 practices-w1 evidence/per_file_metrics.tsv 逐文件一致（基线树
+# 6b5aa7da，2026-11-23，见车道 DELIVERY）；fs-walk 与 --tracked-only 在基线树上同值
+# （untracked 文件的非 comment token 贡献为 0）。
+# ERRATA（2026-11-26）：wt1 全量证书闭合 `4bcbd7ad` 把 `nliCell3QZECFICwt1` 的
+# `:= sorry` 换成证明 ⇒ repo/cone 各 −1（43422→43421、499→498）；sorries 48 = 47 nli*
+# + 1 hLP。该条仪器 SORRIED 仍在（地图是 AQ 基线 stale），入 EXEMPT_STALE_SORRIED。
+EXPECT_REPO_TOKEN = 43421   # 基线 6b5aa7da 为 43422；wt1 闭合 −1
+EXPECT_CONE_TOKEN = 498     # 基线 6b5aa7da 为 499；wt1 闭合 −1
 EXPECT_LP_TOKEN = 42889     # 全在 Kepler/Text/LP/，不在 Final 锥内
 # 仪器 SORRIED 行数（e2e-reachability-map.tsv = AQ 基线 e4c384e6 时点，stale）。
 EXPECT_MAP_SORRIED = 51
 # 显式豁免清单：仪器列出、但当前树已无静态 sorry 的声明名（= 仪器 stale 差额）。
 # 依据：AGENTS §1 —— wt2A 小模块验收 `1ec06b28`（2026-11-20）后账本 49 = 48 nli*
-# + 1 hLP；基线 e4c384e6 时为 51。census 实测恰好这 2 条无 sorry，独立复现 49。
+# + 1 hLP；wt1 全量证书闭合 `4bcbd7ad`（2026-11-26）后 48 = 47 nli* + 1 hLP；
+# 基线 e4c384e6 时为 51。census 实测恰好这 3 条无 sorry，独立复现 48。
 EXEMPT_STALE_SORRIED: frozenset[str] = frozenset({
     "Kepler.Assembly.nliCell3QZECFICwt2A",
     "Kepler.Assembly.nliCell3QZECFICwt0sqrt8",
+    "Kepler.Assembly.nliCell3QZECFICwt1",
 })
 # Assembly 静态债声明超出仪器名单的允许项：5 条 `*Ids` 清单侧同债形态
 # （`theorem nli*Ids : AllCertified *Ids := sorry`；Assembly.lean §2a 注释
