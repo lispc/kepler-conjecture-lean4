@@ -74,13 +74,13 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `tsk-opt-b-w1` | **在飞（2026-11-27 Track A 完成后发车；ZCode `agent_a852a202`；零 Lean）** | 设计能把 TskXLLIPLS 每叶 15.0 s 地板砍到 ≤3.4 s（≥4.4×）的 checker/包络：two-tier 便宜预检、惰性/必要性跳过、更粗导数界、替代 Taylor 模型、checker 形状；交付 DESIGN/PARITY_CARD/EVIDENCE/UNRESOLVED；判定 GO/CONDITIONAL/NO-GO；输入 = A 的 `tb_decomp.csv`/`tb_nodes.csv`/`q1_leaves.csv`；不依赖 C；主仓零改动 |
-| `qitnpea-hol2-cse-leaf-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-8` resume / `agent-xsjt70pe`；不再起计算）** | CSE/数值级联后又多轮修 HOL `pa_j.ml`，超过三轮结构性卡死且未进入 Lean；只整理探针与失败证据，首个 pass/Lean 覆盖未证不得预支；后续等用户裁决 |
 | `wt0-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶单叶；`agent-9` / `agent-u45hh3gd`；≤1 Lean）** | 固定 case 13067 重建叶 `LLLLLLLL`，同盒做二阶中心 Taylor+CSE Lean pass；直接 x 空间三变元 + `nb18_unfold`，禁 dcT2/换叶/细分/提高深度；不做 sibling、glue、全 cell 或 Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `qitnpea-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 21/21 + 两个 OCaml 探针复跑；无 patch；Lean 0，SORRIED −0）** | 原源码语义与 Python 复放核心完成；原版 CSE 通用探针确实会把无共享左脊改指 ref，delta 复放 25 refs 同形并污染 value；真实 azure 项形是否触发仍 UNRESOLVED。首个 pass 未重建，0 行 Lean；pa_j/camlp5 8 移植 RC=2，后续等用户裁决 |
 | `tsk-opt-a-w1` | **完成（2026-11-27，零 Lean；快照 REPORT 436 行 + 22 脚本 + CSV；主仓零改动）** | 位精确引擎逐位复现 kBox0 P3；成本模型订正 ΣN_visited=93·N；Q1 全族 N_min=16（6,609）/32（3），N 杠杆 51.1→27.8 CPU·h（4.41×/5.40× HOL），N=32 安全 28.1/34.4 h；Q2 精度 D5 0%；Q3 叶树 −11.8%，落地树已最优；Q4 HOL 2-piece 无捷径（y1=2.8195635，x=7.94994，ERRATA）；Q5 三杠杆 3.89×/4.77×，≤2× 需地板 ≤3.16 s ⇒ 只有 Track B |
 | `wt0-hol-replay-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-26；编排者 SHA 40/40；无 patch；Lean 0/80 + 0/79，SORRIED −0）** | 原 80/79 Python 候选树有效；一阶 dcT2 两叶各约 1.074 MB，D2 与 HOL 二阶 DIFFERS；leafA RC=134/16.93 GB，Bisect1–8 触发止损。最终生成源/生成器仍含禁用的 maxRecDepth 4M，只是失败证据，非合规候选；后续等用户裁决 |
 | `qitnpea-hol-replay-w1` | **完成：PARTIAL + OVER-BAND（2026-11-26；编排者 SHA 35/35；无 patch；Lean 内核覆盖 0，SORRIED −0）** | HOL case 13031 = 309/308；bb_arb 19,234 叶 = D1 62.2×，仅外部；D3 实际 637,554 B = 25.04×；D2 一阶 hull-TM vs HOL 二阶+CSE = DIFFERS；stage-B/decide/case 公理均未运行。等用户选择严格原版叶模型或明批超带宽路线 |
@@ -242,6 +242,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（QITNPEA 严格二阶单叶最终验收：PARTIAL + STRUCTURAL-STOP；续1608）**：
+  ① **验收**：`agent-xsjt70pe` 交付 21 文件，编排者 SHA **21/21 PASS**、无 patch、主仓零改动、SORRIED −0。另亲跑 `ocaml cse_probe.ml` 与 `ocaml cse_run2.ml` 均 RC=0：通用 `a+(g+g)` 探针确实变为 `ref0+(ref0+ref0)`；delta 复放产生 25 refs，`f0 = r3 + neg(r3*x6)`，与交付记录一致。
+  ② **关键边界**：该现象证明原版 `find_and_replace_all` 算法在这些输入上存在级联改指，且本复放 value 通道被污染；**真实 azure 项形是否触发仍 UNRESOLVED**，不得判 HOL 原证或 QITNPEA 有错。首个 pass 盒未重建，DFS 左脊无 pass 且被输出上限截断；Lean 0 行、0 公理输出，CSE 成对消融未完成。
+  ③ **工具链止损**：camlp5 8.05.04 下 pa_j.ml 约 60 处兼容修补后 `ocamlc` 仍 RC=2，按 §7 收线，不再改 Parser。后续等用户选择：提供兼容 HOL 环境以确认真实项形，或明确允许语义保持的 CSE 修复后再做单叶；不自动续派，不判数学 NO-GO。
 - **2026-11-27（QITNPEA 严格二阶单叶触发结构性止损；续1607）**：
   ① **机器现状**：平台时限时无存活本车道进程，快照只有 TASK/PARITY_CARD，`/tmp` logs/out 为空，未见 Lean 样例。车道先调 CSE 引用、数值级联/sqrt，再多轮修改 HOL `pa_j.ml` 兼容层，补丁两次误删/损坏后重同步；已超 §7 三轮结构性止损线。原 `agent-8` resume / `agent-xsjt70pe` 只整理证据，不再 Parser 改造、编译、DFS 或新工具链施工。
   ② **边界**：可交付仅限有文件/输出支持的原版语义、Python/OCaml 数值与 CSE 探针；首个 HOL pass 盒若无完整证据也须 UNRESOLVED。不得把“Python/OCaml 逐位一致”外推成单叶成功或 Lean 覆盖；阻塞限定当前复放/工具链表示，不判 QITNPEA 或 HOL 二阶路线 NO-GO。后续等用户裁决。
