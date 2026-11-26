@@ -341,8 +341,12 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   ④ D4 最小 olean 未测；⑤ `√`/`atan` 二阶规则在驻点/`f→0` 的分支未实现。
 - **N=32 / 模块合并**：N=32（DEF-FIX，4.46×/5.44×）作 Design P 失败后的 fallback；
   模块合并（C，`[EST]` −6 h import）按用户 2026-11-27 裁决不做。
-- **4.36 census 的抽样边界**：叶族 83/6,412（`HOMOGENEOUS-SAMPLED`）、T\* 3/199
-  （`TEMPLATE-SAMPLED`）、W1DC 231 全编；**census 不等于验收**，全量重放预算见 §1.1。
+- **4.36 census 的抽样边界**：叶族 83/6,412（`HOMOGENEOUS-SAMPLED`）；T\* 3/199
+  （T1/T63/T150，叶并集 102）；**196 个 SAMPLED-OUT T\* 的叶并集 = 6,310**，
+  **199 个 = 6,412 = 全部 PLeaf**（deps.tsv 精确去重）。根链
+  `TskXLLIPLS → PackIneqTskXLLIPLSClose → Assembly → Final` 在 census 中
+  **`DEFERRED`（非 BLOCKED/OOM/失败）**；`0 BLOCKED` 只覆盖已编模块。
+  全量 6,412 叶重放（≈51.6 h 串行 / 10.3 GB 每叶）属 acceptance，见 §1.1。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
   后者需逐模块验证 import 面。
 - `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；

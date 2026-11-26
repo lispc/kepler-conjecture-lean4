@@ -245,8 +245,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 - **2026-11-27（census 根链 DEFERRED 边界确认：T\* 抽样不是 bug；续1612）**：
   ① fixer 报 `Kepler.Interval.Cases.TskXLLIPLS` = `DEFERRED_BY_BLOCKER`（dep `TskXLLIPLST10 SAMPLED-OUT`），根链 `TskXLLIPLS → PackIneqTskXLLIPLSClose → Assembly → Final` 在 4.36 census 中未编。**判定：既定抽样边界，不是编译失败**；census 的 `BLOCKED=0` 仍有效，但只覆盖已编模块。
-  ② **更正 fixer 的「196 叶」**：196 是 T\* 聚合器，每个直接 import 21–48 个连续 PLeaf（平均 ~29），合计 **≈5,700+ 叶**；补编 = 全量 6,412 叶重放（~29 s / 10.3 GB 每叶，≈51.6 h 串行），属 acceptance 阶段，不在 census。
-  ③ **处置**：不提升、不补编、不改 sampling（T\* 仍 3/199）；census SUMMARY 必须写清覆盖矩阵 + 根链 DEFERRED + 全量重放预算 + `0 BLOCKED` 的边界；fixer 只记录不改。W1DC 231 全编不变。SORRIED 48 / AXIOM 585 不变。
+  ② **精确计数（census 车道用 `deps.tsv` 去重实算，替换「≈5,700+」EST）**：**196 个 SAMPLED-OUT T\* 的叶并集 = 6,310 个不同 PLeaf**；**199 个 T\* 合起来 = 6,412 = 全部 PLeaf（无遗漏）**。补编 196 个 T\* = 全量 6,412 叶重放（~29 s / 10.3 GB 每叶，≈51.6 h 串行），属 acceptance 阶段，不在 census。
+  ③ **3 个 T 模板样本边界**（写进 SUMMARY）：`T1` = Leaf6485–6511（27 个）、`T63` = Leaf4506–4549（44 个）、`T150` = Leaf1651–1683（31 个），并集 **102**。
+  ④ **处置**：不提升、不补编、不改 sampling（T\* 仍 3/199）；census SUMMARY 必须写清覆盖矩阵 + 根链 DEFERRED + 全量重放预算 + `0 BLOCKED` 的边界；fixer 只记录不改。W1DC 231 全编不变。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（wt0 严格二阶单叶最终验收：PARTIAL + STRUCTURAL-STOP；续1611）**：
   ① **独立复核**：`agent-vcgwo770` 交付 50 文件，编排者 SHA **50/50 PASS**、无 patch、主仓零改动、SORRIED −0。亲跑 `replay_leaf2.py` RC=0：CSE off/on 求值 518/274、字段完全一致，pp=3 upper = −1965937/400000000 < 0，pp=6 = −381196223947/64000000000000 与存档逐位一致；精确镜像 slack +0.005765。kit olean 实测存在且为 869,400 B，日志十条全标准三。
   ② **真实边界**：二阶 kit（439 行）与复放是有效资产，但 CSE 264,788 B / nocse 467,656 B 叶均未编译通过，Lean 单叶 0/1、候选树 0/80 + 0/79，无叶级 `#print axioms`。leaf_compile8 RC=1/maxErrors=100、4.88 real/5.68 GB，按 §7 收线；最终三 Lean 文件无 limits 提升和禁造边。
