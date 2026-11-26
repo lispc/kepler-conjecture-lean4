@@ -75,6 +75,7 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `tsk-opt-a-w1` | **在飞（2026-11-26 用户裁决「先 A 后 B，C 不做」；ZCode `agent_b28f1038`；零 Lean）** | 用 `pipeline/interval/tmexact.py` 位精确引擎 + `orig_tree_probe.py`：Q1 最小 N 分布（≥40 叶分层）、Q2 精度余量、Q3 分裂启发式有界 B&B、Q4 2-piece cut/HOL 树对照、Q5 Pareto 与 Track B 输入；先复现 kBox0 P3（N=16, lb≈+8.579e-4）再外推；零 Lean / 主仓零改动；快照 `tsk-opt-a-w1`；FAIL/UNRESOLVED 不判数学 |
 | `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
+| `wt0-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶单叶；`agent-9` / `agent-u45hh3gd`；≤1 Lean）** | 固定 case 13067 重建叶 `LLLLLLLL`，同盒做二阶中心 Taylor+CSE Lean pass；直接 x 空间三变元 + `nb18_unfold`，禁 dcT2/换叶/细分/提高深度；不做 sibling、glue、全 cell 或 Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -240,6 +241,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（wt0 严格 HOL 二阶+CSE 单叶发车；续1605）**：
+  ① **用户明批与回执**：`wt0-hol2-cse-leaf-w1`，全新 `agent-9` / `agent-u45hh3gd`；TASK 与六维卡先落快照。固定 case 13067 的重建候选叶 `LLLLLLLL`（node id 8），与旧一阶失败件同盒，复放 pp=3、upper6=-0.005956190999171875；标 RECONSTRUCTED-LEAF，不冒充原运行已识别叶。只做一片及 CSE 消融，不做 sibling、glue、全 cell 或 Assembly。
+  ② **路线**：原非 poly `mk_funs` 二阶中心 Taylor + 真 CSE；前三坐标为 `[1,1]`，可在直接 x 空间用三变元 `taylor3_upper` + `nb18_unfold` 精确桥接，不改原六维命题、不绕 y 空间。禁 dcT2、换叶/换盒、额外细分、自有精度及任何 heartbeats/maxRecDepth 提升；旧复放器/盒数据可复用，旧 4M 一阶生成器不可复用。
+  ③ **同口径基线**：case 13067 实际在 `ineqs.txt:13066`，注册行 **1,070 B**；原 cell 80/79/147.508340 s 由 urban `:1104-1129` 复核。七个直接二阶/CSE 文件合计 314,875 B（非完整传递闭包）。共享 kit、生成器、单叶数据分别实测，禁止混用基线；量产仍未放行。
 - **2026-11-26（wt0 STRUCTURAL-STOP 最终验收；续1604）**：
   ① **交付与真实覆盖**：`agent-8li7yv9o` 返回 PARTIAL + STRUCTURAL-STOP；编排者 SHA **40/40 PASS**，无 patch，主仓零改动、SORRIED −0。原 cell0 的 80/79 Python 候选树保留；Lean **0/80 pass、0/79 glue**，无通过叶、无 case 级 `#print axioms`。leafA RC=134 stack overflow、37.51 real/346.53 user/16.93 GB；Bisect8 RC=1，连续 8 轮触发 §7 止损。
   ② **路线与合规边界**：一阶 dcT2 不是 HOL 二阶中心 Taylor，D2 = DIFFERS。最终 `gen_wt0.py:403` 与两叶源 `:35` 仍实际含 **`set_option maxRecDepth 4000000`**；虽编译失败且未作为修复采纳，也只能归档为失败证据，**不是合规候选、不可落库**。`probe_compile.log` 首行明示是事后转录，不能冒充原始 stdout 日志；环境探针不影响 0 件结论。
