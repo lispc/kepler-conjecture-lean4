@@ -250,6 +250,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（census 第三慢族：Graphs Top\*Shard 106 件 `decide +kernel` ≈50–60 h；抽 9 件；全量上修 287–525 h；续1622）**：
+  ① **对象**：106 = `TopReplayHexShard` 55 + `TopReplayPentShard` 31 + `TopBoundsHexShard` 14 + `TopReplayQuadShard` 6；源码 0.8–0.9 KB、`gen_top_shards.py` 单模板，**内核 `decide +kernel`**（非 native_decide）。实测 `TopBoundsHexShardS000` **31 min 未结束** ⇒ 106 件 ≈ **50–60 h**。
+  ② **裁决 (a)**：抽 **9 件**（TopReplayHex 3 / TopReplayPent 2 / TopReplayQuad 2 / TopBoundsHex 2），每件 60 min cap（超时 kill 记 `BUDGET_CAP`）；其余 97 件 `SAMPLED-OUT (Top*Shard, full at acceptance)`；任一失败 → 整个 106 回队列。
+  ③ **precompile 不覆盖**：106 是 `decide +kernel`；4.32 的 **13.889× 是 native_decide 分片**，dylib 不加速核归约 ⇒ 这条不省时。全量 4.36 shard 重放 = CertShards 237–465 + Top\*Shard 50–60 = **287–525 h**（不含 TskXLLIPLS 51.6 / W1DC 3.7 / 其它 ~10）⇒ acceptance 计划进一步承压；`ArchivePre*Shard` 198 件 avg 3 s 已全绿，单列为非慢族对照。
+  ④ 不自批 acceptance 变更；数先记清，等用户裁决。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（QITNPEA SAFE-CSE 首叶进入 Lean；续1621）**：
   ① **用户明批与回执**：`qitnpea-hol2-lean-leaf-w1`，原 `agent-11` resume / `agent-bsemn8sn`，TASK/六维卡先落新快照。固定已独立验收的 case 13031 首叶（DFS node13/depth12/f1、pp=6、upper=-61279551481/8000000000000），不搜索、不换叶、不额外细分。
   ② **施工边界**：复用 wt0 二阶 kit 的中心值/梯度/盒 Hessian/w-膨胀，泛化到六维 6 一阶 + 21 下三角二阶；SAFE-CSE 仅作共享表示，算术优先 norm_num/显式展开/字面量证明，避免 extern-Rat decide/rfl。原 f1 定义桥未证只能记显式机制件，不预支 case/bank 覆盖；完成一片或三轮止损即返回，不做第二片/glue/Assembly。

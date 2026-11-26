@@ -22,7 +22,7 @@
 | 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
-| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **302–530 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min） |
+| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard 50–60 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **352–590 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 106 件 `decide +kernel`） |
 
 ## 1. 三个基线数
 
@@ -60,6 +60,7 @@
 | `Graphs/TopReplay*` | 96 | 92 KB | p50 ≈18 s；最大 S013 **719.9 s / 22.17 GB** | **0.91 h**（87 件实测） | `decide +kernel` 重放 |
 | `Text/LocalAuto*` | 91 | 10 MB | `LocalAuto35` **1,093.1 s / 10.0 GB** | **1.55 CPU·h**（90 件） | norm_num/linarith + 解释器 |
 | `Graphs/CertShards/*` | 580 | 556 KB | census 实测：非 R Hex 23.5–606 s；**R 变体 37–75 min/件**（HexR.K001 2,216 s、QuadR.K000 4,478 s、PentR.K001 >70 min） | **全量 575 ≈237–465 h**（R 360 件 222–450 h + 非 R 14.6 h） | native_decide 分片（585 基座） |
+| `Graphs/Top*Shard` | 106 | ~0.9 KB/件 | **`decide +kernel`**；`TopBoundsHexShardS000` 31 min 未结束 | **≈50–60 h** | 内核归约（**precompile 不覆盖**） |
 | `Text/ZTG*` | 26 | 9.9 MB | `ZTGJoint0000CornersP` **503.5 s / 21.25 GB** | `[EST]` 1–2 h | norm_num/linarith 重建 |
 | `Text/PackingAuto*` | 27 | 6.4 MB | `PackingAuto21` **483.5–519.1 s / 16.3–16.5 GB** | `[EST]` 0.5–1 h | 巨型项 simp/unfold |
 | `Graphs/GoodListShard*` | 199 | 149 KB | PentS00 **21–26.6 s / 8.2 GB**；TriS00 3.2–4.2 s | ≈0.5 h | `decide +kernel` shard-range |
@@ -84,10 +85,12 @@ Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h
 - TskXLLIPLS：6,412 叶 × 29 s ≈ **51.6 h 串行**；2 车道各 1 lean（2×10.3=20.6 GB）≈ 25.8 h 墙钟。
 - W1DC：231 模块 × ~60 s ≈ **3.7 h**。
 - **CertShards：全量 575 件 ≈237–465 h**（非 R 215 件 ≈14.6 h；R 360 件 222–450 h；`HexR.K001` 2,216 s、`QuadR.K000` 4,478 s、`PentR.K001` >70 min）；**远超单车道可接受范围**。
+- **Top\*Shard：106 件 ≈50–60 h**（`decide +kernel`；`TopBoundsHexShardS000` 31 min+）；**precompile 不覆盖**——4.32 的 13.889× 是 native_decide 分片，dylib 不加速核归约。
 - 其余重件 + 证书：`[EST]` ~10 h。
-- 合计 **≈302–530 CPU·h 串行**（import 已含在每模块时间，不再另加）。**该数已使
-  “全量 4.36 重编 CertShards”不可行**；替代方案 A（4.36 `precompileModules` 重建，
-  4.32 实测 13.889×；若同效 → 17–25 h）或 B（按族抽样 + 585 逐名审计）待用户批。
+- 合计 **≈352–590 CPU·h 串行**（import 已含在每模块时间，不再另加）。**该数已使
+  “全量 4.36 重编 shard 族”不可行**；替代方案 A（4.36 `precompileModules` 重建，
+  只覆盖 CertShards；4.32 实测 13.889×；若同效 → 17–25 h）或 B（按族抽样 + 585 逐名审计）
+  待用户批；**A 不解决 Top\*Shard 的 50–60 h**。
 
 ## 2. 时间分层（重件）
 
@@ -285,6 +288,9 @@ dylib → 4.8 s（无改善）；加载 dylib 后加不加 `-D` 都是 ~0.25 s�
 **与其它杠杆的关系：**若本机执行有数量级收益，优先于 C1+C3；若只有小幅收益，先做
 C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decide +kernel` 也不是
 免费替代品（既有全基座内核重放已判不可行）。
+**适用范围（2026-11-27 实测补充）**：`precompileModules` 加速的是 **native 求值**
+（`native_decide` 分片，4.32 的 13.889×）；**`decide +kernel` 的 Top\*Shard 106 件
+（50–60 h）不吃 dylib**，两者不要混算。
 
 ## 3.3 2026-11-26 增补实验台账
 
@@ -362,6 +368,11 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   **全量 575 实测外推 237–465 h（非 R 14.6 h；R 360 件 222–450 h）⇒ `BUDGET_EXHAUSTED`**；
   验收替代方案 A（4.36 precompile 重建，4.32 实测 13.889×）或 B（按族抽样 + 585 逐名审计）
   待用户批，车道内不自批。
+- **Top\*Shard 的抽样边界（2026-11-27）**：106 件 `decide +kernel`（TopReplayHex 55 /
+  TopReplayPent 31 / TopBoundsHex 14 / TopReplayQuad 6），源码 0.8–0.9 KB、`gen_top_shards.py`
+  单模板；抽 **9 件（3/2/2/2）**，每件 60 min cap，其余 `SAMPLED-OUT`；全量 **≈50–60 h**
+  属 acceptance；**precompile 不覆盖**（4.32 的 13.889× 是 native_decide 分片，dylib
+  不加速核归约）。验收如果只做 CertShards precompile，Top\*Shard 仍要另付 50–60 h。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
   后者需逐模块验证 import 面。
 - `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；
