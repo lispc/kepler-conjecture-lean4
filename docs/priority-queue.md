@@ -72,6 +72,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-6` / `agent-psiqcu0q`；≤1 Lean）** | 只做 HOL `(prep-QZECFIC wt0,0)` 原版 Taylor pass/glue 与 cell 覆盖；先真实单件再按原 80/79 推进；pp/分裂/终止参数不得自创；不走 route R、不扩其余 cell、不接 Assembly |
 | `qitnpea-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-7` / `agent-r0ek0a6b`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 一个有完整原版规格的 case 及 Taylor pass/glue；不走角点电池/11片/456点，不接 Assembly；原数据缺失记 UNRESOLVED |
 
