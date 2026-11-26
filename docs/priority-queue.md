@@ -75,7 +75,7 @@
 | `tsk-certunit-m1-w1` | **在飞（2026-11-26 parity 卡判 GO-for-M1 后发车；ZCode `agent_86d1a721`；≤1 Lean）** | 单盒 `kBox0`：M1a P0/P1/P2 归因（N vs R）+ M1b 自证 checker 原型（新文件，~250–400 行，禁改 CertTM）；硬指标 (a) 标准三/无 sorry、(b) wall ≤3.5 s ∧ RSS ≤10.5 GiB、(c) 必交归因；FAIL 记 `BUDGET_EXHAUSTED`，不判数学 NO-GO |
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批「好，启动继续吧」；原 `agent-6` resume / `agent-i4223hjk`；≤1 Lean）** | 已重建 cell0 的 80/79 Python 候选树；本轮只做最小完整 Lean 覆盖件（通常 2 pass + 1 父 glue），逐件公理/成本验收后返回；不量产 80 叶、不走 route R、不接 Assembly |
-| `qitnpea-hol-replay-w1` | **在飞（平台中断后原 `agent-7` resume / `agent-0kpjkx9r`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 选定 case 的有限真实 Lean 子覆盖、同盒差分与成本；外部覆盖树不算内核闭合；不走角点电池/11片/456点，不接 Assembly |
+| `qitnpea-hol-replay-w1` | **OVER-BAND 收线整理（原 `agent-7` resume / `agent-5m43u52i`；不再起计算）** | 当前设计 D3≈25.1×、D2 与 HOL 二阶 Taylor DIFFERS，未获超带宽授权；只整理 PARTIAL 证据，不跑 stage-A/B 或网格；外部 14,676–19,234 叶不算内核覆盖；后续等用户裁决 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -238,6 +238,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（QITNPEA HOL replay 触发 OVER-BAND 停车闸；续1597）**：
+  ① **机器现状**：第二次平台时限后无存活 QITNPEA lean/bb_arb/python 探针；leaf0 仅已有 40,960 B stage-A 参数，`params3.txt` 为空，stage-B 内核样例未见完成证据。规格恢复与 bb_arb 外部树已交付，但 14,676–19,234 叶不等于 Lean case 闭合。
+  ② **独立停车原因 = parity，不是平台超时**：当前卡实测 D3 = 638,057 B / HOL 25,464 B ≈ **25.1×**；D2 明示 Lean 一阶 hull-TM 与 HOL 二阶 m_taylor **DIFFERS**；D5 全案投影亦 ≫2×。依 §7.3「>2× = OVER-BAND，设计无效，只能用户明批；任一转差即停」，原 `agent-7` resume / `agent-5m43u52i` 只整理 PARTIAL + OVER-BAND 交付，不再跑 stage-A/B、网格或扩算；此前 qitnpea-y6 单片的超带宽批准不转移。后续由用户决定明批当前探针，或改做严格 HOL 二阶+CSE 表示。
 - **2026-11-26（fixer 收线：4 件 MECHANICAL、零 SF/DEF；W1DC 成本订正 3.73 CPU·h；同质生成族普查；续1596）**：
   ① **`lean436-fixer-w1` 收线（ZCode `agent_dcedc2c8`，22:14；13 次 10-min 轮询无新 BLOCKED）**：4 个 blocker 全部 MECHANICAL 且均已在此前落库——`dc5410c5`（Basic:87 `norm_num [minSmoothness]`→`simp`；DCKit:216 scoped linter option；Taylor3:131 `Set`-as-structure → `filter_upwards` + `first | …`）与 `9b973d29`（CertTM:1648 `Real.ofCauchy` 字面量 positivity）。本轮重验双版本 RC=0、公理同基线：CertTM 4.36 在 23 个 `ex*` 上 `Quot.sound` 更小，0 新公理/0 sorryAx；Taylor3 仅 2 条无害 linter 警告。**零 SF / 零 DEF-FIX / 零 UNRESOLVED**（`SF_CANDIDATES.md` 空；UNRESOLVED 仅 UPSTREAM_MISSING 停车单）。下游 4.36 实测 Arithmetic 2.09 / Coordinate 1.63 / Glue 1.67 / Bounds 1.82 / InvSqrt 1.87 s，`Cases.C1965189142aHullBase` 23.3 s / 5.78 GB、`HullTreeC` RC=0；census 独立复核 `C1965189142aHullBase`/`TskXLLIPLSAtan1Base` OK。传递下游：CertTM 6,846、Basic 249、Taylor3/DCKit 240，并集 7,093/9,137；验收路径 `CertTM → C1965189142aHullBase → C1965189142aHull → PackIneqBiefjhuClose → Assembly → Final`。快照 `~/c17_backup/lane_snapshots/lean436-fixer-w1/`（112 文件 + SHA）。
   ② **W1DC 成本订正（撤回 10.9 h 口径）**：`fe1ec17f` 已把 221 箱换成 L1（整树 `rfl` 替换逐节点 ev/p/op）。当前 3,124–3,697 行/箱、**55–67 s CPU/箱、olean ~3.6 MB**；总 **13,445.5 s CPU = 3.73 CPU·h**（单车道投影 10,970 s = 3.05 h）。L1 前 `wt1-bulk-a/b/c` 的 169–189 s、39,028 s = 10.84 CPU·h **作废**。census 的 W1DC 抽样指令已撤销，改 **221 盒全编**（才能验 9 个 `W1DCAssembly*` + `W1DCAssemblyFinal`）。
