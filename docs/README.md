@@ -128,8 +128,9 @@
 ## 维护规则（三条）
 
 1. **一笔落库 = 一条日志**：只在 `priority-queue.md` §8 追加（新→旧）；§8 超过窗口
-   （当前约 20 条）时机械迁入 `history/` 或带日期的 `archive/` 快照，原文不改；
-   续1–续344 的旧档在 `history/changelog-archive.md`。
+   （当前约 20 条）时机械迁入 `history/` 或带日期的 `archive/` 快照，原文不改。
+   2026-11-26 迁出窗口在 `history/changelog-archive-3.md`；更早依次见
+   `history/changelog-archive-2.md`、`history/changelog-archive.md`。
 2. **数字只引用不抄**：同一指标不允许多个文档各写一份；引用时带
    `（实测 <commit>，<日期>）` 或标 `stale`。
 3. **历史只搬不删**：`archive/` 与 `history/` 只增不改；需要纠正时加 `ERRATA` 行，
