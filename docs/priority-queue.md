@@ -73,7 +73,7 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
-| `tsk-opt-a-w1` | **在飞（2026-11-26 用户裁决「先 A 后 B，C 不做」；ZCode `agent_b28f1038`；零 Lean）** | 用 `pipeline/interval/tmexact.py` 位精确引擎 + `orig_tree_probe.py`：Q1 最小 N 分布（≥40 叶分层）、Q2 精度余量、Q3 分裂启发式有界 B&B、Q4 2-piece cut/HOL 树对照、Q5 Pareto 与 Track B 输入；先复现 kBox0 P3（N=16, lb≈+8.579e-4）再外推；零 Lean / 主仓零改动；快照 `tsk-opt-a-w1`；FAIL/UNRESOLVED 不判数学 |
+| `tsk-opt-b-w1` | **在飞（2026-11-27 Track A 完成后发车；ZCode `agent_a852a202`；零 Lean）** | 设计能把 TskXLLIPLS 每叶 15.0 s 地板砍到 ≤3.4 s（≥4.4×）的 checker/包络：two-tier 便宜预检、惰性/必要性跳过、更粗导数界、替代 Taylor 模型、checker 形状；交付 DESIGN/PARITY_CARD/EVIDENCE/UNRESOLVED；判定 GO/CONDITIONAL/NO-GO；输入 = A 的 `tb_decomp.csv`/`tb_nodes.csv`/`q1_leaves.csv`；不依赖 C；主仓零改动 |
 | `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
 | `wt0-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶单叶；`agent-9` / `agent-u45hh3gd`；≤1 Lean）** | 固定 case 13067 重建叶 `LLLLLLLL`，同盒做二阶中心 Taylor+CSE Lean pass；直接 x 空间三变元 + `nb18_unfold`，禁 dcT2/换叶/细分/提高深度；不做 sibling、glue、全 cell 或 Assembly |
 
@@ -81,6 +81,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-opt-a-w1` | **完成（2026-11-27，零 Lean；快照 REPORT 436 行 + 22 脚本 + CSV；主仓零改动）** | 位精确引擎逐位复现 kBox0 P3；成本模型订正 ΣN_visited=93·N；Q1 全族 N_min=16（6,609）/32（3），N 杠杆 51.1→27.8 CPU·h（4.41×/5.40× HOL），N=32 安全 28.1/34.4 h；Q2 精度 D5 0%；Q3 叶树 −11.8%，落地树已最优；Q4 HOL 2-piece 无捷径（y1=2.8195635，x=7.94994，ERRATA）；Q5 三杠杆 3.89×/4.77×，≤2× 需地板 ≤3.16 s ⇒ 只有 Track B |
 | `wt0-hol-replay-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-26；编排者 SHA 40/40；无 patch；Lean 0/80 + 0/79，SORRIED −0）** | 原 80/79 Python 候选树有效；一阶 dcT2 两叶各约 1.074 MB，D2 与 HOL 二阶 DIFFERS；leafA RC=134/16.93 GB，Bisect1–8 触发止损。最终生成源/生成器仍含禁用的 maxRecDepth 4M，只是失败证据，非合规候选；后续等用户裁决 |
 | `qitnpea-hol-replay-w1` | **完成：PARTIAL + OVER-BAND（2026-11-26；编排者 SHA 35/35；无 patch；Lean 内核覆盖 0，SORRIED −0）** | HOL case 13031 = 309/308；bb_arb 19,234 叶 = D1 62.2×，仅外部；D3 实际 637,554 B = 25.04×；D2 一阶 hull-TM vs HOL 二阶+CSE = DIFFERS；stage-B/decide/case 公理均未运行。等用户选择严格原版叶模型或明批超带宽路线 |
 | `tsk-certunit-m1-w1` | **完成：硬指标 (b) FAIL ⇒ `BUDGET_EXHAUSTED`（2026-11-26 22:26；route a 量产 NO-GO，非数学 NO-GO；ZCode `agent_86d1a721`）** | P0 28.13 s / P1(R=64) 28.17 s ⇒ R≈0；P2(N 半化) 20.73 s；P3(N=16) **15.49 s 地板**（每节点 6 维 `dfB` 包络算术，19,666 节点）；M1b 自证 checker 17.80/19.79 s、7.64 GiB、证书 0 Int、`probe_check`=[propext,Quot.sound]、`probe_pos`=标准三、与 Python 回放 322/322 bit 逐位同；6,612×15.3 s ≈ 28.1 h vs HOL 6.313 h = **4.5×**，仍 >2×。主仓零改动；快照含 SHA |
@@ -241,6 +242,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（Track A 完成：N/叶树/精度都动不了地板；Track B 发车；续1606）**：
+  ① **Track A（`tsk-opt-a-w1`，零 Lean）完成**：位精确引擎在 kBox0 逐位复现 M1（N=16 lb `+8.57929462e-4`、N=8 `−7.491e-3`、节点/ΣN 同）；**成本模型订正**：kernel 只走 live `ite` 分支，`ΣN_visited = 93·N`（原 AST 121,344 项，非字面 189,184），`cost_leaf ≈ 15.0 s + 1.055e-4·ΣN_visited`，复现 P0/P2/P3 与 landed 29.16 s/叶。
+  ② **Q1 全族 6,612 叶 [实测]**：`N_min = 16` 6,609 叶、`32` 3 叶（kBox2933/2078/1607）；N≤8 全族不可行；N 从 2048/128 降到 16/32 ⇒ ΣN −81×，**51.1 → 27.8 CPU·h** decide-only（+import 57.3 → 34.1 h）= **4.41× / 5.40× HOL**；全族安全统一 N=32 ⇒ 28.1 / 34.4 h（4.46× / 5.44×）。**Q2**：粒度 −80→−24（56 bit）40/40 样本仍正，但 D5 **0%**、D2 仅 −3.3% ⇒ 不是杠杆。**Q3**：叶树自底向上只合并 12.2% 节点，实测省 ≈674 叶（6,612 → ≈5,833，−11.8%）；独立 B&B 在 7/12/19/47 叶四档精确复现落地叶数 ⇒ 落地树已最优；更细分裂不划算（15 s/叶 vs ≤12.8 s 省）。**Q4**：HOL 只暴露 2 单元（y1 95.01% 切，y1=2.8195635、x=7.94994；文档 7.951434357936 为 x-space 假设，**ERRATA**），两半 lb −7.9e4/−3.2e11 ⇒ 2-piece 无捷径。**Q5**：三杠杆叠加最好 **3.89× / 4.77×**（24.6 h decide / 30.1 h +import）；≤2× 需地板 ≤3.16 s（−79%），≤1.2× 需 ≤0.41 s。
+  ③ **Track B 发车（ZCode `agent_a852a202`，零 Lean）**：目标地板 15.0 → ≤3.4 s（≥4.4×），评估 two-tier 便宜预检、惰性/必要性跳过、更粗导数界、替代 Taylor 模型、checker/证明形状；交付 `DESIGN.md` / `PARITY_CARD.md` / `EVIDENCE.md` / `UNRESOLVED.md`；判定 GO / CONDITIONAL / NO-GO；输入 = A 的 `tb_decomp.csv` / `tb_nodes.csv` / `q1_leaves.csv`；**不依赖 C**。
+  ④ **工程可选（未批）**：AST 统一 N=32（DEF-FIX，−40%，4.46×/5.44×）是 A 给出的最大单笔确定性收益，等用户裁决是否走 DEF-FIX；C（模块合并）按用户裁决不做。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-26（wt0 严格 HOL 二阶+CSE 单叶发车；续1605）**：
   ① **用户明批与回执**：`wt0-hol2-cse-leaf-w1`，全新 `agent-9` / `agent-u45hh3gd`；TASK 与六维卡先落快照。固定 case 13067 的重建候选叶 `LLLLLLLL`（node id 8），与旧一阶失败件同盒，复放 pp=3、upper6=-0.005956190999171875；标 RECONSTRUCTED-LEAF，不冒充原运行已识别叶。只做一片及 CSE 消融，不做 sibling、glue、全 cell 或 Assembly。
   ② **路线**：原非 poly `mk_funs` 二阶中心 Taylor + 真 CSE；前三坐标为 `[1,1]`，可在直接 x 空间用三变元 `taylor3_upper` + `nb18_unfold` 精确桥接，不改原六维命题、不绕 y 空间。禁 dcT2、换叶/换盒、额外细分、自有精度及任何 heartbeats/maxRecDepth 提升；旧复放器/盒数据可复用，旧 4M 一阶生成器不可复用。
