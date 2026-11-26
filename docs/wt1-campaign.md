@@ -159,6 +159,11 @@
   `dRescale`、`KZ=1024` slack 都已内建）。
 - PARITY：直接套 `PARITY_CARD_wt1_value.md` 的六维模板 + 两个已校准的坑
   （HOL `total_time`、olean 不设绝对阈值）。
+- **L3 探针卡（`parity-l3-b-prep-w1/`，`l3-probe-v1`，2026-11-26）**：D5 主判据
+  `t_full/9.661 s`（HOL 单箱预算）；**只有 M2 全量可做 GO**，EST 12–26 s = 1.3–2.7×
+  （值通道 6–9 s 是假绿，不含 part 12.66 s）；D3 证书层 S1（端点 154.5 B/箱）0.44–0.48×，
+  但 **cover/装配 3,654,359 B ⇒ 整 wt1 D3 地板 2.21×**（L3 单独拉不进 2×）；
+  D4 终端 `dcSlack` 不通用化 ≥400 KB/箱 ⇒ 通用终端是硬要求。**wt1 本身不重投。**
 
 ## 9. 指针
 
@@ -171,5 +176,5 @@
   `wt1-m9-emission-w1/`（gen_m9 终版）、`wt1-l1-probe-w1/`（L1）、
   `wt1-bulk-{a,b,c}-w1/`（221 量产）、`wt1-assembly-w1/`（组装）、
   `holparity-wt1-value-w1/`（原形态 PARITY CARD）、`holparity-wt1-l1-backfill-w1/`（L1 卡）、
-  `wt1-l1-close-w1/`（Final 重编 + 根面审计）。
+  `parity-l3-b-prep-w1/`（L3 探针卡 + B 口径注记）、`wt1-l1-close-w1/`（Final 重编 + 根面审计）。
 - 章程：`docs/hol-parity-gate.md`、`AGENTS.md` §7.3；雷区：PR-62/63/64/65。
