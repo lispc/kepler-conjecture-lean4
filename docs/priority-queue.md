@@ -237,6 +237,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Wave 2.5 首批 4 件落库；CertTM hold 用户明批；census 解锁；续1594）**：
+  ① **`dc5410c5` TaylorSecond 三件**（来自 `lean436-fixer-w1`）：`Basic:87` `norm_num [minSmoothness]` → `simp`（4.36 丢 `irreducible_def`，顺带消除报错路径注入的伪 sorryAx）；`DCKit:216` scoped `set_option linter.constructorNameAsVariable false in`；`Taylor3:131` `Set` 在 4.36 为 structure，`hset` 改 `filter_upwards` + `first | exact hiff | exact propext hiff`。4.32 RC=0（2.41/3.31/3.15 s）、4.36 RC=0（2.07/2.96/2.78 s）；编排者亲跑 4 声明公理同基线（标准三）。
+  ② **`9b973d29` CertTM（HOLD-AREA，用户 2026-11-26 明批）**：`arctan_residual_sup` 的 `hcont` 内联 `positivity` 在 4.36 目标展开为 `Real.ofCauchy` 字面量；把 `hne : ∀ x, 1 + x ^ 2 ≠ 0` 提成 `have`。proof-body only；4.32 RC=0/33.92 s/6.19 GB、4.36 RC=0/33.63 s/6.32 GB；`arctan_residual_sup`/`exBoxIteHull_wf`/`exIteHull_valid` 公理同基线；`exIteHull_strict_none` 4.36 `[propext, Quot.sound]` → `[propext]` 为**既有 4.36-vs-4.32 形状差**（非本 patch 引入，已记录）。仅机械适配，不涉 TM3/Mono*/D 层路线或量产。
+  ③ **census 解锁**：CertTM 传递下游 6,846/9,137；已通知 `lean436-census-w1` 把 4 个 patched 源 + 4 个 4.36 olean 同步进其 repo/pool、把 4 行标 OK 后继续多轮拓扑；通知 `lean436-fixer-w1` 在 `fixed.tsv` 记 `LANDED` 并继续轮询新 BLOCKED。两车道仍只读主仓、不落库。
+  ④ 通知前 census 状态：OK 240 / BLOCKED 3 / REUSED 100 / DEFERRED_BY_BLOCKER 6,839。fixer 已交付 `RECIPES.md`（R1 minSmoothness、R2 linter recursion、R3 Set-as-structure、R4 Real-literal positivity）与空的 `SF_CANDIDATES.md`。
 - **2026-11-26（Lean 4.36 Wave 1-A 落库 + 根面复验 + 编排者 lake build 事故自报；续1593）**：
   ① **`planarity-split-w1` 完成/落库 `3119ded7`**：`Planarity.lean` 应用 patch 11 三处 proof-only 适配 + 把 `azim_cone_of_combo` 拆为 6 条新 private 声明（`sin_sub_combo1/2`、`azim_combo_frame`、`azim_combo_axis_false`、`azim_combo_off_align`、`azim_combo_off_bounds`）；原声明签名/陈述 7 行逐字节不变，删除体内未使用死代码。4.36 **@5M（未调高）RC=0/0 err/43.69 s/3.32 GB**（拆分前实测 6,582,885 hb > 5M）；4.32 RC=0/34.23 s/3.29 GB；105 条公开定理公理三路逐条相同（标准三，无 sorryAx）。DIFFERS（器级）：7 个新 private 常量、mangled 下标平移，全库无 `_private.Kepler.Text.Planarity.*` 引用。
   ② **岛内根面复验（含 Wave 1 全部 landing）**：`PackingAuto2→6→7→8→Assembly→Final` 逐一 `lean -o` RC=0（Assembly 95.79 s/9.33 GB，Final 5.39 s）；`#print axioms the_kepler_conjecture_e2e` = **589 = 585 native + 标准三 + sorryAx**，与 `root-baseline.axes` **逐名相同**。主工具链仍 4.32.2。
