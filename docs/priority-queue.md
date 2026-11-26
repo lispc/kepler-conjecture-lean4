@@ -72,14 +72,15 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-blockers-w1` | **在飞（2026-11-26 用户指令解决升级 blockers；`agent-3` / `agent-qeyxbrsn`；≤1 Lean）** | 从 `999aadb5` 起准备 4.32/4.36 同源码候选补丁：exLn_eval 离线证明、Conic/Geom 破类、CFW/NliBanks21/实际证书链、GoodList 公理漂移；交付 STATUS/MIGRATION/patches；不直接升级/改主仓，禁深度心跳当修复/全139/全库 |
-| `wt0-r1-core-w1` | **在飞（2026-11-26 用户再发 wt0 车道；`agent-0` / `agent-jh56tuws`；≤1 Lean）** | R1 y4 代表单调核：`MonotoneOn (fun y4 => pc3 y4 y5 y6) (Icc 2.01 2.30)`，y5/y6 同盒；新模块重建5–6位槽导数括号，private nb18_step0 只仿写；不做 y5/y6/R3/R5/Assembly，SORRIED −0 |
-| `qitnpea-wave1-y6-w1` | **在飞（2026-11-26 卡验收后续入；`agent-1` / `agent-m4s5djo4`；≤1 Lean）** | 两行回归 + D3 瘦身/程序化生表最小接口 + y6 单片曲率/ConcaveOn/真实消费探针；上端 2.4636，复用 ZTG/CFWGKMBZ/IExpr；全部新 Lean+生成器源 ≤50,928 B，超标记 PAUSE_COST；不做 11 片/456 点/Assembly，SORRIED −0 |
+| （当前无在飞车道） | 三条既有车道均已交付；后续动作等用户指令 | 不自动 resume、不新建 agent、不扩量产 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）** | `01–10`、`12–15`、`17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 仍 BLOCKED，`16/18/19` 待 SF，GoodList/Auto8 未决；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
+| `wt0-r1-core-w1` | **完成：UNRESOLVED（2026-11-26；y4 目标 0 条；辅助 2/2 标准三；主仓未落库）** | `wt0_delta_bounds` 与 `wt0_small_matanD_bracket` 可复用；三 sol 槽聚合 dSE 紧包络未闭合，不是 wt0/route R 反证；不做 y5/y6/R3，SORRIED −0 |
+| `qitnpea-wave1-y6-w1` | **完成：BUDGET_EXHAUSTED（2026-11-26；16 GB memcap；SHA 80/80；主仓未落库）** | 14 个置换元组截零检查与运输 elaboration errors=0，但内核/olean 生成超 16 GB；`curvCheckClamp_decide`、C.2、ConcaveOn/consumer 未闭；D3=150,022 B（当前单片用户明批），SORRIED −0，不量产 |
 | `wt0-route-r-first-w1` | **完成/落库 `65d8039a`（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + 模块构建/最终公理复验 + push）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；已落 `NliWt0LogKit`/`NliWt0Corner` 供 R1 复用；未接 Assembly、SORRIED −0；全 route R 仍 UNRESOLVED |
 | `lean436-trans-workaround-w1` | **完成/主 patch 落库 `999aadb5`（2026-11-26；双版本与 Final 589 复验 + push）** | 离线中间值 + 小 decide + `taylorIter.eq_2`/rfl 已应用：4.32 模块构建 RC=0/20.51 s，4.36 直编 RC=0/35.57 s；五证书 `[propext]`、五 `_real` 标准三，API/陈述不变；Final 根面 589。后续由 `lean436-blockers-w1` 处理，主工具链仍 4.32.2 |
 | `repo-hygiene-review-w1` | **完成（2026-11-26；只读交付，编排者 SHA 5/5 + P0 现场 spot-check）** | **不建议大面积重构**；优先 README/PLAN/pq/campaign 文档纠偏与账本瘦身，再 NliBanks18→20 复用 `nb12_nonneg_of_deriv` 两文件 pilot；17 项 arctan 公共化另卡另 pilot；Assembly 三对私有桥随必要改动顺带；两 tracked `.pyc` 可独立清理；REPORT/CODE_REVIEW/DOCS_REVIEW/RECOMMENDATIONS 在快照，未执行建议 |
@@ -230,6 +231,14 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Lean 4.36 兼容补丁 15 笔逐笔验收并落库；续1590）**：
+  ① **逐笔 commit**：01 `577c3754`；07 `0b0e942f`；03 `d34abf8c`；04 `535a8d60`；02 `3c9e8b8c`；08 `07f2caa0`；05 `ba222bfc`；06 `f1ab403d`；09 `64721101`；10 `c01fff8d`；12 `8a7be704`；13 `682f5826`；14 `1aed8889`；15 `ba3aa0ce`；17 `ab382e5c`。每笔均先应用候选、4.32/4.36 单文件 RC=0、相关公开/私有 `#print axioms` 通过、根面公理列表与基线逐名一致后才独立 commit；逐笔证据见 `~/c17_backup/lane_snapshots/lean436-landing-w1/LANDED.tsv` 与 logs。
+  ② **最终岛验收**：`Kepler/Assembly.lean` RC=0 / 106.60 s，`Kepler/Final.lean` RC=0 / 5.85 s；编排者亲跑根面 = **589 = 585 native + 标准三 + `sorryAx`**，与开工基线逐名相同。SORRIED 48 / AXIOM 585 不变，主工具链仍 **4.32.2**，未做 139、585 全量或版本切换。
+  ③ **未纳入**：`11` Planarity 在原 5M heartbeats 下仍 BLOCKED（20M 仅诊断）；`16` 含陈述印刷形 DIFFERS 但无 SF 立案，`18/19` 依赖其 4.36 适配，三笔均未落。GoodList `+Classical.choice` 漂移、`PackingAuto8` VSub、Assembly 三处同模式仍是升级 blocker；K009 实测无公理漂移。
+- **2026-11-26（wt0 R1 与 QITNPEA y6 首件收线：均未减债；续1589）**：
+  ① **wt0 `UNRESOLVED`**：y4 `MonotoneOn ... [2.01,2.30]` 未证，保留 `wt0_delta_bounds`、`wt0_small_matanD_bracket` 两条标准三辅助定理；卡点是三 sol 槽聚合 dSE 的相关性紧包络，不能外推原命题或 route R 为假。主仓未落辅助 patch，SORRIED −0。
+  ② **QITNPEA `BUDGET_EXHAUSTED`**：14 个置换元组的截零探针均 some/lo 正、运输 elaboration errors=0，但内核检查/olean 生成在 16 GB memcap 被终止；`curvCheckClamp_decide`、C.2、ConcaveOn 与 consumer 未闭。D3=150,022 B（2.946×）按用户「超过 2× 还好，先继续」仅对当前单片记 USER-APPROVED，不是 D3 达标或量产授权。SHA 80/80，SORRIED −0。
+  ③ **边界**：两条均未接 Assembly、未做 11 片/456 点/农场，后续均等用户指令，不自动 resume。下一条：续1588。
 - **2026-11-26（Trans 兼容 patch 应用并推送 `999aadb5`；升级 blockers 车道发车；续1588）**：
   ① **应用与双版本验收**：候选 patch 已应用，源与 `Trans.offline.lean` 逐字节一致（+242/−5）。4.32 `lake build Kepler.Interval.Trans` RC=0/20.51 s；4.36 直编 RC=0/35.57 s、峰值 6.04 GB。五计算证书均恰 `[propext]`，五 `_real` 均标准三；`Kepler.Final` 重编并亲跑根面 **589 = 585 native + 标准三 + sorryAx**。commit/push `999aadb5`，主工具链仍 4.32.2。
   ② **新 lane 回执**：`lean436-blockers-w1` = 原 `agent-3` resume / `agent-qeyxbrsn`；任务书已同批落快照。目标 = 同一份源在 4.32/4.36 通过的候选补丁，先 `exLn_eval` 原等式离线证明，再 Conic/Geom/Graphs/Packing 破类，随后 CFW 短链、NliBanks21/实际大证书、K009/GoodList 两形状公理漂移，并形成 MIGRATION。
@@ -429,50 +438,3 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
   ④ **处置**：本轮**不发 QITNPEA Lean 车道**（over-band 未获用户明批）；待 L1 重发射收线后先发
   **单表设计的最小样品探针**（1 凹性片 + 2 角点 + 可计算包络，目标把 456 压成 3 张表），
   样品绿后更新卡片再请用户裁决。SORRIED 48 / AXIOM 585 不变。下一条：续1568。
-- **2026-11-26（wt0 侦察：T2 形态 409 叶/10.4–16.9× ⇒ OVER-BAND；正确路线是 11-19 的 route R；续1568）**：
-  ① **等价关系（机器精确复核，订正我工单的错误）**：**wt0 = wt1 one-mode 树（`W1aFJet.w1F3O`）
-  减掉 `fNeg2`，别的不变**。我工单里"前三槽常数 2→1"是**错的**：`gamma3fXDivSqrtdelta 1 1 1` 的
-  三个 `1` 是 `m4/m5/m6`，而 `mk456` 把 1–3 槽钉成 `two6 = 2`（Lean 已有 `nb18_indep`，
-  `NliBanks18.lean:434`），y1..y3 根本不进公式。证据：7 条符号槽恒等式（ℚ(√2) 多项式恒等）+
-  45 个有理点 × 4 条整式等式，全精确 `==`（`scripts/equiv_check.py`）。
-  ② **T2 模型（若走 DC 发射）**：8 个 HOL prep cell 细化（depth ≤21）⇒ **409 叶**（T2 min 8.50e−6，
-  中位 1.51e−3）；从零切 429 叶；叶宽中位 ~6.0e−2。**D1 vs HOL 520 pass = 0.79× PARITY**（glue 10/512）。
-  ③ **D5 = OVER-BAND**：409 × 49.64 s = **20,303 s**（5.64 h 单车道 / 1.88 h 3 车道）；HOL wt0 =
-  972.924 s + 载入 986.295 s = 1,959.2 s（urban）/ trig 投影 1,202.3 s ⇒ **10.36× / 16.89× 总量、
-  3.45×/5.63× 墙、26.5× per pass**——比 wt1 的 5.1× 更差。
-  ④ **关键发现**：D1 被**盒梯度通道放大 51×**（T2p 只需 2–8 叶）——D1 由 matan 导数括号定，不是数学；
-  T1（盒值）只有 116/409 叶过 ⇒ 发射必须用 value+gradient 终端。风险实测：`y4 > 2` 确认
-  （sup ∂Δ/∂X4 = −0.1604）；但 **∂Δ/∂X5,6 sup 恰为 0 ⇒ y5=2 面上严格单调引理会挂**；m=1 时 matan
-  实参 t∈[−8.2e−4, 3.0e−2]、g∈[−4.54e−2, 4.14] 均在 (−1,∞)；Δ 只在远端帽 0.043% 变号。
-  ⑤ **同对象旧车道发现（重要）**：`~/c17_backup/lane_snapshots/cell3-wt0-scout-w1/` 已有
-  **2026-11-19** 的侦察（`SCOUT.md`/`work/`/`wt0_card.md`，未覆盖）：全局极小
-  **+1.78278351164e−4 恰在有理角点 (2.01,2,2)**；三轴变号全在远端三面"墙"内（墙 min ≥ 2.7535e−3
-  = 15.4× 极小）；角点邻域 [2.01,2.30]³ 三轴全单调 ⇒ **route R「单调核 + 有理角点证书 + 单墙」**
-  GO，footprint ~2,000–21,000 行、单车道 1–3 周（R4→R2→R1→R3→R5，R2+R4 一周内出首个真件闸）。
-  ⑥ **结论（修正下一主攻排序）**：wt0 的**正确路线是 route R（手写）**，不是 409 叶的 T2 发射
-  （后者 over-band，只作 fallback）；QITNPEA 第一波（角点电池，一车道 −3）仍是**性价比最高的
-  立即目标**。协调教训：派同对象车道前必须查快照目录与 `nli-campaign` §9 执行卡（本次撞名但
-  旧件完好、新件做了等价复核与 PARITY 预表，未浪费）。
-  SORRIED 48 / AXIOM 585 不变。下一条：续1567。
-- **2026-11-26（QITNPEA 侦察：13 条剩余；角点电池可批量收口；建议第一波 3 条；续1567）**：
-  ① **精确计数**：`nliRestQITNPEA*` 17 条中 4 条已闭（`4003532128a` 纯代数、`3725403817` G4 glue、
-  `1_2_2`/`1_2_1` rad2）⇒ **13 条 `:= sorry`**（Assembly 1445/1465/1471/1477/1483/1489/1495/
-  1594/1614/1620/1626/1632/1639）。**纯代数单独关不掉任何一条**（rad2 模板对另 4 个 QITNPEA1
-  数值上死：`rad2−2` 角点最小 −5.7e−2…−1.7e−1，`H_mono_*` 需 x3 ≥ 5.76）。
-  ② **共享下界（仿射）**：`B5=[2hmin,2hplus]×[2,2hmin]⁵` 上 `min_y(γ4+λ·dihY)=A+λB` 精确
-  （A=−0.0055589354、B=1.3990024524，argmin 恒为角点 (2.52,2⁵)）⇒ 两个端点证书可覆盖
-  `3848804089/5814748276/6206775865/5653753305`（绑定余量 `4089` 的 **7.97e−5**）+ `BIXPCGW9455898160`；
-  但 λ 线性的 dihY 分解（系数 −1.29）**排除朴素细分**。
-  ③ **更好的共享机器（角点电池）**：γ4 在宽盒 `[2hmin,2hplus]×[2,√8]⁵` 的 y2…y6 上**逐轴严格凹**
-  （`∂²γ4/∂yᵢ² ≤ −0.116` 采样）、`y=2.52` 处为**凸折点**（斜率跳 +0.174）⇒ 逐轴最小值 ∈
-  {lo, 2.52, hi} ⇒ 全族最小值 = 精化角点电池（96/144/216 点），每个债务降为**有限个有理点求值**；
-  与全部扫描/下降 argmin 一致。**例外**：两个带 γ3 的 bank 在盒内有 `1/√Δ` 奇点
-  （Δ(2,2,2,u,u,u) 在 u≈6.00 变号），不能用此机器。
-  ④ **建议第一波 3 条**：`1_1_2`（1620，机器 ~90% 在库：`NliQitnpea12ArctanSeries`+`fat1-g3-exact-w1`，
-  独立复算 min γ4 = 0.08134 > 阈值 0.0114）、`1_2_0`（1614）、`1_1_1`（1626）同模板；
-  一车道 −3。`5400790175a`（1471）可走 `FhbEtaCurve` 的 η-guard（guard min γ4 = +0.0354 > 0.0214）。
-  ⑤ **ERRATA 线索**：`FhbEtaCurve` 头注的 `∂γ4/∂y3,y4 ≥ 1.9e−2` 与实测不符（混合符号），
-  但其 `m3/m4/m5` 是较弱的端点最小值形、与实测一致 ⇒ 记为头注 ERRATA，不改路线。
-  ⑥ **对"下一主攻"的影响**：QITNPEA 第一波（3 条，角点电池）**性价比高于 wt0**（1 条但要整条
-  cover/发射管线）；wt0 仍是下一个大件（其零 Lean 模型侦察在飞：续1568 待记）。
-  SORRIED 48 / AXIOM 585 不变。下一条：续1566。
