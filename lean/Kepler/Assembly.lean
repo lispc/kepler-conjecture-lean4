@@ -3687,12 +3687,20 @@ private theorem evalEdgeHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hypermapOfFan x V E hfan).edgeMap d = (d.2, d.1) := by
   have hif : (hypermapOfFan x V E hfan).edgeMap d
       = if d ∈ dart1OfFan V E then eFanPair V E d else d := by
-    show (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
-      (hypermapOfFan x V E hfan)) d = _
-    unfold hypermapOfFan extendPerm
-    simp only [Equiv.ofBijective_apply]
-    unfold Kepler.Text.Fan.res
-    rw [(finite_dart1_fan hfan).coe_toFinset]
+    have hs : ↑(hypermapOfFan x V E hfan).darts = dart1OfFan V E :=
+      (finite_dart1_fan hfan).coe_toFinset
+    have hset_e : Set.BijOn (eFanPair V E) (dart1OfFan V E) (dart1OfFan V E) :=
+      ⟨fun d' hd' => eFanPair_mem_dart1 hd',
+       fun a ha b hb heq => by
+         have heq2 : eFanPair V E (eFanPair V E a) = eFanPair V E (eFanPair V E b) :=
+           congrArg (eFanPair V E) heq
+         rw [← eFanPair_sq a ha, heq2, eFanPair_sq b hb],
+       fun y hy => ⟨eFanPair V E y, eFanPair_mem_dart1 hy, eFanPair_sq y hy⟩⟩
+    have hmem : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := by
+      rw [hs]; exact hd
+    show extendPerm (hypermapOfFan x V E hfan).darts (eFanPair V E)
+        (bijOn_res hs hset_e) d = _
+    rw [apply_extendPerm_of_mem hmem, if_pos hd]
   rw [hif, if_pos hd]
   rfl
 
@@ -3701,12 +3709,17 @@ private theorem evalNodeHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hypermapOfFan x V E hfan).nodeMap d = (d.1, sigmaFan x V E d.1 d.2) := by
   have hif : (hypermapOfFan x V E hfan).nodeMap d
       = if d ∈ dart1OfFan V E then nFanPair x V E d else d := by
-    show (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
-      (hypermapOfFan x V E hfan)) d = _
-    unfold hypermapOfFan extendPerm
-    simp only [Equiv.ofBijective_apply]
-    unfold Kepler.Text.Fan.res
-    rw [(finite_dart1_fan hfan).coe_toFinset]
+    have hs : ↑(hypermapOfFan x V E hfan).darts = dart1OfFan V E :=
+      (finite_dart1_fan hfan).coe_toFinset
+    have hset_n : Set.BijOn (nFanPair x V E) (dart1OfFan V E) (dart1OfFan V E) :=
+      ⟨fun d' hd' => nFanPair_mem_dart1 hfan hd',
+       fun a ha b hb heq => mono_nFanPair hfan ha hb heq,
+       fun y hy => sur_nFanPair hfan hy⟩
+    have hmem : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := by
+      rw [hs]; exact hd
+    show extendPerm (hypermapOfFan x V E hfan).darts (nFanPair x V E)
+        (bijOn_res hs hset_n) d = _
+    rw [apply_extendPerm_of_mem hmem, if_pos hd]
   rw [hif, if_pos hd]
   rfl
 
@@ -3716,12 +3729,17 @@ private theorem evalFaceHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
       = (d.2, inverse1SigmaFan x V E d.2 d.1) := by
   have hif : (hypermapOfFan x V E hfan).faceMap d
       = if d ∈ dart1OfFan V E then fFanPair x V E d else d := by
-    show (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
-      (hypermapOfFan x V E hfan)) d = _
-    unfold hypermapOfFan extendPerm
-    simp only [Equiv.ofBijective_apply]
-    unfold Kepler.Text.Fan.res
-    rw [(finite_dart1_fan hfan).coe_toFinset]
+    have hs : ↑(hypermapOfFan x V E hfan).darts = dart1OfFan V E :=
+      (finite_dart1_fan hfan).coe_toFinset
+    have hset_f : Set.BijOn (fFanPair x V E) (dart1OfFan V E) (dart1OfFan V E) :=
+      ⟨fun d' hd' => fFanPair_mem_dart1 hfan hd',
+       fun a ha b hb heq => mono_fFanPair hfan ha hb heq,
+       fun y hy => sur_fFanPair hfan hy⟩
+    have hmem : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := by
+      rw [hs]; exact hd
+    show extendPerm (hypermapOfFan x V E hfan).darts (fFanPair x V E)
+        (bijOn_res hs hset_f) d = _
+    rw [apply_extendPerm_of_mem hmem, if_pos hd]
   rw [hif, if_pos hd]
   show (d.2, inverseSigmaFan x V E d.2 d.1) = _
   rw [inverse_sigma_fan_eq_inverse1 hfan (v := d.2) (w := d.1)
