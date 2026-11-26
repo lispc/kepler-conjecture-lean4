@@ -3142,7 +3142,7 @@ theorem inter_is_empty (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
   exact origin_not_in_rcone_fan x v h1 (hyx ▸ hy.1)
 
 /-- HOL topology.hl:3174 `rw_dart_fan`：w_dart ∩ rcone。 -/
-def rwDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
+noncomputable def rwDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
     (p : V3 × V3 × V3 × V3) (h : ℝ) : Set V3 :=
   wDartFan x V E p ∩ rconeFan x p.2.1 h
 
