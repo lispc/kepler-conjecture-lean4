@@ -75,13 +75,13 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
 | `wt0-hol2-arith-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-10` / `agent-qz31d8mc`；≤1 Lean）** | 同一 `LLLLLLLL` 二阶 CSE 叶，只换 ℚ 算术侧条件为 norm_num/显式展开/字面量证明；kit hash、数值、盒、CSE 不动；先小探针再三轮内编译，不做 sibling/glue/Assembly |
-| `qitnpea-safe-cse-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-11` / `agent-icdajfoq`；零 Lean）** | 安全 CSE 只共享确认真重复子式，先证开/关各通道一致，再按原 DFS 找 case 13031 首个 pass；标 RECONSTRUCTED-LEAF；禁 camlp5、额外细分、旧 19k 叶与第二片 |
 | `tsk-opt-m2-w1` | **在飞（2026-11-27 用户明批「批」Design P 一盒原型；ZCode `agent_0df70760`；≤1 Lean）** | 新文件 `Kepler/Interval/PointTM.lean`（~350 行，不改 CertTM）：`PtDual`(1+6)+`evalPtDual`+`ptLoBound`+`checkPosPt`+`CurvTab.Valid`+`checkPosPt_sound`；worst-case 叶（guard-straddle + 高 K）单叶 `decide` ≤3.4 s、RSS ≤10.5 GiB、标准三、K ≤550、12/12 lb >0；只做原型、不量产/不重发射/不碰 585；主仓零改动 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `qitnpea-safe-cse-leaf-w1` | **完成：PASS（2026-11-27；编排者 SHA 24/24 + 探针/首叶/根盒路径独立复核；零 Lean，SORRIED −0）** | SAFE-CSE 消除 delta 污染；case 13031 第 13 DFS 节点/depth 12/f1 首 pass，upper=-61279551481/8000000000000<0，13/13 开关节点逐位一致；根盒 12 分裂精确重建叶盒；仅 RECONSTRUCTED-LEAF，真实 azure 项形/同序首叶仍 UNRESOLVED |
 | `wt0-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 50/50 + 二阶复放重跑；无 patch；Lean 单叶 0/1，SORRIED −0）** | pp=3 负上界、pp=6 逐位一致，CSE 274/518 数值相同；439 行 kit 编译产物 869,400 B、十条标准三。CSE/nocse 叶均未过，leaf_compile8 RC=1/maxErrors=100；首通道 = ℚ 算术侧条件表示，kit 可复用，后续等用户裁决 |
 | `tsk-opt-b-w1` | **完成：GO（2026-11-27，零 Lean；Design P 点 Taylor + 单元 Hessian 曲率表；快照 58 文件 + SHA；主仓零改动）** | 84.7k 原语/叶 → **2.62 s/叶（5.7×）**；地板解剖 467,867 原语/叶、31 µs/原语自洽；两级/惰性/粗界/均值形式全死（1.65× 或 0/12）；现 `err` 过证 300×，换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12）；D5 投影 11.6 h（1.84×）/ 叶树合并 10.3 h（1.63×），**WITHIN-BAND**；K=40–70 vs 容差 550 未严格实现；15% guard-straddle 叶需梯子；A 的 `ite_both=0` 为计数器假象（ERRATA） |
 | `qitnpea-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 21/21 + 两个 OCaml 探针复跑；无 patch；Lean 0，SORRIED −0）** | 原源码语义与 Python 复放核心完成；原版 CSE 通用探针确实会把无共享左脊改指 ref，delta 复放 25 refs 同形并污染 value；真实 azure 项形是否触发仍 UNRESOLVED。首个 pass 未重建，0 行 Lean；pa_j/camlp5 8 移植 RC=2，后续等用户裁决 |
@@ -248,6 +248,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（QITNPEA SAFE-CSE 首叶 PASS；续1619）**：
+  ① **结果**：`agent-icdajfoq` 找到 case 13031 首个重建 pass：DFS node 13/depth 12/全左脊/f1，upper = **−61279551481/8000000000000 ≈ −7.66e-3**；13/13 访问节点 SAFE-CSE 开/关 value/first/second/error 逐位一致。通用探针 legacy 17→15、safe=off=17；delta 恢复 347.158…（legacy −152.605…）；旧“根盒 f2 除零”确认为污染伪影。
+  ② **编排者独立复核**：SHA **24/24 PASS**；亲跑 `probe_safe_cse.py` 与 `verify_first_pass.py` 均 RC=0、pass f1、通道/存档逐位一致；另从根盒重放记录中的 12 次分裂，精确重建全部 lo/hi/y/w 端点。搜索 13 节点/wall 3.19 s/RSS 14.2 MB，CSE 求值 on 154,212/off 177,568。
+  ③ **边界**：仅 **RECONSTRUCTED-LEAF**，不称识别原 309 叶或同序首叶；真实 azure 项形是否触发 legacy 怪癖、safe 提交集与原版是否逐位同仍 UNRESOLVED。零 Lean/零 sorry 变化、无第二片/glue/Assembly；下一棒若进 Lean 需另卡，先复用 wt0 已验证二阶 kit 的六维泛化。
 - **2026-11-27（用户明批 Design P 一盒原型；`tsk-opt-m2-w1` 发车；续1618）**：
   ① **用户裁决**：批 Design P 一盒 Lean 原型（「批」）；只验证架构 sound + 单叶 ≤3.4 s，不进入量产。
   ② **车道 `tsk-opt-m2-w1`（ZCode `agent_0df70760`，≤1 Lean）**：新文件 `Kepler/Interval/PointTM.lean`（~350 行，不改 CertTM）：`PtDual`(1+6) + `evalPtDual` + `ptLoBound` + `checkPosPt` + `CurvTab.Valid` + `checkPosPt_sound`；复用 M1 `nsqrt`/`transOn`；worst-case 叶（guard-straddle + 高 K）单叶 `decide`；验收 **wall ≤3.4 s ∧ RSS ≤10.5 GiB ∧ 标准三 ∧ K ≤550 ∧ 12/12 lb >0 ∧ straddle 梯子可行**；K >550 试单元细分（u² ÷4），wall 超限记 `WALL-FAIL`，不调参硬凑。
