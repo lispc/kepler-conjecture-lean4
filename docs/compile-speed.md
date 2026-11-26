@@ -22,7 +22,7 @@
 | 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
-| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 236–290 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **301–355 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 族 210–372 h） |
+| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **302–530 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min） |
 
 ## 1. 三个基线数
 
@@ -59,7 +59,7 @@
 | `Interval/Cases/*Hull*` | 18 | 1.16 MB | **318–1,176 s / 9.6–12.5 GB**（14 件实测） | **1.92 h** | 内核 `decide` |
 | `Graphs/TopReplay*` | 96 | 92 KB | p50 ≈18 s；最大 S013 **719.9 s / 22.17 GB** | **0.91 h**（87 件实测） | `decide +kernel` 重放 |
 | `Text/LocalAuto*` | 91 | 10 MB | `LocalAuto35` **1,093.1 s / 10.0 GB** | **1.55 CPU·h**（90 件） | norm_num/linarith + 解释器 |
-| `Graphs/CertShards/*` | 580 | 556 KB | census 实测：非 R Hex 23.5–606 s；**R 变体 35–52+ min/件**（HexR.K001 35 min、QuadR.K000 52+ min） | **全量 575 的 35 h 估计作废**，按 R 360 + 非 R 215 重算，可能 **>100 h** | native_decide 分片（585 基座） |
+| `Graphs/CertShards/*` | 580 | 556 KB | census 实测：非 R Hex 23.5–606 s；**R 变体 37–75 min/件**（HexR.K001 2,216 s、QuadR.K000 4,478 s、PentR.K001 >70 min） | **全量 575 ≈237–465 h**（R 360 件 222–450 h + 非 R 14.6 h） | native_decide 分片（585 基座） |
 | `Text/ZTG*` | 26 | 9.9 MB | `ZTGJoint0000CornersP` **503.5 s / 21.25 GB** | `[EST]` 1–2 h | norm_num/linarith 重建 |
 | `Text/PackingAuto*` | 27 | 6.4 MB | `PackingAuto21` **483.5–519.1 s / 16.3–16.5 GB** | `[EST]` 0.5–1 h | 巨型项 simp/unfold |
 | `Graphs/GoodListShard*` | 199 | 149 KB | PentS00 **21–26.6 s / 8.2 GB**；TriS00 3.2–4.2 s | ≈0.5 h | `decide +kernel` shard-range |
@@ -83,9 +83,9 @@ Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h
 
 - TskXLLIPLS：6,412 叶 × 29 s ≈ **51.6 h 串行**；2 车道各 1 lean（2×10.3=20.6 GB）≈ 25.8 h 墙钟。
 - W1DC：231 模块 × ~60 s ≈ **3.7 h**。
-- **CertShards：全量 575 件 ≈236–290 h**（非 R 215 件 ≈14.6 h；R 360 件 210–372 h；`HexR.K001` 2,216 s、`QuadR.K000` >62 min 未结束）；**远超单车道可接受范围**。
+- **CertShards：全量 575 件 ≈237–465 h**（非 R 215 件 ≈14.6 h；R 360 件 222–450 h；`HexR.K001` 2,216 s、`QuadR.K000` 4,478 s、`PentR.K001` >70 min）；**远超单车道可接受范围**。
 - 其余重件 + 证书：`[EST]` ~10 h。
-- 合计 **≈301–355 CPU·h 串行**（import 已含在每模块时间，不再另加）。**该数已使
+- 合计 **≈302–530 CPU·h 串行**（import 已含在每模块时间，不再另加）。**该数已使
   “全量 4.36 重编 CertShards”不可行**；替代方案 A（4.36 `precompileModules` 重建，
   4.32 实测 13.889×；若同效 → 17–25 h）或 B（按族抽样 + 585 逐名审计）待用户批。
 
@@ -349,12 +349,12 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   `TskXLLIPLS → PackIneqTskXLLIPLSClose → Assembly → Final` 在 census 中
   **`DEFERRED`（非 BLOCKED/OOM/失败）**；`0 BLOCKED` 只覆盖已编模块。
   全量 6,412 叶重放（≈51.6 h 串行 / 10.3 GB 每叶）属 acceptance，见 §1.1。
-- **CertShards 的抽样边界（2026-11-27）**：非 R Hex/Pent 已 9 件全绿；**R 变体 35–62+ min/件**
-  （HexR.K001 2,216 s、QuadR.K000 >62 min 未结束）⇒ 抽样降为 **R 族各 1 件**
+- **CertShards 的抽样边界（2026-11-27）**：非 R Hex/Pent 已 9 件全绿；**R 变体 37–75 min/件**
+  （HexR.K001 2,216 s、QuadR.K000 4,478 s、PentR.K001 >70 min）⇒ 抽样降为 **R 族各 1 件**
   （HexR/QuadR/PentR/PentR2/PentR3/HexR2，样本 ≥15–16），其余 `SAMPLED-OUT`；
   任一 R 件失败该 R 族整体回队列。抽样件必须核 `#print axioms` 与 585 manifest 同形
   （实测 = 标准三 + 1 条同名 manifest ax，无 `Lean.ofReduceBool`）。
-  **全量 575 实测外推 236–290 h（非 R 14.6 h；R 210–372 h）⇒ `BUDGET_EXHAUSTED`**；
+  **全量 575 实测外推 237–465 h（非 R 14.6 h；R 360 件 222–450 h）⇒ `BUDGET_EXHAUSTED`**；
   验收替代方案 A（4.36 precompile 重建，4.32 实测 13.889×）或 B（按族抽样 + 585 逐名审计）
   待用户批，车道内不自批。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，

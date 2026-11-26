@@ -245,6 +245,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（CertShards R 族 2/6 实测：HexR 37 min、QuadR 74.6 min；全量 ETA 上修 237–465 h；主队列优先；续1617）**：
+  ① **实测**：`HexR.K001` = 2,216 s（37 min）✅；`QuadR.K000` = 4,478 s（74.6 min）✅；`PentR.K001` >70 min 未结束，90 min kill 记 `BUDGET_CAP`（非失败）。已审计 **11/11**（9 非 R + 2 R）全绿：axioms = 标准三 + 1 条同名 manifest ax，无 `sorryAx`/`Lean.ofReduceBool`。
+  ② **全量 ETA 上修**：R 360 件按实测 37–75 min = **222–450 h**，加非 R 14.6 h ⇒ **237–465 h**；先前 236–290 h 只覆盖低端。**precompile 是唯一现实路径**（4.36 pilot 在飞，不干扰其池/进程）。
+  ③ **执行**：先恢复主队列（Text 1,000 / Graphs 非 shard ~330 / Assembly 3），主队列跑完再补 PentR2/PentR3/HexR2/Quad 各 1 件（90 min cap）；SUMMARY 记 `R-FAMILY-SINGLE-SAMPLE 2/6 (HexR, QuadR)` + 4 族 `NOT-SAMPLED / BUDGET_CAP (acceptance)`，**不得写成全量通过或失败**。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（用户明批 precompileModules；`lean436-precompile-w1` 发车；续1616）**：
   ① **用户裁决**：CertShards 验收走 **A（precompile）**——「当然需要 precompileModules」；B（按族抽样 + 585 逐名审计）保留 fallback。
   ② **车道 `lean436-precompile-w1`（ZCode `agent_7e945d65`，≤1 Lean）**：4.36 下先做 **1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）** 对照；按 4.32 `prod/build_prod.sh` 模板构建 4.36 dylib 闭包 + `--load-dynlib`；记录 baseline vs precompile 的 wall/CPU/RSS、dylib 构建成本/峰值、模块清单与三哈希；`#print axioms`/陈述逐条对 `trust-base.tsv`；判定 **≥10× GO / 5–10× CONDITIONAL / <5× NO-GO**；全量 575 投影目标 ≤25 h（最低 ≤58 h）。
