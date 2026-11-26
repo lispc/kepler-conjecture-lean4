@@ -74,13 +74,13 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `tsk-opt-a-w1` | **在飞（2026-11-26 用户裁决「先 A 后 B，C 不做」；ZCode `agent_b28f1038`；零 Lean）** | 用 `pipeline/interval/tmexact.py` 位精确引擎 + `orig_tree_probe.py`：Q1 最小 N 分布（≥40 叶分层）、Q2 精度余量、Q3 分裂启发式有界 B&B、Q4 2-piece cut/HOL 树对照、Q5 Pareto 与 Track B 输入；先复现 kBox0 P3（N=16, lb≈+8.579e-4）再外推；零 Lean / 主仓零改动；快照 `tsk-opt-a-w1`；FAIL/UNRESOLVED 不判数学 |
-| `wt0-hol-replay-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-6` resume / `agent-8li7yv9o`；不再起计算）** | 当前一阶 dcT2 超大生成表示已连续 Bisect1–8，触发三轮结构性止损；leafA RC=134 栈溢出、Bisect8 RC=1；Lean 0/80 pass、0/79 glue。只整理证据，后续等用户裁决，不接 Assembly |
 | `qitnpea-hol2-cse-leaf-w1` | **在飞（2026-11-26 用户明批严格 HOL 二阶+CSE 单叶；`agent-8` / `agent-o2zedfd1`；≤1 Lean）** | 只做 case 13031 一个真实二阶 Taylor+CSE Lean pass 与同盒消融；先核非 poly `mk_funs`、叶盒/pp/CSE；重建叶标 RECONSTRUCTED-LEAF；禁旧一阶 hull-TM/19k 叶答案，不做第二片/glue/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `wt0-hol-replay-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-26；编排者 SHA 40/40；无 patch；Lean 0/80 + 0/79，SORRIED −0）** | 原 80/79 Python 候选树有效；一阶 dcT2 两叶各约 1.074 MB，D2 与 HOL 二阶 DIFFERS；leafA RC=134/16.93 GB，Bisect1–8 触发止损。最终生成源/生成器仍含禁用的 maxRecDepth 4M，只是失败证据，非合规候选；后续等用户裁决 |
 | `qitnpea-hol-replay-w1` | **完成：PARTIAL + OVER-BAND（2026-11-26；编排者 SHA 35/35；无 patch；Lean 内核覆盖 0，SORRIED −0）** | HOL case 13031 = 309/308；bb_arb 19,234 叶 = D1 62.2×，仅外部；D3 实际 637,554 B = 25.04×；D2 一阶 hull-TM vs HOL 二阶+CSE = DIFFERS；stage-B/decide/case 公理均未运行。等用户选择严格原版叶模型或明批超带宽路线 |
 | `tsk-certunit-m1-w1` | **完成：硬指标 (b) FAIL ⇒ `BUDGET_EXHAUSTED`（2026-11-26 22:26；route a 量产 NO-GO，非数学 NO-GO；ZCode `agent_86d1a721`）** | P0 28.13 s / P1(R=64) 28.17 s ⇒ R≈0；P2(N 半化) 20.73 s；P3(N=16) **15.49 s 地板**（每节点 6 维 `dfB` 包络算术，19,666 节点）；M1b 自证 checker 17.80/19.79 s、7.64 GiB、证书 0 Int、`probe_check`=[propext,Quot.sound]、`probe_pos`=标准三、与 Python 回放 322/322 bit 逐位同；6,612×15.3 s ≈ 28.1 h vs HOL 6.313 h = **4.5×**，仍 >2×。主仓零改动；快照含 SHA |
 | `lean436-fixer-w1` | **完成（2026-11-26 22:14；4/4 MECHANICAL 均已落库 `dc5410c5`/`9b973d29`；零 SF/零 DEF-FIX/零 UNRESOLVED；快照 112 文件 + SHA）** | 4 个 blocker 全部 proof-body/linter 级：Basic:87、DCKit:216、Taylor3:131、CertTM:1648；双版本 RC=0、公理同基线（CertTM 4.36 仅 23 个 `ex*` 上 `Quot.sound` 更小，0 新公理/0 sorryAx）；下游 4.36 实测 Arithmetic 2.09/Coordinate 1.63/Glue 1.67/Bounds 1.82/InvSqrt 1.87 s、`C1965189142aHullBase` 23.3 s/5.78 GB；13 次轮询无新 BLOCKED（census 22:14 OK 412/REUSED 100/BLOCKED 0） |
@@ -240,6 +240,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（wt0 STRUCTURAL-STOP 最终验收；续1604）**：
+  ① **交付与真实覆盖**：`agent-8li7yv9o` 返回 PARTIAL + STRUCTURAL-STOP；编排者 SHA **40/40 PASS**，无 patch，主仓零改动、SORRIED −0。原 cell0 的 80/79 Python 候选树保留；Lean **0/80 pass、0/79 glue**，无通过叶、无 case 级 `#print axioms`。leafA RC=134 stack overflow、37.51 real/346.53 user/16.93 GB；Bisect8 RC=1，连续 8 轮触发 §7 止损。
+  ② **路线与合规边界**：一阶 dcT2 不是 HOL 二阶中心 Taylor，D2 = DIFFERS。最终 `gen_wt0.py:403` 与两叶源 `:35` 仍实际含 **`set_option maxRecDepth 4000000`**；虽编译失败且未作为修复采纳，也只能归档为失败证据，**不是合规候选、不可落库**。`probe_compile.log` 首行明示是事后转录，不能冒充原始 stdout 日志；环境探针不影响 0 件结论。
+  ③ **后续**：不自动续派。若用户继续 wt0，建议另开严格 HOL 二阶单叶卡，复用有效 80/79 树和 matanDD 资产，不修补当前一阶超大生成表示；不判 wt0 或 HOL 路线 NO-GO。
 - **2026-11-26（用户裁决 TskXLLIPLS 优化「先 A 后 B，C 不做」；`tsk-opt-a-w1` 发车；续1603）**：
   ① **用户裁决**：先 **Track A**（零 Lean 的叶树/N/精度 Pareto 研究），A 出数后再做 **Track B**（惰性包络设计 + 新 PARITY CARD）；**Track C 不做**（2 车道验收、29 叶/模块合并、精度 Lean pilot 等工程项暂停）。
   ② **Track A 任务（ZCode `agent_b28f1038`，零 Lean）**：用 `pipeline/interval/tmexact.py` 位精确引擎 + `orig_tree_probe.py`，回答 Q1 最小 N 分布（≥40 叶分层，覆盖 Atan1PLeaf/FamA/T\*）、Q2 精度余量、Q3 分裂启发式有界 B&B、Q4 2-piece cut/HOL 树对照、Q5 Pareto 与 Track B 输入；先复现 kBox0 P3（N=16, lb≈+8.579e-4）再外推；主仓零改动，快照 `tsk-opt-a-w1`；单盒结论不得写成全族。
