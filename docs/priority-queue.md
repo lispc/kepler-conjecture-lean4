@@ -73,7 +73,7 @@
 |---|---|---|
 | `qitnpea-wave1-prep-w1` | **在飞（2026-11-26 用户指令「先发车 QITNPEA 和 wt0，wt1 等结果」；`agent-1` / `agent-m9lp0l0h`；零 Lean）** | 首波 PARITY CARD 更新 + 下一条 Lean 首件工单：D3 机械缩减至 ≤51 KB 的可复核方案、y6 曲率表单片设计；修正 456=144+96+216 首波合计及 D5 口径；产物在快照；不生成全表/不量产，卡验收后续入 Lean |
 | `wt0-route-r-prep-w1` | **在飞（2026-11-26 用户指令「先发车 QITNPEA 和 wt0，wt1 等结果」；`agent-0` / `agent-fmxghi0p`；零 Lean）** | route R 六维 PARITY CARD + R4 log kit/R2 有理角点首件工单；统一 R1 核/R2 角点/R3 墙/R4 log/R5 装配并记 handoff 编号 ERRATA；T2/DC 与 38,011 叶农场禁行；产物在快照；卡验收后续入 Lean |
-| `a-l3-m2-probe-w1` | **在飞（2026-11-26 用户指令「然后 a 探测一下」；派发回执同批入账；卡 `l3-probe-v1`）** | A/L3 1 箱 M1→M2：数据表 + 通用 checker；M1 值通道 >10 s 即 NO-GO；M2 全量 `t_full/9.661`（≤14.49 GO / >19.32 NO-GO），终端 `dcSlack` 通用化硬要求；不改主仓/不改 221/kit；≤1 Lean。**用户同日后续指令：wt1 不新增任务，只等本探针结果** |
+| `a-l3-m2-probe-w1` | **完成（2026-11-26；M1 25.91 s = 2.68× ⇒ NO-GO；M2 未启动；wt1 停在 B）** | A/L3 1 箱 M1→M2：数据表 + 通用 checker；M1 值通道 >10 s 即 NO-GO；M2 全量 `t_full/9.661`（≤14.49 GO / >19.32 NO-GO），终端 `dcSlack` 通用化硬要求；不改主仓/不改 221/kit；≤1 Lean。**用户同日后续指令：wt1 不新增任务，只等本探针结果** |
 | `wt1-b-archive-w1` | **完成/落库 `7b0ae9bd`（2026-11-26；我独立从 HEAD 树删空重发 221/221 逐字节同；`make acceptance-check` PASS）** | B on wt1：221 个 `W1DC_*.lean` 由 tracked source 改为「tracked 数据（`boxes221.json`）+ 生成器 + 构建期生成」，生成物与 HEAD 逐字节 **221/221**；`DELETE_MANIFEST` + 构建钩子 + 抽样链（6 箱 + 9 case + final + Assembly 岛 + 根面 589）；**不做全 221 重编**（字节相同、现有 oleans 有效）；≤1 Lean；不改主仓 |
 | `parity-l3-b-prep-w1` | **完成（2026-11-26，续1574；UNRESOLVED = D5 未测）** | L3 1 箱探针卡（`W1DC_15869`：数据表 + 一次 `eval_mem` + 每箱 `decide`；六维 + D5 go/no-go）+ B 口径注记（D1–D6 不变、D3 tracked/generated 分开报）；产物在快照；零 Lean/零主仓 |
 | `olean-recovery-2w-w1` | **完成（2026-11-23 13:53；missing 0/8,868、Final 闭包 8,869 全齐；编排者亲跑根面 589 同集；§8 续1425 + tools §7）** | 本轮新装 1,033 olean（1,029 编译 + 1 staged D1 件 + 3 审计 prebuilt）；7 failure 全解、0 deferred；6h05m / 169 件/h / 峰值 lean RSS 22.17 GB；平台 1h 强杀 13 次幂等续跑；主池 9,048 regular、0 symlink、主仓零改动。遗留：混世界 A/C 待裁（`SHARD_WORLD_BLOCKER.md`）、仓库缺陷 D1（`Reduction3ElementsOfListNtrans` 源路径≠import 名，staged 件已按 import 名入池并审计标准三，待 SF/ERRATA） |
@@ -334,6 +334,23 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（A/L3 1 箱 M1 实测 = NO-GO；wt1 停在 B；QITNPEA 456 / wt0 R 编号两处 ERRATA；续1578）**：
+  ① **A/L3 M1 NO-GO**：`a-l3-m2-probe-w1` 全量 25.91 s / 6.51 GB / RC=0；box-only 14.94 s；
+  同日 L1 对照 71.04 s（机器慢 1.43×）；主判据 `r = 25.91/9.661 = 2.68×`；决定性单元 =
+  一次 shape 表内核求值 3.07 s vs 落库 1.12 s（2.74× 原始 / 1.92× 漂移校正）；
+  M1 >10 s 触发卡 §2.3 止损，**M2 未启动**；全量投影 33–43 s/箱 = 3.4–4.5×。
+  ② **结构原因**：内核只归约 `List`/`Option`/`match`，`Array.get` 不归约；动态索引查表每节点
+  ≤152 步 + 每 op 一次 match；唯一出路是按节点特化 run = 落库 L1 形态本身。**判词范围 =
+  本求值器设计（索引式 List 表机）的值通道 M1**；不外推到原命题/其它求值策略。
+  ③ **数据/信任**：50 个落库 DC 字面量 0 不符；17 条 axioms 全标准三、0 sorryAx/native_decide；
+  0 error。缺口：`boxTopF=w1F3Z` 不能 rfl、M2 未做、只 3 个 matan 臂、两套 shape 表、
+  每箱数据 4,967 B（S4 级）、olean 1,316,616 B（0.371×）。
+  ④ **ERRATA-1（QITNPEA 口径）**：首波 456 = **144+96+216 合计**，不是每债 456；
+  D5 4.9 s/点 × 456 ≈ **37 min 合计**；旧「37 min/债、13 债 8 h」（续1573/1574）作废。
+  ⑤ **ERRATA-2（wt0 R 编号）**：以旧执行卡为准 **R1 核 / R2 角点 / R3 墙 / R4 log kit /
+  R5 装配**；施工次序 R4→R2→R1→R3→R5；handoff 旧版 §3.2 漂移已改。
+  ⑥ **处置**：wt1 停在 B（`7b0ae9bd`），不再投 L1/杠杆②/A；三线中 wt1 线转维护，Lean 槽给
+  QITNPEA/wt0。两条零 Lean 准备线（续1577）继续。SORRIED 48 / AXIOM 585 不变。下一条：续1577。
 - **2026-11-26（用户明批「先发车 QITNPEA 和 wt0，wt1 等那边结果」；两条零 Lean 准备车道已发；续1577）**：
   ① **用户裁决**：QITNPEA / wt0 现在发车；wt1 不新增任务，只等既有 `a-l3-m2-probe-w1` 结果，不重复派 A 探针。
   ② **QITNPEA 回执**：`qitnpea-wave1-prep-w1` = `agent-1` / `agent-m9lp0l0h`；任务书已落快照同批。零 Lean 更新首波 PARITY CARD + 下一条首件工单：D3 机械缩减、y6 曲率表单片、456=144+96+216 首波合计与 D5 口径勘误；不生成全表、不量产。
