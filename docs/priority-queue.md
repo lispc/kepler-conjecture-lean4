@@ -73,12 +73,12 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
-| `wt0-hol2-cse-leaf-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-9` resume / `agent-vcgwo770`；不再起计算）** | 二阶复放 pp=3 通过、通用 kit 有标准三输出；但单叶 leaf_compile1–8 仍 maxErrors=100/decide stuck，触发三轮止损。只整理资产与失败证据，Lean 单叶 0；后续等用户裁决 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `wt0-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 50/50 + 二阶复放重跑；无 patch；Lean 单叶 0/1，SORRIED −0）** | pp=3 负上界、pp=6 逐位一致，CSE 274/518 数值相同；439 行 kit 编译产物 869,400 B、十条标准三。CSE/nocse 叶均未过，leaf_compile8 RC=1/maxErrors=100；首通道 = ℚ 算术侧条件表示，kit 可复用，后续等用户裁决 |
 | `tsk-opt-b-w1` | **完成：GO（2026-11-27，零 Lean；Design P 点 Taylor + 单元 Hessian 曲率表；快照 58 文件 + SHA；主仓零改动）** | 84.7k 原语/叶 → **2.62 s/叶（5.7×）**；地板解剖 467,867 原语/叶、31 µs/原语自洽；两级/惰性/粗界/均值形式全死（1.65× 或 0/12）；现 `err` 过证 300×，换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12）；D5 投影 11.6 h（1.84×）/ 叶树合并 10.3 h（1.63×），**WITHIN-BAND**；K=40–70 vs 容差 550 未严格实现；15% guard-straddle 叶需梯子；A 的 `ite_both=0` 为计数器假象（ERRATA） |
 | `qitnpea-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 21/21 + 两个 OCaml 探针复跑；无 patch；Lean 0，SORRIED −0）** | 原源码语义与 Python 复放核心完成；原版 CSE 通用探针确实会把无共享左脊改指 ref，delta 复放 25 refs 同形并污染 value；真实 azure 项形是否触发仍 UNRESOLVED。首个 pass 未重建，0 行 Lean；pa_j/camlp5 8 移植 RC=2，后续等用户裁决 |
 | `tsk-opt-a-w1` | **完成（2026-11-27，零 Lean；快照 REPORT 436 行 + 22 脚本 + CSV；主仓零改动）** | 位精确引擎逐位复现 kBox0 P3；成本模型订正 ΣN_visited=93·N；Q1 全族 N_min=16（6,609）/32（3），N 杠杆 51.1→27.8 CPU·h（4.41×/5.40× HOL），N=32 安全 28.1/34.4 h；Q2 精度 D5 0%；Q3 叶树 −11.8%，落地树已最优；Q4 HOL 2-piece 无捷径（y1=2.8195635，x=7.94994，ERRATA）；Q5 三杠杆 3.89×/4.77×，≤2× 需地板 ≤3.16 s ⇒ 只有 Track B |
@@ -243,6 +243,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（wt0 严格二阶单叶最终验收：PARTIAL + STRUCTURAL-STOP；续1611）**：
+  ① **独立复核**：`agent-vcgwo770` 交付 50 文件，编排者 SHA **50/50 PASS**、无 patch、主仓零改动、SORRIED −0。亲跑 `replay_leaf2.py` RC=0：CSE off/on 求值 518/274、字段完全一致，pp=3 upper = −1965937/400000000 < 0，pp=6 = −381196223947/64000000000000 与存档逐位一致；精确镜像 slack +0.005765。kit olean 实测存在且为 869,400 B，日志十条全标准三。
+  ② **真实边界**：二阶 kit（439 行）与复放是有效资产，但 CSE 264,788 B / nocse 467,656 B 叶均未编译通过，Lean 单叶 0/1、候选树 0/80 + 0/79，无叶级 `#print axioms`。leaf_compile8 RC=1/maxErrors=100、4.88 real/5.68 GB，按 §7 收线；最终三 Lean 文件无 limits 提升和禁造边。
+  ③ **下一通道**：首个工程阻塞已定位为生成叶的 ℚ 算术侧条件（170 处 decide + rfl/slack + 括号条件），不是 Taylor 模型层爆炸；主环境 decide-on-ℚ 可用性仍 UNRESOLVED，不作环境归因。若用户继续，只换侧条件证明表示（如 norm_num/显式展开/先验字面量证书），保持已验证 kit 与二阶模型不动，不自动续派、不判数学 NO-GO。
 - **2026-11-27（wt0 严格二阶单叶触发结构性止损；续1610）**：
   ① **有效进展**：二阶复放 pp=3 upper≈−0.004916 通过、pp=6 与存档一致；`kit_olean3.log` 显示通用二阶 kit 的 mem_VBq/mem_PBQ/hRat/hCst/hCoord/hAdd/hSub/hMul/hComp/pos_of_slack 标准三。CSE 叶源 264,788 B、nocse 467,656 B 已生成，但都只是未验证材料，不能等同单叶通过。
   ② **止损**：已连续 `leaf_compile1–8`；最新 RC=1、maxErrors=100，仍有大量 decide stuck/linarith/application mismatch（4.88 real、5.68 GB maximum RSS）。依 §7，原 `agent-9` resume / `agent-vcgwo770` 只整理证据，不再编译、重发或提高深度。真实覆盖仍 Lean 单叶 0、候选树 0/80 + 0/79；工程阻塞限定当前发射/证明表示，不判 wt0 或 HOL 二阶路线 NO-GO。
