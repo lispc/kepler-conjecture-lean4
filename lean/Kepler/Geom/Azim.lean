@@ -788,16 +788,12 @@ theorem azimSpec_exists (h1 : ¬ Collinear3 v w w1) (h2 : ¬ Collinear3 v w w2) 
       = ‖zOf f1 f2 (w1 - v)‖ * Complex.exp
         (((Complex.arg (zOf f1 f2 (w1 - v)) + Complex.arg u : ℝ) : ℂ) * I) := by
     rw [hz1e]
-    congr 1
-    congr 1
     push_cast
     ring
   have hz2e' : zOf e1 e2 (w2 - v)
       = ‖zOf f1 f2 (w2 - v)‖ * Complex.exp
         (((Complex.arg (zOf f1 f2 (w1 - v)) + θ + Complex.arg u : ℝ) : ℂ) * I) := by
     rw [hz2e]
-    congr 1
-    congr 1
     push_cast
     ring
   have hrep1 := rep_of_zOf he hax hwv w1
