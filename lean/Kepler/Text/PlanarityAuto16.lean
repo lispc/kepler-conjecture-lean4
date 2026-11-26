@@ -201,8 +201,7 @@ theorem measurable_dartset_leads_into3_fan
     have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
       rw [hdsf]
       ext z
-      simp
-      tauto
+      simp <;> tauto
     obtain ⟨hθ0, hθπ⟩ := hfan80 f2.1 f3.1 he23
     rw [hsig] at hθ0 hθπ
     have hcop : ¬ Coplanar ({x, f1.1, f2.1, f3.1} : Set V3) :=
@@ -608,7 +607,7 @@ theorem solid_of_dartset_leads_into_fan_triangle_fan
     intro h; exact f_fan_no_fix hfan f3 hf3d1 (hf31.trans h.symm)
   have hf13ne : f1 ≠ f3 := hf31ne.symm
   have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
-    rw [hdsf]; ext z; simp; tauto
+    rw [hdsf]; ext z; simp <;> tauto
   have hleads : dartsetLeadsIntoFan x V E ds =
       affGt ({x} : Set V3) {f1.1, f2.1, f3.1} := by
     rw [← KVQWYDL_lemma10 hfan hcard hfan80 hds hds3, himg]
