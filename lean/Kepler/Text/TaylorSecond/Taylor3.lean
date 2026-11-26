@@ -128,10 +128,13 @@ theorem taylor3_upper {f : (Fin 3 → ℝ) → ℝ} {D : Set (Fin 3 → ℝ)}
   -- two-sided derivative (`Icc 0 1` and `Ici 0` agree on a punctured
   -- neighbourhood of `0`)
   have hset : Set.Icc (0 : ℝ) 1 =ᶠ[𝓝[{(0 : ℝ)}ᶜ] 0] Set.Ici 0 := by
-    refine (Filter.eventuallyEq_of_mem (isOpen_Iio.mem_nhds (by norm_num : (0 : ℝ) < 1)) ?_).filter_mono
-      nhdsWithin_le_nhds
-    intro y hy
-    exact propext ⟨fun h => h.1, fun h => ⟨h, le_of_lt hy⟩⟩
+    have hmem : Set.Iio (1 : ℝ) ∈ 𝓝 (0 : ℝ) := isOpen_Iio.mem_nhds (by norm_num)
+    have hmem' : Set.Iio (1 : ℝ) ∈ 𝓝[{(0 : ℝ)}ᶜ] (0 : ℝ) := nhdsWithin_le_nhds hmem
+    filter_upwards [hmem'] with y hy
+    have hiff : y ∈ Set.Icc (0:ℝ) 1 ↔ y ∈ Set.Ici (0:ℝ) :=
+      ⟨fun h => h.1, fun h => ⟨h, le_of_lt (Set.mem_Iio.mp hy)⟩⟩
+    -- 4.32: goal is `Set.Icc 0 1 y = Set.Ici 0 y`; 4.36: goal is the `↔` form.
+    first | exact hiff | exact propext hiff
   have hd0 : deriv G 0 = ∑ i, h i * partial1 i f c := by
     have h := (hG1 0 (by rw [hγ0]; exact hc)).deriv
     rw [hγ0] at h

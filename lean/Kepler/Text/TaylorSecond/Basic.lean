@@ -84,7 +84,7 @@ theorem partial2_comm {f : (Fin n → ℝ) → ℝ} {x : Fin n → ℝ}
     (hf : ContDiffAt ℝ 2 f x) (j i : Fin n) :
     partial2 j i f x = partial2 i j f x := by
   rw [partial2_eq_fderiv_fderiv hf, partial2_eq_fderiv_fderiv hf]
-  exact hf.isSymmSndFDerivAt (by norm_num [minSmoothness]) (coord j) (coord i)
+  exact hf.isSymmSndFDerivAt (by simp) (coord j) (coord i)
 
 /-- The four fields of a whole-box second-order Taylor input. -/
 structure MTaylorInterval (f : (Fin n → ℝ) → ℝ) (D : Set (Fin n → ℝ))

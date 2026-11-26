@@ -213,6 +213,7 @@ shift appears as `Int.shiftRight lo ↑drop` while the helper's conclusion is
 (`logs/dckit14.log`).  `set`-bound `L`/`U` versions of both branches are kept in
 `/tmp/DCKit_wip.lean` for the next pass. -/
 
+set_option linter.constructorNameAsVariable false in
 /-- `dnorm`: containment only (no bit-length invariant). -/
 theorem dnorm_mem {k lo hi : ℤ} {x : ℝ} (h : (DC.mk k lo hi).mem x) :
     (dnorm k lo hi).mem x := by
