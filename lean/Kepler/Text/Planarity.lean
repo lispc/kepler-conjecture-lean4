@@ -80,7 +80,7 @@ theorem continuousAt_vectorAngle (c : V3) {x : V3} (hx : x ≠ 0) :
   · have hne : ∀ᶠ y in 𝓝 x, y ≠ 0 := by
       have hop : IsOpen {y : V3 | y ≠ 0} := isOpen_compl_singleton
       exact hop.mem_nhds hx
-    have hev : (fun y => Real.arccos ((c ⬝ᵥ y) / (‖c‖ * ‖y‖))) =ᶠ[𝓝 x]
+    have hev : (fun (y : V3) => Real.arccos ((c ⬝ᵥ y) / (‖c‖ * ‖y‖))) =ᶠ[𝓝 x]
         vectorAngle c := by
       filter_upwards [hne] with y hy
       rw [vectorAngle, if_neg (not_or.mpr ⟨hc, hy⟩)]
@@ -857,7 +857,8 @@ theorem exist_close_fan (hfan : FAN x V E) (hdis : Disjoint ({v, w} : Set V3) {v
   have hAne := affGe_ballnorm_nonempty hnc
   have h77 : affGe {x} {v, w} ∩ affGe {x} {v1, w1} = affGe {x} ({v, w} ∩ {v1, w1}) :=
     hfan.2.2.2.2.2 {v, w} (Or.inl he) {v1, w1} (Or.inl he1)
-  have hinter : {v, w} ∩ {v1, w1} = ∅ := Set.disjoint_iff_inter_eq_empty.mp hdis
+  have hinter : (({v, w} : Set V3) ∩ ({v1, w1} : Set V3)) = ((∅ : Set V3)) :=
+    Set.disjoint_iff_inter_eq_empty.mp hdis
   have hint : (affGe {x} {v, w} ∩ ballnormFan x) ∩
       (affGe {x} {v1, w1} ∩ ballnormFan x) = ∅ := by
     have h1 : (affGe {x} {v, w} ∩ ballnormFan x) ∩
@@ -1801,6 +1802,261 @@ private theorem cexp_sin_im (r : ℝ) : (Complex.exp ((r : ℂ) * I)).im = Real.
   have h := congrArg Complex.im (Complex.exp_mul_I (r : ℂ))
   simpa using h
 
+/-- 三角恒等式 1（`sin (α-γ)`、`sin (β-γ)` 展开；锥引理 E1/E2 的代数骨架）。 -/
+private theorem sin_sub_combo1 (A B α β γ : ℝ) :
+    (A * Real.sin α + B * Real.sin β) * Real.cos γ
+      - (A * Real.cos α + B * Real.cos β) * Real.sin γ
+      = A * Real.sin (α - γ) + B * Real.sin (β - γ) := by
+  rw [Real.sin_sub, Real.sin_sub]
+  ring
+
+/-- 三角恒等式 2（`sin (γ-α)`、`sin (γ-β)` 展开；在轴分支用）。 -/
+private theorem sin_sub_combo2 (A B α β γ : ℝ) :
+    (A * Real.cos α + B * Real.cos β) * Real.sin γ
+      - (A * Real.sin α + B * Real.sin β) * Real.cos γ
+      = A * Real.sin (γ - α) + B * Real.sin (γ - β) := by
+  rw [Real.sin_sub, Real.sin_sub]
+  ring
+
+/-- 锥引理的表示层（`azim_cone_of_combo` 的第一段）：轴 `u - x` 的标准正交标架、
+`w`、`v` 的极坐标数据，以及 `y - x` 平面坐标的实部/虚部两条恒等式
+（`k1`/`k2`，由 `zOf` 的线性性与轴向分量归零给出）。 -/
+private theorem azim_combo_frame {x u w v y : V3}
+    (hncw : ¬ Collinear3 x u w) (hncv : ¬ Collinear3 x u v)
+    (a b c : ℝ)
+    (hy : y - x = a • (v - x) + b • (w - x) + c • (u - x)) :
+    ∃ (f1 f2 f3 : V3) (ψ ra rb : ℝ),
+      Orthonormal3 f1 f2 f3 ∧ (u - x : V3) = dist u x • f3 ∧ u ≠ x ∧
+        0 < ra ∧ 0 < rb ∧
+        zOf f1 f2 (w - x) = ((rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) ∧
+        (y - x : V3) ⬝ᵥ f1
+          = a * (ra * Real.cos (ψ + azim x u w v)) + b * (rb * Real.cos ψ) ∧
+        (y - x : V3) ⬝ᵥ f2
+          = a * (ra * Real.sin (ψ + azim x u w v)) + b * (rb * Real.sin ψ) := by
+  have hux : u ≠ x := by
+    intro he
+    exact hncw (collinear3_of_eq (v := x) (w := u) (w1 := w) he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ :=
+    exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨ψ, rb, ra, hrb, hra, hzw, hzv⟩ := azim_frame_spec hncw hncv hon hax hux
+  -- y 的平面坐标：线性性 + 轴向分量归零
+  have hzline : zOf f1 f2 (y - x)
+      = ((a * ra : ℝ) : ℂ) * Complex.exp (((ψ + azim x u w v : ℝ) : ℂ) * I)
+        + ((b * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) := by
+    have h1 : y - x = a • (v - x) + (b • (w - x) + c • (u - x)) := by
+      rw [hy]; abel
+    rw [h1, zOf_add, zOf_smul, zOf_add, zOf_smul, zOf_smul, zOf_axis hax hon, hzv, hzw]
+    push_cast
+    ring
+  refine ⟨f1, f2, f3, ψ, ra, rb, hon, hax, hux, hra, hrb, hzw, ?_, ?_⟩
+  · have h := congrArg Complex.re hzline
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_cos_re, cexp_cos_re] at h
+    linarith
+  · have h := congrArg Complex.im hzline
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_sin_im, cexp_sin_im] at h
+    linarith
+
+/-- 锥引理的在轴分支（`azim_cone_of_combo` 的第二段）：`y` 在轴 `xu` 上时平面
+坐标为 0，与 `v`、`w` 正系数组合的虚部矛盾。 -/
+private theorem azim_combo_axis_false {x u w v y : V3} {a b ψ ra rb : ℝ} {f1 f2 f3 : V3}
+    (hon : Orthonormal3 f1 f2 f3) (hax : (u - x : V3) = dist u x • f3) (hux : u ≠ x)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi) (ha : 0 < a) (hra : 0 < ra)
+    (k1 : (y - x : V3) ⬝ᵥ f1
+      = a * (ra * Real.cos (ψ + azim x u w v)) + b * (rb * Real.cos ψ))
+    (k2 : (y - x : V3) ⬝ᵥ f2
+      = a * (ra * Real.sin (ψ + azim x u w v)) + b * (rb * Real.sin ψ))
+    (hcy : Collinear3 x u y) : False := by
+  have hsinpos : 0 < Real.sin (azim x u w v) :=
+    Real.sin_pos_of_mem_Ioo (Set.mem_Ioo.mpr ⟨hθ0, hθπ⟩)
+  exfalso
+  have hz0 : zOf f1 f2 (y - x) = 0 := by
+    by_contra hne
+    exact (zOf_ne_zero_iff hon hax hux y).mp hne hcy
+  have hz1 : (y - x : V3) ⬝ᵥ f1 = 0 := by
+    have h := congrArg Complex.re hz0
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    exact h
+  have hz2 : (y - x : V3) ⬝ᵥ f2 = 0 := by
+    have h := congrArg Complex.im hz0
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    exact h
+  have hK1 : a * (ra * Real.cos (ψ + azim x u w v)) + b * (rb * Real.cos ψ) = 0 :=
+    k1.symm.trans hz1
+  have hK2 : a * (ra * Real.sin (ψ + azim x u w v)) + b * (rb * Real.sin ψ) = 0 :=
+    k2.symm.trans hz2
+  have hkey := sin_sub_combo2 (a * ra) (b * rb) (ψ + azim x u w v) ψ ψ
+  rw [show (ψ - (ψ + azim x u w v) : ℝ) = -azim x u w v from by ring,
+    show (ψ - ψ : ℝ) = 0 from by ring,
+    Real.sin_zero, mul_zero, add_zero, Real.sin_neg, mul_neg] at hkey
+  rw [show ((a * ra) * Real.cos (ψ + azim x u w v) : ℝ)
+      = a * (ra * Real.cos (ψ + azim x u w v)) from by ring,
+    show ((b * rb) * Real.cos ψ : ℝ) = b * (rb * Real.cos ψ) from by ring, hK1,
+    show ((a * ra) * Real.sin (ψ + azim x u w v) : ℝ)
+      = a * (ra * Real.sin (ψ + azim x u w v)) from by ring,
+    show ((b * rb) * Real.sin ψ : ℝ) = b * (rb * Real.sin ψ) from by ring, hK2] at hkey
+  have hcon : a * (ra * Real.sin (azim x u w v)) = 0 := by
+    have hassoc : a * (ra * Real.sin (azim x u w v)) = a * ra * Real.sin (azim x u w v) :=
+      by ring
+    rw [hassoc]
+    linear_combination hkey
+  have hposA : 0 < a * (ra * Real.sin (azim x u w v)) :=
+    mul_pos ha (mul_pos hra hsinpos)
+  linarith
+
+/-- 锥引理的离轴分支·相位对齐（`azim_cone_of_combo` 的第三段）：以 `y` 为第二
+生成元取第二标架，用单位相位相等把 `ψ'` 归到 `ψ`，得到 `y - x` 平面坐标的两条
+极角等式 `e1`/`e2`（`ry` 为 `y` 的平面模长）。 -/
+private theorem azim_combo_off_align {x u w v y : V3} {a b ψ ra rb : ℝ} {f1 f2 f3 : V3}
+    (hncw : ¬ Collinear3 x u w) (hcy : ¬ Collinear3 x u y)
+    (hon : Orthonormal3 f1 f2 f3) (hax : (u - x : V3) = dist u x • f3) (hux : u ≠ x)
+    (hzw : zOf f1 f2 (w - x) = ((rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I))
+    (hrb : 0 < rb)
+    (k1 : (y - x : V3) ⬝ᵥ f1
+      = a * (ra * Real.cos (ψ + azim x u w v)) + b * (rb * Real.cos ψ))
+    (k2 : (y - x : V3) ⬝ᵥ f2
+      = a * (ra * Real.sin (ψ + azim x u w v)) + b * (rb * Real.sin ψ)) :
+    ∃ (ψ' ry : ℝ), 0 < ry ∧
+      ry * Real.cos (ψ' + azim x u w y)
+        = a * (ra * Real.cos (ψ' + azim x u w v)) + b * (rb * Real.cos ψ') ∧
+      ry * Real.sin (ψ' + azim x u w y)
+        = a * (ra * Real.sin (ψ' + azim x u w v)) + b * (rb * Real.sin ψ') := by
+  obtain ⟨ψ', r1', ry, hr1', hry, hzw2, hzy⟩ :=
+    azim_frame_spec hncw hcy hon hax hux
+  have heq : Complex.exp (((ψ : ℝ) : ℂ) * I) = Complex.exp (((ψ' : ℝ) : ℂ) * I) :=
+    exp_pos_mul_eq hrb hr1' (hzw.symm.trans hzw2)
+  have hcs : Real.cos ψ = Real.cos ψ' ∧ Real.sin ψ = Real.sin ψ' := by
+    constructor
+    · have h := congrArg Complex.re heq
+      rw [cexp_cos_re, cexp_cos_re] at h
+      exact h
+    · have h := congrArg Complex.im heq
+      rw [cexp_sin_im, cexp_sin_im] at h
+      exact h
+  have cospv : Real.cos (ψ' + azim x u w v) = Real.cos (ψ + azim x u w v) := by
+    rw [Real.cos_add, Real.cos_add]
+    rw [hcs.2, hcs.1]
+  have sinpv : Real.sin (ψ' + azim x u w v) = Real.sin (ψ + azim x u w v) := by
+    rw [Real.sin_add, Real.sin_add]
+    rw [hcs.2, hcs.1]
+  have cosw : Real.cos ψ' = Real.cos ψ := hcs.1.symm
+  have sinw : Real.sin ψ' = Real.sin ψ := hcs.2.symm
+  have hy1' : (y - x : V3) ⬝ᵥ f1 = ry * Real.cos (ψ' + azim x u w y) := by
+    have h := congrArg Complex.re hzy
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_cos_re] at h
+    linarith
+  have hy2' : (y - x : V3) ⬝ᵥ f2 = ry * Real.sin (ψ' + azim x u w y) := by
+    have h := congrArg Complex.im hzy
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_sin_im] at h
+    linarith
+  have e1 : ry * Real.cos (ψ' + azim x u w y)
+      = a * (ra * Real.cos (ψ' + azim x u w v)) + b * (rb * Real.cos ψ') := by
+    rw [← hy1', cospv, cosw]
+    exact k1
+  have e2 : ry * Real.sin (ψ' + azim x u w y)
+      = a * (ra * Real.sin (ψ' + azim x u w v)) + b * (rb * Real.sin ψ') := by
+    rw [← hy2', sinpv, sinw]
+    exact k2
+  exact ⟨ψ', ry, hry, e1, e2⟩
+
+/-- 锥引理的离轴分支·收口（`azim_cone_of_combo` 的第四段）：由 `e1`/`e2` 与两条
+三角恒等式得 `sin φ > 0`（E1）与 `sin (φ - θv) < 0`（E2），定出
+`0 < φ < π` 及 `φ < θv`。 -/
+private theorem azim_combo_off_bounds {x u w v y : V3} {a b ψ' ra rb ry : ℝ}
+    (hry : 0 < ry) (ha : 0 < a) (hb : 0 < b) (hra : 0 < ra) (hrb : 0 < rb)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (e1 : ry * Real.cos (ψ' + azim x u w y)
+      = a * (ra * Real.cos (ψ' + azim x u w v)) + b * (rb * Real.cos ψ'))
+    (e2 : ry * Real.sin (ψ' + azim x u w y)
+      = a * (ra * Real.sin (ψ' + azim x u w v)) + b * (rb * Real.sin ψ')) :
+    0 < azim x u w y ∧ azim x u w y < azim x u w v := by
+  have hsinpos : 0 < Real.sin (azim x u w v) :=
+    Real.sin_pos_of_mem_Ioo (Set.mem_Ioo.mpr ⟨hθ0, hθπ⟩)
+  have hpos1 : 0 < a * (ra * Real.sin (azim x u w v)) :=
+    mul_pos ha (mul_pos hra hsinpos)
+  -- E1：`sin φ > 0`
+  have hE1 : ry * Real.sin (azim x u w y) = a * (ra * Real.sin (azim x u w v)) := by
+    have h := sin_sub_combo1 (a * ra) (b * rb) (ψ' + azim x u w v) ψ' ψ'
+    rw [show ((ψ' + azim x u w v) - ψ' : ℝ) = azim x u w v from by ring,
+      show (ψ' - ψ' : ℝ) = 0 from by ring, Real.sin_zero, mul_zero, add_zero] at h
+    calc ry * Real.sin (azim x u w y)
+        = ry * (Real.sin (ψ' + azim x u w y) * Real.cos ψ'
+          - Real.cos (ψ' + azim x u w y) * Real.sin ψ') := by
+          congr 1
+          rw [← Real.sin_sub, show (ψ' + azim x u w y - ψ' : ℝ) = azim x u w y from by ring]
+      _ = (ry * Real.sin (ψ' + azim x u w y)) * Real.cos ψ'
+          - (ry * Real.cos (ψ' + azim x u w y)) * Real.sin ψ' := by ring
+      _ = a * (ra * Real.sin (azim x u w v)) := by
+          rw [e2, e1]
+          linear_combination h
+  have hposry : 0 < ry * Real.sin (azim x u w y) := by rw [hE1]; exact hpos1
+  have hφ0 : 0 ≤ azim x u w y := azim_nonneg x u w y
+  have hφnz : azim x u w y ≠ 0 := by
+    intro h
+    rw [h, Real.sin_zero] at hposry
+    norm_num at hposry
+  have hφpos : 0 < azim x u w y := lt_of_le_of_ne hφ0 (Ne.symm hφnz)
+  have hφ2 : azim x u w y < 2 * Real.pi := azim_lt_two_pi x u w y
+  have hφltπ : azim x u w y < Real.pi := by
+    by_contra hc
+    push_neg at hc
+    have hnn : 0 ≤ Real.sin (azim x u w y - Real.pi) :=
+      Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+    have hcon := mul_nonneg hry.le hnn
+    have hE : ry * Real.sin (azim x u w y)
+        = -(ry * Real.sin (azim x u w y - Real.pi)) := by
+      have h3 : ry * Real.sin (azim x u w y)
+          = ry * Real.sin ((azim x u w y - Real.pi) + Real.pi) := by
+        conv_lhs => rw [show azim x u w y = (azim x u w y - Real.pi) + Real.pi from by ring]
+      rw [h3, Real.sin_add, Real.cos_pi, Real.sin_pi]
+      ring
+    rw [hE1] at hE
+    linarith
+  refine ⟨hφpos, ?_⟩
+  by_contra hc
+  push_neg at hc
+  have hnn : 0 ≤ Real.sin (azim x u w y - azim x u w v) :=
+    Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+  have hcon := mul_nonneg hry.le hnn
+  have hposB : 0 < b * (rb * Real.sin (azim x u w v)) :=
+    mul_pos hb (mul_pos hrb hsinpos)
+  have hE2 : ry * Real.sin (azim x u w y - azim x u w v)
+      = -(b * (rb * Real.sin (azim x u w v))) := by
+    have h := sin_sub_combo1 (a * ra) (b * rb) (ψ' + azim x u w v) ψ' (ψ' + azim x u w v)
+    rw [show ((ψ' + azim x u w v) - (ψ' + azim x u w v) : ℝ) = 0 from by ring,
+      show (ψ' - (ψ' + azim x u w v) : ℝ) = -azim x u w v from by ring, Real.sin_zero,
+      mul_zero, zero_add, Real.sin_neg, mul_neg] at h
+    calc ry * Real.sin (azim x u w y - azim x u w v)
+        = ry * (Real.sin (ψ' + azim x u w y) * Real.cos (ψ' + azim x u w v)
+          - Real.cos (ψ' + azim x u w y) * Real.sin (ψ' + azim x u w v)) := by
+          congr 1
+          rw [← Real.sin_sub,
+            show (ψ' + azim x u w y - (ψ' + azim x u w v) : ℝ)
+              = azim x u w y - azim x u w v from by ring]
+      _ = (ry * Real.sin (ψ' + azim x u w y)) * Real.cos (ψ' + azim x u w v)
+          - (ry * Real.cos (ψ' + azim x u w y)) * Real.sin (ψ' + azim x u w v) := by ring
+      _ = -(b * (rb * Real.sin (azim x u w v))) := by
+          rw [e2, e1]
+          linear_combination h
+  rw [hE2] at hcon
+  linarith
+
 /-- 锥引理（`WEDGE_LUNE_GT`（Multivariate-flyspeck.ml:3805）在轴向标架下的
 解析核心）：`0 < azim x u w v < π` 时，`y - x` 是 `v - x`、`w - x`（正系数）
 与 `u - x`（任意系数）的组合，给出 `y` 不在轴 `xu` 上且
@@ -1814,195 +2070,14 @@ private theorem azim_cone_of_combo {x u w v y : V3}
     (a b c : ℝ) (ha : 0 < a) (hb : 0 < b)
     (hy : y - x = a • (v - x) + b • (w - x) + c • (u - x)) :
     ¬ Collinear3 x u y ∧ 0 < azim x u w y ∧ azim x u w y < azim x u w v := by
-  have hux : u ≠ x := by
-    intro he
-    exact hncw (collinear3_of_eq (v := x) (w := u) (w1 := w) he)
-  obtain ⟨f1, f2, f3, hon, halign⟩ :=
-    exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
-  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
-  obtain ⟨hp1, hp2⟩ := axis_perp hax hon
-  set θv := azim x u w v with hθvdef
-  obtain ⟨ψ, rb, ra, hrb, hra, hzw, hzv⟩ := azim_frame_spec hncw hncv hon hax hux
-  have hwrep := rep_of_zOf hon hax hux w ψ rb hzw
-  have hvrep := rep_of_zOf hon hax hux v (ψ + θv) ra hzv
-  -- y 的平面坐标：线性性 + 轴向分量归零
-  have hzline : zOf f1 f2 (y - x)
-      = ((a * ra : ℝ) : ℂ) * Complex.exp (((ψ + θv : ℝ) : ℂ) * I)
-        + ((b * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) := by
-    have h1 : y - x = a • (v - x) + (b • (w - x) + c • (u - x)) := by
-      rw [hy]; abel
-    rw [h1, zOf_add, zOf_smul, zOf_add, zOf_smul, zOf_smul, zOf_axis hax hon, hzv, hzw]
-    push_cast
-    ring
-  have k1 : (y - x : V3) ⬝ᵥ f1
-      = a * (ra * Real.cos (ψ + θv)) + b * (rb * Real.cos ψ) := by
-    have h := congrArg Complex.re hzline
-    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
-      zero_add, mul_one, one_mul] at h
-    rw [cexp_cos_re, cexp_cos_re] at h
-    linarith
-  have k2 : (y - x : V3) ⬝ᵥ f2
-      = a * (ra * Real.sin (ψ + θv)) + b * (rb * Real.sin ψ) := by
-    have h := congrArg Complex.im hzline
-    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
-      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
-      zero_add, mul_one, one_mul] at h
-    rw [cexp_sin_im, cexp_sin_im] at h
-    linarith
-  have hsinpos : 0 < Real.sin θv :=
-    Real.sin_pos_of_mem_Ioo (Set.mem_Ioo.mpr ⟨hθ0, hθπ⟩)
-  have trig1 : ∀ A B α β γ : ℝ, (A * Real.sin α + B * Real.sin β) * Real.cos γ
-      - (A * Real.cos α + B * Real.cos β) * Real.sin γ
-      = A * Real.sin (α - γ) + B * Real.sin (β - γ) := by
-    intro A B α β γ
-    rw [Real.sin_sub, Real.sin_sub]
-    ring
-  have trig2 : ∀ A B α β γ : ℝ, (A * Real.cos α + B * Real.cos β) * Real.sin γ
-      - (A * Real.sin α + B * Real.sin β) * Real.cos γ
-      = A * Real.sin (γ - α) + B * Real.sin (γ - β) := by
-    intro A B α β γ
-    rw [Real.sin_sub, Real.sin_sub]
-    ring
+  obtain ⟨f1, f2, f3, ψ, ra, rb, hon, hax, hux, hra, hrb, hzw, k1, k2⟩ :=
+    azim_combo_frame hncw hncv a b c hy
   by_cases hcy : Collinear3 x u y
-  · -- y 在轴上：平面坐标为 0，与 v、w 正系数组合的虚部矛盾
-    exfalso
-    have hz0 : zOf f1 f2 (y - x) = 0 := by
-      by_contra hne
-      exact (zOf_ne_zero_iff hon hax hux y).mp hne hcy
-    have hz1 : (y - x : V3) ⬝ᵥ f1 = 0 := by
-      have h := congrArg Complex.re hz0
-      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
-        zero_add, mul_one, one_mul] at h
-      exact h
-    have hz2 : (y - x : V3) ⬝ᵥ f2 = 0 := by
-      have h := congrArg Complex.im hz0
-      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
-        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
-        zero_add, mul_one, one_mul] at h
-      exact h
-    have hK1 : a * (ra * Real.cos (ψ + θv)) + b * (rb * Real.cos ψ) = 0 :=
-      k1.symm.trans hz1
-    have hK2 : a * (ra * Real.sin (ψ + θv)) + b * (rb * Real.sin ψ) = 0 :=
-      k2.symm.trans hz2
-    have hkey := trig2 (a * ra) (b * rb) (ψ + θv) ψ ψ
-    rw [show (ψ - (ψ + θv) : ℝ) = -θv from by ring, show (ψ - ψ : ℝ) = 0 from by ring,
-      Real.sin_zero, mul_zero, add_zero, Real.sin_neg, mul_neg] at hkey
-    rw [show ((a * ra) * Real.cos (ψ + θv) : ℝ) = a * (ra * Real.cos (ψ + θv)) from by ring,
-      show ((b * rb) * Real.cos ψ : ℝ) = b * (rb * Real.cos ψ) from by ring, hK1,
-      show ((a * ra) * Real.sin (ψ + θv) : ℝ) = a * (ra * Real.sin (ψ + θv)) from by ring,
-      show ((b * rb) * Real.sin ψ : ℝ) = b * (rb * Real.sin ψ) from by ring, hK2] at hkey
-    have hcon : a * (ra * Real.sin θv) = 0 := by
-      have hassoc : a * (ra * Real.sin θv) = a * ra * Real.sin θv := by ring
-      rw [hassoc]
-      linear_combination hkey
-    have hposA : 0 < a * (ra * Real.sin θv) := mul_pos ha (mul_pos hra hsinpos)
-    linarith
-  · obtain ⟨ψ', r1', ry, hr1', hry, hzw2, hzy⟩ :=
-      azim_frame_spec hncw hcy hon hax hux
-    have heq : Complex.exp (((ψ : ℝ) : ℂ) * I) = Complex.exp (((ψ' : ℝ) : ℂ) * I) :=
-      exp_pos_mul_eq hrb hr1' (hzw.symm.trans hzw2)
-    have hcs : Real.cos ψ = Real.cos ψ' ∧ Real.sin ψ = Real.sin ψ' := by
-      constructor
-      · have h := congrArg Complex.re heq
-        rw [cexp_cos_re, cexp_cos_re] at h
-        exact h
-      · have h := congrArg Complex.im heq
-        rw [cexp_sin_im, cexp_sin_im] at h
-        exact h
-    have cospv : Real.cos (ψ' + θv) = Real.cos (ψ + θv) := by
-      rw [Real.cos_add, Real.cos_add]
-      rw [hcs.2, hcs.1]
-    have sinpv : Real.sin (ψ' + θv) = Real.sin (ψ + θv) := by
-      rw [Real.sin_add, Real.sin_add]
-      rw [hcs.2, hcs.1]
-    have cosw : Real.cos ψ' = Real.cos ψ := hcs.1.symm
-    have sinw : Real.sin ψ' = Real.sin ψ := hcs.2.symm
-    set φ := azim x u w y with hφdef
-    have hy1' : (y - x : V3) ⬝ᵥ f1 = ry * Real.cos (ψ' + φ) := by
-      have h := congrArg Complex.re hzy
-      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
-        zero_add, mul_one, one_mul] at h
-      rw [cexp_cos_re] at h
-      linarith
-    have hy2' : (y - x : V3) ⬝ᵥ f2 = ry * Real.sin (ψ' + φ) := by
-      have h := congrArg Complex.im hzy
-      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
-        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
-        zero_add, mul_one, one_mul] at h
-      rw [cexp_sin_im] at h
-      linarith
-    have e1 : ry * Real.cos (ψ' + φ)
-        = a * (ra * Real.cos (ψ' + θv)) + b * (rb * Real.cos ψ') := by
-      rw [← hy1', cospv, cosw]
-      exact k1
-    have e2 : ry * Real.sin (ψ' + φ)
-        = a * (ra * Real.sin (ψ' + θv)) + b * (rb * Real.sin ψ') := by
-      rw [← hy2', sinpv, sinw]
-      exact k2
-    -- φ 的界：E1 给 sin φ > 0，故 0 < φ < π；E2 给 sin(φ - θv) < 0，故 φ < θv
-    have hpos1 : 0 < a * (ra * Real.sin θv) := mul_pos ha (mul_pos hra hsinpos)
-    have hE1 : ry * Real.sin φ = a * (ra * Real.sin θv) := by
-      have h := trig1 (a * ra) (b * rb) (ψ' + θv) ψ' ψ'
-      rw [show ((ψ' + θv) - ψ' : ℝ) = θv from by ring,
-        show (ψ' - ψ' : ℝ) = 0 from by ring, Real.sin_zero, mul_zero, add_zero] at h
-      calc ry * Real.sin φ
-          = ry * (Real.sin (ψ' + φ) * Real.cos ψ'
-            - Real.cos (ψ' + φ) * Real.sin ψ') := by
-            congr 1
-            rw [← Real.sin_sub, show (ψ' + φ - ψ' : ℝ) = φ from by ring]
-        _ = (ry * Real.sin (ψ' + φ)) * Real.cos ψ'
-            - (ry * Real.cos (ψ' + φ)) * Real.sin ψ' := by ring
-        _ = a * (ra * Real.sin θv) := by
-            rw [e2, e1]
-            linear_combination h
-    have hposry : 0 < ry * Real.sin φ := by rw [hE1]; exact hpos1
-    have hφ0 : 0 ≤ φ := azim_nonneg x u w y
-    have hφnz : φ ≠ 0 := by
-      intro h
-      rw [h, Real.sin_zero] at hposry
-      norm_num at hposry
-    have hφpos : 0 < φ := lt_of_le_of_ne hφ0 (Ne.symm hφnz)
-    have hφ2 : φ < 2 * Real.pi := azim_lt_two_pi x u w y
-    have hφltπ : φ < Real.pi := by
-      by_contra hc
-      push_neg at hc
-      have hnn : 0 ≤ Real.sin (φ - Real.pi) :=
-        Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
-      have hcon := mul_nonneg hry.le hnn
-      have hE : ry * Real.sin φ = -(ry * Real.sin (φ - Real.pi)) := by
-        have h3 : ry * Real.sin φ = ry * Real.sin ((φ - Real.pi) + Real.pi) := by
-          congr 1; ring
-        rw [h3, Real.sin_add, Real.cos_pi, Real.sin_pi]
-        ring
-      rw [hE1] at hE
-      linarith
-    refine ⟨hcy, hφpos, ?_⟩
-    by_contra hc
-    push_neg at hc
-    have hnn : 0 ≤ Real.sin (φ - θv) :=
-      Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
-    have hcon := mul_nonneg hry.le hnn
-    have hposB : 0 < b * (rb * Real.sin θv) := mul_pos hb (mul_pos hrb hsinpos)
-    have hE2 : ry * Real.sin (φ - θv) = -(b * (rb * Real.sin θv)) := by
-      have h := trig1 (a * ra) (b * rb) (ψ' + θv) ψ' (ψ' + θv)
-      rw [show ((ψ' + θv) - (ψ' + θv) : ℝ) = 0 from by ring,
-        show (ψ' - (ψ' + θv) : ℝ) = -θv from by ring, Real.sin_zero, mul_zero,
-        zero_add, Real.sin_neg, mul_neg] at h
-      calc ry * Real.sin (φ - θv)
-          = ry * (Real.sin (ψ' + φ) * Real.cos (ψ' + θv)
-            - Real.cos (ψ' + φ) * Real.sin (ψ' + θv)) := by
-            congr 1
-            rw [← Real.sin_sub, show (ψ' + φ - (ψ' + θv) : ℝ) = φ - θv from by ring]
-        _ = (ry * Real.sin (ψ' + φ)) * Real.cos (ψ' + θv)
-            - (ry * Real.cos (ψ' + φ)) * Real.sin (ψ' + θv) := by ring
-        _ = -(b * (rb * Real.sin θv)) := by
-            rw [e2, e1]
-            linear_combination h
-    rw [hE2] at hcon
-    linarith
+  · exact (azim_combo_axis_false hon hax hux hθ0 hθπ ha hra k1 k2 hcy).elim
+  · obtain ⟨ψ', ry, hry, e1, e2⟩ :=
+      azim_combo_off_align hncw hcy hon hax hux hzw hrb k1 k2
+    obtain ⟨h1, h2⟩ := azim_combo_off_bounds hry ha hb hra hrb hθ0 hθπ e1 e2
+    exact ⟨hcy, h1, h2⟩
 
 /-- HOL planarity.hl:1688 `inequality3_aim_in_convex_fan`：弦 `v→w` 内点的
 正组合的方位角严格落在 `0` 与 `azim x u w v` 之间（锥引理推论）。 -/
