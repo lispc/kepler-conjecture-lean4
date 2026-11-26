@@ -75,12 +75,12 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
 | `wt0-hol2-arith-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-10` / `agent-qz31d8mc`；≤1 Lean）** | 同一 `LLLLLLLL` 二阶 CSE 叶，只换 ℚ 算术侧条件为 norm_num/显式展开/字面量证明；kit hash、数值、盒、CSE 不动；先小探针再三轮内编译，不做 sibling/glue/Assembly |
-| `tsk-opt-m2-w1` | **在飞（2026-11-27 用户明批「批」Design P 一盒原型；ZCode `agent_0df70760`；≤1 Lean）** | 新文件 `Kepler/Interval/PointTM.lean`（~350 行，不改 CertTM）：`PtDual`(1+6)+`evalPtDual`+`ptLoBound`+`checkPosPt`+`CurvTab.Valid`+`checkPosPt_sound`；worst-case 叶（guard-straddle + 高 K）单叶 `decide` ≤3.4 s、RSS ≤10.5 GiB、标准三、K ≤550、12/12 lb >0；只做原型、不量产/不重发射/不碰 585；主仓零改动 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-opt-m2-w1` | **完成：WALL-FAIL / CONDITIONAL（2026-11-27，Design P 一盒原型；`PointTM.lean` 558 行；主仓零改动）** | 其余硬指标全 PASS：`checkPosPt_sound` 标准三、叶 `pt_check`=[propext,Quot.sound]、RSS 6.194 GiB、K 150.6–301.8（≤550）、34/34 非 straddle lb>0、12/12（11 直接 + 1 straddle 回落 TM）。**wall 8.61–8.82 s > 3.4 s**；根因 = Fixed-Grid 未实现（75.6 µs/op vs 31；op 数仅 1.047×），预计 Fixed-Grid ~2.75 s。S1/S2 仍是命名 Prop 假设（570–720 + 400–700 行未证）；straddle 15% 分裂无效、回落 TM 15.49 s ⇒ 摊销 9.6 s/叶；4.36 未测 |
 | `qitnpea-safe-cse-leaf-w1` | **完成：PASS（2026-11-27；编排者 SHA 24/24 + 探针/首叶/根盒路径独立复核；零 Lean，SORRIED −0）** | SAFE-CSE 消除 delta 污染；case 13031 第 13 DFS 节点/depth 12/f1 首 pass，upper=-61279551481/8000000000000<0，13/13 开关节点逐位一致；根盒 12 分裂精确重建叶盒；仅 RECONSTRUCTED-LEAF，真实 azure 项形/同序首叶仍 UNRESOLVED |
 | `wt0-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 50/50 + 二阶复放重跑；无 patch；Lean 单叶 0/1，SORRIED −0）** | pp=3 负上界、pp=6 逐位一致，CSE 274/518 数值相同；439 行 kit 编译产物 869,400 B、十条标准三。CSE/nocse 叶均未过，leaf_compile8 RC=1/maxErrors=100；首通道 = ℚ 算术侧条件表示，kit 可复用，后续等用户裁决 |
 | `tsk-opt-b-w1` | **完成：GO（2026-11-27，零 Lean；Design P 点 Taylor + 单元 Hessian 曲率表；快照 58 文件 + SHA；主仓零改动）** | 84.7k 原语/叶 → **2.62 s/叶（5.7×）**；地板解剖 467,867 原语/叶、31 µs/原语自洽；两级/惰性/粗界/均值形式全死（1.65× 或 0/12）；现 `err` 过证 300×，换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12）；D5 投影 11.6 h（1.84×）/ 叶树合并 10.3 h（1.63×），**WITHIN-BAND**；K=40–70 vs 容差 550 未严格实现；15% guard-straddle 叶需梯子；A 的 `ite_both=0` 为计数器假象（ERRATA） |
@@ -171,7 +171,8 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | `ox3q1h` S2b 其余批（约 67 万行估计） | 未批；建议等 A–C 结果，不在本轮擅自量产 |
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
-| **TskXLLIPLS Design P 一盒 Lean 原型** | **已批（2026-11-27 用户「批」）**：`tsk-opt-m2-w1` 在飞——`PtDual`(1+6)+`checkPosPt`+`_sound`（~350 行，复用 M1 自证骨架）、worst-case 叶（guard-straddle + 高 K）单叶 `decide` ≤3.4 s、21 分量曲率表 K ≤550；只做原型、不量产、不改 CertTM/585；N=32 仍为 P 失败 fallback；C 不做 |
+| **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **等用户裁决**：只换值链表示（Int 单格点、尾数 ≤310 bit、对齐 0），不动 S1/S2；目标 wall ≤3.4 s。PASS 后再投 S1/S2 证明（~1,000–1,400 行）；FAIL 则 N=32 fallback；C 不做 |
 | **CertShards 全量 4.36 重放（236–290 h）** | **A 已批（2026-11-27 用户「当然需要 precompileModules」）**：`lean436-precompile-w1` 先做 4.36 precompile pilot（1 非 R + 1 R）；pilot GO（≥10×）后才谈全量 575；B（按族抽样 + 585 逐名审计）保留为 fallback。批前不改验收契约、不启动全量重编 |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -248,6 +249,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（Design P 一盒原型收线：WALL-FAIL 8.61–8.82 s；根因 Fixed-Grid 未实现；其余硬指标全 PASS；续1620）**：
+  ① **交付**：`PointTM.lean` **558 行 / 38–40 声明**，单文件 `lean -o` RC=0 / 0 error / 0 warning / 0 sorry；`patch.diff` 纯新增，对主仓 `d6fb5b74` `git apply --check` PASS；主仓 tracked 零改动。
+  ② **硬指标**：`checkPosPt_sound` axioms = **标准三**；叶 `pt_check` = `[propext, Quot.sound]`；RSS **6.194 GiB**；K = **150.6–301.8**（sound 区间二阶 AD，40 叶样本；阈值 550）；lb>0 **34/34** 非 straddle（min +7.83e-3）；12/12 = 11 叶 PointTM 直接闭合 + 1 叶 straddle 回落现 TM。straddle 实测 6/40 = 15%，**分裂无效**（1 级 12/12、2 级 24/24 子盒仍 straddle）⇒ 回落现 TM 15.49 s/叶；全族摊销 **0.85×8.61+0.15×15.49 = 9.6 s/叶**。
+  ③ **WALL-FAIL**：kBox0 **8.61 / 8.80 / 8.82 s**（user 6.71–6.87），worst-case T149 8.82 s；目标 ≤3.4 s。**根因不是 op 数**（实测 **88,753** vs B 投影 84,766 = **1.047×**），而是 **75.6 µs/op vs B 标定 31 µs（2.44×）**：原型沿用非规范化 `Dyadic`（指数到 −1790、尾数 10²–10³ bit），**DESIGN §3.4 的 Fixed-Grid 未实现**；`ptChop=−170` 无效（8.38→8.61）。Fixed-Grid（Int 单格点、尾数 ≤310 bit、对齐 0）预计 **~2.75 s**。相对 M1 P3（15.49 s）：wall **1.80×**、user **2.01×** 改善。
+  ④ **UNRESOLVED**：`checkPosPt_sound` 的 **S1**（点对偶包络归纳 + 链式法则）与 **S2**（曲率表）仍是命名 `Prop` 假设，非 axiom；已证 = 实数侧归约 + `mem_mulF/mem_absB/mem_chop/abs_le_absHi`；S1 估算 **570–720 行**、tier-0 `D2` **400–700 行**；`CurvTab.Valid` 仍是语义 Prop、非 `decide` 义务；4.36 未测；原 AST（N=4096）单叶 `decide` 在 4.32.2 内核栈溢出。
+  ⑤ **下一步（等用户批）**：**M2b Fixed-Grid 一盒 v2**——只换值链表示（Int 单格点、尾数 ≤310 bit），不动 S1/S2，验证 wall ≤3.4 s；PASS 后再投 S1/S2 证明（~1,000–1,400 行），FAIL 则 N=32 fallback。C 不做。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（QITNPEA SAFE-CSE 首叶 PASS；续1619）**：
   ① **结果**：`agent-icdajfoq` 找到 case 13031 首个重建 pass：DFS node 13/depth 12/全左脊/f1，upper = **−61279551481/8000000000000 ≈ −7.66e-3**；13/13 访问节点 SAFE-CSE 开/关 value/first/second/error 逐位一致。通用探针 legacy 17→15、safe=off=17；delta 恢复 347.158…（legacy −152.605…）；旧“根盒 f2 除零”确认为污染伪影。
   ② **编排者独立复核**：SHA **24/24 PASS**；亲跑 `probe_safe_cse.py` 与 `verify_first_pass.py` 均 RC=0、pass f1、通道/存档逐位一致；另从根盒重放记录中的 12 次分裂，精确重建全部 lo/hi/y/w 端点。搜索 13 节点/wall 3.19 s/RSS 14.2 MB，CSE 求值 on 154,212/off 177,568。
