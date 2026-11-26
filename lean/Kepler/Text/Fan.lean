@@ -159,7 +159,7 @@ def yfan (x : V3) (V : Set V3) (E : Set (Set V3)) : Set V3 :=
   Set.univ \ xfan x V E
 
 /-- HOL `w_dart_fan x V E (y,v,w,w1)`。 -/
-def wDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
+noncomputable def wDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
     (p : V3 × V3 × V3 × V3) : Set V3 :=
   if (setOfEdge p.2.1 V E).ncard > 1 then
     wedge x p.2.1 p.2.2.1 (sigmaFan x V E p.2.1 p.2.2.1)
@@ -189,7 +189,7 @@ def rconeFan (x v : V3) (h : ℝ) : Set V3 :=
     dist b x * dist v x * h}
 
 /-- HOL `rw_dart_fan x V E (y,v,w,w1) h`。 -/
-def rwDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
+noncomputable def rwDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
     (p : V3 × V3 × V3 × V3) (h : ℝ) : Set V3 :=
   wDartFan x V E p ∩ rconeFan x p.2.1 h
 
@@ -1143,8 +1143,7 @@ theorem bijOn_res {α : Type*} [DecidableEq α] {f : α → α} {s : Set α}
     exact hmem _ |>.mpr (hf.1 (hmem _ |>.mp hd))
   · simp only [res, ha, hb] at hfab
     exact hf.2.1 (hmem _ |>.mp ha) (hmem _ |>.mp hb) hfab
-  · simp only [res, hy]
-    obtain ⟨x, hx, hfx⟩ := hf.2.2 (hmem _ |>.mp hy)
+  · obtain ⟨x, hx, hfx⟩ := hf.2.2 (hmem _ |>.mp hy)
     refine ⟨x, hmem _ |>.mpr hx, ?_⟩
     simp only [res, hmem _ |>.mpr hx]
     exact hfx
@@ -1174,6 +1173,25 @@ noncomputable def extendPerm {α : Type*} [DecidableEq α] (s : Finset α) (f : 
         exact ⟨x, hfx⟩
       · exact ⟨y, if_neg hy⟩)
 
+/-- `extendPerm` 落在 `↑s` 内时按 `f` 取值。展开链
+`extendPerm → Equiv.ofBijective`（两版 Mathlib 均 `toFun := f`）先经 `show`
+归约到 `res` 层，再 `unfold res` 让 ite 带上 `res` 自己的 Decidable 实例，
+`if_pos/if_neg` 以元变量赋值对齐——避开 4.36 的 simp 引擎与 TC 实例分叉。 -/
+theorem apply_extendPerm_of_mem {α : Type*} [DecidableEq α] {s : Finset α}
+    {f : α → α} {hf : Set.BijOn (res f ↑s) ↑s ↑s} {x : α}
+    (hx : x ∈ (↑s : Set α)) : extendPerm s f hf x = f x := by
+  show (res f ↑s) x = f x
+  unfold res
+  exact if_pos hx
+
+/-- `extendPerm` 落在 `↑s` 外时为恒等。 -/
+theorem apply_extendPerm_of_not_mem {α : Type*} [DecidableEq α] {s : Finset α}
+    {f : α → α} {hf : Set.BijOn (res f ↑s) ↑s ↑s} {x : α}
+    (hx : x ∉ (↑s : Set α)) : extendPerm s f hf x = x := by
+  show (res f ↑s) x = x
+  unfold res
+  exact if_neg hx
+
 /-- `extendPerm` permutes `s`。 -/
 theorem extendPerm_permutes {α : Type*} [DecidableEq α] {s : Finset α} {f : α → α}
     {hf : Set.BijOn (res f ↑s) ↑s ↑s} :
@@ -1181,9 +1199,7 @@ theorem extendPerm_permutes {α : Type*} [DecidableEq α] {s : Finset α} {f : �
   intro x hx
   have hnot : x ∉ (↑s : Set α) := fun hmem => hx (Finset.mem_coe.mp hmem)
   show (extendPerm s f hf) x = x
-  rw [show (extendPerm s f hf) x = (res f ↑s) x from by
-    simp only [extendPerm, Equiv.ofBijective_apply]]
-  exact if_neg hnot
+  exact apply_extendPerm_of_not_mem hnot
 
 /-- HOL fan_defs.hl `hypermap_of_fan`（proof-parameterized）。 -/
 noncomputable def hypermapOfFan (x : V3) (V : Set V3) (E : Set (Set V3))
@@ -1228,9 +1244,17 @@ noncomputable def hypermapOfFan (x : V3) (V : Set V3) (E : Set (Set V3))
         have hnfd : nFanPair x V E (fFanPair x V E d) ∈ (↑hD.toFinset : Set (V3 × V3)) :=
           hmemS _ |>.mpr (nFanPair_mem_dart1 hfan
             (fFanPair_mem_dart1 hfan (hmemS _ |>.mp hd)))
-        simp only [extendPerm, Equiv.ofBijective_apply, res, hd, hfd, hnfd, if_true]
+        show extendPerm hD.toFinset (eFanPair V E) hbij_e
+            (extendPerm hD.toFinset (nFanPair x V E) hbij_n
+              (extendPerm hD.toFinset (fFanPair x V E) hbij_f d)) = d
+        rw [apply_extendPerm_of_mem hd, apply_extendPerm_of_mem hfd,
+          apply_extendPerm_of_mem hnfd]
         exact condition_hypermap_fan hfan d (hmemS _ |>.mp hd)
-      · simp only [extendPerm, Equiv.ofBijective_apply, res, hd, if_false] }
+      · show extendPerm hD.toFinset (eFanPair V E) hbij_e
+            (extendPerm hD.toFinset (nFanPair x V E) hbij_n
+              (extendPerm hD.toFinset (fFanPair x V E) hbij_f d)) = d
+        rw [apply_extendPerm_of_not_mem hd, apply_extendPerm_of_not_mem hd,
+          apply_extendPerm_of_not_mem hd] }
 
 /-- HOL fan.hl `edge_map permutes dart` 分量（hypermapOfFan 打包后的一行引理）。 -/
 theorem edgePermutesOfFan (hfan : FAN x V E) :
