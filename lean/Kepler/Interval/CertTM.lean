@@ -1643,9 +1643,9 @@ theorem arctan_residual_sup {s t : ℝ} {lo hi C : ℝ}
         show ((fun y : ℝ => (1 + y ^ 2)⁻¹) = (fun y : ℝ => 1 / (1 + y ^ 2))) from
           funext fun y => (one_div _).symm] at hfin
     exact hfin
-  have hcont : Continuous (fun y : ℝ => 1 / (1 + y ^ 2)) :=
-    Continuous.div continuous_const (continuous_const.add (continuous_pow 2))
-      (fun x => ne_of_gt (by positivity))
+  have hcont : Continuous (fun y : ℝ => 1 / (1 + y ^ 2)) := by
+    have hne : ∀ x : ℝ, 1 + x ^ 2 ≠ 0 := fun x => by positivity
+    exact Continuous.div continuous_const (continuous_const.add (continuous_pow 2)) hne
   have hmvt : ∃ ξ ∈ Set.uIcc s t,
       Real.arctan s - Real.arctan t = (s - t) / (1 + ξ ^ 2) := by
     rcases lt_trichotomy s t with hlt | rfl | hlt
