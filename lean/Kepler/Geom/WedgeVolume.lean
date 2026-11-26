@@ -269,9 +269,13 @@ theorem sector_area_ang {ρ θ : ℝ} (hρ : 0 ≤ ρ) (_hθ0 : 0 ≤ θ) (hθ2�
   set A : Set (ℝ × ℝ) := Set.Ioo (0 : ℝ) ρ ×ˢ angSet θ with hA
   have hS_meas : MeasurableSet S := by
     rw [hS]
-    exact (measurableSet_lt measurable_norm measurable_const).inter
-      ((measurableSet_lt measurable_const measurable_ang).inter
-        (measurableSet_lt measurable_ang measurable_const))
+    have hnorm : MeasurableSet {z : ℂ | ‖z‖ < ρ} :=
+      measurableSet_lt measurable_norm measurable_const
+    have hpos : MeasurableSet {z : ℂ | 0 < ang z} :=
+      measurableSet_lt measurable_const measurable_ang
+    have hlt : MeasurableSet {z : ℂ | ang z < θ} :=
+      measurableSet_lt measurable_ang measurable_const
+    exact hnorm.inter (hpos.inter hlt)
   have hA_meas : MeasurableSet A := by
     rw [hA]
     exact measurableSet_Ioo.prod (measurableSet_angSet hθ2π)
@@ -549,10 +553,14 @@ theorem volume_sector_rot {a : ℂ} (ha : a ≠ 0) {R θ : ℝ}
         rw [hkey (u * ζ'), hmem, ang_ofReal_mul_of_pos hkeypos]; exact h2
       · change ang (a⁻¹ * (u * ζ')) < θ
         rw [hkey (u * ζ'), hmem, ang_ofReal_mul_of_pos hkeypos]; exact h3
-  have hS : MeasurableSet {ζ : ℂ | ‖ζ‖ < R ∧ 0 < ang ζ ∧ ang ζ < θ} :=
-    (measurableSet_lt measurable_norm measurable_const).inter
-      ((measurableSet_lt measurable_const measurable_ang).inter
-        (measurableSet_lt measurable_ang measurable_const))
+  have hS : MeasurableSet {ζ : ℂ | ‖ζ‖ < R ∧ 0 < ang ζ ∧ ang ζ < θ} := by
+    have hnorm : MeasurableSet {ζ : ℂ | ‖ζ‖ < R} :=
+      measurableSet_lt measurable_norm measurable_const
+    have hpos : MeasurableSet {ζ : ℂ | 0 < ang ζ} :=
+      measurableSet_lt measurable_const measurable_ang
+    have hlt : MeasurableSet {ζ : ℂ | ang ζ < θ} :=
+      measurableSet_lt measurable_ang measurable_const
+    exact hnorm.inter (hpos.inter hlt)
   rw [hset, volume_image_cplx (cplxRot u hu) _ hS]
   exact sector_area_ang hR hθ0 hθ2π
 
