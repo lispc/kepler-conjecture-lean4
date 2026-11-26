@@ -74,8 +74,8 @@
 |---|---|---|
 | `lean436-fixer-w1` | **在飞（2026-11-26 用户明批「轮询+修」；ZCode `agent_dcedc2c8`；≤1 Lean）** | 每 10 min 轮询 `census.tsv` 的 BLOCKED，独立 repo 副本修 + 4.32/4.36/公理三路验证；只许 proof-body/显式标注/linter option；陈述或定义改动 → SF/DEF 候选停手；产出 `fixes/*.diff` + `RECIPES.md`；不落主仓 |
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md |
-| `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-6` / `agent-psiqcu0q`；≤1 Lean）** | 只做 HOL `(prep-QZECFIC wt0,0)` 原版 Taylor pass/glue 与 cell 覆盖；先真实单件再按原 80/79 推进；pp/分裂/终止参数不得自创；不走 route R、不扩其余 cell、不接 Assembly |
-| `qitnpea-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-7` / `agent-r0ek0a6b`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 一个有完整原版规格的 case 及 Taylor pass/glue；不走角点电池/11片/456点，不接 Assembly；原数据缺失记 UNRESOLVED |
+| `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批「好，启动继续吧」；原 `agent-6` resume / `agent-i4223hjk`；≤1 Lean）** | 已重建 cell0 的 80/79 Python 候选树；本轮只做最小完整 Lean 覆盖件（通常 2 pass + 1 父 glue），逐件公理/成本验收后返回；不量产 80 叶、不走 route R、不接 Assembly |
+| `qitnpea-hol-replay-w1` | **在飞（平台中断后原 `agent-7` resume / `agent-0kpjkx9r`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 选定 case 的有限真实 Lean 子覆盖、同盒差分与成本；外部覆盖树不算内核闭合；不走角点电池/11片/456点，不接 Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -237,6 +237,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（wt0 HOL 复放 PARTIAL 验收并续发最小 Lean 件；QITNPEA 原车道恢复；续1595）**：
+  ① **wt0 规格/复放交付**：case 13067 已恢复一棵与 urban 体积指纹及计数一致的 80 pass/79 glue Python 候选树；编排者独立核对 159 节点、80 个唯一叶路径、根盒中点分裂覆盖及 80 个负 `upper6`。这只是复放资产，Lean 仍 **0/80**，未接 Assembly、SORRIED −0、无 patch 落库。SHA 21/22（`STATUS.md` 校验和过期）；“精确 dyadic”勘误为“精确有理（非全 dyadic）”；探针 RC 原缺输出日志，均交原车道补正。
+  ② **wt0 最小 Lean 覆盖件续发（用户明批「好，启动继续吧」）**：原 `agent-6` resume / `agent-i4223hjk`。选两个 children 均为 pass 叶的父 glue，真实证明所需子叶与父分裂（通常 2 pass + 1 glue），逐条公理/RC/成本留档后返回；不自动量产 80 叶，不以假设 sibling 或单 pass 冒充覆盖。
+  ③ **QITNPEA 平台中断恢复**：原 `agent-7` resume / `agent-0kpjkx9r`；先固化 checkpoint，再做有限真实 Lean 子覆盖验收。已有外部搜索树（19,234 叶及优化变体）不等于内核 case 闭合，更不等于 `QITNPEA1_1_2` 8 case 完成；不扩量产。
 - **2026-11-26（Wave 2.5 首批 4 件落库；CertTM hold 用户明批；census 解锁；续1594）**：
   ① **`dc5410c5` TaylorSecond 三件**（来自 `lean436-fixer-w1`）：`Basic:87` `norm_num [minSmoothness]` → `simp`（4.36 丢 `irreducible_def`，顺带消除报错路径注入的伪 sorryAx）；`DCKit:216` scoped `set_option linter.constructorNameAsVariable false in`；`Taylor3:131` `Set` 在 4.36 为 structure，`hset` 改 `filter_upwards` + `first | exact hiff | exact propext hiff`。4.32 RC=0（2.41/3.31/3.15 s）、4.36 RC=0（2.07/2.96/2.78 s）；编排者亲跑 4 声明公理同基线（标准三）。
   ② **`9b973d29` CertTM（HOLD-AREA，用户 2026-11-26 明批）**：`arctan_residual_sup` 的 `hcont` 内联 `positivity` 在 4.36 目标展开为 `Real.ofCauchy` 字面量；把 `hne : ∀ x, 1 + x ^ 2 ≠ 0` 提成 `have`。proof-body only；4.32 RC=0/33.92 s/6.19 GB、4.36 RC=0/33.63 s/6.32 GB；`arctan_residual_sup`/`exBoxIteHull_wf`/`exIteHull_valid` 公理同基线；`exIteHull_strict_none` 4.36 `[propext, Quot.sound]` → `[propext]` 为**既有 4.36-vs-4.32 形状差**（非本 patch 引入，已记录）。仅机械适配，不涉 TM3/Mono*/D 层路线或量产。
