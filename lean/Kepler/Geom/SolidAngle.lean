@@ -933,7 +933,6 @@ theorem volume_solid_triangle {v0 v1 v2 v3 : V3} {r : ℝ}
     rw [dihV_sub_self v0 v1 v2 v3, dihV_sub_self v0 v2 v3 v1,
       dihV_sub_self v0 v3 v1 v2]
   rw [hvol, volume_solid_triangle_zero hr hcop0]
-  congr 1
   rw [← hdih]
 
 end Kepler.Geom
