@@ -74,6 +74,9 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
+| `wt0-hol2-arith-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-10` / `agent-qz31d8mc`；≤1 Lean）** | 同一 `LLLLLLLL` 二阶 CSE 叶，只换 ℚ 算术侧条件为 norm_num/显式展开/字面量证明；kit hash、数值、盒、CSE 不动；先小探针再三棱内编译，不做 sibling/glue/Assembly |
+| `qitnpea-safe-cse-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-11` / `agent-icdajfoq`；零 Lean）** | 安全 CSE 只共享确认真重复子式，先证开/关各通道一致，再按原 DFS 找 case 13031 首个 pass；标 RECONSTRUCTED-LEAF；禁 camlp5、额外细分、旧 19k 叶与第二片 |
+| `tsk-opt-m2-w1` | **在飞（2026-11-27 用户明批「批」Design P 一盒原型；ZCode `agent_0df70760`；≤1 Lean）** | 新文件 `Kepler/Interval/PointTM.lean`（~350 行，不改 CertTM）：`PtDual`(1+6)+`evalPtDual`+`ptLoBound`+`checkPosPt`+`CurvTab.Valid`+`checkPosPt_sound`；worst-case 叶（guard-straddle + 高 K）单叶 `decide` ≤3.4 s、RSS ≤10.5 GiB、标准三、K ≤550、12/12 lb >0；只做原型、不量产/不重发射/不碰 585；主仓零改动 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -168,7 +171,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | `ox3q1h` S2b 其余批（约 67 万行估计） | 未批；建议等 A–C 结果，不在本轮擅自量产 |
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
-| **TskXLLIPLS Design P 一盒 Lean 原型** | **等用户裁决**（Track B 已 GO，2026-11-27）：只做 `PtDual`(1+6) + `checkPosPt` + `_sound`（~350 行，复用 M1 自证骨架）、单叶 `decide` 实测 wall（验收 ≤3.4 s）、21 分量二阶 AD 曲率表；优先选 worst-case 叶（guard-straddle + 高 K）。**不先做 N=32**（P 失败后的 fallback）；C（模块合并）不做 |
+| **TskXLLIPLS Design P 一盒 Lean 原型** | **已批（2026-11-27 用户「批」）**：`tsk-opt-m2-w1` 在飞——`PtDual`(1+6)+`checkPosPt`+`_sound`（~350 行，复用 M1 自证骨架）、worst-case 叶（guard-straddle + 高 K）单叶 `decide` ≤3.4 s、21 分量曲率表 K ≤550；只做原型、不量产、不改 CertTM/585；N=32 仍为 P 失败 fallback；C 不做 |
 | **CertShards 全量 4.36 重放（236–290 h）** | **A 已批（2026-11-27 用户「当然需要 precompileModules」）**：`lean436-precompile-w1` 先做 4.36 precompile pilot（1 非 R + 1 R）；pilot GO（≥10×）后才谈全量 575；B（按族抽样 + 585 逐名审计）保留为 fallback。批前不改验收契约、不启动全量重编 |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -245,6 +248,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（用户明批 Design P 一盒原型；`tsk-opt-m2-w1` 发车；续1618）**：
+  ① **用户裁决**：批 Design P 一盒 Lean 原型（「批」）；只验证架构 sound + 单叶 ≤3.4 s，不进入量产。
+  ② **车道 `tsk-opt-m2-w1`（ZCode `agent_0df70760`，≤1 Lean）**：新文件 `Kepler/Interval/PointTM.lean`（~350 行，不改 CertTM）：`PtDual`(1+6) + `evalPtDual` + `ptLoBound` + `checkPosPt` + `CurvTab.Valid` + `checkPosPt_sound`；复用 M1 `nsqrt`/`transOn`；worst-case 叶（guard-straddle + 高 K）单叶 `decide`；验收 **wall ≤3.4 s ∧ RSS ≤10.5 GiB ∧ 标准三 ∧ K ≤550 ∧ 12/12 lb >0 ∧ straddle 梯子可行**；K >550 试单元细分（u² ÷4），wall 超限记 `WALL-FAIL`，不调参硬凑。
+  ③ **边界**：只做原型；不重发射 6,612 叶、不碰 585/CertTM、不跑全量；主仓零改动，`patch.diff` 对新文件 `git apply --check`；4.36 侧可选附测，缺 olean 记 UNRESOLVED 非失败。PASS 后才谈量产（DEF-FIX + 新卡）；N=32 仍为 fallback；C 不做。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（CertShards R 族 2/6 实测：HexR 37 min、QuadR 74.6 min；全量 ETA 上修 237–465 h；主队列优先；续1617）**：
   ① **实测**：`HexR.K001` = 2,216 s（37 min）✅；`QuadR.K000` = 4,478 s（74.6 min）✅；`PentR.K001` >70 min 未结束，90 min kill 记 `BUDGET_CAP`（非失败）。已审计 **11/11**（9 非 R + 2 R）全绿：axioms = 标准三 + 1 条同名 manifest ax，无 `sorryAx`/`Lean.ofReduceBool`。
   ② **全量 ETA 上修**：R 360 件按实测 37–75 min = **222–450 h**，加非 R 14.6 h ⇒ **237–465 h**；先前 236–290 h 只覆盖低端。**precompile 是唯一现实路径**（4.36 pilot 在飞，不干扰其池/进程）。
