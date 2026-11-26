@@ -973,10 +973,20 @@
      （计算便宜 ~250×）；D6 PARITY；D2/D4 结构性。**四条硬发现**：① 角点必须核验 **456 个**
      （三条债整盒角点极小都 >0.0057，`rad2>2` 支对整盒极小**不能剪**）；② **库内仍无 γ4 凹性
      资产**（`g4w_concave_1..6` 是 `private`、对象是 **deltaX** 不是 γ4；归约骨架
-     `NliBanks9.boxInf_le_of_piecewise_concave` 已在库，缺 11 片 `ConcaveOn`）；③ 侦察 ERRATA：
+     `NliBanks9.boxInf_le_of_piecewise_concave` 已在库，缺 11 片 `ConcaveOn`；**探针勘误：
+     二阶导闭式其实已落库，缺的只是 `ConcaveOn` 收口，见下**）；③ 侦察 ERRATA：
      `1_2_0` 的 `w=1` 不是 2、`g4w_concave_*` 归属错；④ **唯一进带路径 = 单表 + 一次反射**
      （D1→0.46×、D3→1.9×），依赖库内**不存在**的「可计算 dyadic atan 点包络」⇒ 先做**最小样品**
      （1 片凹性 + 2 角点）验证。第一波仍以 `1_1_2`+`1_2_0`+`1_1_1` 为对象，但**卡更新前不发 Lean**。
+     **单表样品已收线（2026-11-26，`qitnpea-table-probe-w1`）**：链条做出来了、比预想便宜——
+     `cornerLB_two`/`rowComp_sound` 标准三、`checkRows_decide`=[propext]；**D1 3/37 = 0.081×**、
+     **D5 4.9 s/角点 ⇒ 456 角点 ≈ 37 min/债 = 0.14× HOL**（卡「5–20 s」低约 100×）、D4 1.77 MB；
+     **D3 53.7 KB = 逐波 2.11×（超 2× 线 5.5%）/ 家族 0.73×（13 债共享 kit）⇒ 待用户裁决口径**；
+     机械缩减 ~3–8 KB 可达约 1.8×。两处设计级 ERRATA：`ℚ` 内核不可归约（必须 Dyadic）、
+     **atan 已落库**（`Interval.arctanI`，U2 只剩 sqrt 缺口，已用燃料 `isqrt` 闭）；凹性腿的
+     二阶导闭式**已落库**（`Gamma4Concave`/`ZTGJoint0000DihSecond`/`Gamma4DerivSecond`，
+     卡 ERRATA #1 的「无资产」作废），缺 11 片 `ConcaveOn`。编排者复核：`Gamma4Val` 可 import
+     （探针 V6 误判），三条括号无需假设。**第一波仍缺 V4 凹性片，不是样品绿即 −3。**
    - **wt0**：等价关系精确确认 **wt0 = `W1aFJet.w1F3O` − `fNeg2`**（`gamma3fXDivSqrtdelta 1 1 1`
      的 `1` 是 `m4/m5/m6`；`mk456` 把 1–3 槽钉成 `two6=2`，`nb18_indep`）。**T2/DC 发射形态
      409 叶**（8 HOL prep cell 细化；D1 = 0.79× PARITY）但 **D5 = 10.36–16.89× ⇒ OVER-BAND**

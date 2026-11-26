@@ -331,6 +331,33 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 
 ## 8. 变更日志（新 → 旧）
 
+- **2026-11-26（QITNPEA 单表+反射最小样品：链条成立；D1 0.081×、D5 0.14×；D3 逐波 2.11×/家族 0.73× 待裁决；两处卡 ERRATA + 探针 V6 误判纠正；续1573）**：
+  ① **样品绿（我亲跑复核）**：`qitnpea-table-probe-w1`（快照 34 文件 + `SHA256SUMS` + `ORCH_ERRATA.md`；
+  主仓零改动）；四文件 1,095 行 / **53,753 B**；`cornerLB_two`（两角点 γ4 下界）标准三；
+  `checkRows_decide`（一次内核判定覆盖两行表）= `[propext]`；`rowComp_sound`（行反射，任意行）标准三。
+  我亲跑 `scripts/build.sh` **RC=0 / 0 error**，axioms 逐条一致（`logs/orch_build_rerun.log`）。
+  ② **两处设计级卡 ERRATA**：(a) **`ℚ` 内核不可归约**（`Rat.blt` 卡死）⇒ 表/包络必须建在
+  `Kepler.Interval.Dyadic`（`⟨m:ℤ,e:ℤ⟩`）；(b) **atan 已落库**：`Kepler.Interval.arctanI`
+  （`Interval/Trans.lean:1251`，sound `:1274`）是全域、纯 `Int`、内核可归约的包络；U2 的真缺口只有
+  sqrt 尾数，已用燃料 `isqrt`（`T1_core.lean:47-104`）+ `Dyadic.sqrtI` 闭（soundness 借 `sqrtI_sound`，
+  isqrt 只负责完备性）。
+  ③ **六维实测回填**：D1 **3/37 = 0.081×**（卡 0.46×）；D3 **53,753 B**：逐波 2.11×
+  （超 2× 线 5.5%）、家族 0.73×（13 债共享同一 kit）；D4 **1.77 MB**（STRUCTURAL-DIFF 不变）；
+  D5 **4.9 s/角点（N=40）⇒ 456 角点 ≈ 37 min/债**（卡「5–20 s」低约 100×；vs HOL 15,490 s =
+  **0.14×**，仍 PARITY；N=10 约 25 min/债）；D6 PARITY（零新公理/零 `native_decide`）。
+  ④ **凹性腿**：二阶导闭式**已落库**（`Gamma4Concave.lean:130…361` 六条、`ZTGJoint0000DihSecond.lean:95-140`
+  六条、`Gamma4DerivSecond.lean` 六条），无 `ConcaveOn γ4`；`Gamma4Concave` 头注自记 ∂²γ4 两项
+  O(3) 相消到 O(0.03) ⇒ 值层证书目标，正是本 kit 可复用处（11 片 `ConcaveOn` 仍待证）。
+  **卡 ERRATA #1 的「无二阶导资产」作废。**
+  ⑤ **我纠正探针一处误判**：探针称 `Gamma4Val.olean` 陈旧不可加载、把 π/mm1/mm2 括号做成假设。
+  亲测 `import Kepler.Text.Gamma4Val` **RC=0**，`g4v_pi_bounds_d8`/`g4v_mm1_bounds`/`g4v_mm2_bounds`
+  均标准三 ⇒ 三条假设可由 import 直接消去（探针 V6 与 `Gamma4ValP` 改名重建作废；
+  `logs/orch_g4bracket_probe.log`）。
+  ⑥ **待用户裁决**：D3 口径——**逐波 2.11×（OVER-BAND，超 5.5%）vs 家族 0.73×（PARITY）**；
+  机械缩减已定位（`rowComp_sound` 展开式 + `solSumI_mem`/`dSumI_mem` 的 List 形，约 3–8 KB
+  ⇒ 乐观 45 KB = 1.8×）。**第一波仍缺 V4 的 11 片 `ConcaveOn`，不是「样品绿即 −3」**；
+  13 条债里 11 条 γ4-基可用此机，两条 γ3 债例外。
+  ⑦ SORRIED 48 / AXIOM 585 不变；样品未落主仓。下一条：续1572。
 - **2026-11-26（L1 PARITY CARD 回填：OVER-BAND（D5 6.30×，用户明批 B）；两处数字 ERRATA；Final 根面重编闭环；续1571）**：
   ① **卡片落库**：`~/c17_backup/lane_snapshots/holparity-wt1-l1-backfill-w1/PARITY_CARD_wt1_value_L1.md`
   （`value-L1-v1`，基线 `fe1ec17f`；+ EVIDENCE/SHA256SUMS）。六维：D1 `PARITY` 0.357×；
