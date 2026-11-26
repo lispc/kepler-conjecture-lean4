@@ -71,6 +71,8 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `wt1-b-archive-w1` | **在飞（2026-11-26 用户指令「先做 b，b on wt1 也做」；派发回执同批入账）** | B on wt1：221 个 `W1DC_*.lean` 由 tracked source 改为「tracked 数据（`boxes221.json`）+ 生成器 + 构建期生成」，生成物与 HEAD `7855a963` 逐字节 **221/221**；`DELETE_MANIFEST` + 构建钩子 + 抽样链（6 箱 + 9 case + final + Assembly 岛 + 根面 589）；**不做全 221 重编**（字节相同、现有 oleans 有效）；≤1 Lean；不改主仓 |
+| `parity-l3-b-prep-w1` | **在飞（2026-11-26 用户指令「然后 a 探测一下」；零 Lean）** | L3 1 箱探针卡（`W1DC_15869`：数据表 + 一次 `eval_mem` + 每箱 `decide`；六维 + D5 go/no-go ≤1.5×）+ B 口径注记（D1–D6 不变、D3 tracked/generated 分开报）；产物在快照；零 Lean/零主仓 |
 | `olean-recovery-2w-w1` | **完成（2026-11-23 13:53；missing 0/8,868、Final 闭包 8,869 全齐；编排者亲跑根面 589 同集；§8 续1425 + tools §7）** | 本轮新装 1,033 olean（1,029 编译 + 1 staged D1 件 + 3 审计 prebuilt）；7 failure 全解、0 deferred；6h05m / 169 件/h / 峰值 lean RSS 22.17 GB；平台 1h 强杀 13 次幂等续跑；主池 9,048 regular、0 symlink、主仓零改动。遗留：混世界 A/C 待裁（`SHARD_WORLD_BLOCKER.md`）、仓库缺陷 D1（`Reduction3ElementsOfListNtrans` 源路径≠import 名，staged 件已按 import 名入池并审计标准三，待 SF/ERRATA） |
 | `taylor-second-bounded-lean-w1` | **底座落库`13dee7c8` + LEAF_NOT_READY（§8 续1422；编排者全模块重编+主池17组公理审计）** | 10文件1176行：Diff2C/6 Hessian、WholeBoxJet add/sub/mul/comp、正支inv/sqrt/matan、QInterval/Base200及wt1全三维C²/D11桥，全部RC0/error0/恰标准三。LeafContract只证完整证据⇒负性，SelectedLeafEvidence未构造；G3为精确有理外包非pp全镜像。首次主构建因恢复竞态缺PackingAuto21失败，依赖就绪后全过。无577 WIP/减债 |
 | `cell3-wt1-edges-w1` | **E00/E01/E11 EXTERNAL_CANDIDATE_READY（§8 续1420；编排者从零重跑+双65SHA全OK）** | 三边6分支10终叶零未决，主/第二实现及独立覆盖全过；E00左减右增证全局最小在折点，下界4.514331609e−5>4.5e−5，E01下界0.003877895、E11下界0.014596426。修正Python dmatan小参数首项−1→−1/3并清空旧叶重跑；核查前两盒所有接受输入均严格正，不触该分支。仅一维外候选，非Lean/HOL证明，SORRIED−0 |
