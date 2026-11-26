@@ -243,6 +243,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（CertShards 抽样裁决：24/575，全量 ≈35 h 留 acceptance；续1613）**：
+  ① **实测成本**：census 已编 4 件 `Graphs.CertShards.Hex.K001` 75.9 s / K002 23.5 / K006 166.7 / K008 606.0；K009 为 REUSED。剩余 **575 件**（HexR 219 / Pent 141 / QuadR 80 / Hex 62 / PentR2 30 / PentR 16 / Quad 12 / PentR3 10 / HexR2 5），源码均 ~1 KB、合计 0.6 MB，成本全在 `native_decide`；均值 **218 s/件**（23–606），全编 ≈ **34.8 h**（18–48 h 区间）。
+  ② **裁决 = 抽样，不全编**（与 TskXLLIPLS/W1DC 同口径）：样本 **≥24 件（含已编 4）**，9 子族每族 ≥2，小族取 min/max + 中间；其余 551 标 `SAMPLED-OUT`（reason `CertShards homogeneous sample 24/575 (trust base; full at acceptance)`）；**任一抽样件失败 → 整族 575 件回队列**；抽样件除 RC/error/sorry 外**必须记 `#print axioms` 与 585 manifest 对应**（`native_decide` 的 `Lean.ofReduceBool` 是否同形），不能只看 RC。
+  ③ **SUMMARY 口径**：全量 575 ≈35 h 单列为 acceptance 预算；census `0 BLOCKED` 不含被抽样排除的 551 件；585 逐名公理审计仍为 acceptance 必做项。W1DC 231 全编、Text 1,000 全编不变。SORRIED 48 / AXIOM 585 不变。
 - **2026-11-27（census 根链 DEFERRED 边界确认：T\* 抽样不是 bug；续1612）**：
   ① fixer 报 `Kepler.Interval.Cases.TskXLLIPLS` = `DEFERRED_BY_BLOCKER`（dep `TskXLLIPLST10 SAMPLED-OUT`），根链 `TskXLLIPLS → PackIneqTskXLLIPLSClose → Assembly → Final` 在 4.36 census 中未编。**判定：既定抽样边界，不是编译失败**；census 的 `BLOCKED=0` 仍有效，但只覆盖已编模块。
   ② **精确计数（census 车道用 `deps.tsv` 去重实算，替换「≈5,700+」EST）**：**196 个 SAMPLED-OUT T\* 的叶并集 = 6,310 个不同 PLeaf**；**199 个 T\* 合起来 = 6,412 = 全部 PLeaf（无遗漏）**。补编 196 个 T\* = 全量 6,412 叶重放（~29 s / 10.3 GB 每叶，≈51.6 h 串行），属 acceptance 阶段，不在 census。
