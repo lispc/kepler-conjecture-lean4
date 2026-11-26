@@ -25,19 +25,6 @@ open Kepler.NliBanks19
 
 /-! ## 1. `arctan` Taylor brackets and the constant brackets (K1, K2) -/
 
-/-- Nonneg from a nonnegative derivative at 0 (template). -/
-private theorem nb20_nonneg_of_deriv {f : ℝ → ℝ}
-    (hC : Continuous f) (hD : Differentiable ℝ f) (h0 : f 0 = 0)
-    (hd : ∀ x : ℝ, 0 ≤ x → 0 ≤ deriv f x) : ∀ s : ℝ, 0 ≤ s → 0 ≤ f s := by
-  have hmono : MonotoneOn f (Set.Ici 0) :=
-    monotoneOn_of_deriv_nonneg (convex_Ici (0 : ℝ)) hC.continuousOn hD.differentiableOn
-      (fun x hx => by
-        have hlt : 0 < x := by simpa [interior_Ici, Set.mem_Ioi] using hx
-        exact hd x hlt.le)
-  intro s hs
-  have h := hmono (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr hs) hs
-  rwa [h0] at h
-
 /-- The 17-term alternating arctan partial sum `Σ (−1)^k x^{2k+1}/(2k+1)`. -/
 private noncomputable def nb20P (x : ℝ) : ℝ :=
   ∑ k ∈ Finset.range 17, (-1 : ℝ) ^ (k : ℕ) * x ^ (2 * k + 1) / ((2 * k + 1 : ℕ) : ℝ)
@@ -114,7 +101,7 @@ private theorem nb20_P_strictMonoOn : StrictMonoOn nb20P (Set.Ici 0) := by
 
 /-- Upper bracket: `arctan s ≤ nb20P s` for `s ≥ 0`. -/
 private theorem nb20_atan_le_P {s : ℝ} (hs : 0 ≤ s) : Real.arctan s ≤ nb20P s := by
-  have h := nb20_nonneg_of_deriv
+  have h := Kepler.NliBanks12.nb12_nonneg_of_deriv
     (f := fun y : ℝ => nb20P y - Real.arctan y)
     (hC := nb20_cont_P.sub Real.continuous_arctan)
     (hD := nb20_diff_P.sub Real.differentiable_arctan)
@@ -134,7 +121,7 @@ private theorem nb20_atan_le_P {s : ℝ} (hs : 0 ≤ s) : Real.arctan s ≤ nb20
 /-- Lower bracket: `nb20P s − s³⁵/35 ≤ arctan s` for `s ≥ 0`. -/
 private theorem nb20_series_le {s : ℝ} (hs : 0 ≤ s) :
     nb20P s - s ^ 35 / 35 ≤ Real.arctan s := by
-  have h := nb20_nonneg_of_deriv
+  have h := Kepler.NliBanks12.nb12_nonneg_of_deriv
     (f := fun y : ℝ => Real.arctan y - nb20P y + y ^ 35 / 35)
     (hC := nb20_cont_f35)
     (hD := nb20_diff_f35)
@@ -346,7 +333,7 @@ theorem nb20_matan_le_one {t : ℝ} (ht : 0 ≤ t) : matan t ≤ 1 := by
 
 /-- `arctan x ≥ x − x³/3` for `x ≥ 0`. -/
 theorem nb20_arctan_ge {x : ℝ} (hx : 0 ≤ x) : x - x ^ 3 / 3 ≤ Real.arctan x := by
-  have h := nb20_nonneg_of_deriv
+  have h := Kepler.NliBanks12.nb12_nonneg_of_deriv
     (f := fun y : ℝ => Real.arctan y - y + y ^ 3 / 3)
     (hC := Real.continuous_arctan.sub continuous_id |>.add
       ((continuous_pow 3).div_const (3:ℝ)))

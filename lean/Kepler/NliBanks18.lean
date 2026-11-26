@@ -19,19 +19,6 @@ open Kepler.NliBanks13
 
 /-! ## 0. Generic monotonicity helper -/
 
-/-- `f` with `f 0 = 0` and `f' ≥ 0` on `[0,∞)` is nonnegative there. -/
-private theorem nb18_nonneg_of_deriv {f : ℝ → ℝ}
-    (hC : Continuous f) (hD : Differentiable ℝ f) (h0 : f 0 = 0)
-    (hd : ∀ x : ℝ, 0 ≤ x → 0 ≤ deriv f x) : ∀ s : ℝ, 0 ≤ s → 0 ≤ f s := by
-  have hmono : MonotoneOn f (Set.Ici 0) :=
-    monotoneOn_of_deriv_nonneg (convex_Ici (0 : ℝ)) hC.continuousOn hD.differentiableOn
-      (fun x hx => by
-        have hlt : 0 < x := by simpa [interior_Ici, Set.mem_Ioi] using hx
-        exact hd x hlt.le)
-  intro s hs
-  have h := hmono (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr hs) hs
-  rwa [h0] at h
-
 /-- No odd multiple of `π/2` lies in an interval strictly inside `(0, π/2)`. -/
 private theorem nb18_not_halfpi {x : ℝ} (hx : 0 < x) (hx' : x < Real.pi / 2) :
     ∀ k : ℤ, x ≠ (2 * k + 1) * Real.pi / 2 := by
@@ -141,7 +128,7 @@ private theorem nb18_P_strictMonoOn : StrictMonoOn nb18P (Set.Ici 0) := by
 
 /-- Upper bracket: `arctan s ≤ nb18P s` for `s ≥ 0`. -/
 private theorem nb18_atan_le_P {s : ℝ} (hs : 0 ≤ s) : Real.arctan s ≤ nb18P s := by
-  have h := nb18_nonneg_of_deriv
+  have h := Kepler.NliBanks12.nb12_nonneg_of_deriv
     (f := fun y : ℝ => nb18P y - Real.arctan y)
     (hC := nb18_cont_P.sub Real.continuous_arctan)
     (hD := nb18_diff_P.sub Real.differentiable_arctan)
@@ -161,7 +148,7 @@ private theorem nb18_atan_le_P {s : ℝ} (hs : 0 ≤ s) : Real.arctan s ≤ nb18
 /-- Lower bracket: `nb18P s − s³⁵/35 ≤ arctan s` for `s ≥ 0`. -/
 private theorem nb18_series_le {s : ℝ} (hs : 0 ≤ s) :
     nb18P s - s ^ 35 / 35 ≤ Real.arctan s := by
-  have h := nb18_nonneg_of_deriv
+  have h := Kepler.NliBanks12.nb12_nonneg_of_deriv
     (f := fun y : ℝ => Real.arctan y - nb18P y + y ^ 35 / 35)
     (hC := nb18_cont_f35)
     (hD := nb18_diff_f35)
