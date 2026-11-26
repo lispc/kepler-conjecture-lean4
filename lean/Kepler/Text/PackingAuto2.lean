@@ -2776,11 +2776,11 @@ private theorem p2g_GLTVHUM_lemma1 (V : Set V3) (ul : List V3) (j : ℕ) (hP : P
   · intro hk
     have hkle : j ≤ k ∧ k ≤ 3 := Finset.mem_Icc.1 (Finset.mem_coe.1 hk)
     exact p2g_NUMSEG_SUBSET_INDUCT
-      (fun k : ℕ => k ∈ (Finset.Icc j 3 : Set ℕ) ∧
+      (setOf (fun k : ℕ => k ∈ (Finset.Icc j 3 : Set ℕ) ∧
         voronoiList V ul =
           ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (k - 1)} ∪
             voronoiList V vl) | vl ∈ {vl : List V3 |
-            barV V k vl ∧ truncateSimplex j vl = ul}})
+            barV V k vl ∧ truncateSimplex j vl = ul}}))
       j 3
       ⟨Finset.mem_coe.2 (Finset.mem_Icc.2 ⟨le_refl j, Nat.le_of_lt hj⟩), hbase⟩
       (fun k hk1 hk2 hmem =>
@@ -5532,7 +5532,7 @@ theorem URRPHBZ2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (v : V3),
 /-- HOL `QZYZMJC_concl` (pack_concl.hl:185-187): the solid angles around a
 packing point sum to `4π`. -/
 theorem QZYZMJC_concl : ∀ (V : Set V3) (v : V3), saturated V → Packing V → v ∈ V →
-    setSum {X | mcellSet V X ∧ v ∈ VX V X} (fun t => sol v t) = 4 * Real.pi := by
+    setSum {X | X ∈ mcellSet V ∧ v ∈ VX V X} (fun t => sol v t) = 4 * Real.pi := by
   sorry
 
 /-- HOL `KIZHLTL3_concl` (pack_concl.hl:210-220). -/
@@ -5540,7 +5540,7 @@ theorem KIZHLTL3_concl : ∀ (V : Set V3) (f : ℝ → ℝ), ∃ c : ℝ, ∀ r 
     saturated V → Packing V → 1 ≤ r →
     (∃ c1 : ℝ, ∀ x : ℝ, 2 ≤ x ∧ x < Real.sqrt 8 → |f x| ≤ c1) →
     ((8 * mm2 / Real.pi) *
-          setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+          setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ X ∈ mcellSet V}
             (fun X => setSum (edgeX V X) fun e =>
               let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
               dihX V X (q.1, q.2) * f (hl [q.1, q.2]))
@@ -5558,7 +5558,7 @@ theorem OXLZLEZ_concl : ∀ V : Set V3, saturated V → Packing V →
 /-- HOL `TSKAJXY_statement` (pack_concl.hl:224-231, a `new_definition` of a
 proposition). -/
 def TSKAJXY_statement : Prop :=
-  ∀ (V : Set V3) (X : Set V3), saturated V → Packing V → mcellSet V X →
+  ∀ (V : Set V3) (X : Set V3), saturated V → Packing V → X ∈ mcellSet V →
     criticalEdgeX V X = ∅ → gammaX V X lmfun ≥ 0
 
 /-- HOL `UPFZBZM_concl` (pack_concl.hl:233-237). -/
@@ -5843,7 +5843,7 @@ cells along a short edge sum to `2π`. -/
 theorem GRUTOTI1_concl : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3), saturated V →
     Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 → hl [u0, u1] < Real.sqrt 2 →
     e = {u0, u1} →
-    setSum {X | mcellSet V X ∧ e ∈ edgeX V X} (fun t => dihX V t (u0, u1)) =
+    setSum {X | X ∈ mcellSet V ∧ e ∈ edgeX V X} (fun t => dihX V t (u0, u1)) =
       2 * Real.pi := by
   sorry
 
@@ -5860,7 +5860,7 @@ theorem REUHADY_concl : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2
     v1 = elV vl1 2 ∧ v2 = elV vl2 2 ∧
     (∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
       X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1) →
-    setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X ∧
+    setSum {X : Set V3 | X ∈ mcellSet V ∧ e ∈ edgeX V X ∧
         X ⊆ wedgeGe u0 u1 v1 v2} (fun t => dihX V t (u0, u1)) =
       azim u0 u1 v1 v2 := by
   sorry
@@ -5879,7 +5879,7 @@ theorem REUHADY_concl_version2 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V
     v1 = elV vl1 2 ∧ v2 = elV vl2 2 ∧
     (∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
       X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1) →
-    setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X ∧
+    setSum {X : Set V3 | X ∈ mcellSet V ∧ e ∈ edgeX V X ∧
         X ⊆ wedgeGe u0 u1 v1 v2} (fun t => dihX V t (u0, u1)) =
       azim u0 u1 v1 v2 := by
   sorry

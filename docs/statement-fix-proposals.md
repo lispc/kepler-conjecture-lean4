@@ -7092,3 +7092,78 @@ ChainSplit1/2（hslp 19）。优先走**生成器模板改 + 整文件重生成*
 直编 RC=0/0 err，462 + 17 条 `#print axioms` 全部恰标准三；新增
 `hstep_of_shifted_concave_box`（Chain3）/ `hstep_split_m_box`（ChainSplitKit）
 两个加性步骤引理（既有 `hstep_*` 签名零改动）。
+
+## 112. `PackingAuto2` 六处 `mcellSet V X` 函数应用形改成员形 `X ∈ mcellSet V`（Lean 4.36 应用侧 elaboration 收紧；defeq 等价；HOL 原文即 `mcell_set V X` 应用形）— 分级 **A**（印刷形修正 · 零语义变化 · 解锁 71 个 import 下游）
+
+### (a) HOL 裁决
+
+HOL 原版六处对象全部用应用形 `mcell_set V X`
+（`reference/flyspeck/text_formalization/packing/pack_concl.hl`）：
+
+| Lean 声明 | HOL 锚 | 依据 |
+|---|---|---|
+| `QZYZMJC_concl` | `:185-188` | `sum { X | mcell_set V X /\ v IN VX V X } (\t. sol v t) = &4 * pi` |
+| `KIZHLTL3_concl` | `:210-220` | `... mcell_set V X ...` |
+| `TSKAJXY_statement` | `:224-231` | `new_definition`，`mcell_set V X` 作前提 |
+| `GRUTOTI1_concl` | `:294` 起 | `... mcell_set V X ...` |
+| `REUHADY_concl` | `:306-321` | 同 |
+| `REUHADY_concl_version2` | `:325-340` | 同 |
+
+HOL 的 `mcell_set V` 是 `real^3->bool`（集合）按谓词应用；Lean
+`mcellSet (V : Set V3) : Set V3` 同构（`Set α = α → Prop`）。成员形与
+应用形等价为 `Iff.rfl`：`X ∈ mcellSet V ↔ (mcellSet V : V3 → Prop) X`
+（`Set.mem` 定义展开，零证明义务）。4.32 的应用侧 elaboration 可自动展开
+`Set`；4.36 在无期望类型的应用位不再展开，必须写成员形。
+
+### (b) 机器证据（`lean436-blockers-w1`，2026-11-26）
+
+4.36.0 直编同源 7 处报错（`packingauto2_v2_436.log` 前身）：
+
+```text
+PackingAuto2.lean:2779:6: error: Application type mismatch: The argument
+PackingAuto2.lean:5535:16: error: Function expected at
+PackingAuto2.lean:5543:53: error: Function expected at
+PackingAuto2.lean:5561:57: error: Function expected at
+PackingAuto2.lean:5846:16: error: Function expected at
+PackingAuto2.lean:5863:25: error: Function expected at
+PackingAuto2.lean:5882:25: error: Function expected at
+```
+
+陈述印刷形对照（4.32；`tskajxy_print_original_432.log` vs
+`tskajxy_print_candidate_432.log`，补丁前后仅此行不同）：
+
+```lean
+-- 原（`mcellSet V X`）
+∀ (V X : Set Kepler.Geom.V3), saturated V → Packing V → Kepler.Text.mcellSet V X → ...
+-- 候选（`X ∈ mcellSet V`）
+∀ (V X : Set Kepler.Geom.V3), saturated V → Packing V → X ∈ Kepler.Text.mcellSet V → ...
+```
+
+补丁后双版本：4.32 模块 RC=0（38.78 s）；4.36 直编 RC=0（30.43 s）。
+
+### (c) 修法
+
+- 六处陈述（`:5535` `QZYZMJC_concl`、`:5543` `KIZHLTL3_concl`、
+  `:5561` `TSKAJXY_statement`、`:5846` `GRUTOTI1_concl`、`:5863`
+  `REUHADY_concl`、`:5882` `REUHADY_concl_version2`）：
+  `mcellSet V X` → `X ∈ mcellSet V`，括号/量词/结论逐字不动；
+- 一处证明体（`:2779`，`p2g_NUMSEG_SUBSET_INDUCT` 实参）：
+  `(fun k : ℕ => …)` → `setOf (fun k : ℕ => …)`（`Set` 显式化，同为 defeq）；
+- 无签名、无新增/删除声明、无 sorry 面变化。
+
+### (d) 验收
+
+- 4.32 模块 build RC=0 / 0 err；4.36 复制式岛直编 RC=0；
+- `TSKAJXY_statement` 是 `def`，`#print axioms` 无公理；其余五声明体仍为
+  `sorry`（sorryAx 不变），无新增 `axiom`/`native_decide`；
+- 下游 71 个 `import Kepler.Text.PackingAuto2` 模块的 4.36 适配随之解锁
+  （含 `PackingAuto6`/`PackingAuto7` 的 18/19 笔）；
+- 不在 585 地面 `native_decide` 公理面上；根面 589 不受影响。
+
+### (e) 执行记录
+
+**编排者 2026-11-26 按分级 A 直接执行**（用户当日「好」批准 Wave 0；理由：
+defeq 印刷形、零公理变化、HOL 应用形同义）。存档 patch：
+`docs/statement-fix-proposals-patches/112-packingauto2-set-membership.patch`；
+闸：`GATE_MODE=STATEMENT-FIX SF_ITEM=112`（规则 1/2-SF/4/5；§4 的 Text roots
+步按既定政策以 `GATE_ROOTS` 收窄为模块自身，不作为拒绝理由）。
