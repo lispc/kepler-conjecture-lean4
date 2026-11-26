@@ -58,8 +58,14 @@ Mathlib cache：9,117 文件预构建（`lake update` post-update hook 自动 `c
 - `Text.Planarity`：`azim_cone_of_combo` 在 4.36 @5M heartbeats 超时
   （20M 诊断通过，253 s/245 s）；需拆分证明，不得以调 heartbeats 代替。
 - `PackingAuto8:295`：`VSub ?m (Set V3)` synthInstance 失败（未修）。
-- GoodList `+Classical.choice` 证明级漂移（根面不变，但破坏 good_list 零公理叙述；
-  待定位或记 ERRATA）。
+- GoodList `+Classical.choice` 证明级漂移：**已定位**（2026-11-26 一轮探针）——
+  `goodListB` 第三合取项（对称边 ∈）在 4.36 经 core 的
+  `Init/Prelude.lean:1146`（`Decidable` 改为 structure）+ `Init/Core.lean:1141`
+  （`decidable_of_decidable_of_iff`）+ `Init/Data/List/Basic.lean:851`
+  （成员实例）引入 `Classical.choice`；其余两合取项两版均零公理。
+  根面 589 不变，按用户 2026-11-26 裁定记为**文档化漂移**、不当硬阻塞。
+  可选消除路径（探针已验证）：第三项改布尔扫描 `.all (… .contains …)`，
+  4.36 下零公理；但改 `goodListB` 本体须走 DEF-FIX 通道，当前不做。
 - `Assembly.lean:3693/3707/3722`、`PackingAuto14` 等 `Equiv.ofBijective_apply`
   同模式点（全树 80 处/23 文件，以 4.36 census 实测为准）。
 - 全量 4.36 census（Final 闭包）与 585 逐名公理复核尚未执行。

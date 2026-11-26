@@ -73,8 +73,6 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `planarity-split-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_7283d025`；≤1 Lean）** | `Text.Planarity` 4.36 @5M：先应用 patch 11 的三处 proof-only 适配，再把 `azim_cone_of_combo`（:1811 起）拆 2–4 个 private lemma；既有声明签名/陈述逐字冻结；禁调 heartbeats；4.32/4.36 + 公理三路；3 轮卡死写 PAUSE_COST |
-| `packing-chain-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_c983bc09`；≤1 Lean）** | 18/19 双验落库候选 + `PackingAuto8:295` 的 `VSub (Set V3)` 显式标注 + `PackingAuto14` @4.36（6/7/8 新 olean 解锁后 11 处同模式）；proof-body only；缺上游 4.36 olean 即报第一个缺失名 |
-| `assembly-pattern-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3dc88ca4`；≤1 Lean）** | `Assembly.lean:3693/3707/3722` **先测后修**（fragment 探针 4.36）；4.32 全模块 + 公理对照；输出 23 文件/80 处同模式 inventory 供 census；不改陈述 |
 | `wt0-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-6` / `agent-psiqcu0q`；≤1 Lean）** | 只做 HOL `(prep-QZECFIC wt0,0)` 原版 Taylor pass/glue 与 cell 覆盖；先真实单件再按原 80/79 推进；pp/分裂/终止参数不得自创；不走 route R、不扩其余 cell、不接 Assembly |
 | `qitnpea-hol-replay-w1` | **在飞（2026-11-26 用户明批两 nli 各一发；`agent-7` / `agent-r0ek0a6b`；≤1 Lean）** | 只做 `QITNPEA1_1_2` 一个有完整原版规格的 case 及 Taylor pass/glue；不走角点电池/11片/456点，不接 Assembly；原数据缺失记 UNRESOLVED |
 
@@ -82,7 +80,9 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）；`16` 后补落库 `0caffebc`（SF-112）** | `01–10`、`12–17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 仍 BLOCKED（`planarity-split-w1` 在飞），`18/19` 在 `packing-chain-w1` 验证，GoodList/Auto8 未决；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
+| `assembly-pattern-w1` | **完成/落库 `cd841d84`（2026-11-26；Assembly 三处；4.36 fragment RC=0）** | 先测后修：fragment 4.32 RC=0 / 4.36 RC=1（6 err）→ 修后 4.36 RC=0；4.32 全模块 98.97 s/9.34 GB；公理 baseline vs candidate `diff` 空（`assembly` = 标准三 + 585 native）；4.36 全模块缺 `NliBanks16` 等 38/43 import，证据止于 fragment；inventory 23 文件/80 处 |
+| `packing-chain-w1` | **完成/落库 `ffd65d0a`（2026-11-26；18/19 + Auto8 VSub；三文件 +5/−5）** | Auto8 根因 = 4.36 Mathlib `scoped [Pointwise]`，改 `Set.image2`；4.32 编排者亲跑 6/7/8 RC=0（22.10/20.50/4.59 s）；4.36 24.52/33.05/4.16 s；公理 12 声明 `diff` 空；Auto14 @4.36 BLOCKED（首个缺失 `PackingAuto12`），11 处未测 |
+| `lean436-blockers-w1` + `lean436-landing-w1` | **候选交付完成；15 笔逐笔落库 `577c3754`…`ab382e5c`（2026-11-26；双版本/公理/根面逐笔验收）；`16` 后补落库 `0caffebc`（SF-112）** | `01–10`、`12–17` 已提交；Assembly/Final 岛编译 RC=0，根面 589 同集；`11` Planarity 仍 BLOCKED（`planarity-split-w1` 在飞），`18/19` 已随 `ffd65d0a` 落库，GoodList 漂移已定位（见 §8 续1592）；主工具链仍 4.32.2，清单见快照 `LANDED.tsv` |
 | `wt0-r1-core-w1` | **完成：UNRESOLVED（2026-11-26；y4 目标 0 条；辅助 2/2 标准三；主仓未落库）** | `wt0_delta_bounds` 与 `wt0_small_matanD_bracket` 可复用；三 sol 槽聚合 dSE 紧包络未闭合，不是 wt0/route R 反证；不做 y5/y6/R3，SORRIED −0 |
 | `qitnpea-wave1-y6-w1` | **完成：BUDGET_EXHAUSTED（2026-11-26；16 GB memcap；SHA 80/80；主仓未落库）** | 14 个置换元组截零检查与运输 elaboration errors=0，但内核/olean 生成超 16 GB；`curvCheckClamp_decide`、C.2、ConcaveOn/consumer 未闭；D3=150,022 B（当前单片用户明批），SORRIED −0，不量产 |
 | `wt0-route-r-first-w1` | **完成/落库 `65d8039a`（2026-11-26；R4+R2 共 35/35 标准三；编排者 SHA 15/15 + 模块构建/最终公理复验 + push）** | R4 5 定理 + R2 30 定理，`wt0_corner_pos` 成立；505 行/22,653 B，olean 4,121,888 B，顺序编译 20.81 s；已落 `NliWt0LogKit`/`NliWt0Corner` 供 R1 复用；未接 Assembly、SORRIED −0；全 route R 仍 UNRESOLVED |
@@ -235,6 +235,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-26（Lean 4.36 Wave 1-B/C 落库 + GoodList 漂移定位；续1592）**：
+  ① **`assembly-pattern-w1` 完成/落库 `cd841d84`**：`Assembly.lean` 三处 `have hif` 由 `unfold …; simp only [Equiv.ofBijective_apply]; rw [coe_toFinset]` 改为 `hs` + `hset_{e,n,f}` + `hmem` + `show extendPerm … (bijOn_res …) d = _` + `rw [apply_extendPerm_of_mem hmem, if_pos hd]`；陈述/签名零改动。**先测后修**：fragment 探针 4.32 RC=0 / 4.36 RC=1（6 err，`Equiv.ofBijective_apply` 不点燃）→ 修后 4.36 RC=0；4.32 全模块 RC=0/0 err/98.97 s/9.34 GB；编排者亲跑公理 baseline vs candidate `diff` 空（`assembly` = 标准三 + 585 native）。4.36 全模块仍缺 `Kepler.NliBanks16` 等 38/43 import，证据止于 fragment（UNRESOLVED 已限定）。inventory：23 文件 / 80 处，0 个模块已有 4.36 olean。
+  ② **`packing-chain-w1` 完成/落库 `ffd65d0a`**：18/19 + Auto8 三文件（+5/−5，proof-body only）。Auto8 根因 = 4.36 Mathlib 把 Set 逐点运算收进 `scoped [Pointwise]`（两侧显式标注仍报同一 `VSub` 实例错，机器反证在快照 Evidence），改 `Set.image2 (fun p q : V3 => p -ᵥ q)`。4.32 编排者亲跑 6/7/8 RC=0（22.10/20.50/4.59 s）；4.36 车道 24.52/33.05/4.16 s；公理 12 声明（含 4 私有）`diff` 空。Auto14 @4.36 BLOCKED：首个缺失 `Kepler.Text.PackingAuto12`（10/11/12 未适配），11 处同模式点未测，不写“无需改动”。
+  ③ **GoodList 漂移已定位（一轮探针，按用户裁定不再深挖）**：`#print axioms goodListB` 4.32 `[propext, Quot.sound]` → 4.36 `+Classical.choice`。三分量二分：`glB1`（Nodup）两版无公理、`glB2`（`∀ l ∈ L, l ≠ []`）两版无公理、**`glB3`（`∀ d ∈ listOfDarts L, (d.2,d.1) ∈ listOfDarts L`）4.32 `[propext, Quot.sound]` → 4.36 `+Classical.choice`**。源在 core：4.32 `Init/Prelude.lean:972` 的 `class inductive Decidable` → 4.36 `Init/Prelude.lean:1146` 的 **structure**（`decide`/`reflects_decide`）+ 4.36 `Init/Core.lean:1141` 的 `decidable_of_decidable_of_iff`，经 `Init/Data/List/Basic.lean:851` 的成员实例进入。不是我们的证明形式，也不是 Mathlib 实例。**可选消除路径（探针已验证）**：把第三合取项改成布尔扫描 `.all (fun d => (listOfDarts L).contains (d.2,d.1))`，4.36 下**无公理**；但改 `goodListB` 本体 = 定义改动，须走 DEF-FIX 通道，当前不做。根面 589 不变。
+  ④ **主仓 `.lake` 清理**：删除 2026-11-19 事故遗留的自指 symlink `Kepler/LP/W6Align/W6Align`（目标=其父目录，循环）；`.lake` 余 7 条正常链接（包内 4 + shadow 3）。
+  ⑤ **在飞**：`planarity-split-w1` 仍跑；与另一会话的两条 nli HOL replay 车道共享 ≤3 lean 护栏。
 - **2026-11-26（Lean 4.36 Wave 0 落库 + Wave 1 三车道发车；续1591）**：
   ① **SF-112 / patch 16 落库 `0caffebc`**：`PackingAuto2` 六处陈述 `mcellSet V X` → `X ∈ mcellSet V`（`QZYZMJC_concl`/`KIZHLTL3_concl`/`TSKAJXY_statement`/`GRUTOTI1_concl`/`REUHADY_concl`/`REUHADY_concl_version2`）+ 一处证明体 `setOf`（:2779）；分级 A，HOL `pack_concl.hl:185/210/224/294/306/325` 原文即应用形。闸 `GATE_MODE=STATEMENT-FIX SF_ITEM=112` → GATE-PASS；4.36 岛直编 RC=0/0 err/28.18 s/6.32 GB；`TSKAJXY_statement` 公理原/候选一致 `[propext, Classical.choice, Quot.sound]`，五 sorry 声明仍 `sorryAx`；解锁 71 个 import 下游（含 18/19）。存档 patch `docs/statement-fix-proposals-patches/112-…patch`。
   ② **pin 与口径 `8de76453`**：新增 `docs/lean-4.36-pin.md`（toolchain commit `611c117b…` + mathlib `fc4f59e5…` + 8 包 rev + cache 9,117 + 切换检查单 + 未决 5 项）；`lakefile.toml` 的 Final 闭包注释 8,869 → **9,137**（实测 `scripts/check_acceptance_targets.py`；1,249 是模块 `Kepler` 闭包，口径无误，不是 ERRATA）。
