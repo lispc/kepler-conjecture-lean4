@@ -7167,3 +7167,7 @@ defeq 印刷形、零公理变化、HOL 应用形同义）。存档 patch：
 `docs/statement-fix-proposals-patches/112-packingauto2-set-membership.patch`；
 闸：`GATE_MODE=STATEMENT-FIX SF_ITEM=112`（规则 1/2-SF/4/5；§4 的 Text roots
 步按既定政策以 `GATE_ROOTS` 收窄为模块自身，不作为拒绝理由）。
+**已落地 `0caffebc`**：4.32 模块 build RC=0；4.36 岛直编 RC=0/0 err/28.18 s/
+6.32 GB；`TSKAJXY_statement` 公理原/候选一致 `[propext, Classical.choice,
+Quot.sound]`；五个 sorry 声明仍 `sorryAx`；下游 71 个 import 模块的 4.36
+适配随之解锁。
