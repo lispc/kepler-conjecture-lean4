@@ -1439,7 +1439,51 @@ remainder `1/11!` — all computed by kernel `decide` (the mantissas stay
 below `2^24`). -/
 theorem sinPilot_cert :
     sinInterval ⟨1, -1⟩ 5 (-20) = some ⟨⟨502712, -20⟩, ⟨502719, -20⟩⟩ := by
-  decide
+  have hdiv0 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 1)
+      ⟨((Nat.factorial 1 : ℕ) : ℤ), 0⟩ (-20) = some ⟨524288, -20⟩ := by decide
+  have hdiv1 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 3)
+      ⟨((Nat.factorial 3 : ℕ) : ℤ), 0⟩ (-20) = some ⟨21845, -20⟩ := by decide
+  have hdiv2 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 5)
+      ⟨((Nat.factorial 5 : ℕ) : ℤ), 0⟩ (-20) = some ⟨273, -20⟩ := by decide
+  have hdiv3 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 7)
+      ⟨((Nat.factorial 7 : ℕ) : ℤ), 0⟩ (-20) = some ⟨1, -20⟩ := by decide
+  have hdiv4 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 9)
+      ⟨((Nat.factorial 9 : ℕ) : ℤ), 0⟩ (-20) = some ⟨0, -20⟩ := by decide
+  have hrem : Dyadic.divFloorQ (⟨1, 0⟩ : Dyadic)
+      ⟨((Nat.factorial 11 : ℕ) : ℤ), 0⟩ (-20) = some ⟨0, -20⟩ := by decide
+  have hloop :
+      taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+        (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-20) 5 0 ⟨0, 0⟩ ⟨0, 0⟩
+        = some (⟨502713, -20⟩, ⟨502718, -20⟩) := by
+    calc
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-20) 4 1
+          ⟨524288, -20⟩ ⟨524289, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv0]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-20) 3 2
+          ⟨502442, -20⟩ ⟨502444, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv1]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-20) 2 3
+          ⟨502715, -20⟩ ⟨502718, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv2]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-20) 1 4
+          ⟨502713, -20⟩ ⟨502717, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv3]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-20) 0 5
+          ⟨502713, -20⟩ ⟨502718, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv4]
+        rfl
+  unfold sinInterval
+  rw [hloop, hrem]
+  rfl
 
 /-- End-to-end real statement: `0.4794 < sin(1/2)` (the true value is
 `0.4794255…`). -/
@@ -1469,7 +1513,9 @@ theorem sinPilot_real : (2397:ℝ)/5000 < Real.sin ((1:ℝ)/2) := by
 `0.4794254` with radius `7/2^21` (kernel `decide`). -/
 theorem sinBallPilot :
     sinBall ⟨1, -1⟩ 5 (-20) = some ⟨⟨1005431, -21⟩, ⟨7, -21⟩⟩ := by
-  decide
+  unfold sinBall
+  rw [sinPilot_cert]
+  rfl
 
 /-- End-to-end ball statement over `ℝ`: `|sin(1/2) − 1005431/2^21| ≤ 7/2^21`. -/
 theorem sinBallPilot_real :
@@ -1502,7 +1548,51 @@ theorem sinBallPilot_real :
 remainder `x^10/10!` — all computed by kernel `decide`. -/
 theorem cosPilot_cert :
     cosInterval ⟨1, -2⟩ 5 (-20) = some ⟨⟨1015975, -20⟩, ⟨1015982, -20⟩⟩ := by
-  decide
+  have hdiv0 : Dyadic.divFloorQ ((⟨1, -2⟩ : Dyadic).npow 0)
+      ⟨((Nat.factorial 0 : ℕ) : ℤ), 0⟩ (-20) = some ⟨1048576, -20⟩ := by decide
+  have hdiv1 : Dyadic.divFloorQ ((⟨1, -2⟩ : Dyadic).npow 2)
+      ⟨((Nat.factorial 2 : ℕ) : ℤ), 0⟩ (-20) = some ⟨32768, -20⟩ := by decide
+  have hdiv2 : Dyadic.divFloorQ ((⟨1, -2⟩ : Dyadic).npow 4)
+      ⟨((Nat.factorial 4 : ℕ) : ℤ), 0⟩ (-20) = some ⟨170, -20⟩ := by decide
+  have hdiv3 : Dyadic.divFloorQ ((⟨1, -2⟩ : Dyadic).npow 6)
+      ⟨((Nat.factorial 6 : ℕ) : ℤ), 0⟩ (-20) = some ⟨0, -20⟩ := by decide
+  have hdiv4 : Dyadic.divFloorQ ((⟨1, -2⟩ : Dyadic).npow 8)
+      ⟨((Nat.factorial 8 : ℕ) : ℤ), 0⟩ (-20) = some ⟨0, -20⟩ := by decide
+  have hrem : Dyadic.divFloorQ ((⟨1, -2⟩ : Dyadic).npow 10)
+      ⟨((Nat.factorial 10 : ℕ) : ℤ), 0⟩ (-20) = some ⟨0, -20⟩ := by decide
+  have hloop :
+      taylorIter (fun i => (⟨1, -2⟩ : Dyadic).npow (2*i))
+        (fun i => ((Nat.factorial (2*i) : ℕ) : ℤ)) (-20) 5 0 ⟨0, 0⟩ ⟨0, 0⟩
+        = some (⟨1015976, -20⟩, ⟨1015981, -20⟩) := by
+    calc
+      _ = taylorIter (fun i => (⟨1, -2⟩ : Dyadic).npow (2*i))
+          (fun i => ((Nat.factorial (2*i) : ℕ) : ℤ)) (-20) 4 1
+          ⟨1048576, -20⟩ ⟨1048577, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv0]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -2⟩ : Dyadic).npow (2*i))
+          (fun i => ((Nat.factorial (2*i) : ℕ) : ℤ)) (-20) 3 2
+          ⟨1015807, -20⟩ ⟨1015809, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv1]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -2⟩ : Dyadic).npow (2*i))
+          (fun i => ((Nat.factorial (2*i) : ℕ) : ℤ)) (-20) 2 3
+          ⟨1015977, -20⟩ ⟨1015980, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv2]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -2⟩ : Dyadic).npow (2*i))
+          (fun i => ((Nat.factorial (2*i) : ℕ) : ℤ)) (-20) 1 4
+          ⟨1015976, -20⟩ ⟨1015980, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv3]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -2⟩ : Dyadic).npow (2*i))
+          (fun i => ((Nat.factorial (2*i) : ℕ) : ℤ)) (-20) 0 5
+          ⟨1015976, -20⟩ ⟨1015981, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv4]
+        rfl
+  unfold cosInterval
+  rw [hloop, hrem]
+  rfl
 
 /-- End-to-end real statement: `0.9689 < cos(1/4)` (the true value is
 `0.9689124…`). -/
@@ -1533,7 +1623,51 @@ theorem cosPilot_real : (9689:ℝ)/10000 < Real.cos ((1:ℝ)/4) := by
 remainder `x^11/11` — all computed by kernel `decide`. -/
 theorem arctanPilot_cert :
     arctanInterval ⟨1, -1⟩ 5 (-20) = some ⟨⟨486159, -20⟩, ⟨486258, -20⟩⟩ := by
-  decide
+  have hdiv0 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 1)
+      ⟨((1 : ℕ) : ℤ), 0⟩ (-20) = some ⟨524288, -20⟩ := by decide
+  have hdiv1 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 3)
+      ⟨((3 : ℕ) : ℤ), 0⟩ (-20) = some ⟨43690, -20⟩ := by decide
+  have hdiv2 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 5)
+      ⟨((5 : ℕ) : ℤ), 0⟩ (-20) = some ⟨6553, -20⟩ := by decide
+  have hdiv3 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 7)
+      ⟨((7 : ℕ) : ℤ), 0⟩ (-20) = some ⟨1170, -20⟩ := by decide
+  have hdiv4 : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 9)
+      ⟨((9 : ℕ) : ℤ), 0⟩ (-20) = some ⟨227, -20⟩ := by decide
+  have hrem : Dyadic.divFloorQ ((⟨1, -1⟩ : Dyadic).npow 11)
+      ⟨((11 : ℕ) : ℤ), 0⟩ (-20) = some ⟨46, -20⟩ := by decide
+  have hloop :
+      taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+        (fun i => ((2*i+1 : ℕ) : ℤ)) (-20) 5 0 ⟨0, 0⟩ ⟨0, 0⟩
+        = some (⟨486206, -20⟩, ⟨486211, -20⟩) := by
+    calc
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((2*i+1 : ℕ) : ℤ)) (-20) 4 1
+          ⟨524288, -20⟩ ⟨524289, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv0]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((2*i+1 : ℕ) : ℤ)) (-20) 3 2
+          ⟨480597, -20⟩ ⟨480599, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv1]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((2*i+1 : ℕ) : ℤ)) (-20) 2 3
+          ⟨487150, -20⟩ ⟨487153, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv2]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((2*i+1 : ℕ) : ℤ)) (-20) 1 4
+          ⟨485979, -20⟩ ⟨485983, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv3]
+        rfl
+      _ = taylorIter (fun i => (⟨1, -1⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((2*i+1 : ℕ) : ℤ)) (-20) 0 5
+          ⟨486206, -20⟩ ⟨486211, -20⟩ := by
+        rw [taylorIter.eq_2, hdiv4]
+        rfl
+  unfold arctanInterval
+  rw [hloop, hrem]
+  rfl
 
 /-- End-to-end real statement: `0.46 < arctan(1/2)` (the true value is
 `0.4636476…`). -/
@@ -1566,7 +1700,110 @@ theorem arctanPilot_real : (23:ℝ)/50 < Real.arctan ((1:ℝ)/2) := by
 theorem sinRedPilot_cert :
     sinRed (⟨⟨7, -1⟩, ⟨4, 0⟩⟩ : DInterval) 5 (-40)
       = some ⟨⟨-843923039390, -40⟩, ⟨-338032194059, -40⟩⟩ := by
-  decide
+  have hshift : (⟨⟨7, -1⟩, ⟨4, 0⟩⟩ : DInterval).sub piD
+      = ⟨⟨5, -4⟩, ⟨14, -4⟩⟩ := by decide
+  have hband : Dyadic.ble (⟨9, -2⟩ : Dyadic) (⟨7, -1⟩ : Dyadic) = true := by decide
+  have hrange : (Dyadic.ble (⟨-1, 0⟩ : Dyadic) (⟨5, -4⟩ : Dyadic) &&
+      Dyadic.ble (⟨14, -4⟩ : Dyadic) (⟨1, 0⟩ : Dyadic)) = true := by decide
+  have hloNeg : (⟨5, -4⟩ : Dyadic).isNeg = false := by decide
+  have hhiNeg : (⟨14, -4⟩ : Dyadic).isNeg = false := by decide
+  have hlo : sinInterval ⟨5, -4⟩ 5 (-40)
+      = some ⟨⟨338032194059, -40⟩, ⟨338032249156, -40⟩⟩ := by
+    have hdiv0 : Dyadic.divFloorQ ((⟨5, -4⟩ : Dyadic).npow 1)
+        ⟨((Nat.factorial 1 : ℕ) : ℤ), 0⟩ (-40) = some ⟨343597383680, -40⟩ := by decide
+    have hdiv1 : Dyadic.divFloorQ ((⟨5, -4⟩ : Dyadic).npow 3)
+        ⟨((Nat.factorial 3 : ℕ) : ℤ), 0⟩ (-40) = some ⟨5592405333, -40⟩ := by decide
+    have hdiv2 : Dyadic.divFloorQ ((⟨5, -4⟩ : Dyadic).npow 5)
+        ⟨((Nat.factorial 5 : ℕ) : ℤ), 0⟩ (-40) = some ⟨27306666, -40⟩ := by decide
+    have hdiv3 : Dyadic.divFloorQ ((⟨5, -4⟩ : Dyadic).npow 7)
+        ⟨((Nat.factorial 7 : ℕ) : ℤ), 0⟩ (-40) = some ⟨63492, -40⟩ := by decide
+    have hdiv4 : Dyadic.divFloorQ ((⟨5, -4⟩ : Dyadic).npow 9)
+        ⟨((Nat.factorial 9 : ℕ) : ℤ), 0⟩ (-40) = some ⟨86, -40⟩ := by decide
+    have hrem : Dyadic.divFloorQ (⟨1, 0⟩ : Dyadic)
+        ⟨((Nat.factorial 11 : ℕ) : ℤ), 0⟩ (-40) = some ⟨27545, -40⟩ := by decide
+    have hloop :
+        taylorIter (fun i => (⟨5, -4⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 5 0 ⟨0, 0⟩ ⟨0, 0⟩
+          = some (⟨338032221605, -40⟩, ⟨338032221610, -40⟩) := by
+      calc
+        _ = taylorIter (fun i => (⟨5, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 4 1
+            ⟨343597383680, -40⟩ ⟨343597383681, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv0]
+          rfl
+        _ = taylorIter (fun i => (⟨5, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 3 2
+            ⟨338004978346, -40⟩ ⟨338004978348, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv1]
+          rfl
+        _ = taylorIter (fun i => (⟨5, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 2 3
+            ⟨338032285012, -40⟩ ⟨338032285015, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv2]
+          rfl
+        _ = taylorIter (fun i => (⟨5, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 1 4
+            ⟨338032221519, -40⟩ ⟨338032221523, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv3]
+          rfl
+        _ = taylorIter (fun i => (⟨5, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 0 5
+            ⟨338032221605, -40⟩ ⟨338032221610, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv4]
+          rfl
+    unfold sinInterval
+    rw [hloop, hrem]
+    rfl
+  have hhi : sinInterval ⟨14, -4⟩ 5 (-40)
+      = some ⟨⟨843922984293, -40⟩, ⟨843923039390, -40⟩⟩ := by
+    have hdiv0 : Dyadic.divFloorQ ((⟨14, -4⟩ : Dyadic).npow 1)
+        ⟨((Nat.factorial 1 : ℕ) : ℤ), 0⟩ (-40) = some ⟨962072674304, -40⟩ := by decide
+    have hdiv1 : Dyadic.divFloorQ ((⟨14, -4⟩ : Dyadic).npow 3)
+        ⟨((Nat.factorial 3 : ℕ) : ℤ), 0⟩ (-40) = some ⟨122764481877, -40⟩ := by decide
+    have hdiv2 : Dyadic.divFloorQ ((⟨14, -4⟩ : Dyadic).npow 5)
+        ⟨((Nat.factorial 5 : ℕ) : ℤ), 0⟩ (-40) = some ⟨4699577821, -40⟩ := by decide
+    have hdiv3 : Dyadic.divFloorQ ((⟨14, -4⟩ : Dyadic).npow 7)
+        ⟨((Nat.factorial 7 : ℕ) : ℤ), 0⟩ (-40) = some ⟨85669387, -40⟩ := by decide
+    have hdiv4 : Dyadic.divFloorQ ((⟨14, -4⟩ : Dyadic).npow 9)
+        ⟨((Nat.factorial 9 : ℕ) : ℤ), 0⟩ (-40) = some ⟨910980, -40⟩ := by decide
+    have hrem : Dyadic.divFloorQ (⟨1, 0⟩ : Dyadic)
+        ⟨((Nat.factorial 11 : ℕ) : ℤ), 0⟩ (-40) = some ⟨27545, -40⟩ := by decide
+    have hloop :
+        taylorIter (fun i => (⟨14, -4⟩ : Dyadic).npow (2*i+1))
+          (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 5 0 ⟨0, 0⟩ ⟨0, 0⟩
+          = some (⟨843923011839, -40⟩, ⟨843923011844, -40⟩) := by
+      calc
+        _ = taylorIter (fun i => (⟨14, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 4 1
+            ⟨962072674304, -40⟩ ⟨962072674305, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv0]
+          rfl
+        _ = taylorIter (fun i => (⟨14, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 3 2
+            ⟨839308192426, -40⟩ ⟨839308192428, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv1]
+          rfl
+        _ = taylorIter (fun i => (⟨14, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 2 3
+            ⟨844007770247, -40⟩ ⟨844007770250, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv2]
+          rfl
+        _ = taylorIter (fun i => (⟨14, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 1 4
+            ⟨843922100859, -40⟩ ⟨843922100863, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv3]
+          rfl
+        _ = taylorIter (fun i => (⟨14, -4⟩ : Dyadic).npow (2*i+1))
+            (fun i => ((Nat.factorial (2*i+1) : ℕ) : ℤ)) (-40) 0 5
+            ⟨843923011839, -40⟩ ⟨843923011844, -40⟩ := by
+          rw [taylorIter.eq_2, hdiv4]
+          rfl
+    unfold sinInterval
+    rw [hloop, hrem]
+    rfl
+  unfold sinRed sinI sinPoint
+  rw [hband, hshift, hrange, hloNeg, hhiNeg, hlo, hhi]
+  rfl
 
 /-- End-to-end real statement: `sin x < -3/10` on `[7/2, 4]` (the true values
 run from `-0.3508` to `-0.7568`). -/
