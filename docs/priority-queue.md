@@ -75,6 +75,7 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（104 OK + 2 `BUDGET_CAP`，族 ≈1.6 h；见 §8 续1624/续1628） |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
 | `tsk-opt-m2b-w1`（STRADDLE） | **在飞（2026-11-27 用户批「测 guard straddle」；同一 `agent_136ccdb4`；零 Lean）** | 修复后 FG 值链上测全族 6,612 叶 guard-straddle 占比；先核对 M2 原 40 叶 6/40，全量 ≤3 h 则全跑、否则 1,000 叶分层；输出 per-leaf CSV + 占比 + 摊销成本；≤5% ⇒ 6.3 s 可代表全族，~15% ⇒ 2.23× OVER-BAND；不做集合范数/S1/S2/量产 |
+| `native-decide-research-w1` | **在飞（2026-11-27 用户明批；ZCode `agent_3b69e406`；≤1 Lean）** | 调研放开 `native_decide` + precompile 的编译时间收益：基线 85–91 h；probe TskXLLIPLS 2 叶 / W1DC 1 箱 / Cases 典型 + 重件 / Hull 1 件；三档 + 公理代价（逐族件数 = 新增公理）+ bundle 构建成本/峰值；不改契约/不落库 |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
@@ -253,6 +254,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（用户明批 native_decide + precompile 专项调研；`native-decide-research-w1` 发车；续1632）**：
+  ① **用户要求**：专门调研「放开使用 `native_decide` 并多用 `precompileModules`，能快多少编译时间」。
+  ② **车道**：`agent_3b69e406`，≤1 Lean；probe TskXLLIPLS 2 叶（典型+最重）、W1DC 1 箱、Interval Cases 典型 + `C6096597438b/Shard1`、Hull 1 件；Top\* 引用已有 A/B；LocalAuto/ZTG/PA 说明 native 不适用。
+  ③ **输出**：分族 + 总量三档（只 native / native+precompile），对表 **85–91 h**；新增公理数（逐族件数）、根面 **589→589+N**、bundle 构建成本/峰值、信任类别后果；不改验收契约/不落库。
+  ④ **已有锚点**：native 固定费 **2–5 s**；S005 4.05× / S054 1.67× / S017 10.8× / S030 0.63× / S013 >35.7× / BoundsS000 >1,813×；证据 `~/c17_backup/lane_snapshots/kn-native-ab-20261127/`。SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（用户批测全叶 guard straddle；kernel vs native A/B：Top\* 家族信任溢价 ~10–16×；续1631）**：
   ① **用户裁决**：「测 guard straddle」——`tsk-opt-m2b-w1` 转 STRADDLE（同一 `agent_136ccdb4`，**零 Lean**，≤3 h）：修复后 FG 值链上测全族 6,612 叶；先核对 M2 原 40 叶 **6/40 = 15%**，全量 ≤3 h 则全跑、否则 1,000 叶分层；≤5% ⇒ 6.3 s 可代表全族，~15% ⇒ **2.23× OVER-BAND**；不做集合范数/S1/S2/量产。
