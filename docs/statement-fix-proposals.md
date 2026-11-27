@@ -7171,3 +7171,45 @@ defeq 印刷形、零公理变化、HOL 应用形同义）。存档 patch：
 6.32 GB；`TSKAJXY_statement` 公理原/候选一致 `[propext, Classical.choice,
 Quot.sound]`；五个 sorry 声明仍 `sorryAx`；下游 71 个 import 模块的 4.36
 适配随之解锁。
+
+## 113. `PackingAuto12` 公开定理 `ROGERS_INTER_V_LEMMA` 一处 `rogers V ul v` 应用形改成员形 `v ∈ rogers V ul`（Lean 4.36 应用侧 elaboration 收紧；defeq 等价；HOL `marchal2.hl:626` 原文即 `(rogers V ul v)`）— 分级 **A**（印刷形修正 · 零语义变化 · 同一命题）
+
+### (a) HOL 裁决
+
+HOL `ROGERS_INTER_V_LEMMA`（`reference/flyspeck/text_formalization/packing/marchal2.hl:626`）：
+
+```text
+!V ul v:real^3.
+  saturated V /\ packing V /\ barV V 3 ul /\ v IN V /\ (rogers V ul v)
+  ==> v = HD ul
+```
+
+HOL 的 `rogers V ul : real^3 -> bool` 是集合，`(rogers V ul v)` 即成员关系；
+Lean `rogers V ul : Set V3` 同构，`v ∈ rogers V ul ↔ (rogers V ul : V3 → Prop) v`
+为 `Iff.rfl`（零证明义务）。4.32 应用位可自动展开 `Set`；4.36 在无期望类型时
+不再展开，必须写成员形。
+
+### (b) 机器证据（`lean436-census-w1` / `lean436-fixer-w1`，2026-11-27）
+
+- 4.36 直编 `PackingAuto12.lean:1241`：`Function expected at rogers V ul`；
+- 4.32 同源模块 RC=0（29.46 s）；
+- 补丁后双版本 RC=0（4.36 26.48 s / 4.32 29.46 s）；无 `#print axioms` 段、0 sorryAx；
+- 4.32 打印对照：仅该假设 `rogers V ul v` → `v ∈ rogers V ul`，其余逐字同。
+
+### (c) 修法
+
+`:1241` 的 `(_hr : rogers V ul v)` → `(_hr : v ∈ rogers V ul)`；
+量词、结论、证明体、下游消费者逐字不动。
+
+### (d) 影响面
+
+公开定理，但两形 defeq；`PackingAuto13` 两处消费者以证明项 `hvin.1`/`hvin.1.1`
+传入，不依赖语法形。零公理变化。
+
+### (e) 验证
+
+4.32 模块 RC=0 / 0 error；4.36 RC=0；无新 axiom/sorry；陈述语义不变（`Iff.rfl`）。
+
+### (f) 状态
+
+**APPROVED / 待落库（SF 通道常态化，分级 A；编排者 2026-11-27 执行）**。

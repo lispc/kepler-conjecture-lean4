@@ -1238,7 +1238,7 @@ puts the whole Rogers simplex inside `voronoiClosed V u0`, so for `v ∈ V` we
 get `dist v u0 ≤ dist v v = 0`, hence `v = u0`. -/
 theorem ROGERS_INTER_V_LEMMA (V : Set V3) (ul : List V3) (v : V3)
     (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul)
-    (_hv : v ∈ V) (_hr : rogers V ul v) : v = hdV ul := by
+    (_hv : v ∈ V) (_hr : v ∈ rogers V ul) : v = hdV ul := by
   obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul _hb
   have hu0 : u0 ∈ V := BARV_IMP_u0_IN_V V ul u0 u1 u2 u3 _hs _hp _hb hul
   have htr : truncateSimplex 0 ul = [u0] := by
