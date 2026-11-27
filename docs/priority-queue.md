@@ -74,7 +74,6 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（9 件 3.2–33.2 s，整族 ≈1–2 h；见 §8 续1624） |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
-| `tsk-opt-m2b-w1` | **在飞（2026-11-27 用户明批「M2b：批」；ZCode `agent_136ccdb4`；≤1 Lean）** | 只换值链表示（Fixed-Grid Int 单格点、尾数 ≤310 bit、对齐 0），保留 `PtDual`/`CurvTab.Valid`/`checkPosPt_sound` 形状；kBox0 + worst-case T149 两叶 `decide`，目标 wall ≤3.4 s、RSS ≤10.5 GiB、标准三、lb>0；**不做 S1/S2/量产/4.36/C；结果回来只交 RESULTS，等用户确认后再任何下一步** |
 | `wt0-hol2-arith-leaf-w1` | **STRUCTURAL-STOP + OVER-BAND 收线整理（原 `agent-10` resume / `agent-3ww7uxc0`；不再起计算）** | leaf_compile1–10 仍 maxErrors=100，52,838,847 B 叶源约 168× HOL 直接机制文件；leaf_compile9 含 sorryAx 污染，无合格 Lean 叶。只整理失败证据，后续等用户裁决 |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
@@ -82,6 +81,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-opt-m2b-w1` | **完成：UNRESOLVED / WALL-NOT-MEASURED（2026-11-27；Fixed-Grid v2；`PointTMFG.lean` 787 行；主仓零改动）** | RC=0 / 0 error、`checkPosPt_sound` 标准三、零 axiom/sorry/native_decide/extern；Fixed-Grid 原语 **184,838**（2.08×；`ediv`+`abs` 各 43,960 来自半径路径）。**单叶 wall 未取得**：探针 `decide` 不闭合、`dualOnly` 早退 `none`（`sorryAx`；镜像 fy 2.73 vs M2 2.45e-2、curv 一致 ⇒ 值链节点分叉，`ofInterval`/`fgCeilD` 未排除）。按实测单价投影 **≈4.5–5 s/叶 `[EST]`**（>3.4 s；`× = 1 mul + 1 shift` 只在不要半径时成立）。负结果：`atan1K` 点检测须下沉格点层；`chopCeilTo` 非取格点。**四选一等用户确认** |
 | `tsk-opt-m2-w1` | **完成：WALL-FAIL / CONDITIONAL（2026-11-27，Design P 一盒原型；`PointTM.lean` 558 行；主仓零改动）** | 其余硬指标全 PASS：`checkPosPt_sound` 标准三、叶 `pt_check`=[propext,Quot.sound]、RSS 6.194 GiB、K 150.6–301.8（≤550）、34/34 非 straddle lb>0、12/12（11 直接 + 1 straddle 回落 TM）。**wall 8.61–8.82 s > 3.4 s**；根因 = Fixed-Grid 未实现（75.6 µs/op vs 31；op 数仅 1.047×），预计 Fixed-Grid ~2.75 s。S1/S2 仍是命名 Prop 假设（570–720 + 400–700 行未证）；straddle 15% 分裂无效、回落 TM 15.49 s ⇒ 摊销 9.6 s/叶；4.36 未测 |
 | `qitnpea-safe-cse-leaf-w1` | **完成：PASS（2026-11-27；编排者 SHA 24/24 + 探针/首叶/根盒路径独立复核；零 Lean，SORRIED −0）** | SAFE-CSE 消除 delta 污染；case 13031 第 13 DFS 节点/depth 12/f1 首 pass，upper=-61279551481/8000000000000<0，13/13 开关节点逐位一致；根盒 12 分裂精确重建叶盒；仅 RECONSTRUCTED-LEAF，真实 azure 项形/同序首叶仍 UNRESOLVED |
 | `wt0-hol2-cse-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 50/50 + 二阶复放重跑；无 patch；Lean 单叶 0/1，SORRIED −0）** | pp=3 负上界、pp=6 逐位一致，CSE 274/518 数值相同；439 行 kit 编译产物 869,400 B、十条标准三。CSE/nocse 叶均未过，leaf_compile8 RC=1/maxErrors=100；首通道 = ℚ 算术侧条件表示，kit 可复用，后续等用户裁决 |
@@ -174,7 +174,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
-| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已批（2026-11-27 用户「M2b：批」）**：`tsk-opt-m2b-w1` 在飞——只换值链表示（Int 单格点、尾数 ≤310 bit、对齐 0），不动 S1/S2；目标 wall ≤3.4 s；**结果回来后等用户确认再进行任何下一步**；PASS 后再谈 S1/S2 证明，FAIL 则 N=32 fallback；C 不做 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已回（2026-11-27）= `UNRESOLVED / WALL-NOT-MEASURED`**：`PointTMFG.lean` 787 行、RC=0 / 0 error、`checkPosPt_sound` 标准三、零禁用构造；单叶 wall 未取得（`decide` 不闭合、`dualOnly` 早退 `none`；镜像 fy 2.73 vs M2 2.45e-2、curv 一致 ⇒ 值链节点分叉）；Fixed-Grid 原语 184,838（2.08×，ediv+abs 各 43,960 来自半径路径），按实测单价投影 **≈4.5–5 s/叶 `[EST]`**。**下一步四选一等用户确认**：① 修值链分叉再测；② 接受 ~4.5–5 s 重评可行性；③ N=32 fallback（DEF-FIX）；④ 止损。C 不做 |
 | **CertShards 全量 4.36 重放（236–290 h）** | **A 已批（2026-11-27 用户「当然需要 precompileModules」）**：`lean436-precompile-w1` 先做 4.36 precompile pilot（1 非 R + 1 R）；pilot GO（≥10×）后才谈全量 575；B（按族抽样 + 585 逐名审计）保留为 fallback。批前不改验收契约、不启动全量重编 |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -250,6 +250,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（M2b Fixed-Grid v2 收线：`UNRESOLVED / WALL-NOT-MEASURED`；单叶 wall 未取得；投影 ≈4.5–5 s；等用户确认；续1625）**：
+  ① **交付**：`~/c17_backup/lane_snapshots/tsk-opt-m2b-w1/`——`PointTMFG.lean` **787 行 / ~60 声明**，单文件 `lean -o` **RC=0 / 0 error**，零 `axiom`/`sorry`/`native_decide`/extern；主仓 tracked 零改动（HEAD `89dab07b`），`patch.diff` `apply --check` PASS。`#print axioms Kepler.Interval.checkPosPt_sound` = **`[propext, Classical.choice, Quot.sound]`**（`FG.mem_mul` 同）。
+  ② **已证舍入引理**：`mem_add/neg/sub`/**`mem_mul`**、`le_of_mem/ge_of_mem/abs_le_of_mem/mem_of_bounds`、四条 Euclidean 取整界、`ptLoBound_spec`；未证 `mem_recip`/`mem_sqrt`/`mem_ofInterval`（与 M2 同级 S1 余额）及两条显式取整假设 `hHW`/`hLin`。
+  ③ **判词 = UNRESOLVED / WALL-NOT-MEASURED（非 PASS 非 WALL-FAIL）**：M2 同车道重测 kBox0 = 8.78 s（M2 8.61 s，环境一致）；Fixed-Grid 原语 **184,838** vs M2 88,753 = **2.08×**（`ediv` 43,960 + `abs` 43,960 全部来自半径路径）。**单叶 wall 未取得**——kBox0 探针 `decide` 不闭合，连只跑 `evalPtDual` 的 `dualOnly` 也在核内早退 `none`（`#print axioms` 带 `sorryAx`，user≈基线 1.97 s）；已排除证书向量/消费序，未排除 `ofInterval`/`fgCeilD` 逐位一致性；镜像 `fy=2.73` 与 M2 `2.45e-2` 不一致、`curv` 一致 ⇒ 值链某节点分叉。修复顺序在快照 `UNRESOLVED.md` §1。
+  ④ **投影不利（非判词）**：184,838 原语 × 实测单价（Int.add 6 / Int.ediv 48 / Int.mul+ediv 98 µs）≈ **4.5–5 s/叶**；DESIGN §3.4 的「× = 1 mul + 1 shift」只在不要半径时成立，而不要半径不 sound ⇒ 3.4 s 目标预计不可达。
+  ⑤ **两条负结果**：`atan1K` 点值检测必须下沉到格点层（`c=2^S ∧ r=0`）——Dyadic 端点 `⟨2^164,−164⟩` 永不为语法 `(1,0)`，落 `arctanI` 在 x=1、N=16 只有 2% 精度；`chopCeilTo` 不能当“取到格点”用（`e₀ ≤ d.e` 时原样返回）。不做 S1/S2、T149、量产、CertTM/585、4.36。**下一步四选一（修值链再测 / 接受 ~4.5–5 s 重评 / N=32 fallback / 止损）等用户确认，未确认前不动**。SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（wt0 算术侧修复触发结构+parity 双止损；续1625）**：
   ① **结构**：已有 leaf_compile1–10，最新 RC=1/maxErrors=100（8.83 real/37.01 user/6.20 GB max RSS），远超三轮止损；当前仍有系统性的语法/作用域/未解目标错误。leaf_compile9 的 pass 公理输出含 sorryAx 且 RC=1，只是错误污染，不是定理。
