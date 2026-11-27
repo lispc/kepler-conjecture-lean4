@@ -256,6 +256,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（W1DC 冒烟零 Lean 预准备；8 kit olean 未齐，排队 round 2 后；续1638）**：
+  ① **目标**：`Kepler.Text.TaylorSecond.W1DC_15873_RRLR_zero_2`（2,971 行，最小盒）；8 个 Kepler kit = `W1aFJet` / `NliBanks21` / `DCJet` / `DCMatanMono` / `DCSqrtLit` / `DltCornerWide` / `LeafKit` / `MatanC1`；assembly 另加 `Wt1Glue` / `NliBanks19`。
+  ② **脚本** `scripts/w1dc_smoke.sh`：零 Lean 预检（deps.tsv 解析，缺 olean 打印 `W1DC_SMOKE_NOT_READY` 并退出、不起 lean）；齐了才 4.36 编译一次 + 最小失败点 + R1–R14 分类；W1DC 类不改源/生成器/证书数值。
+  ③ **现状**：8 个 kit 均不在 fixer 池，冒烟天然排在 round 2 后；槽位 2 lean + slot1 被占，不起第 3/4 个。下游计数：13 件修复覆盖 ~7,500 模块；W1DC 若出 blocker 优先最小失败点。
+  ④ CertP 不动，等用户裁 `maxRecDepth`；SORRIED 48 / AXIOM 585 不变。
+
 - **2026-11-27（census round 1 对账收线；round 2 重跑 1,011 DBB（含 231 W1DC）发车；续1637）**：
   ① **round 1 终值**：OK 1,008 / REUSED 100 / BLOCKED 14 / BUDGET_CAP 3 / DBB 1,011 / SAMPLED-OUT 7,001 / PENDING 0（driver "nothing pending; done" 09:34:30）；13/14 已落库（`dc5410c5`/`9b973d29`/`50b37b04`/`78f87cda`/`27131f24`），只剩 CertP。
   ② **round 2**：census 车道恢复，同步 13 件 patched 源 + 删旧 olean，重跑 **1,011 DBB**；**231 个 W1DC 全在 DBB**（Wt1TowerKit 解锁），是真正的 4.36 适配压力段；CertP 的 3 个下游仍 DBB。
