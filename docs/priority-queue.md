@@ -73,13 +73,13 @@
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（9 件 3.2–33.2 s，整族 ≈1–2 h；见 §8 续1624） |
-| `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `lean436-precompile-w1` | **完成：GO（2026-11-27；4.36 precompile pilot；主仓零改动、0 symlink）** | `Hex.K008` 606.00→**46.74 s（12.97×）**、`HexR.K001` 2,216.29→**170.97 s（12.96×）**（同岛配对 13.75×/13.86×）；bundle 1,041 模块 **53.7 min / 峰值 19.40 GB**；两件 axioms = 标准三 + 各自 1 条同名 native ax、陈述哈希 MATCH `trust-base.tsv`、**olean base/dyn/census 逐字节同**；全量 575 投影 **19.1–23.3 h**（含一次性构建）。UNRESOLVED：Pent/Quad 未跑（需补 `CertData.PentTop`/`QuadTop` 两模块）、`QuadR.K000` 尾部 35.2 h（<58 h 最低线）、生产接入未做；**全量 575 待用户另批** |
 | `wt0-hol2-arith-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP + OVER-BAND（2026-11-27；编排者 SHA 26/26 + kit hash 复核；无 patch；Lean 0/1，SORRIED −0）** | 替代算术探针可用、kit 逐字节不变；但 52,838,847 B/45,712 行叶 = D3 ~168×，10 轮全 RC=1，compile9 公理含 sorryAx。旧 matan 镜像与 kit 括号不符，kit-true slack 6.304814e-3 仍正但不能替代证明；不可落库 |
 | `tsk-opt-m2b-w1` | **完成：UNRESOLVED / WALL-NOT-MEASURED（2026-11-27；Fixed-Grid v2；`PointTMFG.lean` 787 行；主仓零改动）** | RC=0 / 0 error、`checkPosPt_sound` 标准三、零 axiom/sorry/native_decide/extern；Fixed-Grid 原语 **184,838**（2.08×；`ediv`+`abs` 各 43,960 来自半径路径）。**单叶 wall 未取得**：探针 `decide` 不闭合、`dualOnly` 早退 `none`（`sorryAx`；镜像 fy 2.73 vs M2 2.45e-2、curv 一致 ⇒ 值链节点分叉，`ofInterval`/`fgCeilD` 未排除）。按实测单价投影 **≈4.5–5 s/叶 `[EST]`**（>3.4 s；`× = 1 mul + 1 shift` 只在不要半径时成立）。负结果：`atan1K` 点检测须下沉格点层；`chopCeilTo` 非取格点。**四选一等用户确认** |
 | `tsk-opt-m2-w1` | **完成：WALL-FAIL / CONDITIONAL（2026-11-27，Design P 一盒原型；`PointTM.lean` 558 行；主仓零改动）** | 其余硬指标全 PASS：`checkPosPt_sound` 标准三、叶 `pt_check`=[propext,Quot.sound]、RSS 6.194 GiB、K 150.6–301.8（≤550）、34/34 非 straddle lb>0、12/12（11 直接 + 1 straddle 回落 TM）。**wall 8.61–8.82 s > 3.4 s**；根因 = Fixed-Grid 未实现（75.6 µs/op vs 31；op 数仅 1.047×），预计 Fixed-Grid ~2.75 s。S1/S2 仍是命名 Prop 假设（570–720 + 400–700 行未证）；straddle 15% 分裂无效、回落 TM 15.49 s ⇒ 摊销 9.6 s/叶；4.36 未测 |
@@ -175,7 +175,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
 | **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已回（2026-11-27）= `UNRESOLVED / WALL-NOT-MEASURED`**：`PointTMFG.lean` 787 行、RC=0 / 0 error、`checkPosPt_sound` 标准三、零禁用构造；单叶 wall 未取得（`decide` 不闭合、`dualOnly` 早退 `none`；镜像 fy 2.73 vs M2 2.45e-2、curv 一致 ⇒ 值链节点分叉）；Fixed-Grid 原语 184,838（2.08×，ediv+abs 各 43,960 来自半径路径），按实测单价投影 **≈4.5–5 s/叶 `[EST]`**。**下一步四选一等用户确认**：① 修值链分叉再测；② 接受 ~4.5–5 s 重评可行性；③ N=32 fallback（DEF-FIX）；④ 止损。C 不做 |
-| **CertShards 全量 4.36 重放（236–290 h）** | **A 已批（2026-11-27 用户「当然需要 precompileModules」）**：`lean436-precompile-w1` 先做 4.36 precompile pilot（1 非 R + 1 R）；pilot GO（≥10×）后才谈全量 575；B（按族抽样 + 585 逐名审计）保留为 fallback。批前不改验收契约、不启动全量重编 |
+| **CertShards 全量 4.36 重放（237–465 h）** | **precompile pilot = GO（2026-11-27）**：4.36 实测 Hex 非 R **12.97×** / HexR **12.96×**；全量 575 投影 **19.1–23.3 h**（含一次性 bundle 53.7 min）；axioms/陈述哈希/olean 逐字节三项全同。**全量 575 仍待用户另批**；B（按族抽样 + 585 逐名审计）保留 fallback；Pent/Quad 覆盖与 `QuadR.K000` 尾部 35.2 h 未闭环 |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
 
@@ -250,6 +250,13 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（precompile 4.36 pilot = GO：Hex 12.97× / HexR 12.96×；全量 575 投影 19.1–23.3 h；全量待另批；续1627）**：
+  ① **实测**（同岛、`-M 24576 -j 1`）：`Hex.K008` 606.00→**46.74 s**（**12.97×**，同岛配对 13.75×）；`HexR.K001` 2,216.29→**170.97 s**（**12.96×**，配对 13.86×）；额外 `Hex.K076` 12.40→3.85 s（3.22×，小件固定费 ~2 s）。**R 族不受益的担心不成立**（12.96× ≈ 非 R 12.97×）。
+  ② **bundle**：1,041 模块 = 39 Kepler + 1,002 package + 204 toolchain；lean 2,943 s + clang 221 s + link 57 s = **53.7 min**，峰值 **19.40 GB**（`ArchiveData.Pent` 1,065 s；`HexTop` 946.75 s / 16.93 GB），<2 h / <24 GB，未 `BUDGET_EXHAUSTED`；dylib 100,723,280 B / 70,762 symbols / 0 duplicate。
+  ③ **信任面**：两件 `#print axioms` = **标准三 + 各自 1 条同名 native ax**；陈述哈希 `342480f0016e8cb5` / `62793dbe4a10fbd6` **MATCH** `docs/trust-base.tsv`；更强——**olean base/dyn/census 三者逐字节相同**；零新增 axiom/sorry/native_decide/extern，零手写 C，0 symlink，主仓零改动。
+  ④ **投影**：全量 575 **19.1–23.3 h**（236–290 h 的 **10.1–15.2×**，含一次性构建；两种模型一致），落在 **≤25 h** 目标内，远优于 58 h 最低线。
+  ⑤ **UNRESOLVED / 边界**：Pent/Quad 族未在本 bundle 下跑（需补 `CertData.PentTop`/`QuadTop` 两模块，+~20 min；本次 census 占 23.3 GB 槽未取）；`QuadR.K000`（4,478 s census）未做 dylib 对照，尾部情形估 **35.2 h**（CONDITIONAL 带，仍 <58 h）；生产 bundle 未接入正式构建；计时受 1–2 并发车道影响 ±5%。**全量 575 待用户另批**（续1616 边界：pilot GO 后才谈全量）；SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（wt0 算术侧修复最终验收：STRUCTURAL-STOP + OVER-BAND；续1626）**：
   ① **验收**：`agent-3ww7uxc0` 交付 26 文件，编排者 SHA **26/26 PASS**、无 patch；kit sha256 与旧版逐字节一致（c7a448cf…）。52,838,847 B/45,712 行叶、D3 ~168× 实测一致；10 轮全 RC=1，compile9 两条公理含 sorryAx/RC=1，Lean 单叶 0/1、候选树 0/80 + 0/79，SORRIED −0，不可落库。
