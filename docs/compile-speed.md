@@ -330,10 +330,11 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
 | **Design P（Track B 投影）** | 点 Taylor（`f(y)`、`∇f(y)`）+ 单元级 Hessian 曲率表（= HOL `m_taylor_error` 结构）；**84.7k 原语/叶 → 2.62 s/叶（5.7×）[模型]**；D5 **11.6 h（1.84×）**，叶树合并后 **10.3 h（1.63×）**，decide-only 0.76–0.86× | **WITHIN-BAND**（模型） |
 | **Design P 一盒原型（2026-11-27）** | `PointTM.lean` **558 行**；`checkPosPt_sound` 标准三、叶 `pt_check`=[propext,Quot.sound]、RSS 6.194 GiB、K **150.6–301.8**（≤550）、**34/34** 非 straddle lb>0、12/12（11 直接 + 1 straddle 回落 TM）；**wall 8.61–8.82 s > 3.4 s**；根因 = Fixed-Grid 未实现（**75.6 vs 31 µs/op**；op 数 88,753 vs 84,766 = 1.047×）；S1/S2 仍为命名 Prop 假设（570–720 + 400–700 行未证）；straddle 15% 分裂无效、回落 TM 15.49 s ⇒ 摊销 **9.6 s/叶** | **WALL-FAIL / CONDITIONAL** |
 | **M2b Fixed-Grid v2（2026-11-27）** | `PointTMFG.lean` **787 行 / ~60 声明**；RC=0 / 0 error / 零 `axiom`/`sorry`/`native_decide`/extern；`checkPosPt_sound` **标准三**。Fixed-Grid 原语 **184,838** vs M2 88,753 = **2.08×**（`ediv`+`abs` 各 43,960，全部来自半径路径）；**单叶 wall 未取得**——探针 `decide` 不闭合、`dualOnly` 核内早退 `none`（`sorryAx`；镜像 `fy=2.73` vs M2 `2.45e-2`、`curv` 一致 ⇒ 值链某节点分叉；`ofInterval`/`fgCeilD` 未排除）。按实测单价（Int.add 6 / Int.ediv 48 / Int.mul+ediv 98 µs）投影 **≈4.5–5 s/叶**（`[EST]`，非判词）：DESIGN §3.4 的「× = 1 mul + 1 shift」只在不要半径时成立，而不要半径不 sound | **UNRESOLVED / WALL-NOT-MEASURED**（非 PASS 非 WALL-FAIL；投影 >3.4 s） |
+| **M2b v2.1 修值链（2026-11-27）** | 两个真 bug 已定位修复（`p5_diff.py` 同输入逐节点比对）：① reciprocal 负分母符号（`q` 应为 `−⌈P2/|c|⌉`；Lean 加 `0 ≤ q·c`）；② `ofInterval` 对精确点未给 `r=0`（`atan1K` 的 `c=2^S ∧ r=0` 判据永不成立 ⇒ 落 `arctanI`，x=1/N=16 仅 ~2% 精度）。修复后 **0 分叉**，`fy/lin/curv/lb` 与 M2 **逐位相同**；**两叶均闭合**：kBox0 **6.30 s**（复测 6.65）/ T149 **6.00 s**（复测 6.25），user 4.35/4.22，RSS 5.79 GiB，标准三；相对 M2 **8.78→6.30 s wall（1.39×）/ user 1.56×**。`FG.mul` = 1 大乘 + 2 `ediv` + 2 小乘 + ~5 加，184,838 原语（2.08×），单价 76.4→23.5 µs/op（3.2×）。**判词 `STOP`（>5 s）**；折算 6,612×6.30 s ≈ **11.6 h ≈1.83× HOL `[EST]`**（15% straddle 回落 15.49 s → ≈14.1 h ≈2.23×，**OVER-BAND**）；唯一量级杠杆「集合范数半径」原语 ~184.8k→~95k，按实测单价折 **4.2–4.6 s**（仍不进 PASS，且需新 S1 接口） | **STOP**（按工单带；S1/S2 不做） |
 | 死候选 | 两级自然区间 0/12 闭合（相消 27×）；惰性/零跳过 1.65×；粗导数界 0/8（19× 膨胀）；均值形式紧度持平 | 不做 |
 | 关键事实 | 现 `err` **过证 300×**（真二阶余项中位 2e-3·fB0 vs err 0.72·fB0）；换曲率后 lb 4.6e-3→1.6–2.8e-2（12/12 叶）；A 的 `ite_both=0` 是计数器假象，活路径 6/40 叶有未定 guard | **ERRATA 已记** |
 | 残余风险 | 严格二阶 AD 的 K 未实现；实测幅度型 K=40–70 vs 容差 550（余量 8–13×）；15% guard-straddle 叶需梯子；Lean wall 未测 | UNRESOLVED |
-| 下一步 | **M2b 已回（2026-11-27）= `UNRESOLVED / WALL-NOT-MEASURED`**：先修值链分叉再测、接受 ~4.5–5 s `[EST]` 重评、N=32 fallback、止损——**四选一等用户确认，车道内不动**；C 不做 | 待裁决 |
+| 下一步 | **M2b v2.1 = `STOP`（2026-11-27；kBox0 6.30 / T149 6.00 s > 5 s）**：接受 6.3 s/叶 `[EST]`（≈11.6 h / 1.83× HOL；含 15% straddle → ≈2.23×）、集合范数半径（~4.2–4.6 s，仍不进 PASS）、N=32 fallback、止损——**四选一等用户确认，车道内不动**；C 不做 | 待裁决 |
 
 ## 4. 不要做
 
@@ -353,17 +354,19 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   最好 3.89×。Track B 的 **Design P** [模型] 2.62 s/叶、D5 1.63–1.84×；**一盒原型已测
   （2026-11-27）**：wall **8.61–8.82 s（WALL-FAIL）**，根因 Fixed-Grid 未实现
   （75.6 vs 31 µs/op；op 数仅 1.047×），其余硬指标全 PASS（标准三、K 150.6–301.8、
-  34/34 lb>0、12/12 含 straddle 回落）；S1/S2 仍为命名 Prop 假设。**M2b Fixed-Grid v2
-  已回（2026-11-27）：`UNRESOLVED / WALL-NOT-MEASURED`，非 PASS 非 WALL-FAIL**——
-  `PointTMFG.lean` 787 行、RC=0/0 error、`checkPosPt_sound` 标准三、零禁用构造；但探针
-  `decide` 不闭合（`dualOnly` 核内早退 `none`；镜像 `fy=2.73` vs M2 `2.45e-2`、`curv`
-  一致 ⇒ 值链某节点分叉，`ofInterval`/`fgCeilD` 未排除），单叶 wall 未取得。Fixed-Grid
-  原语 **184,838（2.08×）**，`ediv`+`abs` 各 43,960 全来自半径路径；按实测单价投影
-  **≈4.5–5 s/叶 `[EST]`**（`× = 1 mul + 1 shift` 只在不要半径时成立，而不要半径不 sound）。
-  附带两条负结果：① `atan1K` 点值检测必须下沉到格点层（`c=2^S ∧ r=0`），Dyadic 端点
-  `⟨2^164,−164⟩` 永不语法等于 `(1,0)`，落 `arctanI` 在 x=1/N=16 只有 2% 精度；
-  ② `chopCeilTo` 不能当取格点用（`e₀ ≤ d.e` 时原样返回）。**下一步四选一（修值链再测 /
-  接受 ~4.5–5 s 重评 / N=32 fallback / 止损）等用户确认；未确认前不动。**
+  34/34 lb>0、12/12 含 straddle 回落）；S1/S2 仍为命名 Prop 假设。**M2b v2.1
+  （2026-11-27）已修两个真 bug 并测到 wall：`STOP`（>5 s）**——`p5_diff.py` 同输入
+  逐节点比对定位：① reciprocal 负分母符号（`q` 应为 `−⌈P2/|c|⌉`；Lean 加 `0 ≤ q·c`）；
+  ② `ofInterval` 对精确点未给 `r=0`（`atan1K` 的 `c=2^S ∧ r=0` 判据永不成立 ⇒ 落
+  `arctanI`，x=1/N=16 仅 ~2% 精度）。修复后 **0 分叉**，`fy/lin/curv/lb` 与 M2
+  **逐位相同**；两叶均闭合：kBox0 **6.30 s**（复测 6.65）、T149 **6.00 s**（复测
+  6.25），user 4.35/4.22，RSS 5.79 GiB，标准三；相对 M2 8.78 s **wall 1.39× /
+  user 1.56×**。`FG.mul` = 1 大乘 + 2 `ediv` + 2 小乘 + ~5 加，184,838 原语（2.08×），
+  单价 76.4→23.5 µs/op（3.2×）。折算 6,612×6.30 s ≈ **11.6 h ≈1.83× HOL `[EST]`**
+  （若 15% straddle 回落 15.49 s → ≈14.1 h ≈**2.23×，OVER-BAND**）；唯一量级杠杆
+  「集合范数半径」原语 ~184.8k→~95k，按实测单价折 **4.2–4.6 s**（仍不进 PASS，且需
+  新 S1 接口）。**按工单 STOP，S1/S2 不做；下一步（接受 6.3 s / 集合范数 / N=32 /
+  止损）等用户确认。**
   **B 的 UNRESOLVED**：① 严格二阶 AD 的膨胀因子 K（实测 40–70 vs 容差 550）未实现；
   ② 15% guard-straddle 叶的梯子成本未比较；③ 新紧度下最优叶数未重跑 B&B（若减半 → ~4 h）；
   ④ D4 最小 olean 未测；⑤ `√`/`atan` 二阶规则在驻点/`f→0` 的分支未实现。
