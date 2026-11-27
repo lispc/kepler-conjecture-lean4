@@ -75,7 +75,7 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（104 OK + 2 `BUDGET_CAP`，族 ≈1.6 h；见 §8 续1624/续1628） |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
 | `native-decide-research-w1` | **在飞（2026-11-27 用户明批；ZCode `agent_3b69e406`；≤1 Lean）** | 调研放开 `native_decide` + precompile 的编译时间收益：基线 85–91 h；probe TskXLLIPLS 2 叶 / W1DC 1 箱 / Cases 典型 + 重件 / Hull 1 件；三档 + 公理代价（逐族件数 = 新增公理）+ bundle 构建成本/峰值；不改契约/不落库 |
-| `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
+| `qitnpea-hol2-lean-leaf-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-11` resume / `agent-mc80k1cf`；不再起计算）** | kit_compile1–96、leaf_compile1–10 远超三轮止损；六维 kit 有多条标准三输出，但叶仍有未解目标/sorryAx，Lean 单叶 0/1。只整理有效 kit 与失败证据，后续等用户裁决 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
@@ -255,6 +255,9 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（QITNPEA Lean 单叶触发结构性止损；续1634）**：
+  ① **结构**：已有 kit_compile1–96、leaf_compile1–10 与大量文本手术，远超三轮止损；原 `agent-11` resume / `agent-mc80k1cf` 只整理交付，不再编译、重发或修补。
+  ② **有效与未证边界**：kit_compile96 显示六维二阶 kit 多条标准三（atan/pi/sqrt/constants/mem_VBq6/mem_PBQ6/h*6/q6Box_seg/pos_of_slack6 等），kit 80,825 B 可归档；但 leaf_compile10 仍有 hw、hCoord6 wQ 推断、HOL2Jet6 目标和 slack6 rfl 失败，case13031_n13_pass 含 sorryAx。故 Lean 单叶 0/1、case/bank 0、无合格叶级公理，不能拿 kit 成功掩盖叶失败；不判 QITNPEA 或 HOL 二阶路线 NO-GO。
 - **2026-11-27（STRADDLE 全量：21.17%，摊销 8.245 s/叶 = 15.14 h = 2.39× HOL；直算代表全族不成立；续1633）**：
   ① **全量 census**（零 Lean，主仓零改动；6,612 叶 / 199 shard，31.0 s，4.7 ms/叶）：**straddle 1,400 = 21.17%**（M2 40 叶样本 15% 偏乐观 +6.2 pt）；`GUARD-NONE` **0**；仅 **2 条** guard 路径（`lrlrllllllr` 1,249 叶、`lrlrlrlllr` 151 叶）；**145/199 shard 无 straddle**（含 73.5% 叶），30 shard 100% straddle；median 54 `.ite`/叶。
   ② **摊销**（叶级 dispatch）：6.30 直算 + 21.17%×15.49 = **8.245 s/叶 = 15.14 h = 2.39× HOL**；M2 直算 + 实测 p = 10.20 s / 18.73 h / 2.95×；**FG 摊销收益仅 1.24×**；族级 dispatch 8.74 s 更差。p 不可压（两条结构性 guard，分裂无效）；≤1.2× 需直算 **≤1.09 s/叶**；集合范数 ~4.2–4.6 s ⇒ ~1.9–2.0×；N=32 4.46× 更差。
