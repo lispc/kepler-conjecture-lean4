@@ -17,7 +17,7 @@
 |---|---|---|
 | 验收闭包 | **9,137 模块**（`Kepler.Final`） | `scripts/check_acceptance_targets.py`，2026-11-26 |
 | 全仓 Lean 文件 | 11,241（`Interval/Cases` 7,600、`LP` 1,150、`Graphs` 951、`Text` 1,097） | 2026-11-21 基线；TskXLLIPLS 已含 |
-| 4.36 census | **完成：OK 1,008 / REUSED 100 / BLOCKED 14 / BUDGET_CAP 3 / DEFERRED 1,011 / SAMPLED-OUT 7,001**（9,137 行；lean wall **12.73 h**）；**9 个 Text blocker 已修落库 `50b37b04` ⇒ 剩 5** | `lean436-census-w1/census.tsv`（2026-11-27 完成） |
+| 4.36 census | **完成：OK 1,008 / REUSED 100 / BLOCKED 14 / BUDGET_CAP 3 / DEFERRED 1,011 / SAMPLED-OUT 7,001**（9,137 行；lean wall **12.73 h**）；**13 个 Text blocker 已修落库（`50b37b04`/`78f87cda`/SF-113 `27131f24`）⇒ 剩 1 = `CQITNPEA…CertP`（maxRecDepth 待用户裁决）** | `lean436-census-w1/census.tsv`（2026-11-27 完成） |
 | 最大单族成本 | **TskXLLIPLS 6,819 模块 × 29 s ≈ 55 CPU·h** | parity card / census 实测 |
 | 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
@@ -381,9 +381,9 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   模块合并（C，`[EST]` −6 h import）按用户 2026-11-27 裁决不做。
 - **4.36 census 完成（2026-11-27）**：9,137 行 = **OK 1,008 + REUSED 100 + BLOCKED 14 +
   BUDGET_CAP 3 + DEFERRED 1,011 + SAMPLED-OUT 7,001**；lean wall **12.73 h**。
-  **9 个 Text blocker 已修落库 `50b37b04` ⇒ 剩 5**：`PackingAuto9/12`、`CQITNPEA…CertP`
-  （recursion depth）、`ContraFanDeep`（linarith）、`Wt1TowerKit`（positivity）；
-  1,011 件 DBB 待 5 件修后复跑。叶族 83/6,412（`HOMOGENEOUS-SAMPLED`）；T\* 3/199
+  **13 个 Text blocker 已修落库（`50b37b04` / `78f87cda` / SF-113 `27131f24`）⇒ 剩 1**：
+  `CQITNPEA…CertP`（max recursion depth，101 errors，542 下游；`maxRecDepth` 待用户裁决）；
+  1,011 件 DBB 待 1 件修后复跑。叶族 83/6,412（`HOMOGENEOUS-SAMPLED`）；T\* 3/199
   （T1/T63/T150，叶并集 102）；**196 个 SAMPLED-OUT T\* 的叶并集 = 6,310**，
   **199 个 = 6,412 = 全部 PLeaf**（deps.tsv 精确去重）。全量 6,412 叶重放
   （≈51.6 h 串行 / 10.3 GB 每叶）属 acceptance，见 §1.1。

@@ -79,7 +79,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-census-w1` | **完成（2026-11-27；9,137 行全 final；主仓零改动；快照 1.9 GB / 13,735 哈希 / 0 symlink）** | OK 1,008 / REUSED 100 / **BLOCKED 14** / BUDGET_CAP 3 / DBB 1,011 / SAMPLED-OUT 7,001；lean wall **12.73 h**；30 OK 公理样本全标准、0 sorryAx；5 叶 4.32↔4.36 形状 5/5 same；CertShards 12/12 逐名对 trust-base；Top\* 9 件无 native 公理。14 blocker 中 **9 件已修落库 `50b37b04`**，剩 5：PackingAuto9/12、CQITNPEA…CertP、ContraFanDeep、Wt1TowerKit；1,011 DBB 待修后复跑 |
+| `lean436-census-w1` | **完成（2026-11-27；9,137 行全 final；主仓零改动；快照 1.9 GB / 13,735 哈希 / 0 symlink）** | OK 1,008 / REUSED 100 / **BLOCKED 14** / BUDGET_CAP 3 / DBB 1,011 / SAMPLED-OUT 7,001；lean wall **12.73 h**；30 OK 公理样本全标准、0 sorryAx；5 叶 4.32↔4.36 形状 5/5 same；CertShards 12/12 逐名对 trust-base；Top\* 9 件无 native 公理。14 blocker 中 **13 件已修落库（`50b37b04`/`78f87cda`/SF-113 `27131f24`）**，剩 1：`CQITNPEA…CertP`（maxRecDepth 待用户裁决）；1,011 DBB 待修后复跑 |
 | `qitnpea-hol2-lean-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 126/126 + olean/公理复核；无 patch；Lean 单叶 0/1，SORRIED −0）** | Taylor6 olean 552,192 B；六维 kit olean 3,994,736 B、尾部 30 条全标准三；叶 olean 不存在、pass 含 sorryAx。hev/heb/slack6 roundOut-defeq、hw6 与原 f1 桥未闭；kit 可复用但 case/bank 0，不续调 |
 | `tsk-opt-m2b-w1`（STRADDLE） | **完成：直算代表全族不成立；OVER-BAND 2.39×（2026-11-27；零 Lean；主仓零改动）** | 全族 **6,612 叶 / 199 shard**、31.0 s：**straddle 1,400 = 21.17%**（15% 样本偏乐观 +6.2 pt）；`GUARD-NONE` 0；仅 2 条 guard 路径（1,249 + 151 叶）；145/199 shard 干净、30 shard 100% 脏。摊销 **8.245 s/叶 = 15.14 h = 2.39× HOL**；M2 10.20 s/18.73 h/2.95×；FG 摊销收益 1.24×；p 不可压、≤1.2× 需直算 ≤1.09 s/叶。交付 `STRADDLE.md` + `straddle_all.csv`（6,612 行）+ 脚本 + SHA |
 | `tsk-opt-m2b-w1` v2.1 | **完成：STOP（2026-11-27；>5 s 带；`PointTMFG.lean` 780 行；主仓零改动）** | 两个真 bug 修复（reciprocal 负分母符号；`ofInterval` 精确点未给 `r=0`）⇒ `p5_diff` **0 分叉**、`fy/lin/curv/lb` 与 M2 逐位同；**两叶闭合**：kBox0 **6.30 s**（复测 6.65）/ T149 **6.00 s**（复测 6.25），user 4.35/4.22，RSS 5.79 GiB，标准三；M2 8.78→6.30 wall（**1.39×**）/ user 1.56×；原语 184,838（2.08×），单价 76.4→23.5 µs；S1/S2/量产/585 未做；四选一等用户确认 |
@@ -254,6 +254,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（PackingAuto9/Wt1TowerKit/ContraFanDeep 落库 `78f87cda`；SF-113 PackingAuto12 落库 `27131f24`；剩 CertP 待裁 maxRecDepth；续1636）**：
+  ① **落库**：`PackingAuto9`（private hyp `rogers V ul v` → `v ∈ rogers V ul`；4.32 6.62 s / 4.36 8.01 s）、`Wt1TowerKit`（positivity lambda hoist；7.15/20.45）、`ContraFanDeep`（linarith hoist + 显式 `h1''`；23.97/41.89）——编排者 4.32 **3/3 RC=0 / 0 error**，fixer 4.36 RC=0。
+  ② **SF-113**：`ROGERS_INTER_V_LEMMA` 公开假设印刷形 `rogers V ul v` → `v ∈ rogers V ul`；HOL `marchal2.hl:626` 原文应用形、`Iff.rfl` 零语义；4.32 12.13 s RC=0 / 4.36 26.48 s RC=0；patch 存档 `docs/statement-fix-proposals-patches/113-packingauto12-set-membership.patch`；落库 `27131f24`。
+  ③ **剩 1 = `CQITNPEA…CertP`**：26,777 行生成证书；`by_cases` 从 `:19075` 起 **100 条同型 max recursion depth**（每 15 行一条），census wall **614.53 s / RSS 19.27 GB**；4.32 olean 存在（700 MB）；文件只设 `maxHeartbeats 4000000`，未设 `maxRecDepth`。**唯一旋钮 = `set_option maxRecDepth`（车道禁令，需用户批）或重生成/拆浅（生成器/信任面改动）**；请用户裁决：(a) 批一次有界 maxRecDepth 试验（如 10,000，局部到失败块，测所需深度 + wall/RSS）；(b) 拆/重生成；(c) 暂缓。1,011 DBB 等此件。
+  ④ SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（census 完成 9,137 行：14 BLOCKED；9 件 Text 修复落库 `50b37b04`；续1635）**：
   ① **census 完成**：9,137 行全 final = **OK 1,008 / REUSED 100 / BLOCKED 14 / BUDGET_CAP 3 / DBB 1,011 / SAMPLED-OUT 7,001**；lean wall **12.73 h**；OOM/PENDING 0。BUDGET_CAP = `PentR.K001`、`BoundsHexS000`、`S013`。
