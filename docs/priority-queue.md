@@ -72,6 +72,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `lean436-census-w1`（round 2） | **在飞（2026-11-27 编排者恢复；同一 `agent_3759e7dc`；≤1 Lean）** | 同步 13 件 patched 源进 repo、删对应旧 olean，重跑 **1,011 DBB**（含 **231 个 W1DC**）；CertP 仍 BLOCKED（待用户裁）；每 50 件/2 h 报进度；输出 `round2.tsv` + `SUMMARY-round2.md`；不改主仓/不落库 |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
 | `native-decide-research-w1` | **在飞（2026-11-27 用户明批；ZCode `agent_3b69e406`；≤1 Lean）** | 调研放开 `native_decide` + precompile 的编译时间收益：基线 85–91 h；probe TskXLLIPLS 2 叶 / W1DC 1 箱 / Cases 典型 + 重件 / Hull 1 件；三档 + 公理代价（逐族件数 = 新增公理）+ bundle 构建成本/峰值；不改契约/不落库 |
 
@@ -254,6 +255,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（census round 1 对账收线；round 2 重跑 1,011 DBB（含 231 W1DC）发车；续1637）**：
+  ① **round 1 终值**：OK 1,008 / REUSED 100 / BLOCKED 14 / BUDGET_CAP 3 / DBB 1,011 / SAMPLED-OUT 7,001 / PENDING 0（driver "nothing pending; done" 09:34:30）；13/14 已落库（`dc5410c5`/`9b973d29`/`50b37b04`/`78f87cda`/`27131f24`），只剩 CertP。
+  ② **round 2**：census 车道恢复，同步 13 件 patched 源 + 删旧 olean，重跑 **1,011 DBB**；**231 个 W1DC 全在 DBB**（Wt1TowerKit 解锁），是真正的 4.36 适配压力段；CertP 的 3 个下游仍 DBB。
+  ③ **fixer**：watcher 继续 10 min；新 BLOCKED 按独立 repo 双版本 + 公理三路 + patch；**W1DC 冒烟暂不做**（580 + native 调研 + census round 2 已占 3 lean）。
+  ④ **CertP 决策仍待用户**：有界 maxRecDepth 试验 / 拆重生成 / 暂缓；SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（PackingAuto9/Wt1TowerKit/ContraFanDeep 落库 `78f87cda`；SF-113 PackingAuto12 落库 `27131f24`；剩 CertP 待裁 maxRecDepth；续1636）**：
   ① **落库**：`PackingAuto9`（private hyp `rogers V ul v` → `v ∈ rogers V ul`；4.32 6.62 s / 4.36 8.01 s）、`Wt1TowerKit`（positivity lambda hoist；7.15/20.45）、`ContraFanDeep`（linarith hoist + 显式 `h1''`；23.97/41.89）——编排者 4.32 **3/3 RC=0 / 0 error**，fixer 4.36 RC=0。
