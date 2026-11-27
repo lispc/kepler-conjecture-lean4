@@ -72,6 +72,8 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-opt-m2b-w1`（S1/S2 WORKORDER） | **在飞（2026-11-27 用户选定 FG 15.14 h 方案；同一 `agent_136ccdb4`；零 Lean）** | 出 S1（点对偶包络）/ S2（曲率表）tier 工单 + `checkPosPt_sound` 最终形状 + DEF-FIX 章程；单 tier >700 行或 3 轮卡死即停；不编译/不落库 |
+| `lean436-fixer-w1`（CertP depth） | **在飞（2026-11-27 用户明批一次有界试验；同一 `agent_dcedc2c8`；≤1 Lean）** | `nnL6_10110` 局部 `set_option maxRecDepth` 2k→5k→10k；测所需深度/wall/RSS；>10k 或 >20 min/24 GB 停；不落库，结果等用户批 |
 | `lean436-census-w1`（round 2） | **在飞（2026-11-27 编排者恢复；同一 `agent_3759e7dc`；≤1 Lean）** | 同步 13 件 patched 源进 repo、删对应旧 olean，重跑 **1,011 DBB**（含 **231 个 W1DC**）；CertP 仍 BLOCKED（待用户裁）；每 50 件/2 h 报进度；输出 `round2.tsv` + `SUMMARY-round2.md`；不改主仓/不落库 |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
 | `native-decide-research-w1` | **在飞（2026-11-27 用户明批；ZCode `agent_3b69e406`；≤1 Lean）** | 调研放开 `native_decide` + precompile 的编译时间收益：基线 85–91 h；probe TskXLLIPLS 2 叶 / W1DC 1 箱 / Cases 典型 + 重件 / Hull 1 件；三档 + 公理代价（逐族件数 = 新增公理）+ bundle 构建成本/峰值；不改契约/不落库 |
@@ -179,7 +181,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
-| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **STRADDLE 已测（2026-11-27）：p=21.17%，摊销 8.245 s/叶 = 15.14 h = 2.39× HOL ⇒ `OVER-BAND`**；直算代表全族不成立；FG 摊销收益 1.24×；p 不可压（两条结构性 guard，分裂无效），≤1.2× 需直算 ≤1.09 s/叶；集合范数 ~4.2–4.6 s ⇒ ~1.9–2.0×；N=32 4.46× 更差。**四选一等用户裁决**：① 接受 2.39×（需明批超带宽）；② 集合范数；③ 维持 M1 P3 4.5×；④ 止损。S1/S2 未做 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **用户 2026-11-27 选定 FG 15.14 h 方案（明批 2.39× 超带宽）**：S1/S2 证明（~1,000–1,400 行）+ DEF-FIX/量产 为下一步；零 Lean 工单在飞；**15.14 h 是目标非现状**；N=32（4.46×）已劣势；C 不做 |
 | **CertShards 全量 4.36 重放（237–465 h）** | **全量 575 已批（2026-11-27「575 按你建议批」）**：先补 Pent/Quad 两模块 + `QuadR.K000` dyn 对照，再全量 575；pilot 已 GO（Hex 非 R 12.97× / HexR 12.96×；投影 19.1–23.3 h；axioms/陈述哈希/olean 三同）。2A 正在闭环；B（按族抽样 + 585 逐名审计）保留 fallback |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -255,6 +257,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（用户选定 FG 15.14 h 方案；批 CertP 有界 maxRecDepth 试验；续1639）**：
+  ① **FG 裁决**：用户「就用 fg 15h 这个方案」= 接受 8.245 s/叶 × 6,612 = **15.14 h**（**2.39× HOL，明批超带宽**），替代当前 51.6 h。验收计划相应 ≈ **49–54 h `[EST]`**（precompile 19.1–23.3 + FG 15.14 + W1DC 3.7 + Top\* 1–2 + 其它 ~10）；**S1/S2 未证，15.14 h 是目标非现状**。
+  ② **下一步**：S1（点对偶包络，570–720 行）/ S2（曲率表，400–700 行）证明 + DEF-FIX/量产；`tsk-opt-m2b-w1` 先出零 Lean tier 工单（单 tier >700 行或 3 轮卡死即停）；等槽位再发第一 tier。
+  ③ **CertP**：用户批**一次有界 `set_option maxRecDepth` 试验**——`nnL6_10110` 局部 2k→5k→10k，测所需深度/wall/RSS；>10k 或 >20 min/24 GB 停；结果回来再批是否落库；主仓不动。
+  ④ 580 precompile 38/580；census round 2 在跑；SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（W1DC 冒烟零 Lean 预准备；8 kit olean 未齐，排队 round 2 后；续1638）**：
   ① **目标**：`Kepler.Text.TaylorSecond.W1DC_15873_RRLR_zero_2`（2,971 行，最小盒）；8 个 Kepler kit = `W1aFJet` / `NliBanks21` / `DCJet` / `DCMatanMono` / `DCSqrtLit` / `DltCornerWide` / `LeafKit` / `MatanC1`；assembly 另加 `Wt1Glue` / `NliBanks19`。
