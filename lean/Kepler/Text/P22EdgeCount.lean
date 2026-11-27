@@ -168,7 +168,9 @@ theorem p22_incidences_le_two_mul_edges (P : Set V3) (hp : polyhedron P)
       exact ⟨h1, h3⟩
   have hfinF : ∀ e ∈ D, (Ff e).Finite := by
     intro e _
-    exact ((FINITE_POLYHEDRON_FACETS hp).subset (fun f hf => hf.1)).prod
+    exact ((FINITE_POLYHEDRON_FACETS hp).subset
+      (fun f hf => (show FacetOf f P ∧ FacetOf e f from by
+        simpa only [hG, Set.mem_setOf_eq] using hf).1)).prod
       (Set.finite_singleton e)
   have hle1 : ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).ncard
       ≤ ∑ᶠ e ∈ D, (Ff e).ncard := by

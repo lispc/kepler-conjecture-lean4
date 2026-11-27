@@ -485,6 +485,7 @@ theorem NOT_SUBSET_EMPTY_SYM_0_p13 {A : Set V3} (h : ¬(A ⊆ ∅)) :
 /-- HOL `REFL_SYM_0` (src:204). -/
 theorem REFL_SYM_0_p13 (A : Set V3) :
     Set.image (fun x : V3 => -x) (Set.image (fun x : V3 => -x) A) = A := by
+  ext x
   simp
 
 /-- HOL `IMAGE_E_SYM_0` (src:216). -/

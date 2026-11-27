@@ -180,10 +180,9 @@ private theorem hypermapOfFan_nodeMap_eq_ca7 {x : V3} {V : Set V3} {E : Set (Set
     (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
     (hypermapOfFan x V E hfan).nodeMap d = nFanPair x V E d := by
   unfold hypermapOfFan extendPerm
-  simp only [Equiv.ofBijective_apply]
   unfold Kepler.Text.Fan.res
-  rw [if_pos (by
-    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+  exact if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)
 
 /-- `nodeMap` 的迭代在 `dart1OfFan` 上保持首分量并沿 `sigmaFan` 递推
 （ConformingAuto1 中 private 引理的本文件副本）。 -/

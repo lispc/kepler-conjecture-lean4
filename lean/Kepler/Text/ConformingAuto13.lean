@@ -529,10 +529,9 @@ private theorem hypermapOfFan_faceMap_eq_ca13 (hfan : FAN x V E) {d : V3 × V3}
     (hd : d ∈ dart1OfFan V E) :
     (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
   unfold hypermapOfFan extendPerm
-  simp only [Equiv.ofBijective_apply]
   unfold Kepler.Text.Fan.res
-  rw [if_pos (by
-    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+  exact if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)
 
 private lemma image_f1Fan_mem_face_imp_mem_face {x : V3} {V : Set V3}
     {E : Set (Set V3)} {ds : Set (V3 × V3)} {y y1 : V3 × V3}

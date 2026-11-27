@@ -630,7 +630,7 @@ theorem continuous_dotP {X : Type*} [TopologicalSpace X] {u v : X → (Fin 3 →
     (hu : Continuous u) (hv : Continuous v) :
     Continuous (fun x => (u x) ⬝ᵥ (v x)) := by
   simp only [dotProduct]
-  exact continuous_finset_sum _ fun i _ =>
+  exact continuous_finsetSum _ fun i _ =>
     ((continuous_apply i).comp hu).mul ((continuous_apply i).comp hv)
 
 theorem continuous_crossP {X : Type*} [TopologicalSpace X] {u v : X → (Fin 3 → ℝ)}

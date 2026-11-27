@@ -79,6 +79,7 @@ namespace Kepler.Text
 
 open Kepler.Geom
 open Classical
+open scoped Pointwise
 
 /-! ## polyhedron.hl :745-:890（连续性、仿射包与内部） -/
 

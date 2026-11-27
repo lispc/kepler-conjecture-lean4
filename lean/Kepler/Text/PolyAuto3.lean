@@ -84,6 +84,7 @@ namespace Kepler.Text
 open Kepler.Geom
 open Kepler.Text.Fan
 open Classical
+open scoped Pointwise
 
 /-! ## 平移与线性像不变性（polyhedron.hl:283-339） -/
 
