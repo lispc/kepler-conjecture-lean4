@@ -72,9 +72,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `tsk-opt-m2b-w1`（S1/S2 WORKORDER） | **在飞（2026-11-27 用户选定 FG 15.14 h 方案；同一 `agent_136ccdb4`；零 Lean）** | 出 S1（点对偶包络）/ S2（曲率表）tier 工单 + `checkPosPt_sound` 最终形状 + DEF-FIX 章程；单 tier >700 行或 3 轮卡死即停；不编译/不落库 |
-| `lean436-fixer-w1`（CertP depth） | **在飞（2026-11-27 用户明批一次有界试验；同一 `agent_dcedc2c8`；≤1 Lean）** | `nnL6_10110` 局部 `set_option maxRecDepth` 2k→5k→10k；测所需深度/wall/RSS；>10k 或 >20 min/24 GB 停；不落库，结果等用户批 |
-| `lean436-census-w1`（round 2） | **在飞（2026-11-27 编排者恢复；同一 `agent_3759e7dc`；≤1 Lean）** | 同步 13 件 patched 源进 repo、删对应旧 olean，重跑 **1,011 DBB**（含 **231 个 W1DC**）；CertP 仍 BLOCKED（待用户裁）；每 50 件/2 h 报进度；输出 `round2.tsv` + `SUMMARY-round2.md`；不改主仓/不落库 |
+| `lean436-fixer-w1`（CertP + round-2 blockers） | **在飞（2026-11-27 用户明批 CertP 试验；同一 `agent_dcedc2c8`；≤1 Lean）** | CertP `nnL6_10110` 局部 `set_option maxRecDepth` 2k→5k→10k；**round 2 新增 4 件**：PackingAuto13(979) / ConformingAuto8(553) / ConformingAuto14(552) / Wt1MatanDDAnti(250, 门住 231 W1DC)；双版本/公理/patch；优先 PackingAuto13 + Wt1MatanDDAnti |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
 | `native-decide-research-w1` | **在飞（2026-11-27 用户明批；ZCode `agent_3b69e406`；≤1 Lean）** | 调研放开 `native_decide` + precompile 的编译时间收益：基线 85–91 h；probe TskXLLIPLS 2 叶 / W1DC 1 箱 / Cases 典型 + 重件 / Hull 1 件；三档 + 公理代价（逐族件数 = 新增公理）+ bundle 构建成本/峰值；不改契约/不落库 |
 
@@ -82,6 +80,8 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `tsk-opt-m2b-w1`（S1/S2 WORKORDER） | **完成：S2 核内义务判死（2026-11-27；零 Lean；主仓零改动）** | cell 粒度 4,575 叶 **84.1% `lb ≤ 0`**（中位 −1.77e-2）+ **64/199 shard d2 fail**（2,037 叶无表）；叶粒度 **+36.7 h → 52 h（8.2×）**；S2 只能核外/条件 ⇒ 与 589 无条件验收冲突；S1 可闭（200–280 行）；T0/T1 暂缓；等用户裁 A/B/C/D |
+| `lean436-census-w1`（round 2） | **完成（2026-11-27；1,024 目标）** | 13/13 修复重编 RC=0 + 6 直接下游 OK = **19 OK**；新增 **4 blockers**：PackingAuto13(979)、ConformingAuto8(553)、ConformingAuto14(552)、Wt1MatanDDAnti(250，门住 231 W1DC)；CertP 仍 BLOCKED；round 3 待这批修完 |
 | `lean436-census-w1` | **完成（2026-11-27；9,137 行全 final；主仓零改动；快照 1.9 GB / 13,735 哈希 / 0 symlink）** | OK 1,008 / REUSED 100 / **BLOCKED 14** / BUDGET_CAP 3 / DBB 1,011 / SAMPLED-OUT 7,001；lean wall **12.73 h**；30 OK 公理样本全标准、0 sorryAx；5 叶 4.32↔4.36 形状 5/5 same；CertShards 12/12 逐名对 trust-base；Top\* 9 件无 native 公理。14 blocker 中 **13 件已修落库（`50b37b04`/`78f87cda`/SF-113 `27131f24`）**，剩 1：`CQITNPEA…CertP`（maxRecDepth 待用户裁决）；1,011 DBB 待修后复跑 |
 | `qitnpea-hol2-lean-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 126/126 + olean/公理复核；无 patch；Lean 单叶 0/1，SORRIED −0）** | Taylor6 olean 552,192 B；六维 kit olean 3,994,736 B、尾部 30 条全标准三；叶 olean 不存在、pass 含 sorryAx。hev/heb/slack6 roundOut-defeq、hw6 与原 f1 桥未闭；kit 可复用但 case/bank 0，不续调 |
 | `tsk-opt-m2b-w1`（STRADDLE） | **完成：直算代表全族不成立；OVER-BAND 2.39×（2026-11-27；零 Lean；主仓零改动）** | 全族 **6,612 叶 / 199 shard**、31.0 s：**straddle 1,400 = 21.17%**（15% 样本偏乐观 +6.2 pt）；`GUARD-NONE` 0；仅 2 条 guard 路径（1,249 + 151 叶）；145/199 shard 干净、30 shard 100% 脏。摊销 **8.245 s/叶 = 15.14 h = 2.39× HOL**；M2 10.20 s/18.73 h/2.95×；FG 摊销收益 1.24×；p 不可压、≤1.2× 需直算 ≤1.09 s/叶。交付 `STRADDLE.md` + `straddle_all.csv`（6,612 行）+ 脚本 + SHA |
@@ -181,7 +181,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
-| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **用户 2026-11-27 选定 FG 15.14 h 方案（明批 2.39× 超带宽）**：S1/S2 证明（~1,000–1,400 行）+ DEF-FIX/量产 为下一步；零 Lean 工单在飞；**15.14 h 是目标非现状**；N=32（4.46×）已劣势；C 不做 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **S1/S2 工单回（2026-11-27）：S2 核内义务判死**——cell 84.1% lb≤0 + 64/199 d2 fail；叶粒度 +36.7 h → 52 h（8.2×）；S2 只能核外/条件，与 589 冲突。**等用户裁 A 外部 S2 / B 叶粒度 52 h / C 中间子格 / D 止损用 M1 P3 28.1 h**；T0/T1 暂缓；S1 可闭 200–280 行 |
 | **CertShards 全量 4.36 重放（237–465 h）** | **全量 575 已批（2026-11-27「575 按你建议批」）**：先补 Pent/Quad 两模块 + `QuadR.K000` dyn 对照，再全量 575；pilot 已 GO（Hex 非 R 12.97× / HexR 12.96×；投影 19.1–23.3 h；axioms/陈述哈希/olean 三同）。2A 正在闭环；B（按族抽样 + 585 逐名审计）保留 fallback |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -257,6 +257,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（S1/S2 工单：S2 核内义务判死；FG 15.14 h 与 589 冲突；round 2 新增 4 blockers；续1640）**：
+  ① **S2 实测**：cell 粒度 4,575 叶中 **3,846 = 84.1% `lb ≤ 0`**（中位 −1.77e-2，最坏 −1.04e-1）+ **64/199 shard 根盒 d2 直接失败**（2,037 叶无表）；叶粒度 6,612 条 **+36.7 h → 52 h = 8.2× HOL**；证书化逐节点爆炸。S1 可闭（200–280 行）；T0/T1a/T1b 合计 680–960 行。
+  ② **结论**：`CurvTab.Valid` 保持命名 Prop + 核外义务 ⇒ 根定理**条件于 S2**（或加公理），与「`#print axioms` = 589 的无条件验收」冲突；**15.14 h 不能按原契约落地**。等用户裁 **A** 外部 S2/改契约、**B** 叶粒度 52 h、**C** 中间子格 2×/4×/8× 研究、**D** 止损用 M1 P3 28.1 h；T0/T1 暂缓。
+  ③ **round 2**：13/13 修复重编 RC=0 + 6 直接下游 OK = **19 OK**；新增 **4 blockers**：PackingAuto13(979)、ConformingAuto8(553)、ConformingAuto14(552)、Wt1MatanDDAnti(250，门住 231 W1DC)；已转 fixer，优先 PackingAuto13 + Wt1MatanDDAnti；CertP 仍 BLOCKED；round 3 待 4 件修完。
+  ④ 580 precompile 38/580；SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（用户选定 FG 15.14 h 方案；批 CertP 有界 maxRecDepth 试验；续1639）**：
   ① **FG 裁决**：用户「就用 fg 15h 这个方案」= 接受 8.245 s/叶 × 6,612 = **15.14 h**（**2.39× HOL，明批超带宽**），替代当前 51.6 h。验收计划相应 ≈ **49–54 h `[EST]`**（precompile 19.1–23.3 + FG 15.14 + W1DC 3.7 + Top\* 1–2 + 其它 ~10）；**S1/S2 未证，15.14 h 是目标非现状**。
