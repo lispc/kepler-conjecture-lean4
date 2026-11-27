@@ -251,6 +251,11 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（TopReplayPentShardS013 记 `BUDGET_CAP` 非 BLOCKED：kernel `-M 24576` 上限 / 24.0 GiB；acceptance 单槽重跑；续1628）**：
+  ① **实测**（census.tsv / fixer 09:20）：`TopReplayPentShardS013` wall 160.86 s、**RSS 25,769,902,080 B = 24.0 GiB**、error 1「(kernel) excessive memory consumption」；同族 S010–S026 除 S013 全 OK（S024 最大 19.6 GB）；同源 4.32 olean 存在（2026-11-23）⇒ **census 运行时内存预算中止，不是 4.36 代码/证明错误**。源为 `gen_top_shards.py` 机器生成 25 行，**不改源/不重生成分片**。
+  ② **处置**：census.tsv 该行改记 **`BUDGET_CAP`**（reason=kernel `-M` memory cap），SUMMARY 列入 **acceptance 未覆盖项**；fixer `known_blocked.txt` 放行、不重复报警。**现在不做 >24 GiB 独占跑**——会越 24 GB 总 RSS 硬闸，独占大内存窗口需用户明批；acceptance 阶段单槽 `-M 0` 重跑并实测峰值。
+  ③ **口径**：Top\* 106 件 census 全编完成 = **104 OK + S000 `BUDGET_CAP`（>60 min）+ S013 `BUDGET_CAP`**；族 ≈1.6 h（含 S000 3,682 s）。S013 **不计入代码 BLOCKED**；SORRIED 48 / AXIOM 585 不变。
+
 - **2026-11-27（precompile 4.36 pilot = GO：Hex 12.97× / HexR 12.96×；全量 575 投影 19.1–23.3 h；全量待另批；续1627）**：
   ① **实测**（同岛、`-M 24576 -j 1`）：`Hex.K008` 606.00→**46.74 s**（**12.97×**，同岛配对 13.75×）；`HexR.K001` 2,216.29→**170.97 s**（**12.96×**，配对 13.86×）；额外 `Hex.K076` 12.40→3.85 s（3.22×，小件固定费 ~2 s）。**R 族不受益的担心不成立**（12.96× ≈ 非 R 12.97×）。
   ② **bundle**：1,041 模块 = 39 Kepler + 1,002 package + 204 toolchain；lean 2,943 s + clang 221 s + link 57 s = **53.7 min**，峰值 **19.40 GB**（`ArchiveData.Pent` 1,065 s；`HexTop` 946.75 s / 16.93 GB），<2 h / <24 GB，未 `BUDGET_EXHAUSTED`；dylib 100,723,280 B / 70,762 symbols / 0 duplicate。

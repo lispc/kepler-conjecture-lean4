@@ -22,7 +22,7 @@
 | 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
-| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard ≈1–2 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **303–532 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 9 件 census 实测 3.2–33.2 s，唯 S000 >60 min） |
+| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard ≈1–2 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **303–532 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 106 件 census 全编：104 OK、S000 >60 min、S013 顶 24 GiB `-M` 上限） |
 | precompile 4.36 pilot | **GO：Hex 非 R 12.97× / HexR 12.96×**；bundle 1,041 模块 53.7 min / 19.40 GB；全量 575 投影 **19.1–23.3 h**（含一次性构建） | `lean436-precompile-w1`（2026-11-27；oleans 与 census 池逐字节同） |
 
 ## 1. 三个基线数
@@ -61,7 +61,7 @@
 | `Graphs/TopReplay*` | 96 | 92 KB | p50 ≈18 s；最大 S013 **719.9 s / 22.17 GB** | **0.91 h**（87 件实测） | `decide +kernel` 重放 |
 | `Text/LocalAuto*` | 91 | 10 MB | `LocalAuto35` **1,093.1 s / 10.0 GB** | **1.55 CPU·h**（90 件） | norm_num/linarith + 解释器 |
 | `Graphs/CertShards/*` | 580 | 556 KB | census 实测：非 R Hex 23.5–606 s；**R 变体 37–75 min/件**（HexR.K001 2,216 s、QuadR.K000 4,478 s、PentR.K001 >70 min） | **全量 575 ≈237–465 h**（R 360 件 222–450 h + 非 R 14.6 h） | native_decide 分片（585 基座） |
-| `Graphs/Top*Shard` | 106 | ~0.9 KB/件 | **`decide +kernel`**；9 件实测 **3.2–33.2 s**（mean 11.9 s），唯 `TopBoundsHexShardS000` **60 min cap 未结束** | **≈1–2 h**（105 件外推 ≈0.3–0.6 h + S000 >1 h；**ERRATA**：原 50–60 h 作废） | 内核归约（**precompile 不覆盖**） |
+| `Graphs/Top*Shard` | 106 | ~0.9 KB/件 | **`decide +kernel`**；**census 全编完成：104 OK + S000 `BUDGET_CAP`（>60 min）+ S013 `BUDGET_CAP`（24.0 GiB 顶 `-M 24576`，内核内存上限，非代码错误）**；OK 件 3.2–41.7 s | **≈1.6 h 实测墙钟和**（含 S000 3,682 s；S013 需 acceptance 单槽 `-M 0` 重跑） | 内核归约（**precompile 不覆盖**） |
 | `Text/ZTG*` | 26 | 9.9 MB | `ZTGJoint0000CornersP` **503.5 s / 21.25 GB** | `[EST]` 1–2 h | norm_num/linarith 重建 |
 | `Text/PackingAuto*` | 27 | 6.4 MB | `PackingAuto21` **483.5–519.1 s / 16.3–16.5 GB** | `[EST]` 0.5–1 h | 巨型项 simp/unfold |
 | `Graphs/GoodListShard*` | 199 | 149 KB | PentS00 **21–26.6 s / 8.2 GB**；TriS00 3.2–4.2 s | ≈0.5 h | `decide +kernel` shard-range |
@@ -390,8 +390,14 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   `TopBoundsHexShardS000` **60 min cap 未结束（`BUDGET_CAP`）**。公理形状：`TopBounds*` =
   `[propext]`、`TopReplay*` = 标准三，**均无 native_decide 公理**。因此 `skip.tsv` 已撤掉
   97 行 `SAMPLED-OUT`，driver 恢复全编 106 件，整族 **≈1–2 h**。**ERRATA**：续1622 的
-  “31 min 未结束 ⇒ 50–60 h” 是把单件异常外推整族，作废。**precompile 不覆盖**该族，
-  但它已不是 acceptance 成本瓶颈；验收若做 CertShards precompile，Top\* 另付 ≈1–2 h。
+  “31 min 未结束 ⇒ 50–60 h” 是把单件异常外推整族，作废。**census 已全编完成**：
+  104 OK + `TopBoundsHexShardS000` `BUDGET_CAP`（>60 min）+ `TopReplayPentShardS013`
+  `BUDGET_CAP`（RSS 25,769,902,080 B = 24.0 GiB，顶 `-M 24576` 内核内存上限；error
+  1「(kernel) excessive memory consumption」；同族 S010–S026 除 S013 全 OK、S024 最大
+  19.6 GB；同源 4.32 olean 存在 ⇒ 预算中止，非 4.36 代码/证明错误）。S013 列入
+  acceptance 未覆盖项：**单槽 `-M 0` 重跑并实测峰值**；当前 24 GB 总 RSS 闸不放宽
+  （>24 GiB 独占窗口需用户明批）。**precompile 不覆盖**该族，但它已不是 acceptance
+  成本瓶颈；验收若做 CertShards precompile，Top\* 另付 ≈1–2 h。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
   后者需逐模块验证 import 面。
 - `precompileModules`：4.32 三族 580/580 跑通（7.184 h；192 件基线 13.889×）；
