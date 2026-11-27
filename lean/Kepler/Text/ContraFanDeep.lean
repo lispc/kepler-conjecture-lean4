@@ -1708,7 +1708,8 @@ theorem cf4_continuous_intersection_point {v1 v2 w n : V3} (f : ℝ → V3) (t1 
   have hs : ContinuousOn (fun t => -inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
       (Set.Icc 0 t1) :=
     ContinuousOn.div hfc.neg (continuous_const.continuousOn.sub hfc) (fun t ht =>
-      ne_of_gt (by linarith [hfn t ht]))
+      have hpos : (0:ℝ) < inner ℝ w n - inner ℝ (f t) n := by linarith [hfn t ht]
+      ne_of_gt hpos)
   have hA1 : ContinuousOn (fun t => inner ℝ (f t) v1
       + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
         * (inner ℝ w v1 - inner ℝ (f t) v1)) (Set.Icc 0 t1) :=
@@ -1962,6 +1963,7 @@ private theorem cf4_ivt_first_hit (g : ℝ → ℝ) (c t1 : ℝ) (ht1 : 0 ≤ t1
           ⟨hy0, le_trans (le_of_lt hyx) h3.2.1⟩
         have hyc : c < g (sInf S - min (δ / 2) (sInf S / 2)) := by
           have h1' := hU _ (hWsub ⟨hball hydist, hyI⟩)
+          have h1'' : (g (sInf S) + c) / 2 < g (sInf S - min (δ / 2) (sInf S / 2)) := h1'
           linarith
         have hyS : sInf S - min (δ / 2) (sInf S / 2) ∈ S :=
           (hSmem _).2 ⟨hy0, le_trans (le_of_lt hyx) h3.2.1, le_of_lt hyc⟩

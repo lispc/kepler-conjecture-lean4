@@ -377,7 +377,7 @@ private theorem p9_barv_imp_u0_in_V (V : Set V3) (ul : List V3) (u0 u1 u2 u3 : V
 
 private theorem p9_rogersInV_of_gltvhum (V : Set V3) (ul : List V3) (v : V3)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
-    (hv : v ∈ V) (hr : rogers V ul v) : v = hdV ul := by
+    (hv : v ∈ V) (hr : v ∈ rogers V ul) : v = hdV ul := by
   obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
   have hu0 : u0 ∈ V := p9_barv_imp_u0_in_V V ul u0 u1 u2 u3 hs hp hb hul
   have htr : truncateSimplex 0 ul = [u0] := by

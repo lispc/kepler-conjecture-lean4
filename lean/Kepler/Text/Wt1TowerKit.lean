@@ -232,7 +232,8 @@ theorem nb12w_artanh_le_sub7 {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 1) :
       · intro u hu
         have hlt : u < 1 := lt_of_le_of_lt hu.2 hs1
         have hpos : (0 : ℝ) < 1 - u ^ 2 := by nlinarith [hu.1, hlt]
-        positivity
+        have h7 : (0 : ℝ) < 7 * (1 - u ^ 2) := by nlinarith [hpos]
+        exact ne_of_gt h7
     exact (hpoly.add hrat).sub hlog
   have hdiff : ∀ u ∈ Set.Ioo (0 : ℝ) s,
       HasDerivAt
