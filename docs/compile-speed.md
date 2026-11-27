@@ -24,6 +24,7 @@
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
 | 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard ≈1–2 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **303–532 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 106 件 census 全编：104 OK、S000 >60 min、S013 顶 24 GiB `-M` 上限） |
 | precompile 4.36 pilot | **GO：Hex 非 R 12.97× / HexR 12.96×**；bundle 1,041 模块 53.7 min / 19.40 GB；全量 575 投影 **19.1–23.3 h**（含一次性构建）；**全量 575 已批（2026-11-27），Phase 2A/2B 执行中** | `lean436-precompile-w1`（2026-11-27；oleans 与 census 池逐字节同） |
+| Top\* kernel vs native | **kernel 106 件 1.63 h**（capped）vs **native 同件 ≈0.1–0.15 h**（+106 公理，不可用）；S013 >24 GiB→4.51 s、BoundsS000 >60 min→2.03 s | `kn-native-ab-20261127`（2026-11-27 A/B） |
 
 ## 1. 三个基线数
 
@@ -307,8 +308,9 @@ C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decid
 | 每模块 `-j2` | 2026-11-21 基线 | 3 并发重件总 CPU −31%（999→688 s），wall +12%；单件 CertD CPU −55% | **建议采用（批量/CI）**；未全局应用 |
 | import kit（精确 import） | 2026-11-21 基线 | 3.63→0.99 s（−73%），RSS 5.62→1.41 GB（−75%）；toy 仅三 tactic | **仅试点**；全仓需逐模块验证 |
 | `precompileModules` + `--load-dynlib` | 2026-11-22/23 | 三族 **580/580 PASS / 7.184 h**；192 件基线 13.889×；`PentData` 峰值 24.52 GB 越线 | **功能 PASS，未接入正式构建**；需用户批 |
+| **kernel vs native A/B（Top\* 同件）** | 编排者，2026-11-27；证据 `~/c17_backup/lane_snapshots/kn-native-ab-20261127/` | 同 4.36 island、同源只换 tactic：S005 9.64→**2.38 s**（4.05×）/ S054 8.71→5.21（1.67×）/ S017 56.75→**5.27 s**（10.8×）/ S030 2.86→4.53（**0.63×，native 更慢**）/ S013 **>160.9 s @24.0 GiB → 4.51 s**（>35.7×）/ BoundsS000 **>3,682 s cap → 2.03 s**（>1,813×）。native 固定费 2–5 s，内存 1.6 GiB 级；**每条 native 新增 1 公理（探针，不落库）**；106 件 kernel 1.63 h vs native ≈0.1–0.15 h | **测量结论：信任溢价 ~10–16×（家族和）/ 单件 0.6–>1,800×；不进信任基座** |
 | **`precompileModules` 4.36 pilot** | `lean436-precompile-w1`，2026-11-27 | Hex 非 R `Hex.K008` 606.00→**46.74 s**（**12.97×**）；HexR.K001 2,216.29→**170.97 s**（**12.96×**）；bundle 1,041 模块 **53.7 min / 19.40 GB**；两件 axioms = 标准三 + 各自 1 条同名 native ax、陈述哈希 MATCH `trust-base.tsv`、**olean base/dyn/census 三者逐字节同**；全量 575 投影 **19.1–23.3 h**（10.1–15.2×，含一次性构建） | **GO**（≥10×）；Pent/Quad 未跑、`QuadR.K000` 尾部 **35.2 h**（CONDITIONAL 带，仍 <58 h）；**全量 575 已批（2026-11-27），Phase 2A/2B 执行中** |
-| `native_decide` 提速 | 2026-11-21 基线 | fib30 0.60 s vs `decide` 0.17 s（3.5× 慢）+ 1 条公理 | **负结果，不做** |
+| `native_decide` 提速 | 2026-11-21 基线 + 2026-11-27 A/B | fib30 0.60 s vs `decide` 0.17 s（3.5× 慢）+ 1 条公理；大 shard 反超（S017 10.8×、S013 >35.7×、BoundsS000 >1,813×），但固定费 2–5 s、每条 +1 公理 | **不进信任基座**（零新增契约）；仅作对照测量，不做替换 |
 | 跳过 `-c` / `-i` | 2026-11-21 基线 | `-c` ≈ 0（1.23 vs 1.21 s）；`-i` +7% | **不做**（只省磁盘：C 16.6 GB + setup 25.4 GB） |
 | `-M` 当加速旋钮 | 2026-11-21 基线 | 低于峰值直接 `memory_exception` | **只当护栏** |
 | 无界 `lake build` / 高并发 | 2026-11-13 / 11-26 事故 | 默认 `-j12` 扇出；Assembly 事故 12 路 / 28.5 GB / swap 6.8 GB | **永久禁止**（AGENTS §4） |

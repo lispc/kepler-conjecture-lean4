@@ -74,6 +74,7 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（104 OK + 2 `BUDGET_CAP`，族 ≈1.6 h；见 §8 续1624/续1628） |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
+| `tsk-opt-m2b-w1`（STRADDLE） | **在飞（2026-11-27 用户批「测 guard straddle」；同一 `agent_136ccdb4`；零 Lean）** | 修复后 FG 值链上测全族 6,612 叶 guard-straddle 占比；先核对 M2 原 40 叶 6/40，全量 ≤3 h 则全跑、否则 1,000 叶分层；输出 per-leaf CSV + 占比 + 摊销成本；≤5% ⇒ 6.3 s 可代表全族，~15% ⇒ 2.23× OVER-BAND；不做集合范数/S1/S2/量产 |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
@@ -176,7 +177,7 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
-| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已回 v2.1 = `STOP`（2026-11-27；>5 s 带）**：两个真 bug 修复（reciprocal 符号、`ofInterval` 精确点 `r=0`），`p5_diff` 0 分叉、`fy/lin/curv/lb` 与 M2 逐位同；kBox0 **6.30 s** / T149 **6.00 s**（user 4.35/4.22，RSS 5.79 GiB，标准三）；M2 8.78→6.30（**1.39×**）。**下一步四选一等用户确认**：① 接受 6.3 s（≈11.6 h / 1.83× HOL；含 15% straddle ≈2.23×）；② 集合范数半径（~4.2–4.6 s，仍不进 PASS，需新 S1 接口）；③ N=32 fallback；④ 止损。S1/S2 未做 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已回 v2.1 = `STOP`（2026-11-27；>5 s 带）**：两个真 bug 修复（reciprocal 符号、`ofInterval` 精确点 `r=0`），`p5_diff` 0 分叉、`fy/lin/curv/lb` 与 M2 逐位同；kBox0 **6.30 s** / T149 **6.00 s**（user 4.35/4.22，RSS 5.79 GiB，标准三）；M2 8.78→6.30（**1.39×**）。**用户已批测全叶 guard straddle**（`tsk-opt-m2b-w1` STRADDLE 在飞）；四选一仍待最终裁决：① 接受 6.3 s；② 集合范数半径（~4.2–4.6 s）；③ N=32（4.46×，已劣势）；④ 止损 |
 | **CertShards 全量 4.36 重放（237–465 h）** | **全量 575 已批（2026-11-27「575 按你建议批」）**：先补 Pent/Quad 两模块 + `QuadR.K000` dyn 对照，再全量 575；pilot 已 GO（Hex 非 R 12.97× / HexR 12.96×；投影 19.1–23.3 h；axioms/陈述哈希/olean 三同）。2A 正在闭环；B（按族抽样 + 585 逐名审计）保留 fallback |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
@@ -252,6 +253,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（用户批测全叶 guard straddle；kernel vs native A/B：Top\* 家族信任溢价 ~10–16×；续1631）**：
+  ① **用户裁决**：「测 guard straddle」——`tsk-opt-m2b-w1` 转 STRADDLE（同一 `agent_136ccdb4`，**零 Lean**，≤3 h）：修复后 FG 值链上测全族 6,612 叶；先核对 M2 原 40 叶 **6/40 = 15%**，全量 ≤3 h 则全跑、否则 1,000 叶分层；≤5% ⇒ 6.3 s 可代表全族，~15% ⇒ **2.23× OVER-BAND**；不做集合范数/S1/S2/量产。
+  ② **kernel vs native 同件 A/B**（4.36 island，同源只换 tactic；每条 native 探针 +1 公理，**不落库**）：`TopReplayQuadShardS005` 9.64→**2.38 s**（4.05×）/ `HexS054` 8.71→5.21（1.67×）/ `HexS017` 56.75→**5.27 s**（10.8×）/ `PentS030` 2.86→4.53（**0.63×，native 更慢**）/ **`PentS013` >160.9 s @24.0 GiB → 4.51 s（>35.7×）** / **`BoundsHexS000` >3,682 s cap → 2.03 s（>1,813×）**。native 固定费 2–5 s、内存 1.6 GiB 级；kernel 交叉点约 5–9 s。
+  ③ **总量**：Top\* 106 件（Hex 55 / Pent 31 / Quad 6 / BoundsHex 14）census **1.63 h**（含两个 cap）；GoodListShard 199 = **1.09 h**、ArchivePreShard 198 = **0.17 h** ⇒ 503 件 kernel shard ≈ **2.89 h**。native 同族 ≈0.1–0.15 h，但 +106 公理 ⇒ 违反零新增契约，**不采用**；证据 `~/c17_backup/lane_snapshots/kn-native-ab-20261127/`。
+  ④ SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（M2b v2.1：修两个真 bug、两叶闭合；kBox0 6.30 s / T149 6.00 s > 5 s ⇒ `STOP`；续1630）**：
   ① **值链分叉 = 两个真 bug**（`p5_diff.py` 同输入逐节点比值+半径）：**reciprocal 负分母符号**（生成器算出 `+⌈P2/|c|⌉`，应为 `−`；Lean 检查加 `0 ≤ q·c`）；**`ofInterval` 对精确点未给 `r=0`**（“点 1”的格点球是 `⟨2^S,2⟩`，`atan1K` 的 `c=2^S ∧ r=0` 判据永不成立 ⇒ 落 `arctanI`，x=1/N=16 仅 ~2% 精度）。修复后 **0 分叉**，`fy/lin/curv/lb` 与 M2 **逐位相同**（2.4505043659e-02 / 2.4655241899e-03 / 1.4114395778e-02 / +7.8940265344e-03）。
