@@ -75,12 +75,12 @@
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（104 OK + 2 `BUDGET_CAP`，族 ≈1.6 h；见 §8 续1624/续1628） |
 | `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
 | `native-decide-research-w1` | **在飞（2026-11-27 用户明批；ZCode `agent_3b69e406`；≤1 Lean）** | 调研放开 `native_decide` + precompile 的编译时间收益：基线 85–91 h；probe TskXLLIPLS 2 叶 / W1DC 1 箱 / Cases 典型 + 重件 / Hull 1 件；三档 + 公理代价（逐族件数 = 新增公理）+ bundle 构建成本/峰值；不改契约/不落库 |
-| `qitnpea-hol2-lean-leaf-w1` | **STRUCTURAL-STOP 收线整理（原 `agent-11` resume / `agent-mc80k1cf`；不再起计算）** | kit_compile1–96、leaf_compile1–10 远超三轮止损；六维 kit 有多条标准三输出，但叶仍有未解目标/sorryAx，Lean 单叶 0/1。只整理有效 kit 与失败证据，后续等用户裁决 |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `qitnpea-hol2-lean-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP（2026-11-27；编排者 SHA 126/126 + olean/公理复核；无 patch；Lean 单叶 0/1，SORRIED −0）** | Taylor6 olean 552,192 B；六维 kit olean 3,994,736 B、尾部 30 条全标准三；叶 olean 不存在、pass 含 sorryAx。hev/heb/slack6 roundOut-defeq、hw6 与原 f1 桥未闭；kit 可复用但 case/bank 0，不续调 |
 | `tsk-opt-m2b-w1`（STRADDLE） | **完成：直算代表全族不成立；OVER-BAND 2.39×（2026-11-27；零 Lean；主仓零改动）** | 全族 **6,612 叶 / 199 shard**、31.0 s：**straddle 1,400 = 21.17%**（15% 样本偏乐观 +6.2 pt）；`GUARD-NONE` 0；仅 2 条 guard 路径（1,249 + 151 叶）；145/199 shard 干净、30 shard 100% 脏。摊销 **8.245 s/叶 = 15.14 h = 2.39× HOL**；M2 10.20 s/18.73 h/2.95×；FG 摊销收益 1.24×；p 不可压、≤1.2× 需直算 ≤1.09 s/叶。交付 `STRADDLE.md` + `straddle_all.csv`（6,612 行）+ 脚本 + SHA |
 | `tsk-opt-m2b-w1` v2.1 | **完成：STOP（2026-11-27；>5 s 带；`PointTMFG.lean` 780 行；主仓零改动）** | 两个真 bug 修复（reciprocal 负分母符号；`ofInterval` 精确点未给 `r=0`）⇒ `p5_diff` **0 分叉**、`fy/lin/curv/lb` 与 M2 逐位同；**两叶闭合**：kBox0 **6.30 s**（复测 6.65）/ T149 **6.00 s**（复测 6.25），user 4.35/4.22，RSS 5.79 GiB，标准三；M2 8.78→6.30 wall（**1.39×**）/ user 1.56×；原语 184,838（2.08×），单价 76.4→23.5 µs；S1/S2/量产/585 未做；四选一等用户确认 |
 | `lean436-precompile-w1` | **完成：GO（2026-11-27；4.36 precompile pilot；主仓零改动、0 symlink）** | `Hex.K008` 606.00→**46.74 s（12.97×）**、`HexR.K001` 2,216.29→**170.97 s（12.96×）**（同岛配对 13.75×/13.86×）；bundle 1,041 模块 **53.7 min / 峰值 19.40 GB**；两件 axioms = 标准三 + 各自 1 条同名 native ax、陈述哈希 MATCH `trust-base.tsv`、**olean base/dyn/census 逐字节同**；全量 575 投影 **19.1–23.3 h**（含一次性构建）。UNRESOLVED：Pent/Quad 未跑（需补 `CertData.PentTop`/`QuadTop` 两模块）、`QuadR.K000` 尾部 35.2 h（<58 h 最低线）、生产接入未做；**全量 575 已批，Phase 2 在飞** |
@@ -255,6 +255,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（QITNPEA Lean 单叶最终验收：PARTIAL + STRUCTURAL-STOP；续1635）**：
+  ① **有效 kit**：`agent-mc80k1cf` 交付 127 文件，编排者 SHA **126/126 PASS**（manifest 自身不计）、无 patch。`QitnpeaTaylor6.olean` 实测 552,192 B，`QitnpeaKit6.olean` 3,994,736 B；kit_compile96 恰 30 条公理输出、无 sorryAx/error，全标准三。六变量 taylor6/taylor26、Fin-6 jet、mem_VBq6/mem_PBQ6、组合子、pos_of_slack6、atnUnaryBox 与常数链为可复用真证资产。
+  ② **叶仍未证**：叶 olean 不存在；leaf_compile1–10 全 RC=1，末轮 7 错（hev/heb roundOut-defeq、hw6 三轴、slack6 rfl），`case13031_n13_pass` 含 sorryAx。Python slack 0.00203 只是生成器值；原 f1 定义桥未闭，case/bank 0、SORRIED −0。kit_compile96/leaf10 后按 §7 收线，不再重发或文本修补。
+  ③ **后续仅建议**：若用户继续，先把 hev、hw6、slack6 分别做成最小独立探针，通过后才允许重发同一叶，kit 不动；不自动续派，不判 QITNPEA 或 HOL 二阶路线 NO-GO。
 - **2026-11-27（QITNPEA Lean 单叶触发结构性止损；续1634）**：
   ① **结构**：已有 kit_compile1–96、leaf_compile1–10 与大量文本手术，远超三轮止损；原 `agent-11` resume / `agent-mc80k1cf` 只整理交付，不再编译、重发或修补。
   ② **有效与未证边界**：kit_compile96 显示六维二阶 kit 多条标准三（atan/pi/sqrt/constants/mem_VBq6/mem_PBQ6/h*6/q6Box_seg/pos_of_slack6 等），kit 80,825 B 可归档；但 leaf_compile10 仍有 hw、hCoord6 wQ 推断、HOL2Jet6 目标和 slack6 rfl 失败，case13031_n13_pass 含 sorryAx。故 Lean 单叶 0/1、case/bank 0、无合格叶级公理，不能拿 kit 成功掩盖叶失败；不判 QITNPEA 或 HOL 二阶路线 NO-GO。
