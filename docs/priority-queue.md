@@ -72,7 +72,9 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（9 件 3.2–33.2 s，整族 ≈1–2 h；见 §8 续1624） |
+| `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（104 OK + 2 `BUDGET_CAP`，族 ≈1.6 h；见 §8 续1624/续1628） |
+| `lean436-precompile-w1`（Phase 2） | **在飞（2026-11-27 用户明批「575 按你建议批」；同一 `agent_7e945d65`；≤1 Lean）** | 先补 `CertData.PentTop`/`QuadTop` 进 bundle + `QuadR.K000` dyn 对照；PASS 后全量 **575** `CertShards` 串行重放（`-M 24576 -j 1 --load-dynlib`），per-shard tsv（RC/errors/wall/RSS/axioms/statement-hash）；不改源/不接生产/`BUDGET_CAP` 单列；全量投影 19.1–23.3 h |
+| `tsk-opt-m2b-w1`（v2.1） | **在飞（2026-11-27 用户选 1；同一 `agent_136ccdb4`；≤1 Lean）** | 修值链分叉（`ofInterval`/`fgCeilD`/atan1K 格点层检测），kBox0 闭合后测 T149；**≤3.4 s PASS / 3.4–5 s BAND / >5 s STOP**；不做 S1/S2/量产/585；结果只交 RESULTS，等用户确认 |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
@@ -174,8 +176,8 @@ D 的 `lp-packed-single-leaf-w2` 已于 2026-11-19 获批发车；E 已收线，
 | 农场解冻 5 项（nli 农场 / Rule P 规模化 / certtm 特性 / LP 证书层 / 磁盘算力） | 未批；全部保持 EST 与 hold |
 | certtm TM3 量产、Mono*、D 其它项、585 信任基座 | 保持 hold；零新增 axiom/sorry/native_decide |
 | **TskXLLIPLS Design P 一盒原型** | **完成：WALL-FAIL / CONDITIONAL（2026-11-27）**：`PointTM.lean` 558 行；其余硬指标全 PASS（标准三、RSS 6.194 GiB、K 150.6–301.8、34/34 lb>0、12/12 含 straddle 回落）；wall 8.61–8.82 s > 3.4 s，根因 Fixed-Grid 未实现（75.6 vs 31 µs/op，op 数 1.047×）；S1/S2 仍为 Prop 假设 |
-| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **已回（2026-11-27）= `UNRESOLVED / WALL-NOT-MEASURED`**：`PointTMFG.lean` 787 行、RC=0 / 0 error、`checkPosPt_sound` 标准三、零禁用构造；单叶 wall 未取得（`decide` 不闭合、`dualOnly` 早退 `none`；镜像 fy 2.73 vs M2 2.45e-2、curv 一致 ⇒ 值链节点分叉）；Fixed-Grid 原语 184,838（2.08×，ediv+abs 各 43,960 来自半径路径），按实测单价投影 **≈4.5–5 s/叶 `[EST]`**。**下一步四选一等用户确认**：① 修值链分叉再测；② 接受 ~4.5–5 s 重评可行性；③ N=32 fallback（DEF-FIX）；④ 止损。C 不做 |
-| **CertShards 全量 4.36 重放（237–465 h）** | **precompile pilot = GO（2026-11-27）**：4.36 实测 Hex 非 R **12.97×** / HexR **12.96×**；全量 575 投影 **19.1–23.3 h**（含一次性 bundle 53.7 min）；axioms/陈述哈希/olean 逐字节三项全同。**全量 575 仍待用户另批**；B（按族抽样 + 585 逐名审计）保留 fallback；Pent/Quad 覆盖与 `QuadR.K000` 尾部 35.2 h 未闭环 |
+| **TskXLLIPLS M2b Fixed-Grid 一盒 v2** | **用户选 1：修值链再测（2026-11-27）**：`tsk-opt-m2b-w1` 已恢复——只查/修 `ofInterval`/`fgCeilD`/atan1K 格点层；kBox0 闭合后测 T149；**≤3.4 s PASS / 3.4–5 s BAND / >5 s STOP**；不做 S1/S2/量产/585；结果只交 RESULTS，等用户确认。已回事实：787 行、标准三、原语 184,838（2.08×）、单叶 wall 未取得 |
+| **CertShards 全量 4.36 重放（237–465 h）** | **全量 575 已批（2026-11-27「575 按你建议批」）**：先补 Pent/Quad 两模块 + `QuadR.K000` dyn 对照，再全量 575；pilot 已 GO（Hex 非 R 12.97× / HexR 12.96×；投影 19.1–23.3 h；axioms/陈述哈希/olean 三同）。2A 正在闭环；B（按族抽样 + 585 逐名审计）保留 fallback |
 | **主仓 LP 构建池恢复** | **等用户裁决**：`lp-packed-single-leaf-w2` farm 穿透事故见文件头警示；源码无损但 LP 产物不可用，根验收暂不可复跑。不得擅自全量重建；先确定恢复范围/串行 shard 方案与备份 |
 | push | 未批；`origin/main..HEAD = 68`（实测 HEAD `4f9e12cd`，2026-11-18） |
 
@@ -250,6 +252,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（用户明批：全量 575「按你建议批」+ M2b「选 1」；两车道恢复；续1629）**：
+  ① **用户裁决**：575 按编排者建议——先补 `CertData.PentTop`/`QuadTop` 两模块 + `QuadR.K000` dyn 对照（~20–40 min），PASS 后全量 575；M2b 选 **1**（修值链分叉再测）。
+  ② **`lean436-precompile-w1` Phase 2（`agent_7e945d65` 恢复，≤1 Lean）**：2A 补 bundle + `QuadR.K000`（census 基线 4,478 s）dyn 对照，`QuadR.K000` >40 min 或失败即停；2B 全量 575 串行（`-M 24576 -j 1 --load-dynlib`），每件记 RC/errors/wall/RSS/axioms/statement-hash，tsv 每 25 件 flush、每 50 件或 2 h 报进度；不改源、不接生产、`BUDGET_CAP` 单列、>24 GiB 不放宽、>3 件同因停。
+  ③ **`tsk-opt-m2b-w1` v2.1（`agent_136ccdb4` 恢复，≤1 Lean）**：只查/修 `ofInterval`/`fgCeilD`/atan1K 格点层；kBox0 闭合后测 T149；**≤3.4 s PASS / 3.4–5 s BAND / >5 s STOP**；不做 S1/S2/量产/585；结果只交 RESULTS，等用户确认。
+  ④ **资源/边界**：census 继续；三槽信号量 + 总 RSS 24 GB 闸仲裁；主仓零改动；SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（TopReplayPentShardS013 记 `BUDGET_CAP` 非 BLOCKED：kernel `-M 24576` 上限 / 24.0 GiB；acceptance 单槽重跑；续1628）**：
   ① **实测**（census.tsv / fixer 09:20）：`TopReplayPentShardS013` wall 160.86 s、**RSS 25,769,902,080 B = 24.0 GiB**、error 1「(kernel) excessive memory consumption」；同族 S010–S026 除 S013 全 OK（S024 最大 19.6 GB）；同源 4.32 olean 存在（2026-11-23）⇒ **census 运行时内存预算中止，不是 4.36 代码/证明错误**。源为 `gen_top_shards.py` 机器生成 25 行，**不改源/不重生成分片**。

@@ -23,7 +23,7 @@
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
 | 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard ≈1–2 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **303–532 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 106 件 census 全编：104 OK、S000 >60 min、S013 顶 24 GiB `-M` 上限） |
-| precompile 4.36 pilot | **GO：Hex 非 R 12.97× / HexR 12.96×**；bundle 1,041 模块 53.7 min / 19.40 GB；全量 575 投影 **19.1–23.3 h**（含一次性构建） | `lean436-precompile-w1`（2026-11-27；oleans 与 census 池逐字节同） |
+| precompile 4.36 pilot | **GO：Hex 非 R 12.97× / HexR 12.96×**；bundle 1,041 模块 53.7 min / 19.40 GB；全量 575 投影 **19.1–23.3 h**（含一次性构建）；**全量 575 已批（2026-11-27），Phase 2A/2B 执行中** | `lean436-precompile-w1`（2026-11-27；oleans 与 census 池逐字节同） |
 
 ## 1. 三个基线数
 
@@ -91,8 +91,9 @@ Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h
 - 合计 **≈303–532 CPU·h 串行**（import 已含在每模块时间，不再另加），**瓶颈仍是
   CertShards R 族（222–450 h）**。替代方案 A **已于 2026-11-27 4.36 pilot 实测 GO**
   （Hex 非 R **12.97×** / HexR **12.96×**；bundle 53.7 min / 19.40 GB；全量 575 投影
-  **19.1–23.3 h**，含一次性构建）或 B（按族抽样 + 585 逐名审计）**待用户另批**——
-  pilot 边界明确写了“全量 575 仍待 pilot GO 后另批”。**Top\*Shard 不再是 A 的缺口**
+  **19.1–23.3 h**，含一次性构建）或 B（按族抽样 + 585 逐名审计）**已由用户 2026-11-27
+  明批走 A**——先补 Pent/Quad + `QuadR.K000`，再全量 575，Phase 2A/2B 执行中；B 保留
+  fallback。**Top\*Shard 不再是 A 的缺口**
   （≈1–2 h，可全编）；A 若获准全量，剩余验收串行 ≈ **85–91 h `[EST]`**
   （precompile 19.1–23.3 + TskXLLIPLS 51.6 + W1DC 3.7 + Top\* 1–2 + 其它 ~10）。
 
@@ -306,7 +307,7 @@ C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decid
 | 每模块 `-j2` | 2026-11-21 基线 | 3 并发重件总 CPU −31%（999→688 s），wall +12%；单件 CertD CPU −55% | **建议采用（批量/CI）**；未全局应用 |
 | import kit（精确 import） | 2026-11-21 基线 | 3.63→0.99 s（−73%），RSS 5.62→1.41 GB（−75%）；toy 仅三 tactic | **仅试点**；全仓需逐模块验证 |
 | `precompileModules` + `--load-dynlib` | 2026-11-22/23 | 三族 **580/580 PASS / 7.184 h**；192 件基线 13.889×；`PentData` 峰值 24.52 GB 越线 | **功能 PASS，未接入正式构建**；需用户批 |
-| **`precompileModules` 4.36 pilot** | `lean436-precompile-w1`，2026-11-27 | Hex 非 R `Hex.K008` 606.00→**46.74 s**（**12.97×**）；HexR.K001 2,216.29→**170.97 s**（**12.96×**）；bundle 1,041 模块 **53.7 min / 19.40 GB**；两件 axioms = 标准三 + 各自 1 条同名 native ax、陈述哈希 MATCH `trust-base.tsv`、**olean base/dyn/census 三者逐字节同**；全量 575 投影 **19.1–23.3 h**（10.1–15.2×，含一次性构建） | **GO**（≥10×）；Pent/Quad 未跑、`QuadR.K000` 尾部 **35.2 h**（CONDITIONAL 带，仍 <58 h）；**全量 575 待用户另批** |
+| **`precompileModules` 4.36 pilot** | `lean436-precompile-w1`，2026-11-27 | Hex 非 R `Hex.K008` 606.00→**46.74 s**（**12.97×**）；HexR.K001 2,216.29→**170.97 s**（**12.96×**）；bundle 1,041 模块 **53.7 min / 19.40 GB**；两件 axioms = 标准三 + 各自 1 条同名 native ax、陈述哈希 MATCH `trust-base.tsv`、**olean base/dyn/census 三者逐字节同**；全量 575 投影 **19.1–23.3 h**（10.1–15.2×，含一次性构建） | **GO**（≥10×）；Pent/Quad 未跑、`QuadR.K000` 尾部 **35.2 h**（CONDITIONAL 带，仍 <58 h）；**全量 575 已批（2026-11-27），Phase 2A/2B 执行中** |
 | `native_decide` 提速 | 2026-11-21 基线 | fib30 0.60 s vs `decide` 0.17 s（3.5× 慢）+ 1 条公理 | **负结果，不做** |
 | 跳过 `-c` / `-i` | 2026-11-21 基线 | `-c` ≈ 0（1.23 vs 1.21 s）；`-i` +7% | **不做**（只省磁盘：C 16.6 GB + setup 25.4 GB） |
 | `-M` 当加速旋钮 | 2026-11-21 基线 | 低于峰值直接 `memory_exception` | **只当护栏** |
@@ -407,7 +408,7 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   **19.1–23.3 h**。**未闭合**：Pent/Quad 族未在本 bundle 下跑（需补
   `CertData.PentTop`/`QuadTop` 两模块，+~20 min；本次 census 占 23.3 GB 槽未取）；
   `QuadR.K000` 尾部按 4,478 s 起点估 **35.2 h**（CONDITIONAL 带，仍 <58 h 最低线）；
-  生产 bundle 未接入正式构建；**全量 575 待用户另批**。
+  生产 bundle 未接入正式构建；**全量 575 已批（2026-11-27），Phase 2A/2B 执行中**。
 - `Kepler.Assembly` / `Kepler.Final` 岛件与 `Graphs`/`LP` 分片的 `-j` 曲线：测量窗口内
   `Graphs` 318/951、`LP` 6/1,150 olean 缺失；探针 `probe/mods/P_assembly.lean` 已备。
 - `interpretation` 桶的逐文件触发机制（可用线索：linarith 14–21 ms/次 + 巨型项 simp/unfold）。
