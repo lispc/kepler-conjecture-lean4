@@ -50,12 +50,12 @@
 > 落库版规划：[`../strategy/nli-strategy-20261123.md`](../strategy/nli-strategy-20261123.md)
 > （2026-11-23，含 5 个车道方向与混世界约束）。
 
-- **主线（2026-11-26 更新）**：根面恢复 → ~~wt1~~ **wt1 已闭**（`nliCell3QZECFICwt1`
+- **主线（2026-11-27 更新）**：根面恢复 → ~~wt1~~ **wt1 已闭**（`nliCell3QZECFICwt1`
   = 标准三，`4bcbd7ad`；战役档案 [`wt1-campaign.md`](wt1-campaign.md)）→
-  **QITNPEA 第一波**（角点电池，`nliRestQITNPEA1_1_2`+`1_2_0`+`1_1_1`）→
-  QITNPEA 角点电池全族 / `nliCell3QZECFICwt0` route R → ZTG joint-6 trio →
-  ZTG 余债/解耦 4；fat1/ox3q1h 先零 Lean 预认证。
-  **优先级依据**见 §8 第 9 条（2026-11-26 两债侦察）。
+  **QITNPEA / wt0 的 HOL 原版复刻战役现已按用户裁决暂停**（有效资产与未闭合边界见 §10）。
+  旧角点电池与 route R 不再作为当前执行路线；后续重启必须另批，不得自动续派。
+  ZTG joint-6 trio、ZTG 余债/解耦 4 与 fat1/ox3q1h 的既有排序不因本节改变；
+  历史优先级依据见 §8 第 9 条（2026-11-26 两债侦察）。
 - **分档读法**：T1 近闭 1；T2 可走共享 kit 15；T3 农场 27 + T3-mixed 1 + T4 阻塞 2 + T5 LP 3（含 hLP）共 33 条，不纳入 1–2 周数学承诺。
 - **不用**：certtm/TM 宽盒量产（Gate-0 已 NO-GO；窄盒 Rule P 有 XLLIPLS 先例）；precompile 只加速 585 native shard 重建/复验，不作用于 NLI 的 kernel decide。
 - **合取债纪律**：ox3q1h / TerminalV11 / LpIneqs / Kcblrqc 只报已闭分量，不把部分分支写成 −1。
@@ -942,10 +942,10 @@
   只能作低优先机械件，**B0 母定理不得按原凹性方案发车**。
 3. **FHB floor 已收线为 UNRESOLVED**：三轴一阶导全盒为正有高精度数值反例；
    已验收的只有“凹性 + 端点 ⇒ m3/m4/m5”归约，H1/H2 均未证（§1.14）。不得续走旧单调路线。
-4. **cell3 wt 状态（2026-11-26 更新）**：**wt1 已闭**（`nliCell3QZECFICwt1` 标准三，
+4. **cell3 wt 状态（2026-11-27 更新）**：**wt1 已闭**（`nliCell3QZECFICwt1` 标准三，
    `4bcbd7ad`；见 [`wt1-campaign.md`](wt1-campaign.md)）；**wt2A 核本身仍未证**
-   （y5 全盒严格增有高精度反例，§1.15）；wt0 是下一个大件，走 route R（§8 第 9 条）。
-   wt2A 的 8–12 cell 数值方案不自动续发。
+   （y5 全盒严格增有高精度反例，§1.15）；**wt0 的 HOL 复刻与后续二阶单叶均已暂停**，
+   route R 不再是当前执行路线，详见 §10。wt2A 的 8–12 cell 数值方案不自动续发。
 5. **当前授权在飞 2 条（另一编排会话的 cell3/Bernstein）**。
    `fat1-g-positivity-w1` 已超时记暂缓、可重启，WIP 与失败证据见 §1.26，不自动 resume；
    `lp-packed-single-leaf-w2` 的 b2 经独立两轮验收为单叶 bounded GO（§6.3），不车队化。
@@ -996,6 +996,8 @@
    - **排序（2026-11-26 卡片后）**：**QITNPEA 单表最小样品（解锁 11 条）> QITNPEA 第一波
      （样品绿后）≈ wt0 route R（1 条，1–3 周）> wt0 T2 兜底（over-band）**；
      LP/Ox3q1h/MainNonlinear、FHB、ZTG 超越子集、Kcblrqc 不进本窗口。
+     **2026-11-27 状态勘误**：上述排序已被随后的 HOL 复刻战役取代；两债现均暂停，
+     不再按 route R / 角点电池自动排产，现行结论统一见 §10。
 
 ---
 
@@ -1441,7 +1443,10 @@ L1 卡 `~/c17_backup/lane_snapshots/holparity-wt1-l1-backfill-w1/PARITY_CARD_wt1
   **止损**：磁盘无第二卷且已用 >0.95 TB ⇒ 停；单批 >20 叶（19.3 GB）⇒ 强制
   拆批；`LPLeaf` olean 单叶 >25 MB ⇒ 停。
 
-**`nliCell3QZECFICwt0` —— 手工路线已定型（状态：可启动，待用户批产；2026-11-19 精确重测收线，③解冻仍兼容）**
+**`nliCell3QZECFICwt0` —— 历史 route R 路线卡（2026-11-27 起暂停；现行状态见 §10）**
+
+> 以下五件套是 2026-11-19 的路线设计与资产记录，不是当前派单。后续实际转向 HOL 原版复刻；
+> route R 的 R1 未闭合，R4/R2 仅留下辅助资产。暂停状态与二阶 kit 证据见 §10。
 
 - **这是什么**：`Assembly.lean:406`；HOL `ineq.hl:1372`。盒
   `[1,1]³ × [2.01,2hminus] × [2,2hminus]²`（前三维钉死），结论
@@ -1743,7 +1748,10 @@ L1 卡 `~/c17_backup/lane_snapshots/holparity-wt1-l1-backfill-w1/PARITY_CARD_wt1
   校准点，此处失真则 F2 全部作废）；单债 >300 CPU·h 未闭 ⇒ 退回 BLOCKED。
 - **判词指针**：§1.3 / §1.21 / FARM_PLAN §5.1 F1 行。
 
-**QITNPEA 家族 10 + `nliRestBIXPCGW9455898160`（状态：等解冻 ①②，F2a 批）**
+**QITNPEA 家族 10 + `nliRestBIXPCGW9455898160`（历史 F2a 路线卡；2026-11-27 起暂停，现行状态见 §10）**
+
+> 以下为旧农场/角点与 fat1 路线记录。2026-11-26—27 已改试 HOL 原版复刻与 SAFE-CSE 首叶；
+> 当前用户裁决暂停，不据此卡自动发车。
 
 - **这是什么**：同一条 HOL idv 循环（`ineq.hl:845-862` 等）量产出的 11 张
   同模板债（`Assembly.lean:1602–1633` 区段），盒宽 0.464（宽盒 ⇒ 叶树 ~10⁵
@@ -1913,7 +1921,7 @@ L1 卡 `~/c17_backup/lane_snapshots/holparity-wt1-l1-backfill-w1/PARITY_CARD_wt1
 
 | 债名 | 状态 | 卡位 | 判词主出处 |
 |---|---|---|---|
-| `nliCell3QZECFICwt0` | 可启动（手工路线 R 五件套，待批产；11-19 重测收线 GO） | 9.3 | §1.3 / §1.9 |
+| `nliCell3QZECFICwt0` | **暂停（2026-11-27 用户裁决）**：route R 不再执行；HOL 复刻保留 80/79 Python 候选树与标准三二阶 kit，两个 Lean 单叶路线均未通过；无 patch、无减债，详见 §10 | 9.3 / 10 | §10；pq §8 续1595–1626 |
 | `nliCell3QZECFICwt0sqrt8` | **已闭合 `8c7dfc34`（2026-11-20）**：26-cell antitone S0 终态，margin +2.6398e-4，11 定理标准三编排者亲测 | 9.3 | §1.2 / §1.9 |
 | `nliCell3QZECFICwt1` | **P1 代表盒外证闭环 + 最小 Lean pilot `3faf2e39`**；独立槽聚合全盒未闭。`cell3-wt1-joint-taylor-w1` 已验收 `UNRESOLVED_ORIGINAL_MAX_DEPTH`（pq 续1407）：首盒155节点完整联合对象、201记录/200 split、0严格负，第二实现196/196一致；后续`cell3-wt1-ddmatan-refine-w1`已验收首盒`EXTERNAL_CANDIDATE_READY`（pq续1410）：577叶全负且覆盖完整、第二实现577/577；仅Python外候选；后续matan''正支六定理已落库`884bd80d`（pq续1417）；真实叶仍LEAN_NOT_READY；通用二阶底座与wt1 C²桥已落库`13dee7c8`，SelectedLeafEvidence未构造；第二盒2192叶与E00/E01/E11外候选均已验收（pq续1420/1421），不预支减债 | 9.2 | §1.9 / §1.15 |
 | `nliCell3QZECFICwt2A` | **已闭合 `1ec06b28`（2026-11-20）**：六模块 `d733f61d` + 验收下沉 `Kepler.Targets.Wt2A`；小模块闭包 90、亲跑 `#print axioms` 恰标准三；根面复验未做；olean 恢复已停止并交接新负责人（pq 续1385） | 9.1 | §1.15 / §1.19 |
@@ -1935,7 +1943,7 @@ L1 卡 `~/c17_backup/lane_snapshots/holparity-wt1-l1-backfill-w1/PARITY_CARD_wt1
 | `nliRestPEMKWU` | 等解冻①②（F1） | 9.4 | §1.3 |
 | `nliRestQITNPEA1_1_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA1_1_1` | 等解冻①②（F2a） | 9.4 | §1.23 |
-| `nliRestQITNPEA1_1_2` | **`fat1-terminal-export-w1` 三终端诊断已独立验收（pq 续1406）**：真实树与248终端精确ifloat复核PASS；三例dual均PASS，但unchanged IA/RuleP/BaseC均未接受；重放除CPU时间外逐字段一致。未做Lean，其余245终端未测；`qitnpea1-shared-floor-w1`已验收UNRESOLVED（pq续1411）：共享面仍有正面证据但无完整覆盖，新kink勘误入档，不预支减债 | 9.4 | §1.18 / §1.22 / §1.25–1.27 / §9.6 |
+| `nliRestQITNPEA1_1_2` | **暂停（2026-11-27 用户裁决）**：SAFE-CSE 已找到一枚 f1 重建 pass，六维二阶 kit 标准三；但 Lean 单叶和原 f1 桥均未闭合，case/bank 0。旧三终端诊断与共享下界 UNRESOLVED 不变，不预支减债，详见 §10 | 9.4 / 10 | §1.18 / §1.22 / §1.25–1.27 / §9.6 / §10；pq §8 续1618–1635 |
 | `nliRestQITNPEA1_2_0` | 等解冻①②（F2a） | 9.4 | §1.3 / §1.23 |
 | `nliRestQITNPEA2134082733` | 等解冻①②（F2a） | 9.4 | §1.3 |
 | `nliRestQITNPEA3848804089` | 等解冻①②（F2a） | 9.4 | §1.3 |
@@ -2018,3 +2026,90 @@ L1 卡 `~/c17_backup/lane_snapshots/holparity-wt1-l1-backfill-w1/PARITY_CARD_wt1
   路线现值。
 - **判词指针**：快照 `~/c17_backup/lane_snapshots/hol-cost-gap-census-w1/`
   （DELIVERY.md + CENSUS.tsv + 7 聚合脚本）；pq 续1331；strategy §12 ERRATA。
+
+
+---
+
+## 10. wt0 / QITNPEA HOL 复刻战役（2026-11-26—27；用户暂停）
+
+> **当前总状态：两条均暂停，均没有 Lean 单叶 pass、没有候选 patch、没有 SORRIED 减债。**
+> 本节统一登记路线经过、有效资产与未闭合边界；实时数字不另立账本，详见
+> `priority-queue.md` §8 续1595、1597–1600、1602、1604–1605、1607–1608、1610–1611、
+> 1618–1619、1621、1625–1626、1634–1635。用户 2026-11-27 明批暂停，不自动 resume。
+
+### 10.1 共同口径
+
+- 旧自创路线已停止：wt0 不再走 route R，QITNPEA 不再走角点电池、11 片、456 点或旧 y6 曲率路线。
+  后续统一以 HOL 的数学对象、二阶 Taylor、覆盖与终端参数为基准，创新只许落在 Lean 表示与内核成本层。
+- **Python 复放、外部 bb_arb 搜索和正余量都不是 Lean 证明**；单个 `RECONSTRUCTED-LEAF`
+  也不是原 HOL 证书中已识别的一片，更不预支 case/cell/bank 闭合。
+- 两条都反复验证同一条纪律：kit 编译通过不等于叶通过；错误文件里的 `#print axioms`
+  若含 `sorryAx` 只是错误污染；三轮结构性卡死或 parity >2× 未获明批即停。
+
+### 10.2 wt0：原树重建与二阶 kit 有效，两个 Lean 单叶路线均未通过
+
+1. **route R 冻结**：R1 的三 sol 槽聚合紧包络未闭合；R4/R2 只留下辅助定理，
+   不形成 wt0/cell 闭合。随后转向 `(prep-QZECFIC wt0,0)` 的 HOL 原版复刻。
+2. **原版候选树有效**：`wt0-hol-replay-w1` 恢复 case 13067 的 80 pass/79 glue 候选树，
+   体积指纹与 urban 记录吻合。编排者独立检查完整二叉树、叶路径、根盒中点分裂覆盖和负上界。
+   隐形分裂放置并不唯一，故只能称候选树，不能称唯一恢复原运行树。
+3. **一阶 dcT2 路线失败**：两叶超大生成表示未编译通过，首次为栈溢出，后续连续二分调试
+   仍未消除递归深度错误。最终生成源还保留禁用的 maxRecDepth 4M，故只归档为失败证据，
+   不是合规 patch。D2 也明确不同于 HOL 二阶中心 Taylor。
+4. **严格二阶 kit 成功**：`wt0-hol2-cse-leaf-w1` 的二阶复放在 pp=3 通过、pp=6 与存档逐位一致，
+   CSE 开/关数值一致；439 行 `Wt0HOL2Kit.lean` 形成 olean，十条定理全标准三。
+   但 CSE/nocse 叶均未编译成功，候选树 Lean 覆盖仍为 0。
+5. **算术侧修复仍失败且超带宽**：`wt0-hol2-arith-leaf-w1` 证明 norm_num、显式展开和
+   字面量证明的小探针可用，kit 逐字节不变；但集成叶膨胀到数十 MB、十轮编译全 RC=1，
+   最好一轮仍有 15 个错误且公理含 sorryAx。D3 远超带宽，按 STRUCTURAL-STOP + OVER-BAND 收线。
+6. **必须保留的 ERRATA**：旧镜像 matan 端点括号形状与冻结 kit 不一致，部分旧 manifest
+   数值对 kit 不可证；改成 kit-true 后余量仍正，但这只修复数值镜像，不等于任何 Lean 叶已证。
+
+**暂停时资产**：原版 80/79 Python 候选树、复放器、439 行标准三二阶 kit、算术小探针。
+**暂停时边界**：Lean 0/80 pass、0/79 glue；原六维桥、叶 olean 和 case 级公理均不存在。
+不得继续扩大 52.8 MB 发射器，也不得以“剩余错误已修”编造未重编译的进展。
+
+### 10.3 QITNPEA：SAFE-CSE 首叶突破，六维 kit 有效，Lean 叶与原桥未闭合
+
+1. **旧一阶 hull-TM 复刻出局**：`qitnpea-hol-replay-w1` 的外部 bb_arb 树相对 HOL 选定 case
+   的叶数和源码均远超带宽，叶模型也与 HOL 二阶 Taylor+CSE 不同；stage-B 从未形成，
+   Lean 内核覆盖为 0，判 PARTIAL + OVER-BAND。
+2. **严格二阶首次尝试暴露 CSE 级联怪癖**：原版 `find_and_replace_all` 在通用探针上会
+   让无共享左子树在同轮被改指；Python/OCaml 双跑一致。真实 azure 项形是否触发该现象
+   仍 UNRESOLVED，**不能据此判 HOL 原证或 QITNPEA 有错**。首次 HOL 工具链移植按结构性止损停止。
+3. **SAFE-CSE 首叶成功**：`qitnpea-safe-cse-leaf-w1` 改为只共享经结构相等确认的真实重复子式。
+   编排者独立复跑确认：delta 数值污染消失，13/13 个 DFS 访问节点开/关各通道逐位一致，
+   case 13031 在第 13 节点、depth 12、f1 通道得到负上界；根盒 12 次分裂可精确重建全部叶端点。
+   这只是一枚 RECONSTRUCTED-LEAF，原同序首叶与 safe 提交集是否等于原版仍 UNRESOLVED。
+4. **六维二阶 kit 成功**：`qitnpea-hol2-lean-leaf-w1` 留下 `QitnpeaTaylor6` 与
+   `QitnpeaKit6` olean；后者尾部 30 条公理输出全标准三，覆盖六变量 Taylor、Fin-6 jet、
+   `mem_VBq6/mem_PBQ6`、组合子、`pos_of_slack6`、arctan 与常数链。
+5. **但 Lean 首叶未证**：十轮叶编译全部 RC=1，末轮剩 hev/heb 的 roundOut-defeq、
+   hw6 的 max 情形和 slack6 数值等式；叶 olean 不存在，pass 含 sorryAx。
+   显式 x-space f1 也没有接到仓库 prep/bank 定义，故 case/bank 覆盖均为 0。
+   经 kit_compile1–96、leaf_compile1–10 后按结构性止损停止，不再做文本级续补。
+
+**暂停时资产**：SAFE-CSE 复放器、首叶完整 JSON 与独立重验证、六维 Taylor/kit 标准三证明。
+**暂停时边界**：Lean 单叶 0/1，case/bank 0；hev、hw6、slack6 与原 f1 桥未闭合。
+SAFE-CSE 是语义保持的表示修复，不宣称对旧 CSE 的逐位复刻。
+
+### 10.4 暂停与重启门槛
+
+- **当前没有这两条任务的授权在飞车道，不启动新 agent，不自动 resume。**
+- wt0 若重启：必须另立新卡，优先利用 439 行 kit 与 kit-true 数值，禁止续调一阶 dcT2
+  或 52.8 MB 生成器；先给一个可审计的小表示单叶，不得直接量产 80 叶。
+- QITNPEA 若重启：先把 `hev`、`hw6`、`slack6` 分别做成最小独立探针，全部通过后才允许
+  重发同一首叶；六维 kit 保持不动，原 f1 桥另列义务，不能用显式表达式 pass 冒充 bank 覆盖。
+- 两条恢复后都仍须遵守：陈述不改、零新增禁造边、原 pp/分裂/终止参数、三轮结构性止损、
+  parity 超带宽只能由用户明批。
+
+### 10.5 快照索引
+
+| 内容 | 快照 |
+|---|---|
+| wt0 原版候选树与一阶失败 | `/Users/zhangzhuo/c17_backup/lane_snapshots/wt0-hol-replay-w1/` |
+| wt0 二阶 kit 与未通过双叶 | `/Users/zhangzhuo/c17_backup/lane_snapshots/wt0-hol2-cse-leaf-w1/` |
+| wt0 算术侧修复、kit-true ERRATA 与超带宽失败 | `/Users/zhangzhuo/c17_backup/lane_snapshots/wt0-hol2-arith-leaf-w1/` |
+| QITNPEA 旧一阶外部树与 CSE 首次失败 | `/Users/zhangzhuo/c17_backup/lane_snapshots/qitnpea-hol-replay-w1/`、`/Users/zhangzhuo/c17_backup/lane_snapshots/qitnpea-hol2-cse-leaf-w1/` |
+| QITNPEA SAFE-CSE 首叶 | `/Users/zhangzhuo/c17_backup/lane_snapshots/qitnpea-safe-cse-leaf-w1/` |
+| QITNPEA 六维 kit 与未通过首叶 | `/Users/zhangzhuo/c17_backup/lane_snapshots/qitnpea-hol2-lean-leaf-w1/` |
