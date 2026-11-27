@@ -74,13 +74,13 @@
 |---|---|---|
 | `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（9 件 3.2–33.2 s，整族 ≈1–2 h；见 §8 续1624） |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
-| `wt0-hol2-arith-leaf-w1` | **STRUCTURAL-STOP + OVER-BAND 收线整理（原 `agent-10` resume / `agent-3ww7uxc0`；不再起计算）** | leaf_compile1–10 仍 maxErrors=100，52,838,847 B 叶源约 168× HOL 直接机制文件；leaf_compile9 含 sorryAx 污染，无合格 Lean 叶。只整理失败证据，后续等用户裁决 |
 | `qitnpea-hol2-lean-leaf-w1` | **在飞（2026-11-27 用户明批「好，发」；原 `agent-11` resume / `agent-bsemn8sn`；≤1 Lean）** | 固定 SAFE-CSE 首叶 f1/node13/depth12，泛化 wt0 二阶 kit 到六维 6+21 通道并做同一 Lean pass；原桥未证只记显式机制件；不搜索/换叶/第二片/Assembly |
 
 ### 最近完成（仅作导航；完整结果见 §8 最近日志）
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
+| `wt0-hol2-arith-leaf-w1` | **完成：PARTIAL + STRUCTURAL-STOP + OVER-BAND（2026-11-27；编排者 SHA 26/26 + kit hash 复核；无 patch；Lean 0/1，SORRIED −0）** | 替代算术探针可用、kit 逐字节不变；但 52,838,847 B/45,712 行叶 = D3 ~168×，10 轮全 RC=1，compile9 公理含 sorryAx。旧 matan 镜像与 kit 括号不符，kit-true slack 6.304814e-3 仍正但不能替代证明；不可落库 |
 | `tsk-opt-m2b-w1` | **完成：UNRESOLVED / WALL-NOT-MEASURED（2026-11-27；Fixed-Grid v2；`PointTMFG.lean` 787 行；主仓零改动）** | RC=0 / 0 error、`checkPosPt_sound` 标准三、零 axiom/sorry/native_decide/extern；Fixed-Grid 原语 **184,838**（2.08×；`ediv`+`abs` 各 43,960 来自半径路径）。**单叶 wall 未取得**：探针 `decide` 不闭合、`dualOnly` 早退 `none`（`sorryAx`；镜像 fy 2.73 vs M2 2.45e-2、curv 一致 ⇒ 值链节点分叉，`ofInterval`/`fgCeilD` 未排除）。按实测单价投影 **≈4.5–5 s/叶 `[EST]`**（>3.4 s；`× = 1 mul + 1 shift` 只在不要半径时成立）。负结果：`atan1K` 点检测须下沉格点层；`chopCeilTo` 非取格点。**四选一等用户确认** |
 | `tsk-opt-m2-w1` | **完成：WALL-FAIL / CONDITIONAL（2026-11-27，Design P 一盒原型；`PointTM.lean` 558 行；主仓零改动）** | 其余硬指标全 PASS：`checkPosPt_sound` 标准三、叶 `pt_check`=[propext,Quot.sound]、RSS 6.194 GiB、K 150.6–301.8（≤550）、34/34 非 straddle lb>0、12/12（11 直接 + 1 straddle 回落 TM）。**wall 8.61–8.82 s > 3.4 s**；根因 = Fixed-Grid 未实现（75.6 µs/op vs 31；op 数仅 1.047×），预计 Fixed-Grid ~2.75 s。S1/S2 仍是命名 Prop 假设（570–720 + 400–700 行未证）；straddle 15% 分裂无效、回落 TM 15.49 s ⇒ 摊销 9.6 s/叶；4.36 未测 |
 | `qitnpea-safe-cse-leaf-w1` | **完成：PASS（2026-11-27；编排者 SHA 24/24 + 探针/首叶/根盒路径独立复核；零 Lean，SORRIED −0）** | SAFE-CSE 消除 delta 污染；case 13031 第 13 DFS 节点/depth 12/f1 首 pass，upper=-61279551481/8000000000000<0，13/13 开关节点逐位一致；根盒 12 分裂精确重建叶盒；仅 RECONSTRUCTED-LEAF，真实 azure 项形/同序首叶仍 UNRESOLVED |
@@ -251,6 +251,10 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
 
+- **2026-11-27（wt0 算术侧修复最终验收：STRUCTURAL-STOP + OVER-BAND；续1626）**：
+  ① **验收**：`agent-3ww7uxc0` 交付 26 文件，编排者 SHA **26/26 PASS**、无 patch；kit sha256 与旧版逐字节一致（c7a448cf…）。52,838,847 B/45,712 行叶、D3 ~168× 实测一致；10 轮全 RC=1，compile9 两条公理含 sorryAx/RC=1，Lean 单叶 0/1、候选树 0/80 + 0/79，SORRIED −0，不可落库。
+  ② **有效与未证边界**：替代算术小探针（norm_num/展开/字面量、hwid）可用；compile9 最少 15 错，剩余两类虽称已修但**未再编译**，不得写成接近通过。compile10 还含 hv 重构回归，修正同样未验收。
+  ③ **重要 ERRATA**：旧镜像 matan 端点括号形状（gP_direct 3/2、gP_u 3/3）与冻结 kit（P9 5/4、PU9 5/6）不符，旧 manifest 数值对 kit 不可证；本轮改 kit-true 后 slack 5.765e-3→6.304814e-3 仍正，但只说明数值余量，不是 Lean 证明。工程失败限定当前发射器/证明表示，不判 wt0 或 HOL 二阶路线 NO-GO；后续等用户裁决。
 - **2026-11-27（M2b Fixed-Grid v2 收线：`UNRESOLVED / WALL-NOT-MEASURED`；单叶 wall 未取得；投影 ≈4.5–5 s；等用户确认；续1625）**：
   ① **交付**：`~/c17_backup/lane_snapshots/tsk-opt-m2b-w1/`——`PointTMFG.lean` **787 行 / ~60 声明**，单文件 `lean -o` **RC=0 / 0 error**，零 `axiom`/`sorry`/`native_decide`/extern；主仓 tracked 零改动（HEAD `89dab07b`），`patch.diff` `apply --check` PASS。`#print axioms Kepler.Interval.checkPosPt_sound` = **`[propext, Classical.choice, Quot.sound]`**（`FG.mem_mul` 同）。
   ② **已证舍入引理**：`mem_add/neg/sub`/**`mem_mul`**、`le_of_mem/ge_of_mem/abs_le_of_mem/mem_of_bounds`、四条 Euclidean 取整界、`ptLoBound_spec`；未证 `mem_recip`/`mem_sqrt`/`mem_ofInterval`（与 M2 同级 S1 余额）及两条显式取整假设 `hHW`/`hLin`。
