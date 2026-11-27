@@ -72,7 +72,7 @@
 
 | 车道 | 回执 | 唯一目标与止损 |
 |---|---|---|
-| `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS |
+| `lean436-census-w1` | **在飞（2026-11-26 编排者发车；ZCode `agent_3759e7dc`；≤1 Lean）** | `Kepler.Final` 闭包（实测 9,137）4.36 全量单文件直编，**只读枚举 blocker**；seed = blockers 99 + packing-chain 36 olean；多轮拓扑（缺依赖 DEFER、真实错误 BLOCKED、`-M` 杀重试 24576）；不修源/不落库；交付 census.tsv + BLOCKERS.md + SUMMARY.md。**W1DC 221 盒全编**（2026-11-26 订正：L1 后 13,445.5 s CPU = 3.73 h，撤销抽样；见 §8 续1596）；叶族抽样仅 TskXLLIPLS；**Top\* 106 件 2026-11-27 实测后撤销抽样、改全编**（9 件 3.2–33.2 s，整族 ≈1–2 h；见 §8 续1624） |
 | `lean436-precompile-w1` | **在飞（2026-11-27 用户明批 precompileModules；ZCode `agent_7e945d65`；≤1 Lean）** | 4.36 下 1 非 R（Hex.K008/K006）+ 1 R（HexR.K001）对照：构建 4.36 dylib 闭包 + `--load-dynlib`，测 baseline vs precompile 的 wall/CPU/RSS/加速比；`#print axioms`/陈述对 `trust-base.tsv`，三哈希；判定 ≥10× GO / 5–10× CONDITIONAL / <5× NO-GO；**先 pilot，不跑全量 580**；目标全量 575 投影 ≤25 h（最低 ≤58 h） |
 | `tsk-opt-m2b-w1` | **在飞（2026-11-27 用户明批「M2b：批」；ZCode `agent_136ccdb4`；≤1 Lean）** | 只换值链表示（Fixed-Grid Int 单格点、尾数 ≤310 bit、对齐 0），保留 `PtDual`/`CurvTab.Valid`/`checkPosPt_sound` 形状；kBox0 + worst-case T149 两叶 `decide`，目标 wall ≤3.4 s、RSS ≤10.5 GiB、标准三、lb>0；**不做 S1/S2/量产/4.36/C；结果回来只交 RESULTS，等用户确认后再任何下一步** |
 | `wt0-hol2-arith-leaf-w1` | **在飞（2026-11-27 用户明批两条后续 agent；`agent-10` / `agent-qz31d8mc`；≤1 Lean）** | 同一 `LLLLLLLL` 二阶 CSE 叶，只换 ℚ 算术侧条件为 norm_num/显式展开/字面量证明；kit hash、数值、盒、CSE 不动；先小探针再三轮内编译，不做 sibling/glue/Assembly |
@@ -250,6 +250,12 @@ Interval 叶级去重/对称、靠重分片省总时间。详见 roadmap §5。
 > 当前仅保留最近 **20 个日期条目**；迁出的旧窗口原文见
 > [`history/changelog-archive-3.md`](history/changelog-archive-3.md)。
 > 续号有缺号与历史重叠，以日期条目和 commit 为准，不按续号推测完整性。
+
+- **2026-11-27（census 实测撤销 Top\*Shard 抽样：9 件 3.2–33.2 s，106 件 ≈1–2 h；全量重放下修 303–532 h；续1624）**：
+  ① **实测（4.36 census 单 lean，证据 `/tmp/lean436-census-w1/census.tsv`）**：9 件抽样 **9/9 OK / 0 error**——TopBoundsHex S001 3.90 s、S013 3.18 s（S000 **60 min cap 未结束**，`BUDGET_CAP` 非失败）；TopReplayHex S000 33.20 / S027 21.07 / S054 8.71 s；TopReplayPent S000 17.17 / S030 2.86 s；TopReplayQuad S000 7.23 / S005 9.64 s。公理形状：`TopBounds*` = `[propext]`；`TopReplay*` = 标准三；**均无 native_decide 公理**（`decide +kernel`，与文件头一致）。
+  ② **ERRATA（续1622）**：前条「`TopBoundsHexShardS000` 31 min 未结束 ⇒ 106 件 50–60 h」是把单件异常外推整族，**作废**。9 件 sum 107 s / mean 11.9 s ⇒ 整族 **≈1–2 h**（105 件 ≈0.3–0.6 h + S000 >1 h）。
+  ③ **执行变更**：`skip.tsv` 撤掉全部 97 行 `Top*` `SAMPLED-OUT`，driver 恢复真编 106 件（比抽样更强、成本可接受；仍属 census，**不等于 acceptance 通过**）。
+  ④ **预算修正**：全量 4.36 shard 重放 = CertShards 237–465 + Top\* 1–2 = **238–467 h**；加 TskXLLIPLS 51.6 + W1DC 3.7 + 其余 ~10 ⇒ **≈303–532 h 串行**（原记 352–590）。瓶颈仍为 CertShards R 族（222–450 h）；**Top\* 不再是 precompile 方案 A 的缺口**，若 pilot GO，剩余验收串行 ≈ **83–92 h `[EST]`**。SORRIED 48 / AXIOM 585 不变。
 
 - **2026-11-27（用户明批 M2b Fixed-Grid；`tsk-opt-m2b-w1` 发车；结果后等用户确认；续1623）**：
   ① **用户裁决**：「M2b：批，结果回来之后，等我确认再进行任何下一步」。

@@ -1,6 +1,6 @@
 # 编译速度（Compile Speed）— 现状、实测、优化与实验台账
 
-> 状态：**活文档**（最后更新 2026-11-26）。编译速度专题的**持续维护页**；
+> 状态：**活文档**（最后更新 2026-11-27）。编译速度专题的**持续维护页**；
 > 2026-11-21 的调研基线（§1–§7）保留原文，2026-11-26 起的普查/实验增量见
 > §1.1、§3.3、§8。pq 只记日期与结论并链接本页，不再另抄一套数字。
 > 规则：每个数字带**日期 + 来源**（commit 或快照路径）；实测与 `[EST]` 分开；
@@ -17,12 +17,12 @@
 |---|---|---|
 | 验收闭包 | **9,137 模块**（`Kepler.Final`） | `scripts/check_acceptance_targets.py`，2026-11-26 |
 | 全仓 Lean 文件 | 11,241（`Interval/Cases` 7,600、`LP` 1,150、`Graphs` 951、`Text` 1,097） | 2026-11-21 基线；TskXLLIPLS 已含 |
-| 4.36 census | **OK 412 / REUSED 100 / BLOCKED 0**（22:14，round 1） | `lean436-census-w1` |
+| 4.36 census | **OK 877 / REUSED 100 / BLOCKED 0 / DEFERRED 1 / BUDGET_CAP 2**（2026-11-27 08:19 快照；主队列仍在跑） | `lean436-census-w1/census.tsv` |
 | 最大单族成本 | **TskXLLIPLS 6,819 模块 × 29 s ≈ 55 CPU·h** | parity card / census 实测 |
 | 第二大族 | **W1DC 221 箱 L1 = 3.73 CPU·h**（55–67 s/箱） | `fe1ec17f` 实测 |
 | 固定 import 费 | **3.4 s CPU / 5.5 GB RSS**；9,858/11,241（87.7%）模块付此费 | §1 勘误 |
 | 全闭包 import 地板 | 9,137 × 3.4 s ≈ **8.6 CPU·h** | 本页推算 |
-| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard 50–60 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **352–590 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 106 件 `decide +kernel`） |
+| 4.36 全量重放预算 | TskXLLIPLS 51.6 h + **CertShards 237–465 h** + **Top\*Shard ≈1–2 h** + W1DC 3.7 h + 其余重件 ~10 h ≈ **303–532 CPU·h 串行**（import 已含在每模块时间，不再另加） | 2026-11-27 实测外推（R 360 件 37–75 min；Top\* 9 件 census 实测 3.2–33.2 s，唯 S000 >60 min） |
 
 ## 1. 三个基线数
 
@@ -60,7 +60,7 @@
 | `Graphs/TopReplay*` | 96 | 92 KB | p50 ≈18 s；最大 S013 **719.9 s / 22.17 GB** | **0.91 h**（87 件实测） | `decide +kernel` 重放 |
 | `Text/LocalAuto*` | 91 | 10 MB | `LocalAuto35` **1,093.1 s / 10.0 GB** | **1.55 CPU·h**（90 件） | norm_num/linarith + 解释器 |
 | `Graphs/CertShards/*` | 580 | 556 KB | census 实测：非 R Hex 23.5–606 s；**R 变体 37–75 min/件**（HexR.K001 2,216 s、QuadR.K000 4,478 s、PentR.K001 >70 min） | **全量 575 ≈237–465 h**（R 360 件 222–450 h + 非 R 14.6 h） | native_decide 分片（585 基座） |
-| `Graphs/Top*Shard` | 106 | ~0.9 KB/件 | **`decide +kernel`**；`TopBoundsHexShardS000` 31 min 未结束 | **≈50–60 h** | 内核归约（**precompile 不覆盖**） |
+| `Graphs/Top*Shard` | 106 | ~0.9 KB/件 | **`decide +kernel`**；9 件实测 **3.2–33.2 s**（mean 11.9 s），唯 `TopBoundsHexShardS000` **60 min cap 未结束** | **≈1–2 h**（105 件外推 ≈0.3–0.6 h + S000 >1 h；**ERRATA**：原 50–60 h 作废） | 内核归约（**precompile 不覆盖**） |
 | `Text/ZTG*` | 26 | 9.9 MB | `ZTGJoint0000CornersP` **503.5 s / 21.25 GB** | `[EST]` 1–2 h | norm_num/linarith 重建 |
 | `Text/PackingAuto*` | 27 | 6.4 MB | `PackingAuto21` **483.5–519.1 s / 16.3–16.5 GB** | `[EST]` 0.5–1 h | 巨型项 simp/unfold |
 | `Graphs/GoodListShard*` | 199 | 149 KB | PentS00 **21–26.6 s / 8.2 GB**；TriS00 3.2–4.2 s | ≈0.5 h | `decide +kernel` shard-range |
@@ -85,12 +85,14 @@ Graphs 重放与 Text 巨件各 1–2 h；另有 **9,137 × 3.4 s ≈ 8.6 CPU·h
 - TskXLLIPLS：6,412 叶 × 29 s ≈ **51.6 h 串行**；2 车道各 1 lean（2×10.3=20.6 GB）≈ 25.8 h 墙钟。
 - W1DC：231 模块 × ~60 s ≈ **3.7 h**。
 - **CertShards：全量 575 件 ≈237–465 h**（非 R 215 件 ≈14.6 h；R 360 件 222–450 h；`HexR.K001` 2,216 s、`QuadR.K000` 4,478 s、`PentR.K001` >70 min）；**远超单车道可接受范围**。
-- **Top\*Shard：106 件 ≈50–60 h**（`decide +kernel`；`TopBoundsHexShardS000` 31 min+）；**precompile 不覆盖**——4.32 的 13.889× 是 native_decide 分片，dylib 不加速核归约。
+- **Top\*Shard：106 件 ≈1–2 h**（`decide +kernel`；9 件 census 实测 3.2–33.2 s / mean 11.9 s，唯 `TopBoundsHexShardS000` 60 min cap 未结束；**ERRATA**：原「31 min 未结束 ⇒ 50–60 h」是单件异常外推整族，作废）；**precompile 不覆盖**——4.32 的 13.889× 是 native_decide 分片，dylib 不加速核归约（该族已不是成本瓶颈）。
 - 其余重件 + 证书：`[EST]` ~10 h。
-- 合计 **≈352–590 CPU·h 串行**（import 已含在每模块时间，不再另加）。**该数已使
-  “全量 4.36 重编 shard 族”不可行**；替代方案 A（4.36 `precompileModules` 重建，
-  只覆盖 CertShards；4.32 实测 13.889×；若同效 → 17–25 h）或 B（按族抽样 + 585 逐名审计）
-  待用户批；**A 不解决 Top\*Shard 的 50–60 h**。
+- 合计 **≈303–532 CPU·h 串行**（import 已含在每模块时间，不再另加），**瓶颈仍是
+  CertShards R 族（222–450 h）**，结论不变：全量 4.36 重编 shard 族不可行；替代方案
+  A（4.36 `precompileModules` 重建，只覆盖 CertShards；4.32 实测 13.889×；若同效 →
+  17–25 h）或 B（按族抽样 + 585 逐名审计）待用户批。**Top\*Shard 不再是 A 的缺口**
+  （≈1–2 h，可全编）；A 若 pilot GO，剩余验收串行 ≈ **83–92 h `[EST]`**
+  （precompile 17–25 + TskXLLIPLS 51.6 + W1DC 3.7 + Top\* 1–2 + 其它 ~10）。
 
 ## 2. 时间分层（重件）
 
@@ -290,7 +292,7 @@ C1+C3 的同语义 DEF-FIX。`-j` 不解决单线程 IR 枚举主循环，`decid
 免费替代品（既有全基座内核重放已判不可行）。
 **适用范围（2026-11-27 实测补充）**：`precompileModules` 加速的是 **native 求值**
 （`native_decide` 分片，4.32 的 13.889×）；**`decide +kernel` 的 Top\*Shard 106 件
-（50–60 h）不吃 dylib**，两者不要混算。
+不吃 dylib**（2026-11-27 census 实测整族 **≈1–2 h**，已非成本瓶颈），两者不要混算。
 
 ## 3.3 2026-11-26 增补实验台账
 
@@ -368,11 +370,16 @@ pq 续1606/续1609。A/B 均零 Lean，所有成本为 [模型]（A 用 31 µs/�
   **全量 575 实测外推 237–465 h（非 R 14.6 h；R 360 件 222–450 h）⇒ `BUDGET_EXHAUSTED`**；
   验收替代方案 A（4.36 precompile 重建，4.32 实测 13.889×）或 B（按族抽样 + 585 逐名审计）
   待用户批，车道内不自批。
-- **Top\*Shard 的抽样边界（2026-11-27）**：106 件 `decide +kernel`（TopReplayHex 55 /
-  TopReplayPent 31 / TopBoundsHex 14 / TopReplayQuad 6），源码 0.8–0.9 KB、`gen_top_shards.py`
-  单模板；抽 **9 件（3/2/2/2）**，每件 60 min cap，其余 `SAMPLED-OUT`；全量 **≈50–60 h**
-  属 acceptance；**precompile 不覆盖**（4.32 的 13.889× 是 native_decide 分片，dylib
-  不加速核归约）。验收如果只做 CertShards precompile，Top\*Shard 仍要另付 50–60 h。
+- **Top\*Shard 抽样撤销（2026-11-27，census 实测后改全编）**：106 件 `decide +kernel`
+  （TopReplayHex 55 / TopReplayPent 31 / TopBoundsHex 14 / TopReplayQuad 6），源码
+  0.8–0.9 KB、`gen_top_shards.py` 单模板。9 件抽样 **9/9 OK**，实测 **3.2–33.2 s**
+  （TopBoundsHex S001 3.90 / S013 3.18；TopReplayHex S000 33.20 / S027 21.07 / S054 8.71；
+  TopReplayPent S000 17.17 / S030 2.86；TopReplayQuad S000 7.23 / S005 9.64），唯
+  `TopBoundsHexShardS000` **60 min cap 未结束（`BUDGET_CAP`）**。公理形状：`TopBounds*` =
+  `[propext]`、`TopReplay*` = 标准三，**均无 native_decide 公理**。因此 `skip.tsv` 已撤掉
+  97 行 `SAMPLED-OUT`，driver 恢复全编 106 件，整族 **≈1–2 h**。**ERRATA**：续1622 的
+  “31 min 未结束 ⇒ 50–60 h” 是把单件异常外推整族，作废。**precompile 不覆盖**该族，
+  但它已不是 acceptance 成本瓶颈；验收若做 CertShards precompile，Top\* 另付 ≈1–2 h。
 - **`-j2` 全局默认 / import kit 全仓**：均未获用户批准；前者只建议用于批量/CI，
   后者需逐模块验证 import 面。
 - `precompileModules`：三族 580/580 已全量跑通（7.184 h；192 件基线 13.889×；
